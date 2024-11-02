@@ -9,12 +9,22 @@ Script to Display a Scoreboard for your Favorite Teams
 import pkg_resources
 pip_packages = [p.project_name for p in pkg_resources.working_set]
 
-if "requests" not in str(pip_packages):
-    os.system('pip install requests"')
-if "adafruit-circuitpython-ticks" not in str(pip_packages):
-    os.system('pip3 install adafruit-circuitpython-ticks')
-if "PySimpleGUI" not in str(pip_packages):
-    os.system('pip install PySimpleGUI')
+try: 
+    if "requests" not in str(pip_packages):
+        print("requests not installed, installing...")
+        os.system('pip install requests"')
+    if "adafruit-circuitpython-ticks" not in str(pip_packages):
+        print("adafruit_ticks not installed, installing...")
+        os.system('pip3 install adafruit-circuitpython-ticks')
+    if "PySimpleGUI" not in str(pip_packages):
+        print("PySimpleGUI not installed, installing...")
+        os.system('pip install PySimpleGUI')
+except:
+    print("Could not find and install nessasasry packages")
+    print("please install manually by running commands below in terminal")
+    print("\tpip install PySimpleGUI")
+    print("\tpip install requests")
+    print("\tpip3 install adafruit-circuitpython-ticks")
 
 import PySimpleGUI as sg # pip install PySimpleGUI
 import requests # pip install requests
@@ -63,45 +73,45 @@ last_displayed = -1
 if not os.path.exists('sport_logos'):
     os.makedirs('sport_logos')
 
-# Loop through each league to get the teams
-for i in range(len(sport_league)):
-    sport = sport_name[i]
-    league = sport_league[i]
+    # Loop through each league to get the teams
+    for i in range(len(sport_league)):
+        sport = sport_name[i]
+        league = sport_league[i]
 
-    # Create a directory for the current sport if it doesn't exist
-    sport_dir = os.path.join('sport_logos', bitmap_directories[i])
-    if not os.path.exists(sport_dir):
-        os.makedirs(sport_dir)
+        # Create a directory for the current sport if it doesn't exist
+        sport_dir = os.path.join('sport_logos', bitmap_directories[i])
+        if not os.path.exists(sport_dir):
+            os.makedirs(sport_dir)
 
-    # Set the URL for the JSON file for the current league
-    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams"
+        # Set the URL for the JSON file for the current league
+        url = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams"
 
-    # Fetch the JSON data
-    response = requests.get(url)
-    data = response.json()
+        # Fetch the JSON data
+        response = requests.get(url)
+        data = response.json()
 
-    # Extract team data
-    teams = data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', [])
+        # Extract team data
+        teams_data = data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', [])
 
-    # Download, process, resize, and save each logo
-    for team in teams:
-        abbreviation = team['team']['abbreviation']
-        logo_url = team['team']['logos'][0]['href']
+        # Download, process, resize, and save each logo
+        for team in teams_data:
+            abbreviation = team['team']['abbreviation']
+            logo_url = team['team']['logos'][0]['href']
 
-        print(f"Downloading logo for {abbreviation} from {league}...")
+            print(f"Downloading logo for {abbreviation} from {league}...")
 
-        img_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
-        response = requests.get(logo_url, stream=True)
-        with open(img_path_png, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=1024):
-                file.write(chunk)
+            img_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
+            response = requests.get(logo_url, stream=True)
+            with open(img_path_png, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    file.write(chunk)
 
-        # Open, resize, and save the image with PIL
-        with Image.open(img_path_png) as the_img:
-            the_img.save(img_path_png)
+            # Open, resize, and save the image with PIL
+            with Image.open(img_path_png) as the_img:
+                the_img.save(img_path_png)
 
-if os.path.exists('sport_logos'):
-    print("All logos have been downloaded!")
+    if os.path.exists('sport_logos'):
+        print("All logos have been downloaded!")
 
 
 ##################################
