@@ -233,7 +233,7 @@ score_layout =[
      sg.Text("24",font=("Calibri", 104), key='home_score')],
     ]
 
-info_layout = [[sg.Text("Status of game",font=("Calibri", 72), key='info')],]
+info_layout = [[sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info')],]
 
 layout = [[
     sg.Push(),
@@ -242,7 +242,7 @@ layout = [[
     sg.Column(home_record_layout, element_justification='center'),
     sg.Push()
     ],
-    [sg.VPush()], [sg.Push(), sg.Text("Status of game",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()]
+    [sg.VPush()], [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()]
     ]
 
 # Create the window
