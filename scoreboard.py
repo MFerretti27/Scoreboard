@@ -16,9 +16,9 @@ try:
     if "adafruit-circuitpython-ticks" not in str(pip_packages):
         print("adafruit_ticks not installed, installing...")
         os.system('pip3 install adafruit-circuitpython-ticks')
-    if "PySimpleGUI" not in str(pip_packages):
+    if "FreeSimpleGUI" not in str(pip_packages):
         print("PySimpleGUI not installed, installing...")
-        os.system('pip install PySimpleGUI')
+        os.system('pip install FreeSimpleGUI')
 except:
     print("Could not find and install nessasasry packages")
     print("please install manually by running commands below in terminal")
@@ -26,7 +26,7 @@ except:
     print("\tpip install requests")
     print("\tpip3 install adafruit-circuitpython-ticks")
 
-import PySimpleGUI as sg # pip install PySimpleGUI
+import FreeSimpleGUI as sg # pip install PySimpleGUI
 import requests # pip install requests
 import gc
 import os
@@ -119,69 +119,82 @@ if not os.path.exists('sport_logos'):
 #      Grab ESPN API Data        #
 #                                #
 ##################################
-def get_data(data, team, sport):
+def get_data(URL, team, sport):
     '''The actual API and display function'''
-    global info, team_has_data, currently_playing
+    global team_has_data, currently_playing
     team_has_data = False
-    away_logo = None
-    home_logo = None
-    home_record = 0
-    away_record = 0
-    home_score = 0
-    away_score = 0
     index = 0
     names = []
-    gc.collect()
-    resp = requests.get(data)
-    response_as_json = resp.json()
-    print(f"Looking for:  {team[0]}")
-    for e in response_as_json["events"]:
-        if team[0] in e["name"]:
-            print(f"Found Game: {e["name"]}")
-            team_has_data = True
-            names.append(response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][0]["team"]["abbreviation"])
-            names.append(response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][1]["team"]["abbreviation"])
-            home_score = (response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][0]["score"])
-            away_score = (response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][1]["score"])
-            info = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
-            home_record = (response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][0]["records"][0]["summary"])
-            away_record = (response_as_json["events"][index]["competitions"]
-                            [0]["competitors"][1]["records"][0]["summary"])
-            break
-        else:
-            index += 1
-    
-    # Check if Team is Currently Playing
-    if "PM" not in str(info) and "AM" not in str(info):
-            currently_playing = True
-    if ("Delayed" in str(info)) or ("Postponed" in str(info)) or ("Final" in str(info)):
-            currently_playing = False
-    
-    if 'Bot' in info: # Replace Bot with Bottom for baseball innings
-        info = info.replace('Bot', 'Bottom')
-    
-    # Remove Timezone Characters in info
-    if 'EDT' in info:
-        info = info.replace('EDT', '')
-    if 'EST' in info:
-        info = info.replace('EST', '')
+    team_info = {}
+    team_info['sport_specific_info'] = ''
 
-    if team_has_data:
-        if team[1] is names[0]: # Your team has a Home Game
-            away_logo = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
-            home_logo = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
-        else:
-            away_logo = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
-            home_logo = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
+    try:
+        resp = requests.get(URL)
+        response_as_json = resp.json()
+        print(f"Looking for:  {team[0]}")
+        for e in response_as_json["events"]:
+            if team[0] in e["name"]:
+                print(f"Found Game: {e["name"]}")
+                team_has_data = True
+                names.append(response_as_json["events"][index]["competitions"]
+                                [0]["competitors"][0]["team"]["abbreviation"])
+                names.append(response_as_json["events"][index]["competitions"]
+                                [0]["competitors"][1]["team"]["abbreviation"])
+                team_info['home_score'] = (response_as_json["events"][index]["competitions"]
+                                            [0]["competitors"][0]["score"])
+                team_info['away_score'] = (response_as_json["events"][index]["competitions"]
+                                            [0]["competitors"][1]["score"])
+                team_info['away_record'] = (response_as_json["events"][index]["competitions"]
+                                            [0]["competitors"][0]["records"][0]["summary"])
+                team_info['home_record'] = (response_as_json["events"][index]["competitions"]
+                                            [0]["competitors"][1]["records"][0]["summary"])
+                team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
+                
+                # If looking at NFL team get this data
+                if "nfl" in URL:
+                    nfl_data = e['competitions'][0]
+                    down = nfl_data.get('situation', {}).get('shortDownDistanceText')
+                    redzone = nfl_data.get('situation', {}).get('isRedZone')
+                    spot =  nfl_data.get('situation', {}).get('possessionText')
+                    possession =  nfl_data.get('situation', {}).get('possession')
+                    team_info['sport_specific_info'] = spot + " " + down
+                break
+            else:
+                index += 1
 
-    resp.close()
+        if team_has_data:
+            # Check if Team is Currently Playing
+            if "PM" not in str(team_info.get("info")) and "AM" not in str(team_info.get("info")):
+                    currently_playing = True
+
+            if ("Delayed" in str(team_info.get("info"))) or ("Postponed" in str(team_info.get("info"))) or ("Final" in str(team_info.get("info"))):
+                    currently_playing = False
+                    team_info['sport_specific_info'] = ''
+            
+            if 'Bot' in str(team_info.get("info")): # Replace Bot with Bottom for baseball innings
+                team_info["info"] = 'Bottom'
+            
+            # Remove Timezone Characters in info
+            if 'EDT' in team_info.get("info"):
+                team_info["info"] = team_info["info"].replace('EDT', '')
+            elif 'EST' in team_info["info"]:
+                team_info["info"] = team_info["info"].replace('EST', '')
+
+            if team_has_data:
+                if team[1] is names[0]: # Your team has a Home Game
+                    team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
+                    team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
+                else:
+                    team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
+                    team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
+
+        resp.close()
+
+    except:
+        print(f"Failed to get data for {team[0]}")
+
     gc.collect()
-    return home_logo, away_logo, home_record, away_record, home_score, away_score
+    return team_info
 
 def priority_game(team):
     '''Display one game that is playing, first team in team array has higher priority'''
@@ -190,19 +203,16 @@ def priority_game(team):
     while currently_playing:
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             print(f"\nFetching data for {teams[team]}")
-            home_logo, away_logo, home_record, away_record, home_score, away_score = \
-            get_data(SPORT_URLS[team], teams[team], team)
+            team_info = get_data(SPORT_URLS[team], teams[team], team)
 
             print(f"\nIs {teams[team]} currently playing: {currently_playing}")
 
             print("Updating Display")
-            window["home_score"].update(value=home_score)
-            window["away_score"].update(value=away_score)
-            window["home_record"].update(value=home_record)
-            window["away_record"].update(value=away_record)
-            window["home_image"].update(filename=home_logo)
-            window["away_image"].update(filename=away_logo)
-            window["info"].update(value=info)
+            for key, value in team_info.items():
+                if "logo" in key:
+                    window[key].update(filename=value)
+                else:
+                    window[key].update(value=value)
 
             display_clock = ticks_add(display_clock, display_timer)
 
@@ -218,12 +228,12 @@ def priority_game(team):
 sg.theme("black")
 
 home_record_layout =[
-    [sg.Image("sport_logos/team0_logos/DET.png", subsample=1, key='home_image')],
+    [sg.Image("sport_logos/team0_logos/DET.png", subsample=1, key='home_logo')],
     [sg.Text("Home Record",font=("Calibri", 72), key='home_record')]
     ]
 
 away_record_layout =[
-    [sg.Image("sport_logos/team0_logos/PIT.png", subsample=1, key='away_image')],
+    [sg.Image("sport_logos/team0_logos/PIT.png", subsample=1, key='away_logo')],
     [sg.Text("Away Record",font=("Calibri", 72), key='away_record')]
     ]
 
@@ -242,7 +252,8 @@ layout = [[
     sg.Column(home_record_layout, element_justification='center'),
     sg.Push()
     ],
-    [sg.VPush()], [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()]
+    [sg.Push(), sg.Text("Created by:",font=("Calibri", 72), key='sport_specific_info'), sg.Push()],[sg.VPush()],
+    [sg.VPush()], [sg.Push(), sg.Text("Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()]
     ]
 
 # Create the window
@@ -261,8 +272,7 @@ while True:
     if ticks_diff(ticks_ms(), display_clock) >= display_timer:
         for fetch_index in range(len(teams)):
             print(f"\nFetching data for {teams[fetch_index]}")
-            home_logo, away_logo, home_record, away_record, home_score, away_score = \
-                get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
+            team_info = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
 
             if not team_has_data:
                 teams_playing[fetch_index] = False
@@ -276,13 +286,11 @@ while True:
 
                 if fetch_index is not last_displayed:
                     print("Updating Display")
-                    window["home_score"].update(value=home_score)
-                    window["away_score"].update(value=away_score)
-                    window["home_record"].update(value=home_record)
-                    window["away_record"].update(value=away_record)
-                    window["home_image"].update(filename=home_logo)
-                    window["away_image"].update(filename=away_logo)
-                    window["info"].update(value=info)
+                    for key, value in team_info.items():
+                        if "logo" in key:
+                            window[key].update(filename=value)
+                        else:
+                            window[key].update(value=value)
 
                     last_displayed = fetch_index
                     display_clock = ticks_add(display_clock, display_timer) # Reset Timer
