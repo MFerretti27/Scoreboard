@@ -7,7 +7,12 @@ Script to Display a Scoreboard for your Favorite Teams
 
 
 import pkg_resources
+import os
 pip_packages = [p.project_name for p in pkg_resources.working_set]
+
+# python_installed = os.popen('python3 --version"').read()
+# if 'not found' in python_installed:
+#     raise ValueError("Python is not installed, please install python")
 
 try: 
     if "requests" not in str(pip_packages):
@@ -19,7 +24,7 @@ try:
     if "FreeSimpleGUI" not in str(pip_packages):
         print("PySimpleGUI not installed, installing...")
         os.system('pip install FreeSimpleGUI')
-except:
+except Exception:
     print("Could not find and install nessasasry packages")
     print("please install manually by running commands below in terminal")
     print("\tpip install PySimpleGUI")
@@ -29,9 +34,9 @@ except:
 import FreeSimpleGUI as sg # pip install PySimpleGUI
 import requests # pip install requests
 import gc
-import os
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from PIL import Image
+import datetime
 
 
 #######################################
@@ -44,7 +49,7 @@ from PIL import Image
 teams = [
     ["Detroit Lions", "nfl", "football"],
     ["Detroit Tigers", "mlb", "baseball"],
-    ["Kansas City Chiefs", "nfl", "football"],
+    ["Pittsburgh Steelers", "nfl", "football"],
     ["Detroit Red Wings", "nhl", "hockey"],
     ["Detroit Pistons", "nba", "basketball"]
 ]
@@ -61,7 +66,6 @@ display_clock = ticks_ms() # Start Timer for Switching Display
 display_timer = 30 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
-last_displayed = -1 # Keeps track of what team was last displayed
 
 for i in range(len(teams)):
 
@@ -176,9 +180,9 @@ def get_data(URL, team, sport):
 
             # if not currently playing and game hasn't been played
             else:
-                team_info['info'].append(" @ " + venue)
+                team_info['info'] = str(team_info['info'] + " @ " + venue)
 
-            # # If looking at NFL team get this data (only if currently playing)
+            # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
                 nfl_data = e['competitions'][0]
                 down = nfl_data.get('situation', {}).get('shortDownDistanceText')
@@ -198,9 +202,26 @@ def get_data(URL, team, sport):
                     if red_zone:
                         window['away_score'].update(text_color ='red')
             
+
+            # If looking at NBA team get this data (only if currently playing)
+            if "nba" in URL and currently_playing:
+                nba_data = e['competitions']
+                home_avg_rebound_pct = ((nba_data[0]["statistics"][1]["displayValue"]))
+                home_field_goal_pct = ((nba_data[0]["statistics"][5]["displayValue"]))
+                home_3pt_pct = ((nba_data[0]["statistics"][15]["displayValue"]))
+
+                away_rebound_pct = ((nba_data[1]["statistics"][1]["displayValue"]))
+                away_field_goal_pct = ((nba_data[1]["statistics"][5]["displayValue"]))
+                away_3pt_pct = ((nba_data[1]["statistics"][15]["displayValue"]))
+
+                team_info['sport_specific_info'] = \
+                    "RB%:" + home_avg_rebound_pct + " FG%:" + home_field_goal_pct + " 3PT%:" + home_3pt_pct + \
+                        "\tRB%:" + away_rebound_pct + " FG%:" + away_field_goal_pct + " 3PT%:" + away_3pt_pct
+
+            # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
                 if 'Bot' in str(team_info.get("info")): # Replace Bot with Bottom for baseball innings
-                    team_info["info"] = 'Bottom'
+                    team_info["info"].replace('bot', 'Bottom')
             break
         else:
             index += 1
@@ -229,38 +250,58 @@ def get_data(URL, team, sport):
     return team_info
 
 def priority_game():
-    '''Display one game that is playing, first team in team array has higher priority'''
-    global teams, display_timer, display_clock, team_has_data, window
+    '''Display only games that are playing'''
+    global teams, display_timer, display_clock, fetch_clock, fetch_timer, window
 
-    last_displayed = -1 # Keeps track of what team was last displayed
-    how_many_playing = []
+    teams_currently_playing = []
     first_time = True
-    for _ in range(len(teams)):
-        how_many_playing.append(False)
+    team_info = []
+    teams_with_data = []
+    display_index = 0
 
-    while True in how_many_playing or first_time:
+    while True in teams_currently_playing or first_time:
         first_time = False
-        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
+        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
+            teams_with_data.clear()
+            team_info.clear()
+            teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                team_info = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
+                team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
+                teams_with_data.append(team_has_data)
+                teams_currently_playing.append[currently_playing]
 
-                if currently_playing and team_has_data:
-                    how_many_playing[fetch_index] = True
-                    print(f"\nIs {teams[fetch_index][0]} currently playing: {currently_playing}")
+            fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
-                    print("Updating Display")
-                    if last_displayed is not fetch_index:
-                        for key, value in team_info.items():
-                            if "logo" in key:
-                                window[key].update(filename=value)
-                            else:
-                                window[key].update(value=value)
+        # Display Team Information
+        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
+            if teams_with_data[display_index] and teams_currently_playing[display_index]:
+                print(f"{teams[display_index][0]} is currently playing, updating display")
+                for key, value in team_info[display_index].items():
+                    if "logo" in key:
+                        window[key].update(filename=value)
+                    else:
+                        window[key].update(value=value)
 
-                        last_displayed = fetch_index
-                    display_clock = ticks_add(display_clock, display_timer)
-                    window.read(timeout=0)
-                    break
+                window.read(timeout=0)
+
+                # Find next team to display (skip teams with no data)
+                original_index = display_index
+                for x in range(len(teams)):
+                    if teams_currently_playing[(original_index + x) % len(teams)] == False:
+                        display_index = (display_index + 1) % len(teams)
+                        print(f"\nskipping displaying {teams[(original_index + x) % len(teams)][0]}, current display index: {display_index}")
+                    elif teams_currently_playing[(original_index + x) % len(teams)] == True and x != 0:
+                        print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                        display_index = (display_index + x) % len(teams)
+                        break
+                    else:
+                        display_index = display_index
+                        break
+            else:
+                print(f"{teams[display_index][0]} has no Data and wont Display")
+
+            display_clock = ticks_add(display_clock, display_timer)
     return
 
 
@@ -321,7 +362,7 @@ for fetch_index in range(len(teams)):
 while True:
     event, values = window.read(timeout=0)
 
-    # Fetch Data
+    # # Fetch Data
     if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
         teams_with_data.clear()
         team_info.clear()
@@ -329,15 +370,15 @@ while True:
             print(f"\nFetching data for {teams[fetch_index][0]}")
             team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
             teams_with_data.append(team_has_data)
-            # if currently_playing:
-            #     priority_game()
+            if currently_playing:
+                priority_game()
 
         fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
     # Display Team Information
     if ticks_diff(ticks_ms(), display_clock) >= display_timer:
         if teams_with_data[display_index]:
-            print(f"Updating Display for {teams[display_index][0]}")
+            print(f"\nUpdating Display for {teams[display_index][0]}")
             for key, value in team_info[display_index].items():
                 if "logo" in key:
                     window[key].update(filename=value)
@@ -349,7 +390,7 @@ while True:
             for x in range(len(teams)):
                 if teams_with_data[(original_index + x) % len(teams)] == False:
                     display_index = (display_index + 1) % len(teams)
-                    print(f"\nskipping displaying {teams[(original_index + x) % len(teams)][0]}, current display index: {display_index}")
+                    print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, has no data")
                 elif teams_with_data[(original_index + x) % len(teams)] == True and x != 0:
                     print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                     break
@@ -358,6 +399,27 @@ while True:
 
         display_index = (display_index + 1) % len(teams)
         display_clock = ticks_add(display_clock, display_timer)
+
+    # If there is no data for any team display clock
+    if True not in teams_with_data:
+        current_time = datetime.datetime.now()
+        if current_time.hour > 12:
+            hour = current_time.hour - 12
+        date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
+        window["hyphen"].update(value=':', font=("Calibri", 104))
+        window["home_score"].update(value=current_time.minute, font=("Calibri", 204))
+        window["away_score"].update(value=hour, font=("Calibri", 204))
+        window["home_record"].update(value='')
+        window["away_record"].update(value='')
+        window["away_logo"].update(filename='')
+        window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
+        window["info"].update(value=date,font=("Calibri", 104))
+        window["sport_specific_info"].update(value=' ')
+    else:
+        window["hyphen"].update(value='-',font=("Calibri", 72))
+        window["home_score"].update(font=("Calibri", 104))
+        window["away_score"].update(font=("Calibri", 104))
+        window["info"].update(font=("Calibri", 72))
 
     if event == sg.WIN_CLOSED:
         break
