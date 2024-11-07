@@ -8,28 +8,46 @@ Script to Display a Scoreboard for your Favorite Teams
 
 import pkg_resources
 import os
+import subprocess
+import platform
+import sys
+
 pip_packages = [p.project_name for p in pkg_resources.working_set]
+
+# Check if the virtual environment directory exists
+if not os.path.exists('venv'):
+    print("Virtual environment '{venv}' not found. Creating a new one...")
+    # Create the virtual environment
+    subprocess.check_call([sys.executable, '-m', 'venv', "venv"])
+    print("Virtual environment 'venv' created successfully.")
+
+    if platform.system() == 'Windows':
+        os.system("venv\\Scripts\\activate")
+    else:
+        os.system("source venv/bin/activate")
+else:
+    print("Virtual environment 'venv' already exists.")
 
 # python_installed = os.popen('python3 --version"').read()
 # if 'not found' in python_installed:
 #     raise ValueError("Python is not installed, please install python")
 
-try: 
-    if "requests" not in str(pip_packages):
-        print("requests not installed, installing...")
-        os.system('pip install requests"')
-    if "adafruit-circuitpython-ticks" not in str(pip_packages):
-        print("adafruit_ticks not installed, installing...")
-        os.system('pip3 install adafruit-circuitpython-ticks')
-    if "FreeSimpleGUI" not in str(pip_packages):
-        print("PySimpleGUI not installed, installing...")
-        os.system('pip install FreeSimpleGUI')
-except Exception:
-    print("Could not find and install nessasasry packages")
-    print("please install manually by running commands below in terminal")
-    print("\tpip install PySimpleGUI")
-    print("\tpip install requests")
-    print("\tpip3 install adafruit-circuitpython-ticks")
+# try: 
+#     if "requests" not in str(pip_packages):
+#         print("sudo requests not installed, installing...")
+#         os.system('apt install python3-requests"')
+#     if "adafruit-circuitpython-ticks" not in str(pip_packages):
+#         print("adafruit_ticks not installed, installing...")
+#         os.system('sudo apt install python3-adafruit-circuitpython-ticks')
+#     if "FreeSimpleGUI" not in str(pip_packages):
+#         print("sudo PySimpleGUI not installed, installing...")
+#         os.system('sudo apt install python3-FreeSimpleGUI')
+# except Exception:
+#     print("Could not find and install nessasasry packages")
+#     print("please install manually by running commands below in terminal")
+#     print("\tpip install PySimpleGUI")
+#     print("\tpip install requests")
+#     print("\tpip3 install adafruit-circuitpython-ticks")
 
 import FreeSimpleGUI as sg # pip install PySimpleGUI
 import requests # pip install requests
@@ -37,6 +55,11 @@ import gc
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from PIL import Image
 import datetime
+import time
+
+if os.environ.get('DISPLAY','') == '':
+    print('no display found. Using :0.0')
+    os.environ.__setitem__('DISPLAY', ':0.0')
 
 
 #######################################
@@ -142,6 +165,7 @@ def get_data(URL, team, sport):
     names = []
     team_info = {}
     team_info['sport_specific_info'] = ''
+    currently_playing = False
 
     # Reset font and color if changed from last run
     window['home_score'].update(font=("Calibri", 104), text_color ='white')
@@ -153,7 +177,8 @@ def get_data(URL, team, sport):
     print(f"Looking for:  {team[0]}")
     for e in response_as_json["events"]:
         if team[0] in e["name"]:
-            print(f"Found Game: {e["name"]}")
+            team = e["name"]
+            print(f"Found Game: {team}")
             team_has_data = True
 
             names.append(response_as_json["events"][index]["competitions"]
@@ -169,18 +194,19 @@ def get_data(URL, team, sport):
             team_info['home_record'] = (response_as_json["events"][index]["competitions"]
                                         [0]["competitors"][1]["records"][0]["summary"])
             team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
-            venue = (response_as_json["events"][index]["competitions"][0]["venue"]["address"]["city"])
+            venue = (response_as_json["events"][index]["competitions"][0]["venue"]["fullName"])
             
             # Check if Team is Currently Playing
-            if "PM" not in str(team_info.get("info")) and "AM" not in str(team_info.get("info")):
+            if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
                 currently_playing = True
 
-            if "Delayed" in str(team_info.get("info")) or "Postponed" in str(team_info.get("info")) or "Final" in str(team_info.get("info")):
+            if "Delayed" in str(team_info['info']) or "Postponed" in str(team_info['info']) or "Final" in str(team_info['info']):
                  currently_playing = False
+                 team_info['info'] = str(team_info['info']).upper()
 
             # if not currently playing and game hasn't been played
-            else:
-                team_info['info'] = str(team_info['info'] + " @ " + venue)
+            elif not currently_playing:
+                team_info['info'] = str(team_info['info'] + "@ " + venue)
 
             # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
@@ -226,8 +252,13 @@ def get_data(URL, team, sport):
         else:
             index += 1
 
-    if team_has_data:
+    # Makes sport specific info display above clock if playing
+    if currently_playing:
+        temp = team_info["info"]
+        team_info["info"] = team_info['sport_specific_info']
+        team_info['sport_specific_info'] = temp
 
+    if team_has_data:
         # Remove Timezone Characters in info
         if 'EDT' in team_info.get("info"): team_info["info"] = team_info["info"].replace('EDT', '')
         elif 'EST' in team_info["info"]: team_info["info"] = team_info["info"].replace('EST', '')
@@ -261,6 +292,7 @@ def priority_game():
 
     while True in teams_currently_playing or first_time:
         first_time = False
+        event, values = window.refresh()
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
             teams_with_data.clear()
             team_info.clear()
@@ -269,7 +301,7 @@ def priority_game():
                 print(f"\nFetching data for {teams[fetch_index][0]}")
                 team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
                 teams_with_data.append(team_has_data)
-                teams_currently_playing.append[currently_playing]
+                teams_currently_playing.append(currently_playing)
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
@@ -283,8 +315,6 @@ def priority_game():
                     else:
                         window[key].update(value=value)
 
-                window.read(timeout=0)
-
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
                 for x in range(len(teams)):
@@ -292,7 +322,7 @@ def priority_game():
                         display_index = (display_index + 1) % len(teams)
                         print(f"\nskipping displaying {teams[(original_index + x) % len(teams)][0]}, current display index: {display_index}")
                     elif teams_currently_playing[(original_index + x) % len(teams)] == True and x != 0:
-                        print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                        print(f"Found next team that is currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                         display_index = (display_index + x) % len(teams)
                         break
                     else:
@@ -301,6 +331,7 @@ def priority_game():
             else:
                 print(f"{teams[display_index][0]} has no Data and wont Display")
 
+            display_index = (display_index + 1) % len(teams)
             display_clock = ticks_add(display_clock, display_timer)
     return
 
@@ -313,36 +344,37 @@ def priority_game():
 sg.theme("black")
 
 home_record_layout =[
-    [sg.Image("sport_logos/team0_logos/DET.png", subsample=1, key='home_logo')],
-    [sg.Text("Home Record",font=("Calibri", 72), key='home_record')]
+    [sg.Image("sport_logos/team0_logos/DET.png", key='home_logo')],
+    [sg.Text("0-0",font=("Calibri", 84), key='home_record')]
     ]
 
 away_record_layout =[
-    [sg.Image("sport_logos/team0_logos/PIT.png", subsample=1, key='away_logo')],
-    [sg.Text("Away Record",font=("Calibri", 72), key='away_record')]
+    [sg.Image("sport_logos/team0_logos/PIT.png", key='away_logo'), sg.Push()],
+    [sg.Text("0-0",font=("Calibri", 84), key='away_record')]
     ]
 
 score_layout =[
-    [sg.Text("24",font=("Calibri", 104), key='away_score'),
-     sg.Text("-",font=("Calibri", 72), key='hyphen'),
-     sg.Text("24",font=("Calibri", 104), key='home_score')],
+    [sg.Text("24",font=("Calibri", 120), key='away_score', pad=(0,0)),
+     sg.Text("-",font=("Calibri", 84), key='hyphen'),
+     sg.Text("24",font=("Calibri", 120), key='home_score', pad=(0,0))],
     ]
 
 info_layout = [[sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info')],]
 
 layout = [[
     sg.Push(),
-    sg.Column(away_record_layout, element_justification='center'),
+    sg.Column(away_record_layout, element_justification='center', pad=(75,60)),
     sg.Column(score_layout, element_justification='center'),
-    sg.Column(home_record_layout, element_justification='center'),
+    sg.Column(home_record_layout, element_justification='center', pad=(75,60)),
     sg.Push()
     ],
-    [sg.Push(), sg.Text("Created by:",font=("Calibri", 72), key='sport_specific_info'), sg.Push()],[sg.VPush()],
-    [sg.VPush()], [sg.Push(), sg.Text("Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()]
+    [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=("Calibri", 72), key='sport_specific_info'), sg.Push()],
+    [sg.VPush()],[sg.Push(), sg.Text("Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
+    [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 10), key='persional')]
     ]
 
 # Create the window
-window = sg.Window("Scoreboard", layout, grab_anywhere=True, resizable=True).Finalize() # , no_titlebar=True
+window = sg.Window("Scoreboard", layout, no_titlebar=True).Finalize()
 window.Maximize()
 
 
@@ -354,15 +386,16 @@ window.Maximize()
 team_info = []
 teams_with_data = []
 display_index = 0
+clock_displayed = False
 for fetch_index in range(len(teams)):
     print(f"\nFetching data for {teams[fetch_index][0]}")
     team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
     teams_with_data.append(team_has_data)
 
 while True:
-    event, values = window.read(timeout=0)
+    event, values = window.read(timeout=50000)
 
-    # # Fetch Data
+    # Fetch Data
     if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
         teams_with_data.clear()
         team_info.clear()
@@ -402,6 +435,7 @@ while True:
 
     # If there is no data for any team display clock
     if True not in teams_with_data:
+        clock_displayed = True
         current_time = datetime.datetime.now()
         if current_time.hour > 12:
             hour = current_time.hour - 12
@@ -415,7 +449,8 @@ while True:
         window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
         window["info"].update(value=date,font=("Calibri", 104))
         window["sport_specific_info"].update(value=' ')
-    else:
+
+    elif clock_displayed: # Reset Font if theres data to display
         window["hyphen"].update(value='-',font=("Calibri", 72))
         window["home_score"].update(font=("Calibri", 104))
         window["away_score"].update(font=("Calibri", 104))
