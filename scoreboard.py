@@ -370,7 +370,7 @@ layout = [[
     ],
     [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=("Calibri", 72), key='sport_specific_info'), sg.Push()],
     [sg.VPush()],[sg.Push(), sg.Text("Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
-    [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 10), key='persional')]
+    [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 10), key='personal')]
     ]
 
 # Create the window
