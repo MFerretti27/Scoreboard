@@ -1,7 +1,5 @@
 *.DS*
 
-*.png
-
 .vscode
 
 sport_logos/
