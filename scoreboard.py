@@ -20,13 +20,13 @@ if not os.path.exists('venv'):
     # Create the virtual environment
     subprocess.check_call([sys.executable, '-m', 'venv', "venv"])
     print("Virtual environment 'venv' created successfully.")
-
-    if platform.system() == 'Windows':
-        os.system("venv\\Scripts\\activate")
-    else:
-        os.system("source venv/bin/activate")
 else:
     print("Virtual environment 'venv' already exists.")
+
+# if platform.system() == 'Windows':
+#     os.system("venv\\Scripts\\activate")
+# else:
+#     os.system("source venv/bin/activate")
 
 # python_installed = os.popen('python3 --version"').read()
 # if 'not found' in python_installed:
@@ -86,7 +86,7 @@ SPORT_URLS = []
 team_has_data = False
 currently_playing = False
 display_clock = ticks_ms() # Start Timer for Switching Display
-display_timer = 30 * 1000 # how often the display should update in seconds
+display_timer = 25 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
 
@@ -170,6 +170,7 @@ def get_data(URL, team, sport):
     # Reset font and color if changed from last run
     window['home_score'].update(font=("Calibri", 104), text_color ='white')
     window['away_score'].update(font=("Calibri", 104), text_color ='white')
+    window['sport_specific_info'].update(font=("Calibri", 72))
 
     # try:
     resp = requests.get(URL)
@@ -195,6 +196,9 @@ def get_data(URL, team, sport):
                                         [0]["competitors"][1]["records"][0]["summary"])
             team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
             venue = (response_as_json["events"][index]["competitions"][0]["venue"]["fullName"])
+            overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
+            spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
+            
             
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
@@ -207,6 +211,7 @@ def get_data(URL, team, sport):
             # if not currently playing and game hasn't been played
             elif not currently_playing:
                 team_info['info'] = str(team_info['info'] + "@ " + venue)
+                team_info['sport_specific_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
@@ -232,17 +237,21 @@ def get_data(URL, team, sport):
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
                 nba_data = e['competitions']
-                home_avg_rebound_pct = ((nba_data[0]["statistics"][1]["displayValue"]))
-                home_field_goal_pct = ((nba_data[0]["statistics"][5]["displayValue"]))
-                home_3pt_pct = ((nba_data[0]["statistics"][15]["displayValue"]))
+                home_avg_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
+                                        [0]["statistics"][1]["displayValue"]))
+                home_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
+                                        [0]["statistics"][5]["displayValue"]))
+                home_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
+                                        [0]["statistics"][15]["displayValue"]))
 
-                away_rebound_pct = ((nba_data[1]["statistics"][1]["displayValue"]))
-                away_field_goal_pct = ((nba_data[1]["statistics"][5]["displayValue"]))
-                away_3pt_pct = ((nba_data[1]["statistics"][15]["displayValue"]))
+                away_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][1]["displayValue"]))
+                away_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][5]["displayValue"]))
+                away_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][15]["displayValue"]))
 
                 team_info['sport_specific_info'] = \
-                    "RB%:" + home_avg_rebound_pct + " FG%:" + home_field_goal_pct + " 3PT%:" + home_3pt_pct + \
-                        "\tRB%:" + away_rebound_pct + " FG%:" + away_field_goal_pct + " 3PT%:" + away_3pt_pct
+                    "FG% " + home_field_goal_pct + "  3PT% " + home_3pt_pct + \
+                    "\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
+                window['sport_specific_info'].update(font=("Calibri", 46))
 
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
@@ -252,11 +261,11 @@ def get_data(URL, team, sport):
         else:
             index += 1
 
-    # Makes sport specific info display above clock if playing
-    if currently_playing:
-        temp = team_info["info"]
-        team_info["info"] = team_info['sport_specific_info']
-        team_info['sport_specific_info'] = temp
+    # Makes sport specific info display above clock, if playing
+    # if currently_playing:
+    #     temp = team_info["info"]
+    #     team_info["info"] = team_info['sport_specific_info']
+    #     team_info['sport_specific_info'] = temp
 
     if team_has_data:
         # Remove Timezone Characters in info
@@ -280,19 +289,20 @@ def get_data(URL, team, sport):
     gc.collect()
     return team_info
 
-def priority_game():
+def priority_game(window):
     '''Display only games that are playing'''
-    global teams, display_timer, display_clock, fetch_clock, fetch_timer, window
+    global teams, display_clock, fetch_clock
 
     teams_currently_playing = []
     first_time = True
     team_info = []
     teams_with_data = []
     display_index = 0
+    display_timer = 25 * 1000 # how often the display should update in seconds
+    fetch_timer = 25 * 1000 # how often the display should update in seconds
 
     while True in teams_currently_playing or first_time:
         first_time = False
-        event, values = window.refresh()
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
             teams_with_data.clear()
             team_info.clear()
@@ -308,12 +318,15 @@ def priority_game():
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
-                print(f"{teams[display_index][0]} is currently playing, updating display")
+                print(f"{teams[display_index][0]} is currently playing, updating display\n")
+                    
                 for key, value in team_info[display_index].items():
                     if "logo" in key:
                         window[key].update(filename=value)
                     else:
                         window[key].update(value=value)
+
+                window.read(timeout=1000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
@@ -329,10 +342,12 @@ def priority_game():
                         display_index = display_index
                         break
             else:
-                print(f"{teams[display_index][0]} has no Data and wont Display")
+                print(f"{teams[display_index][0]} is not currently playing and wont Display")
 
             display_index = (display_index + 1) % len(teams)
             display_clock = ticks_add(display_clock, display_timer)
+    
+    fetch_timer = 180 * 1000 #  Put back to fetching every 3 minutes if no team playing
     return
 
 
@@ -392,8 +407,9 @@ for fetch_index in range(len(teams)):
     team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
     teams_with_data.append(team_has_data)
 
+event, values = window.read(timeout=5000)
+
 while True:
-    event, values = window.read(timeout=50000)
 
     # Fetch Data
     if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
@@ -404,7 +420,7 @@ while True:
             team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
             teams_with_data.append(team_has_data)
             if currently_playing:
-                priority_game()
+                priority_game(window)
 
         fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
@@ -417,6 +433,8 @@ while True:
                     window[key].update(filename=value)
                 else:
                     window[key].update(value=value)
+
+            event, values = window.read(timeout=5000)
 
             # Find next team to display (skip teams with no data)
             original_index = display_index
