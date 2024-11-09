@@ -428,6 +428,8 @@ while True:
     if ticks_diff(ticks_ms(), display_clock) >= display_timer:
         if teams_with_data[display_index]:
             print(f"\nUpdating Display for {teams[display_index][0]}")
+            window['sport_specific_info'].update(font=("Calibri", 42))
+
             for key, value in team_info[display_index].items():
                 if "logo" in key:
                     window[key].update(filename=value)
