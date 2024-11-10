@@ -24,9 +24,9 @@ else:
     print("Virtual environment 'venv' already exists.")
 
 # if platform.system() == 'Windows':
-#     os.system("venv\\Scripts\\activate")
+#     os.system('venv\\Scripts\\activate')
 # else:
-#     os.system("source venv/bin/activate")
+#     os.system('source venv/bin/activate')
 
 # python_installed = os.popen('python3 --version"').read()
 # if 'not found' in python_installed:
@@ -89,6 +89,12 @@ display_clock = ticks_ms() # Start Timer for Switching Display
 display_timer = 25 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
+
+# NFL Specfic global varibles 
+home_possession = False
+away_possession = False
+home_redzone = False
+away_redzone = False
 
 for i in range(len(teams)):
 
@@ -159,7 +165,7 @@ if not os.path.exists('sport_logos'):
 ##################################
 def get_data(URL, team, sport):
     '''The actual API and display function'''
-    global team_has_data, currently_playing, window
+    global team_has_data, currently_playing, window, home_possession, away_possession, home_redzone, away_redzone
     team_has_data = False
     index = 0
     names = []
@@ -196,10 +202,22 @@ def get_data(URL, team, sport):
                                         [0]["competitors"][1]["records"][0]["summary"])
             team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
             venue = (response_as_json["events"][index]["competitions"][0]["venue"]["fullName"])
-            overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
-            spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
-            
-            
+            network = (response_as_json["events"][index]["competitions"][0]["broadcast"])
+            home_team_id = response_as_json["events"][index]["competitions"][0]["competitors"][0]["id"]
+            away_team_id = response_as_json["events"][index]["competitions"][0]["competitors"][1]["id"]
+
+            try:
+                if "ABC" in network: team_info['network_logo'] = "Networks/abc.png"
+                elif "CBS" in network: team_info['network_logo'] = "Networks/cbs.png"
+                elif "ESPN" in network: team_info['network_logo'] = "Networks/espn.png"
+                elif "FOX" in network: team_info['network_logo'] = "Networks/fox.png"
+                elif "MLB" in network: team_info['network_logo'] = "Networks/mlb_network.png"
+                elif "NBC" in network: team_info['network_logo'] = "Networks/nbc.png"
+                elif "Pime" in network: team_info['network_logo'] = "Networks/Prime.png"
+                elif "TNT" in network: team_info['network_logo'] = "Networks/tnt.png"
+            except:
+                continue
+
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
                 currently_playing = True
@@ -208,14 +226,16 @@ def get_data(URL, team, sport):
                  currently_playing = False
                  team_info['info'] = str(team_info['info']).upper()
 
-            # if not currently playing and game hasn't been played
+            # if not currently playing and game hasn't been played yet
             elif not currently_playing:
                 team_info['info'] = str(team_info['info'] + "@ " + venue)
+                overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
+                spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
                 team_info['sport_specific_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
-                nfl_data = e['competitions'][0]
+                nfl_data = response_as_json["events"][index]["competitions"][0]
                 down = nfl_data.get('situation', {}).get('shortDownDistanceText')
                 red_zone = nfl_data.get('situation', {}).get('isRedZone')
                 spot =  nfl_data.get('situation', {}).get('possessionText')
@@ -224,15 +244,24 @@ def get_data(URL, team, sport):
                     team_info['sport_specific_info'] = str(down) + " on " + str(spot)
 
                 # Find who has possession and update display to represent possession
-                if possession.find(names[0]) > possession.find(names[1]) and possession is not None: # Home Team
-                    window['home_score'].update(font=("Calibri", 104, "underline"))
+                if possession is not None and possession == home_team_id: # Home Team
+                    home_possession = True
+                    away_possession = False
                     if red_zone:
-                        window['home_score'].update(text_color ='red')
-                elif possession.find(names[1]) > possession.find(names[0]) and possession is not None:
-                    window['away_score'].update(font=("Calibri", 104, "underline"))
+                        home_redzone = True
+                    else:
+                        home_redzone = False
+                elif possession is not None and possession == away_team_id:
+                    home_possession = False
+                    away_possession = True
                     if red_zone:
-                        window['away_score'].update(text_color ='red')
-            
+                        away_redzone = True
+                    else:
+                        away_redzone = False
+
+                temp = str(team_info["info"])
+                team_info["info"] = str(team_info['sport_specific_info'])
+                team_info['sport_specific_info'] = temp
 
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
@@ -251,7 +280,6 @@ def get_data(URL, team, sport):
                 team_info['sport_specific_info'] = \
                     "FG% " + home_field_goal_pct + "  3PT% " + home_3pt_pct + \
                     "\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
-                window['sport_specific_info'].update(font=("Calibri", 46))
 
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
@@ -318,34 +346,45 @@ def priority_game(window):
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
-                print(f"{teams[display_index][0]} is currently playing, updating display\n")
+                print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
                     
                 for key, value in team_info[display_index].items():
+
                     if "logo" in key:
                         window[key].update(filename=value)
                     else:
-                        window[key].update(value=value)
+                        window[key].update(value=value, text_color ='white')
+    
+                    # Football Specific
+                    if "nfl" in SPORT_URLS[display_index]:
+                        if home_possession and key == 'home_score':
+                            window['home_score'].update(value=value, font=("Calibri", 104, "underline"))
+                        elif away_possession and key == 'away_score':
+                            window['away_score'].update(value=value, font=("Calibri", 104, "underline"))
+                        if home_redzone and key == 'home_score':
+                            window['home_score'].update(value=value, font=("Calibri", 104, "underline"), text_color ='red')
+                        elif away_redzone and key == 'away_score':
+                            window['away_score'].update(value=value, font=("Calibri", 104, "underline"), text_color ='red')
+
+                    if "nba" in SPORT_URLS[display_index] and key == 'sport_specific_info':
+                        window['sport_specific_info'].update(value=value, font=("Calibri", 46))
 
                 window.read(timeout=1000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
+                display_clock = ticks_add(display_clock, display_timer)
                 for x in range(len(teams)):
                     if teams_currently_playing[(original_index + x) % len(teams)] == False:
                         display_index = (display_index + 1) % len(teams)
-                        print(f"\nskipping displaying {teams[(original_index + x) % len(teams)][0]}, current display index: {display_index}")
+                        print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, current display index: {display_index}")
                     elif teams_currently_playing[(original_index + x) % len(teams)] == True and x != 0:
                         print(f"Found next team that is currently playing {teams[(original_index + x) % len(teams)][0]}\n")
-                        display_index = (display_index + x) % len(teams)
-                        break
-                    else:
-                        display_index = display_index
                         break
             else:
                 print(f"{teams[display_index][0]} is not currently playing and wont Display")
-
+            
             display_index = (display_index + 1) % len(teams)
-            display_clock = ticks_add(display_clock, display_timer)
     
     fetch_timer = 180 * 1000 #  Put back to fetching every 3 minutes if no team playing
     return
@@ -368,10 +407,11 @@ away_record_layout =[
     [sg.Text("0-0",font=("Calibri", 84), key='away_record')]
     ]
 
-score_layout =[
-    [sg.Text("24",font=("Calibri", 120), key='away_score', pad=(0,0)),
+score_layout =[[sg.Text(" ",font=("Calibri", 50), key='blank_space')],
+    [sg.Text("24",font=("Calibri", 120), key='away_score'),
      sg.Text("-",font=("Calibri", 84), key='hyphen'),
-     sg.Text("24",font=("Calibri", 120), key='home_score', pad=(0,0))],
+     sg.Text("24",font=("Calibri", 120), key='home_score')],
+     [sg.Image("Networks/espn.png", subsample = 5, key='network_logo', pad=(0,50))]
     ]
 
 info_layout = [[sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info')],]
@@ -431,10 +471,19 @@ while True:
             window['sport_specific_info'].update(font=("Calibri", 42))
 
             for key, value in team_info[display_index].items():
+                if "abc" in value or "espn" in value: size=5
+                elif "cbs" in value: size=2
+                elif "fox" in value: size=2
+                elif "mlb" in value: size=3
+                elif "nbc" in value: size=8
+                elif "Prime" in value: size=10
+                elif "tnt" in value: size=7
+                else: size=1
+
                 if "logo" in key:
-                    window[key].update(filename=value)
+                    window[key].update(filename=value, subsample=size)
                 else:
-                    window[key].update(value=value)
+                    window[key].update(value=value, text_color ='white')
 
             event, values = window.read(timeout=5000)
 
