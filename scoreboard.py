@@ -16,18 +16,7 @@ import datetime
 import time
 import gc
 
-pip_packages = [p.project_name for p in pkg_resources.working_set]
-
-# Check if the virtual environment directory exists
-if not os.path.exists('venv'):
-    print("Virtual environment '{venv}' not found. Creating a new one...")
-    # Create the virtual environment
-    subprocess.check_call([sys.executable, '-m', 'venv', "venv"])
-    print("Virtual environment 'venv' created successfully.")
-else:
-    print("Virtual environment 'venv' already exists.")
-
-# Check if you are currently in Virutal Environment, if not go in
+# Check if you are currently in Virtual Environment, if not exit
 if sys.prefix != sys.base_prefix:
     print("\tYou are currently in a virtual environment.")
     if platform.system() == 'Windows':
@@ -38,44 +27,8 @@ if sys.prefix != sys.base_prefix:
         output = subprocess.check_output("ip route", shell=True, encoding="utf-8")
         match = re.search(r"default via ([\d.]+)", output)
         router_ip = match.group(1)
-# else:
-#     if platform.system() == 'Windows':
-#         os.system('venv\\Scripts\\activate')
-#         output = subprocess.check_output("ipconfig", encoding="utf-8")
-#         match = re.search(r"Default Gateway[ .:]*([\d.]+)", output)
-#         router_ip = match.group(1)
-#     else:
-#         subprocess.run('source venv/bin/activate', shell=True, executable='/bin/bash')
-#         output = subprocess.check_output("ip route", shell=True, encoding="utf-8")
-#         match = re.search(r"default via ([\d.]+)", output)
-#         router_ip = match.group(1)
-
-# Install imports used by script
-try: 
-    if "requests" not in str(pip_packages):
-        print("requests not installed, installing...")
-        os.system('pip install requests')
-    if "adafruit-circuitpython-ticks" not in str(pip_packages):
-        print("adafruit_ticks not installed, installing...")
-        os.system('pip install adafruit-circuitpython-ticks')
-    if "FreeSimpleGUI" not in str(pip_packages):
-        print("PySimpleGUI not installed, installing...")
-        os.system('pip install FreeSimpleGUI')
-    if "pillow" not in str(pip_packages):
-        print("psutil not installed, installing...")
-        os.system('pip install pillow')
-    if "psutil" not in str(pip_packages):
-        print("psutil not installed, installing...")
-        os.system('pip install psutil')
-
-except:
-    print("Could not find and install nessasasry packages")
-    print("please install manually by running commands below in terminal")
-    print("\tpip install PySimpleGUI")
-    print("\tpip install requests")
-    print("\tpip3 install adafruit-circuitpython-ticks")
-    print("\tpip install pillow")
-    print("\tpip install psutil")
+else:
+    print("Please go into virtual Environment by running main.py")
     exit()
 
 # Uncommon imports that need to be installed
@@ -131,7 +84,7 @@ display_timer = 25 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
 
-# NFL Specfic global varibles 
+# NFL Specific global variables 
 home_possession = False
 away_possession = False
 home_redzone = False
@@ -245,16 +198,22 @@ def get_data(URL, team, sport):
             away_team_id = response_as_json["events"][index]["competitions"][0]["competitors"][1]["id"]
 
             try:
-                if "ABC" in network: team_info['network_logo'] = "Networks/abc.png"
-                elif "CBS" in network: team_info['network_logo'] = "Networks/cbs.png"
-                elif "ESPN" in network: team_info['network_logo'] = "Networks/espn.png"
-                elif "FOX" in network: team_info['network_logo'] = "Networks/fox.png"
-                elif "MLB" in network: team_info['network_logo'] = "Networks/mlb_network.png"
-                elif "NBC" in network: team_info['network_logo'] = "Networks/nbc.png"
-                elif "Pime" in network: team_info['network_logo'] = "Networks/Prime.png"
-                elif "TNT" in network: team_info['network_logo'] = "Networks/tnt.png"
+                if "ABC" in network: team_info['network_logo'] = "Networks/ABC.png"
+                elif "CBS" in network: team_info['network_logo'] = "Networks/CBS.png"
+                elif "ESPN" in network: team_info['network_logo'] = "Networks/ESPN.png"
+                elif "FOX" in network: team_info['network_logo'] = "Networks/FOX.png"
+                elif "MLB" in network: team_info['network_logo'] = "Networks/MLB_Network.png"
+                elif "NBC" in network or "Peacock" in network: team_info['network_logo'] = "Networks/NBC.png"
+                elif "Prime" in network: team_info['network_logo'] = "Networks/Prime.png"
+                elif "TNT" in network: team_info['network_logo'] = "Networks/TNT.png"
+                elif "NBA TV" in network: team_info['network_logo'] = "Networks/NBA_TV.png"
+                elif "NBA League" in network: team_info['network_logo'] = "Networks/NBA_League.png"
+                elif "NFL" in network: team_info['network_logo'] = "Networks/NFL_NET.png"
             except:
-                continue
+                if "nfl" in URL: team_info['network_logo'] = "Networks/NFL_NET.png"
+                elif "nba" in URL: team_info['network_logo'] = "Networks/NBA_League.png"
+                elif "mlb" in URL: team_info['network_logo'] = "Networks/MLB_Network.png"
+                elif "nhl" in URL: team_info['network_logo'] = "Networks/NHL_Net.png"
 
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
@@ -535,6 +494,10 @@ while True:
                     elif "nbc" in value: size=8
                     elif "Prime" in value: size=10
                     elif "tnt" in value: size=7
+                    elif "NBA_TV" in value: size=7
+                    elif "NBA_League" in value: size=7
+                    elif "NFL" in value: size=7
+                    elif "NHL" in value: size=7
                     else: size=1
 
                     if "logo" in key:
@@ -575,6 +538,7 @@ while True:
             window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
             window["info"].update(value=date,font=("Calibri", 104))
             window["sport_specific_info"].update(value=' ')
+            window.read(timeout=5000)
 
         elif clock_displayed: # Reset Font if theres data to display
             window["hyphen"].update(value='-',font=("Calibri", 72))
