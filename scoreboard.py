@@ -486,13 +486,13 @@ while True:
                 window['sport_specific_info'].update(font=("Calibri", 42))
 
                 for key, value in team_info[display_index].items():
-                    if "abc" in value or "espn" in value: size=5
-                    elif "cbs" in value: size=1
-                    elif "fox" in value: size=2
-                    elif "mlb" in value: size=3
-                    elif "nbc" in value: size=8
+                    if "ABC" in value or "espn" in value: size=5
+                    elif "CBS" in value: size=1
+                    elif "FOX" in value: size=2
+                    elif "MLB" in value: size=3
+                    elif "NBC" in value: size=8
                     elif "Prime" in value: size=10
-                    elif "tnt" in value: size=7
+                    elif "TNT" in value: size=7
                     elif "NBA_TV" in value: size=7
                     elif "NBA_League" in value: size=7
                     elif "NFL" in value: size=7
