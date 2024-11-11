@@ -6,7 +6,6 @@ Script to Display a Scoreboard for your Favorite Teams
 '''
 
 # Common imports (should be on all computers)
-import pkg_resources
 import os
 import subprocess
 import platform
@@ -404,7 +403,7 @@ score_layout =[[sg.Text(" ",font=("Calibri", 50), key='blank_space')],
     [sg.Text("24",font=("Calibri", 120), key='away_score'),
      sg.Text("-",font=("Calibri", 84), key='hyphen'),
      sg.Text("24",font=("Calibri", 120), key='home_score')],
-     [sg.Image("Networks/espn.png", subsample = 5, key='network_logo', pad=(0,50))]
+     [sg.Image("Networks/ESPN.png", subsample = 5, key='network_logo', pad=(0,50))]
     ]
 
 info_layout = [[sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info')],]
