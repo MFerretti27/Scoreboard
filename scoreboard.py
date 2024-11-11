@@ -5,12 +5,16 @@ Script to Display a Scoreboard for your Favorite Teams
 @Author: Matthew Ferretti
 '''
 
-
+# Common imports (should be on all computers)
 import pkg_resources
 import os
 import subprocess
 import platform
 import sys
+import re
+import datetime
+import time
+import gc
 
 pip_packages = [p.project_name for p in pkg_resources.working_set]
 
@@ -23,40 +27,77 @@ if not os.path.exists('venv'):
 else:
     print("Virtual environment 'venv' already exists.")
 
-# if platform.system() == 'Windows':
-#     os.system('venv\\Scripts\\activate')
+# Check if you are currently in Virutal Environment, if not go in
+if sys.prefix != sys.base_prefix:
+    print("\tYou are currently in a virtual environment.")
+    if platform.system() == 'Windows':
+        output = subprocess.check_output("ipconfig", encoding="utf-8")
+        match = re.search(r"Default Gateway[ .:]*([\d.]+)", output)
+        router_ip = match.group(1)
+    else:
+        output = subprocess.check_output("ip route", shell=True, encoding="utf-8")
+        match = re.search(r"default via ([\d.]+)", output)
+        router_ip = match.group(1)
 # else:
-#     os.system('source venv/bin/activate')
+#     if platform.system() == 'Windows':
+#         os.system('venv\\Scripts\\activate')
+#         output = subprocess.check_output("ipconfig", encoding="utf-8")
+#         match = re.search(r"Default Gateway[ .:]*([\d.]+)", output)
+#         router_ip = match.group(1)
+#     else:
+#         subprocess.run('source venv/bin/activate', shell=True, executable='/bin/bash')
+#         output = subprocess.check_output("ip route", shell=True, encoding="utf-8")
+#         match = re.search(r"default via ([\d.]+)", output)
+#         router_ip = match.group(1)
 
-# python_installed = os.popen('python3 --version"').read()
-# if 'not found' in python_installed:
-#     raise ValueError("Python is not installed, please install python")
+# Install imports used by script
+try: 
+    if "requests" not in str(pip_packages):
+        print("requests not installed, installing...")
+        os.system('pip install requests')
+    if "adafruit-circuitpython-ticks" not in str(pip_packages):
+        print("adafruit_ticks not installed, installing...")
+        os.system('pip install adafruit-circuitpython-ticks')
+    if "FreeSimpleGUI" not in str(pip_packages):
+        print("PySimpleGUI not installed, installing...")
+        os.system('pip install FreeSimpleGUI')
+    if "pillow" not in str(pip_packages):
+        print("psutil not installed, installing...")
+        os.system('pip install pillow')
+    if "psutil" not in str(pip_packages):
+        print("psutil not installed, installing...")
+        os.system('pip install psutil')
 
-# try: 
-#     if "requests" not in str(pip_packages):
-#         print("sudo requests not installed, installing...")
-#         os.system('apt install python3-requests"')
-#     if "adafruit-circuitpython-ticks" not in str(pip_packages):
-#         print("adafruit_ticks not installed, installing...")
-#         os.system('sudo apt install python3-adafruit-circuitpython-ticks')
-#     if "FreeSimpleGUI" not in str(pip_packages):
-#         print("sudo PySimpleGUI not installed, installing...")
-#         os.system('sudo apt install python3-FreeSimpleGUI')
-# except Exception:
-#     print("Could not find and install nessasasry packages")
-#     print("please install manually by running commands below in terminal")
-#     print("\tpip install PySimpleGUI")
-#     print("\tpip install requests")
-#     print("\tpip3 install adafruit-circuitpython-ticks")
+except:
+    print("Could not find and install nessasasry packages")
+    print("please install manually by running commands below in terminal")
+    print("\tpip install PySimpleGUI")
+    print("\tpip install requests")
+    print("\tpip3 install adafruit-circuitpython-ticks")
+    print("\tpip install pillow")
+    print("\tpip install psutil")
+    exit()
 
-import FreeSimpleGUI as sg # pip install PySimpleGUI
+# Uncommon imports that need to be installed
+import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 import requests # pip install requests
-import gc
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
-from PIL import Image
-import datetime
-import time
+from PIL import Image  # pip install pillow
+import psutil  # pip install psutil
 
+# Get Network Interface for trying to reconnect on network failure
+interfaces = psutil.net_if_stats()  # Get interface stats (up/down status)
+io_counters = psutil.net_io_counters(pernic=True)  # Get I/O data per interface
+for interface, stats in interfaces.items():
+    if interface == "lo":  # Skip the loopback interface
+        continue
+    if stats.isup:  # Check if interface is up
+        # Check if there has been any data transmitted or received
+        data = io_counters.get(interface)
+        if data and (data.bytes_sent > 0 or data.bytes_recv > 0):
+            network_interface = interface
+
+print(f"Routers IP address {router_ip}, Current Network Interface {network_interface}")
 if os.environ.get('DISPLAY','') == '':
     print('no display found. Using :0.0')
     os.environ.__setitem__('DISPLAY', ':0.0')
@@ -97,14 +138,11 @@ home_redzone = False
 away_redzone = False
 
 for i in range(len(teams)):
-
     sport_league = teams[i][1]
     sport_name = teams[i][2]
 
     # add API URLs
-    URL = (
-    f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard"
-    )
+    URL = (f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
     SPORT_URLS.append(URL)
 
 
@@ -197,9 +235,9 @@ def get_data(URL, team, sport):
             team_info['away_score'] = (response_as_json["events"][index]["competitions"]
                                         [0]["competitors"][1]["score"])
             team_info['away_record'] = (response_as_json["events"][index]["competitions"]
-                                        [0]["competitors"][0]["records"][0]["summary"])
-            team_info['home_record'] = (response_as_json["events"][index]["competitions"]
                                         [0]["competitors"][1]["records"][0]["summary"])
+            team_info['home_record'] = (response_as_json["events"][index]["competitions"]
+                                        [0]["competitors"][0]["records"][0]["summary"])
             team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
             venue = (response_as_json["events"][index]["competitions"][0]["venue"]["fullName"])
             network = (response_as_json["events"][index]["competitions"][0]["broadcast"])
@@ -289,12 +327,6 @@ def get_data(URL, team, sport):
         else:
             index += 1
 
-    # Makes sport specific info display above clock, if playing
-    # if currently_playing:
-    #     temp = team_info["info"]
-    #     team_info["info"] = team_info['sport_specific_info']
-    #     team_info['sport_specific_info'] = temp
-
     if team_has_data:
         # Remove Timezone Characters in info
         if 'EDT' in team_info.get("info"): team_info["info"] = team_info["info"].replace('EDT', '')
@@ -310,14 +342,16 @@ def get_data(URL, team, sport):
         currently_playing = False
 
     resp.close()
-
-    # except:
-    #     print(f"Failed to get data for {team[0]}")
-
     gc.collect()
     return team_info
 
-def priority_game(window):
+
+##########################################
+#                                        #
+#  Display only Teams currently playing  #
+#                                        #
+##########################################
+def team_currently_playing(window):
     '''Display only games that are playing'''
     global teams, display_clock, fetch_clock
 
@@ -435,6 +469,29 @@ window.Maximize()
 
 ##################################
 #                                #
+#   Check internet connection    #
+#                                #
+##################################
+def is_connected(router_ip):
+    """Check if there's an internet connection by pinging a router."""
+    try:
+        # Ping host with one packet and timeout of 2 seconds
+        subprocess.check_call(["ping", "-c", "1", "-W", "2", router_ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def reconnect(network_interface):
+    """Attempt to reconnect by restarting the network interface."""
+    print("No internet connection. Attempting to reconnect...")
+    os.system(f"sudo ifconfig {network_interface} down")
+    time.sleep(1)
+    os.system(f"sudo ifconfig {network_interface} up")
+    time.sleep(5)  # Wait for the network interface to come back up
+
+
+##################################
+#                                #
 #          Event Loop            #
 #                                #
 ##################################
@@ -450,82 +507,88 @@ for fetch_index in range(len(teams)):
 event, values = window.read(timeout=5000)
 
 while True:
+    try:
+        # Fetch Data
+        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
+            teams_with_data.clear()
+            team_info.clear()
+            for fetch_index in range(len(teams)):
+                print(f"\nFetching data for {teams[fetch_index][0]}")
+                team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
+                teams_with_data.append(team_has_data)
+                if currently_playing:
+                    team_currently_playing(window)
 
-    # Fetch Data
-    if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
-        teams_with_data.clear()
-        team_info.clear()
-        for fetch_index in range(len(teams)):
-            print(f"\nFetching data for {teams[fetch_index][0]}")
-            team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
-            teams_with_data.append(team_has_data)
-            if currently_playing:
-                priority_game(window)
+            fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
-        fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
+        # Display Team Information
+        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
+            if teams_with_data[display_index]:
+                print(f"\nUpdating Display for {teams[display_index][0]}")
+                window['sport_specific_info'].update(font=("Calibri", 42))
 
-    # Display Team Information
-    if ticks_diff(ticks_ms(), display_clock) >= display_timer:
-        if teams_with_data[display_index]:
-            print(f"\nUpdating Display for {teams[display_index][0]}")
-            window['sport_specific_info'].update(font=("Calibri", 42))
+                for key, value in team_info[display_index].items():
+                    if "abc" in value or "espn" in value: size=5
+                    elif "cbs" in value: size=1
+                    elif "fox" in value: size=2
+                    elif "mlb" in value: size=3
+                    elif "nbc" in value: size=8
+                    elif "Prime" in value: size=10
+                    elif "tnt" in value: size=7
+                    else: size=1
 
-            for key, value in team_info[display_index].items():
-                if "abc" in value or "espn" in value: size=5
-                elif "cbs" in value: size=2
-                elif "fox" in value: size=2
-                elif "mlb" in value: size=3
-                elif "nbc" in value: size=8
-                elif "Prime" in value: size=10
-                elif "tnt" in value: size=7
-                else: size=1
+                    if "logo" in key:
+                        window[key].update(filename=value, subsample=size)
+                    else:
+                        window[key].update(value=value, text_color ='white')
 
-                if "logo" in key:
-                    window[key].update(filename=value, subsample=size)
-                else:
-                    window[key].update(value=value, text_color ='white')
+                event, values = window.read(timeout=5000)
 
-            event, values = window.read(timeout=5000)
+                # Find next team to display (skip teams with no data)
+                original_index = display_index
+                for x in range(len(teams)):
+                    if teams_with_data[(original_index + x) % len(teams)] == False:
+                        display_index = (display_index + 1) % len(teams)
+                        print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, has no data")
+                    elif teams_with_data[(original_index + x) % len(teams)] == True and x != 0:
+                        print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                        break
+            else:
+                print(f"{teams[display_index][0]} has no Data and wont Display")
 
-            # Find next team to display (skip teams with no data)
-            original_index = display_index
-            for x in range(len(teams)):
-                if teams_with_data[(original_index + x) % len(teams)] == False:
-                    display_index = (display_index + 1) % len(teams)
-                    print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, has no data")
-                elif teams_with_data[(original_index + x) % len(teams)] == True and x != 0:
-                    print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
-                    break
-        else:
-            print(f"{teams[display_index][0]} has no Data and wont Display")
+            display_index = (display_index + 1) % len(teams)
+            display_clock = ticks_add(display_clock, display_timer)
 
-        display_index = (display_index + 1) % len(teams)
-        display_clock = ticks_add(display_clock, display_timer)
+        # If there is no data for any team display clock
+        if True not in teams_with_data:
+            clock_displayed = True
+            current_time = datetime.datetime.now()
+            if current_time.hour > 12:
+                hour = current_time.hour - 12
+            date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
+            window["hyphen"].update(value=':', font=("Calibri", 104))
+            window["home_score"].update(value=current_time.minute, font=("Calibri", 204))
+            window["away_score"].update(value=hour, font=("Calibri", 204))
+            window["home_record"].update(value='')
+            window["away_record"].update(value='')
+            window["away_logo"].update(filename='')
+            window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
+            window["info"].update(value=date,font=("Calibri", 104))
+            window["sport_specific_info"].update(value=' ')
 
-    # If there is no data for any team display clock
-    if True not in teams_with_data:
-        clock_displayed = True
-        current_time = datetime.datetime.now()
-        if current_time.hour > 12:
-            hour = current_time.hour - 12
-        date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
-        window["hyphen"].update(value=':', font=("Calibri", 104))
-        window["home_score"].update(value=current_time.minute, font=("Calibri", 204))
-        window["away_score"].update(value=hour, font=("Calibri", 204))
-        window["home_record"].update(value='')
-        window["away_record"].update(value='')
-        window["away_logo"].update(filename='')
-        window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
-        window["info"].update(value=date,font=("Calibri", 104))
-        window["sport_specific_info"].update(value=' ')
+        elif clock_displayed: # Reset Font if theres data to display
+            window["hyphen"].update(value='-',font=("Calibri", 72))
+            window["home_score"].update(font=("Calibri", 104))
+            window["away_score"].update(font=("Calibri", 104))
+            window["info"].update(font=("Calibri", 72))
 
-    elif clock_displayed: # Reset Font if theres data to display
-        window["hyphen"].update(value='-',font=("Calibri", 72))
-        window["home_score"].update(font=("Calibri", 104))
-        window["away_score"].update(font=("Calibri", 104))
-        window["info"].update(font=("Calibri", 72))
+        if event == sg.WIN_CLOSED: # Quit if any key pressed
+            window.close()
+            exit()
 
-    if event == sg.WIN_CLOSED:
-        break
-
-window.close()
+    except:
+        while not is_connected(router_ip):
+            print("Internet connection is down, trying to reconnect...")
+            reconnect(network_interface)
+            time.sleep(20)  # Check every 20 seconds
+        print("Internet connection is active")
