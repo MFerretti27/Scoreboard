@@ -1,6 +1,7 @@
 # General Infomation
 - Python Script to Display your Favorite Teams in Scoreboard Style <br />
-- Using FreeSimpleGUI for GUI interface <br />
+- Using FreeSimpleGUI for GUI interface (Free version of PySimpleGUI)
+    - [FreeSimpleGUI Documentation](https://docs.pysimplegui.com/en/latest/)<br />
 - Uses EPSN API to grab sports data in JSON format (free, no API key required but more subject to change than other API's) <br />
 
 # Change Teams Displayed
