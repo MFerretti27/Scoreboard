@@ -74,6 +74,7 @@ teams = [
 FONT = "Calibri"
 SCORE_TXT_SIZE = 140
 INFO_TXT_SIZE = 96
+RECORD_TXT_SIZE = 96
 ############################
 #                          #
 #          Setup           #
@@ -121,7 +122,7 @@ for i in range(len(teams)):
 #   Grab all Logos (done once)   #
 #                                #
 ##################################
-def resize_image(image_path, scale_factor=1.5):
+def resize_image(image_path, sport_dir, abbreviation, scale_factor=1.5):
     # Open an image file using Pillow
     img = Image.open(image_path)
     
@@ -132,8 +133,8 @@ def resize_image(image_path, scale_factor=1.5):
     
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    img_resized.save(image_path
-    )
+    new_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
+    img_resized.save(new_path_png)
 
 # Create a base directory to store the logos if it doesn't exist
 if not os.path.exists('sport_logos'):
@@ -166,7 +167,7 @@ if not os.path.exists('sport_logos'):
 
             print(f"Downloading logo for {abbreviation} from {teams[i][1]}...")
 
-            img_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
+            img_path_png = os.path.join(sport_dir, f"{abbreviation}_Original.png")
             response = requests.get(logo_url, stream=True)
             with open(img_path_png, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=1024):
@@ -174,8 +175,10 @@ if not os.path.exists('sport_logos'):
 
             # Open, resize, and save the image with PIL
             with Image.open(img_path_png) as the_img:
-                # resized_image = resize_image(img_path_png)
-                the_img.save(img_path_png)
+                resize_image(img_path_png, sport_dir, abbreviation)
+
+            # Delete the original .png file
+            os.remove(img_path_png)
 
     if os.path.exists('sport_logos'):
         print("All logos have been downloaded!")
@@ -233,7 +236,7 @@ def get_data(URL, team, sport):
                 if network in broadcast: 
                     team_info['network_logo'] = filepath[0] # Index 0 is filepath
                     break
-                else:  # If it cant find logo use these as defualts
+                else:  # If it cant find logo use these as defaults
                     if "nfl" in URL: team_info['network_logo'] = "Networks/NFL_NET.png"
                     elif "nba" in URL: team_info['network_logo'] = "Networks/NBA_League.png"
                     elif "mlb" in URL: team_info['network_logo'] = "Networks/MLB_Network.png"
@@ -372,7 +375,7 @@ def team_currently_playing(window):
                         if network in value: size = file[1]  # Index 1 is how much to decrease logo size
 
                     if "home_logo" in key or "away_logo" in key:
-                        window[key].update(filename=value, zoom=3, subsample=2)
+                        window[key].update(filename=value)
                     elif "network_logo" in key:
                         window[key].update(filename=value, subsample=size)
                     else:
@@ -421,13 +424,13 @@ def team_currently_playing(window):
 sg.theme("black")
 
 home_record_layout =[
-    [sg.Image("sport_logos/team0_logos/DET.png", zoom=3, subsample=2, key='home_logo')],
-    [sg.Text("0-0",font=(FONT, 84), key='home_record')]
+    [sg.Image("sport_logos/team0_logos/DET.png", key='home_logo')],
+    [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='home_record')]
     ]
 
 away_record_layout =[
-    [sg.Image("sport_logos/team0_logos/PIT.png", zoom=3, subsample=2, key='away_logo'), sg.Push()],
-    [sg.Text("0-0",font=(FONT, 84), key='away_record')]
+    [sg.Image("sport_logos/team0_logos/PIT.png", key='away_logo'), sg.Push()],
+    [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='away_record')]
     ]
 
 score_layout =[[sg.Text(" ",font=(FONT, 50), key='blank_space', pad=(0,100))],
@@ -439,9 +442,9 @@ score_layout =[[sg.Text(" ",font=(FONT, 50), key='blank_space', pad=(0,100))],
 
 layout = [[
     sg.Push(),
-    sg.Column(away_record_layout, element_justification='center', pad=(75,20)),
+    sg.Column(away_record_layout, element_justification='center', pad=(45,30)),
     sg.Column(score_layout, element_justification='center'),
-    sg.Column(home_record_layout, element_justification='center', pad=(75,20)),
+    sg.Column(home_record_layout, element_justification='center', pad=(45,30)),
     sg.Push()
     ],
     [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=(FONT, 72), key='sport_specific_info'), sg.Push()],
@@ -521,7 +524,7 @@ while True:
                         if network in value: size = file[1]  # Index 1 is how much to decrease logo size
 
                     if "home_logo" in key or "away_logo" in key:
-                        window[key].update(filename=value, zoom=3, subsample=2)
+                        window[key].update(filename=value)
                     elif "network_logo" in key:
                         window[key].update(filename=value, subsample=size)
                     else:
