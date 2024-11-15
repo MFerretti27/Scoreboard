@@ -70,6 +70,11 @@ teams = [
     ["Detroit Pistons", "nba", "basketball"]
 ]
 
+
+FONT = "Calibri"
+SCORE_TXT_SIZE = 140
+INFO_TXT_SIZE = 96
+RECORD_TXT_SIZE = 96
 ############################
 #                          #
 #          Setup           #
@@ -89,6 +94,20 @@ away_possession = False
 home_redzone = False
 away_redzone = False
 
+network_logo_file_location = {
+    "ABC": ["Networks/ABC.png", 5],
+    "CBS": ["Networks/CBS.png", 1],
+    "ESPN": ["Networks/ESPN.png", 5],
+    "FOX": ["Networks/FOX.png", 2],
+    "MLB": ["Networks/MLB_Network.png", 3],
+    "NBC": ["Networks/NBC.png", 8],
+    "Prime": ["Networks/Prime.png", 10],
+    "TNT": ["Networks/TNT.png", 7],
+    # "NBA TV": ["Networks/NBA_TV.png", 5],
+    "NBA": ["Networks/NBA_League.png", 1],
+    "NFL": ["Networks/NFL_NET.png", 2],
+}
+
 for i in range(len(teams)):
     sport_league = teams[i][1]
     sport_name = teams[i][2]
@@ -103,6 +122,20 @@ for i in range(len(teams)):
 #   Grab all Logos (done once)   #
 #                                #
 ##################################
+def resize_image(image_path, sport_dir, abbreviation, scale_factor=1.5):
+    # Open an image file using Pillow
+    img = Image.open(image_path)
+    
+    # Calculate new size based on scale factor
+    width, height = img.size
+    new_width = int(width * scale_factor)
+    new_height = int(height * scale_factor)
+    
+    # Resize the image
+    img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    new_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
+    img_resized.save(new_path_png)
+
 # Create a base directory to store the logos if it doesn't exist
 if not os.path.exists('sport_logos'):
     os.makedirs('sport_logos')
@@ -134,7 +167,7 @@ if not os.path.exists('sport_logos'):
 
             print(f"Downloading logo for {abbreviation} from {teams[i][1]}...")
 
-            img_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
+            img_path_png = os.path.join(sport_dir, f"{abbreviation}_Original.png")
             response = requests.get(logo_url, stream=True)
             with open(img_path_png, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=1024):
@@ -142,7 +175,10 @@ if not os.path.exists('sport_logos'):
 
             # Open, resize, and save the image with PIL
             with Image.open(img_path_png) as the_img:
-                the_img.save(img_path_png)
+                resize_image(img_path_png, sport_dir, abbreviation)
+
+            # Delete the original .png file
+            os.remove(img_path_png)
 
     if os.path.exists('sport_logos'):
         print("All logos have been downloaded!")
@@ -164,9 +200,9 @@ def get_data(URL, team, sport):
     currently_playing = False
 
     # Reset font and color if changed from last run
-    window['home_score'].update(font=("Calibri", 104), text_color ='white')
-    window['away_score'].update(font=("Calibri", 104), text_color ='white')
-    window['sport_specific_info'].update(font=("Calibri", 72))
+    window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+    window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+    window['sport_specific_info'].update(font=(FONT, 72))
 
     # try:
     resp = requests.get(URL)
@@ -192,27 +228,19 @@ def get_data(URL, team, sport):
                                         [0]["competitors"][0]["records"][0]["summary"])
             team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
             venue = (response_as_json["events"][index]["competitions"][0]["venue"]["fullName"])
-            network = (response_as_json["events"][index]["competitions"][0]["broadcast"])
+            broadcast = (response_as_json["events"][index]["competitions"][0]["broadcast"])
             home_team_id = response_as_json["events"][index]["competitions"][0]["competitors"][0]["id"]
             away_team_id = response_as_json["events"][index]["competitions"][0]["competitors"][1]["id"]
 
-            try:
-                if "ABC" in network: team_info['network_logo'] = "Networks/ABC.png"
-                elif "CBS" in network: team_info['network_logo'] = "Networks/CBS.png"
-                elif "ESPN" in network: team_info['network_logo'] = "Networks/ESPN.png"
-                elif "FOX" in network: team_info['network_logo'] = "Networks/FOX.png"
-                elif "MLB" in network: team_info['network_logo'] = "Networks/MLB_Network.png"
-                elif "NBC" in network or "Peacock" in network: team_info['network_logo'] = "Networks/NBC.png"
-                elif "Prime" in network: team_info['network_logo'] = "Networks/Prime.png"
-                elif "TNT" in network: team_info['network_logo'] = "Networks/TNT.png"
-                elif "NBA TV" in network: team_info['network_logo'] = "Networks/NBA_TV.png"
-                elif "NBA League" in network: team_info['network_logo'] = "Networks/NBA_League.png"
-                elif "NFL" in network: team_info['network_logo'] = "Networks/NFL_NET.png"
-            except:
-                if "nfl" in URL: team_info['network_logo'] = "Networks/NFL_NET.png"
-                elif "nba" in URL: team_info['network_logo'] = "Networks/NBA_League.png"
-                elif "mlb" in URL: team_info['network_logo'] = "Networks/MLB_Network.png"
-                elif "nhl" in URL: team_info['network_logo'] = "Networks/NHL_Net.png"
+            for network, filepath in network_logo_file_location.items():
+                if network in broadcast: 
+                    team_info['network_logo'] = filepath[0] # Index 0 is filepath
+                    break
+                else:  # If it cant find logo use these as defaults
+                    if "nfl" in URL: team_info['network_logo'] = "Networks/NFL_NET.png"
+                    elif "nba" in URL: team_info['network_logo'] = "Networks/NBA_League.png"
+                    elif "mlb" in URL: team_info['network_logo'] = "Networks/MLB_Network.png"
+                    elif "nhl" in URL: team_info['network_logo'] = "Networks/NHL_Net.png"
 
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
@@ -275,10 +303,11 @@ def get_data(URL, team, sport):
 
                 team_info['sport_specific_info'] = \
                     "FG% " + home_field_goal_pct + "  3PT% " + home_3pt_pct + \
-                    "\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
+                    "\t\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
 
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
+                 # outs = (response_as_json["events"][index]["competitions"][0]["outsText"])
                 if 'Bot' in str(team_info.get("info")): # Replace Bot with Bottom for baseball innings
                     team_info["info"].replace('bot', 'Bottom')
             break
@@ -311,7 +340,7 @@ def get_data(URL, team, sport):
 ##########################################
 def team_currently_playing(window):
     '''Display only games that are playing'''
-    global teams, display_clock, fetch_clock
+    global teams, display_clock, fetch_clock, network_logo_file_location
 
     teams_currently_playing = []
     first_time = True
@@ -342,24 +371,29 @@ def team_currently_playing(window):
                     
                 for key, value in team_info[display_index].items():
 
-                    if "logo" in key:
+                    for network, file in network_logo_file_location.items():
+                        if network in value: size = file[1]  # Index 1 is how much to decrease logo size
+
+                    if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
+                    elif "network_logo" in key:
+                        window[key].update(filename=value, subsample=size)
                     else:
                         window[key].update(value=value, text_color ='white')
     
                     # Football Specific
                     if "nfl" in SPORT_URLS[display_index]:
                         if home_possession and key == 'home_score':
-                            window['home_score'].update(value=value, font=("Calibri", 104, "underline"))
+                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         elif away_possession and key == 'away_score':
-                            window['away_score'].update(value=value, font=("Calibri", 104, "underline"))
+                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         if home_redzone and key == 'home_score':
-                            window['home_score'].update(value=value, font=("Calibri", 104, "underline"), text_color ='red')
+                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
                         elif away_redzone and key == 'away_score':
-                            window['away_score'].update(value=value, font=("Calibri", 104, "underline"), text_color ='red')
+                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
 
                     if "nba" in SPORT_URLS[display_index] and key == 'sport_specific_info':
-                        window['sport_specific_info'].update(value=value, font=("Calibri", 46))
+                        window['sport_specific_info'].update(value=value, font=(FONT, 56))
 
                 window.read(timeout=1000)
 
@@ -391,38 +425,37 @@ sg.theme("black")
 
 home_record_layout =[
     [sg.Image("sport_logos/team0_logos/DET.png", key='home_logo')],
-    [sg.Text("0-0",font=("Calibri", 84), key='home_record')]
+    [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='home_record')]
     ]
 
 away_record_layout =[
     [sg.Image("sport_logos/team0_logos/PIT.png", key='away_logo'), sg.Push()],
-    [sg.Text("0-0",font=("Calibri", 84), key='away_record')]
+    [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='away_record')]
     ]
 
-score_layout =[[sg.Text(" ",font=("Calibri", 50), key='blank_space')],
-    [sg.Text("24",font=("Calibri", 120), key='away_score'),
-     sg.Text("-",font=("Calibri", 84), key='hyphen'),
-     sg.Text("24",font=("Calibri", 120), key='home_score')],
-     [sg.Image("Networks/ESPN.png", subsample = 5, key='network_logo', pad=(0,50))]
+score_layout =[[sg.Text(" ",font=(FONT, 50), key='blank_space', pad=(0,100))],
+    [sg.Text("24",font=(FONT, SCORE_TXT_SIZE), key='away_score'),
+     sg.Text("-",font=(FONT, 84), key='hyphen'),
+     sg.Text("24",font=(FONT, SCORE_TXT_SIZE), key='home_score')],
+     [sg.Image("Networks/ESPN.png", subsample=5, key='network_logo', pad=(0,100))]
     ]
-
-info_layout = [[sg.Text("Created by: Matthew Ferretti",font=("Calibri", 72), key='info')],]
 
 layout = [[
     sg.Push(),
-    sg.Column(away_record_layout, element_justification='center', pad=(75,60)),
+    sg.Column(away_record_layout, element_justification='center', pad=(45,30)),
     sg.Column(score_layout, element_justification='center'),
-    sg.Column(home_record_layout, element_justification='center', pad=(75,60)),
+    sg.Column(home_record_layout, element_justification='center', pad=(45,30)),
     sg.Push()
     ],
-    [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=("Calibri", 72), key='sport_specific_info'), sg.Push()],
-    [sg.VPush()],[sg.Push(), sg.Text("Matthew Ferretti",font=("Calibri", 72), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
-    [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=("Calibri", 10), key='personal')]
+    [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=(FONT, 72), key='sport_specific_info'), sg.Push()],
+    [sg.VPush()],[sg.Push(), sg.Text("Matthew Ferretti",font=(FONT, INFO_TXT_SIZE), auto_size_text= True, size=(None,None), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
+    [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=(FONT, 10), key='personal')]
     ]
 
 # Create the window
-window = sg.Window("Scoreboard", layout, no_titlebar=True).Finalize()
+window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True).Finalize()
 window.Maximize()
+window.TKroot.config(cursor="none")
 
 
 ##################################
@@ -483,23 +516,16 @@ while True:
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
-                window['sport_specific_info'].update(font=("Calibri", 42))
+                window['sport_specific_info'].update(font=(FONT, 42))
 
                 for key, value in team_info[display_index].items():
-                    if "ABC" in value or "espn" in value: size=5
-                    elif "CBS" in value: size=1
-                    elif "FOX" in value: size=2
-                    elif "MLB" in value: size=3
-                    elif "NBC" in value: size=8
-                    elif "Prime" in value: size=10
-                    elif "TNT" in value: size=7
-                    elif "NBA_TV" in value: size=7
-                    elif "NBA_League" in value: size=7
-                    elif "NFL" in value: size=7
-                    elif "NHL" in value: size=7
-                    else: size=1
 
-                    if "logo" in key:
+                    for network, file in network_logo_file_location.items():
+                        if network in value: size = file[1]  # Index 1 is how much to decrease logo size
+
+                    if "home_logo" in key or "away_logo" in key:
+                        window[key].update(filename=value)
+                    elif "network_logo" in key:
                         window[key].update(filename=value, subsample=size)
                     else:
                         window[key].update(value=value, text_color ='white')
@@ -528,22 +554,22 @@ while True:
             if current_time.hour > 12:
                 hour = current_time.hour - 12
             date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
-            window["hyphen"].update(value=':', font=("Calibri", 104))
-            window["home_score"].update(value=current_time.minute, font=("Calibri", 204))
-            window["away_score"].update(value=hour, font=("Calibri", 204))
+            window["hyphen"].update(value=':', font=(FONT, SCORE_TXT_SIZE))
+            window["home_score"].update(value=current_time.minute, font=(FONT, 204))
+            window["away_score"].update(value=hour, font=(FONT, 204))
             window["home_record"].update(value='')
             window["away_record"].update(value='')
             window["away_logo"].update(filename='')
             window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
-            window["info"].update(value=date,font=("Calibri", 104))
+            window["info"].update(value=date,font=(FONT, SCORE_TXT_SIZE))
             window["sport_specific_info"].update(value=' ')
             window.read(timeout=5000)
 
         elif clock_displayed: # Reset Font if theres data to display
-            window["hyphen"].update(value='-',font=("Calibri", 72))
-            window["home_score"].update(font=("Calibri", 104))
-            window["away_score"].update(font=("Calibri", 104))
-            window["info"].update(font=("Calibri", 72))
+            window["hyphen"].update(value='-',font=(FONT, 72))
+            window["home_score"].update(font=(FONT, SCORE_TXT_SIZE))
+            window["away_score"].update(font=(FONT, SCORE_TXT_SIZE))
+            window["info"].update(font=(FONT, INFO_TXT_SIZE))
 
         if event == sg.WIN_CLOSED: # Quit if any key pressed
             window.close()
