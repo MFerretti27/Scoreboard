@@ -204,7 +204,6 @@ def get_data(URL, team, sport):
     window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
     window['sport_specific_info'].update(font=(FONT, 72))
 
-    # try:
     resp = requests.get(URL)
     response_as_json = resp.json()
     print(f"Looking for:  {team[0]}")
@@ -289,8 +288,7 @@ def get_data(URL, team, sport):
 
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
-                nba_data = e['competitions']
-                home_avg_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
+                home_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
                                         [0]["statistics"][1]["displayValue"]))
                 home_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
                                         [0]["statistics"][5]["displayValue"]))
@@ -395,7 +393,7 @@ def team_currently_playing(window):
                     if "nba" in SPORT_URLS[display_index] and key == 'sport_specific_info':
                         window['sport_specific_info'].update(value=value, font=(FONT, 56))
 
-                window.read(timeout=1000)
+                window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
