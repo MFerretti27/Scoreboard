@@ -71,15 +71,16 @@ teams = [
 ]
 
 
-FONT = "Calibri"
-SCORE_TXT_SIZE = 140
-INFO_TXT_SIZE = 96
-RECORD_TXT_SIZE = 96
 ############################
 #                          #
 #          Setup           #
 #                          #
 ############################
+FONT = "Calibri"
+SCORE_TXT_SIZE = 140
+INFO_TXT_SIZE = 96
+RECORD_TXT_SIZE = 96
+
 SPORT_URLS = []
 team_has_data = False
 currently_playing = False
@@ -87,12 +88,6 @@ display_clock = ticks_ms() # Start Timer for Switching Display
 display_timer = 25 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
-
-# NFL Specific global variables 
-home_possession = False
-away_possession = False
-home_redzone = False
-away_redzone = False
 
 network_logo_file_location = {
     "ABC": ["Networks/ABC.png", 5],
@@ -191,7 +186,7 @@ if not os.path.exists('sport_logos'):
 ##################################
 def get_data(URL, team, sport):
     '''The actual API and display function'''
-    global team_has_data, currently_playing, window, home_possession, away_possession, home_redzone, away_redzone
+    global team_has_data, currently_playing, window
     team_has_data = False
     index = 0
     names = []
@@ -266,21 +261,19 @@ def get_data(URL, team, sport):
                 if down is not None and spot is not None:
                     team_info['sport_specific_info'] = str(down) + " on " + str(spot)
 
+                team_info['home_possession'] = False
+                team_info['away_possession'] = False
+                team_info['home_redzone'] = False
+                team_info['away_redzone'] = False
                 # Find who has possession and update display to represent possession
                 if possession is not None and possession == home_team_id: # Home Team
-                    home_possession = True
-                    away_possession = False
+                    team_info['home_possession'] = True
                     if red_zone:
-                        home_redzone = True
-                    else:
-                        home_redzone = False
+                        team_info['home_redzone'] = True
                 elif possession is not None and possession == away_team_id:
-                    home_possession = False
-                    away_possession = True
-                    if red_zone:
-                        away_redzone = True
-                    else:
-                        away_redzone = False
+                    team_info['away_possession'] =  True
+                    if red_zone: 
+                        team_info['away_redzone'] = True
 
                 temp = str(team_info["info"])
                 team_info["info"] = str(team_info['sport_specific_info'])
@@ -350,7 +343,7 @@ def team_currently_playing(window):
 
     while True in teams_currently_playing or first_time:
         first_time = False
-        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
+        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             teams_with_data.clear()
             team_info.clear()
             teams_currently_playing.clear()
@@ -369,25 +362,26 @@ def team_currently_playing(window):
                     
                 for key, value in team_info[display_index].items():
 
-                    for network, file in network_logo_file_location.items():
-                        if network in value: size = file[1]  # Index 1 is how much to decrease logo size
+                    if "network_logo" in key:
+                        for network, file in network_logo_file_location.items():
+                            if network in value: size = file[1]  # Index 1 is how much to decrease logo size
 
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
                         window[key].update(filename=value, subsample=size)
-                    else:
+                    elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color ='white')
     
                     # Football Specific
                     if "nfl" in SPORT_URLS[display_index]:
-                        if home_possession and key == 'home_score':
+                        if team_info[display_index]['home_possession'] and key == 'home_score':
                             window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
-                        elif away_possession and key == 'away_score':
+                        elif team_info[display_index]['away_possession'] and key == 'away_score':
                             window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
-                        if home_redzone and key == 'home_score':
+                        if team_info[display_index]['home_redzone'] and key == 'home_score':
                             window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
-                        elif away_redzone and key == 'away_score':
+                        elif team_info[display_index]['away_redzone'] and key == 'away_score':
                             window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
 
                     if "nba" in SPORT_URLS[display_index] and key == 'sport_specific_info':
@@ -410,8 +404,9 @@ def team_currently_playing(window):
             
             display_index = (display_index + 1) % len(teams)
     
+    print("No Team Playing")
     fetch_timer = 180 * 1000 #  Put back to fetching every 3 minutes if no team playing
-    return
+    return team_info
 
 
 ##################################
@@ -506,7 +501,7 @@ while True:
                 team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
                 teams_with_data.append(team_has_data)
                 if currently_playing:
-                    team_currently_playing(window)
+                    x = team_currently_playing(window)
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
@@ -518,14 +513,15 @@ while True:
 
                 for key, value in team_info[display_index].items():
 
-                    for network, file in network_logo_file_location.items():
-                        if network in value: size = file[1]  # Index 1 is how much to decrease logo size
+                    if "network_logo" in key:
+                        for network, file in network_logo_file_location.items():
+                            if network in value: size = file[1]  # Index 1 is how much to decrease logo size
 
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
                         window[key].update(filename=value, subsample=size)
-                    else:
+                    elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color ='white')
 
                 event, values = window.read(timeout=5000)
