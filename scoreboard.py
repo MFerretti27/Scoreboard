@@ -80,6 +80,7 @@ FONT = "Calibri"
 SCORE_TXT_SIZE = 140
 INFO_TXT_SIZE = 96
 RECORD_TXT_SIZE = 96
+TEAM_LOGO_SIZE = 1.5
 
 SPORT_URLS = []
 team_has_data = False
@@ -117,7 +118,7 @@ for i in range(len(teams)):
 #   Grab all Logos (done once)   #
 #                                #
 ##################################
-def resize_image(image_path, sport_dir, abbreviation, scale_factor=1.5):
+def resize_image(image_path, sport_dir, abbreviation, scale_factor):
     # Open an image file using Pillow
     img = Image.open(image_path)
     
@@ -170,7 +171,7 @@ if not os.path.exists('sport_logos'):
 
             # Open, resize, and save the image with PIL
             with Image.open(img_path_png) as the_img:
-                resize_image(img_path_png, sport_dir, abbreviation)
+                resize_image(img_path_png, sport_dir, abbreviation, TEAM_LOGO_SIZE)
 
             # Delete the original .png file
             os.remove(img_path_png)
@@ -240,16 +241,20 @@ def get_data(URL, team, sport):
             if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
                 currently_playing = True
 
+            # Check if Team is Done Playing
             if "Delayed" in str(team_info['info']) or "Postponed" in str(team_info['info']) or "Final" in str(team_info['info']):
                  currently_playing = False
                  team_info['info'] = str(team_info['info']).upper()
 
-            # if not currently playing and game hasn't been played yet
+            # Check if Game hasn't been played yet
             elif not currently_playing:
                 team_info['info'] = str(team_info['info'] + "@ " + venue)
                 overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
                 spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
-                team_info['sport_specific_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+                if "nhl" in URL:
+                    team_info['sport_specific_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                else:
+                    team_info['sport_specific_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
@@ -265,8 +270,8 @@ def get_data(URL, team, sport):
                 team_info['away_possession'] = False
                 team_info['home_redzone'] = False
                 team_info['away_redzone'] = False
-                # Find who has possession and update display to represent possession
-                if possession is not None and possession == home_team_id: # Home Team
+                # Find who has possession and pass information to represent possession
+                if possession is not None and possession == home_team_id:
                     team_info['home_possession'] = True
                     if red_zone:
                         team_info['home_redzone'] = True
@@ -281,14 +286,11 @@ def get_data(URL, team, sport):
 
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
-                home_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
-                                        [0]["statistics"][1]["displayValue"]))
                 home_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
                                         [0]["statistics"][5]["displayValue"]))
                 home_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
                                         [0]["statistics"][15]["displayValue"]))
 
-                away_rebound_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][1]["displayValue"]))
                 away_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][5]["displayValue"]))
                 away_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][15]["displayValue"]))
 
@@ -501,7 +503,8 @@ while True:
                 team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
                 teams_with_data.append(team_has_data)
                 if currently_playing:
-                    x = team_currently_playing(window)
+                    returned_data = team_currently_playing(window)
+                    team_info = returned_data
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
