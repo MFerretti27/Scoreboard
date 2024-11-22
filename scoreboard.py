@@ -81,6 +81,8 @@ SCORE_TXT_SIZE = 140
 INFO_TXT_SIZE = 96
 RECORD_TXT_SIZE = 96
 TEAM_LOGO_SIZE = 1.5
+CLOCK_TXT_SIZE = 204
+HYPHEN_SIZE = 84
 
 SPORT_URLS = []
 team_has_data = False
@@ -303,23 +305,22 @@ def get_data(URL, team, sport):
                  # outs = (response_as_json["events"][index]["competitions"][0]["outsText"])
                 if 'Bot' in str(team_info.get("info")): # Replace Bot with Bottom for baseball innings
                     team_info["info"].replace('bot', 'Bottom')
+
+            # Remove Timezone Characters in info
+            if 'EDT' in team_info.get("info"): team_info["info"] = team_info["info"].replace('EDT', '')
+            elif 'EST' in team_info["info"]: team_info["info"] = team_info["info"].replace('EST', '')
+
+            # Get Logos Location for Teams
+            if team[1] is names[0]: # Your team has a Home Game, and will be on right side
+                team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
+                team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
+            else:
+                team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
+                team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
+
             break
         else:
             index += 1
-
-    if team_has_data:
-        # Remove Timezone Characters in info
-        if 'EDT' in team_info.get("info"): team_info["info"] = team_info["info"].replace('EDT', '')
-        elif 'EST' in team_info["info"]: team_info["info"] = team_info["info"].replace('EST', '')
-
-        if team[1] is names[0]: # Your team has a Home Game
-            team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
-            team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
-        else:
-            team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[1] + ".png")
-            team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + names[0] + ".png")
-    else:
-        currently_playing = False
 
     resp.close()
     gc.collect()
@@ -430,16 +431,16 @@ away_record_layout =[
 
 score_layout =[[sg.Text(" ",font=(FONT, 50), key='blank_space', pad=(0,100))],
     [sg.Text("24",font=(FONT, SCORE_TXT_SIZE), key='away_score'),
-     sg.Text("-",font=(FONT, 84), key='hyphen'),
+     sg.Text("-",font=(FONT, HYPHEN_SIZE), key='hyphen'),
      sg.Text("24",font=(FONT, SCORE_TXT_SIZE), key='home_score')],
      [sg.Image("Networks/ESPN.png", subsample=5, key='network_logo', pad=(0,100))]
     ]
 
 layout = [[
     sg.Push(),
-    sg.Column(away_record_layout, element_justification='center', pad=(45,30)),
-    sg.Column(score_layout, element_justification='center'),
-    sg.Column(home_record_layout, element_justification='center', pad=(45,30)),
+    sg.Column(away_record_layout, element_justification='center', pad=(45,30), size=(800,1000)),
+    sg.Frame("",score_layout, element_justification='center', border_width=0, size=(800,1000)),
+    sg.Column(home_record_layout, element_justification='center', pad=(45,30), size=(800,1000)),
     sg.Push()
     ],
     [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=(FONT, 72), key='sport_specific_info'), sg.Push()],
@@ -544,32 +545,36 @@ while True:
                     elif teams_with_data[(original_index + x) % len(teams)] == True and x != 0:
                         print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                         break
+                    
+                display_clock = ticks_add(display_clock, display_timer)
             else:
                 print(f"{teams[display_index][0]} has no Data and wont Display")
 
             display_index = (display_index + 1) % len(teams)
-            display_clock = ticks_add(display_clock, display_timer)
 
         # If there is no data for any team display clock
         if True not in teams_with_data:
             clock_displayed = True
             current_time = datetime.datetime.now()
-            if current_time.hour > 12:
-                hour = current_time.hour - 12
+            if current_time.hour > 12: hour = current_time.hour - 12
+            else: hour = current_time.hour
+            if current_time.minute < 10: minute = "0" + str(current_time.minute)
+            else: minute = current_time.minute
             date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
             window["hyphen"].update(value=':', font=(FONT, SCORE_TXT_SIZE))
-            window["home_score"].update(value=current_time.minute, font=(FONT, 204))
-            window["away_score"].update(value=hour, font=(FONT, 204))
+            window["home_score"].update(value=minute, font=(FONT, CLOCK_TXT_SIZE))
+            window["away_score"].update(value=hour, font=(FONT, CLOCK_TXT_SIZE))
             window["home_record"].update(value='')
             window["away_record"].update(value='')
-            window["away_logo"].update(filename='')
+            window["away_logo"].update(filename="sport_logos/team0_logos/DET.png")
+            window["network_logo"].update(filename='')
             window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
             window["info"].update(value=date,font=(FONT, SCORE_TXT_SIZE))
             window["sport_specific_info"].update(value=' ')
             window.read(timeout=5000)
 
         elif clock_displayed: # Reset Font if theres data to display
-            window["hyphen"].update(value='-',font=(FONT, 72))
+            window["hyphen"].update(value='-',font=(FONT, HYPHEN_SIZE))
             window["home_score"].update(font=(FONT, SCORE_TXT_SIZE))
             window["away_score"].update(font=(FONT, SCORE_TXT_SIZE))
             window["info"].update(font=(FONT, INFO_TXT_SIZE))
@@ -583,4 +588,5 @@ while True:
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
             time.sleep(20)  # Check every 20 seconds
+        time.sleep(2)
         print("Internet connection is active")
