@@ -513,8 +513,12 @@ while True:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
                 window['sport_specific_info'].update(font=(FONT, 42))
-                if len(team_info['sport_specific_info']) > 37:
-                    window['sport_specific_info'].update(font=(FONT, 36))
+
+                # Change Size of game info if length is too long
+                if len(team_info[display_index]['info']) > 38:
+                    window['info'].update(font=(FONT, 86))
+                else:
+                    window['info'].update(font=(FONT, INFO_TXT_SIZE))
 
                 for key, value in team_info[display_index].items():
 
