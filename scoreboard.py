@@ -26,7 +26,7 @@ from internet_connection import get_network_interface, get_router_ip, is_connect
 from grab_team_logos import grab_team_logos
 from gui_setup import setup_gui
 from get_data import get_data
-from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT
+from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
 
 SPORT_URLS = []
 team_has_data = False
@@ -96,6 +96,7 @@ def team_currently_playing(window):
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
+                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
                 for key, value in team_info[display_index].items():
 
@@ -183,6 +184,7 @@ while True:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
                 window['sport_specific_info'].update(font=(FONT, 42))
+                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
                 # Change Size of game info if length is too long
                 if len(team_info[display_index]['info']) > 38:

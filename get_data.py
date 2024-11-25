@@ -67,6 +67,8 @@ def get_data(URL, team, sport, network_logos):
                 red_zone = nfl_data.get('situation', {}).get('isRedZone')
                 spot =  nfl_data.get('situation', {}).get('possessionText')
                 possession =  nfl_data.get('situation', {}).get('possession')
+                away_timeouts =  nfl_data.get('situation', {}).get('awayTimeouts')
+                home_timeouts =  nfl_data.get('situation', {}).get('homeTimeouts')
                 if down is not None and spot is not None:
                     team_info['sport_specific_info'] = str(down) + " on " + str(spot)
 
@@ -83,6 +85,22 @@ def get_data(URL, team, sport, network_logos):
                     team_info['away_possession'] =  True
                     if red_zone: 
                         team_info['away_redzone'] = True
+
+                timeouts = ''
+                if home_timeouts is not None and away_timeouts is not None:
+                    if away_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
+                    elif away_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF   ")
+                    elif away_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
+                    elif away_timeouts == 0: timeouts = timeouts + ("\t")
+
+                    timeouts = timeouts + ("\t\t")
+
+                    if home_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
+                    elif home_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF  ")
+                    elif home_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
+                    elif home_timeouts == 0: timeouts = timeouts + ("\t")
+
+                team_info['timeouts'] = timeouts
 
                 temp = str(team_info["info"])
                 team_info["info"] = str(team_info['sport_specific_info'])
