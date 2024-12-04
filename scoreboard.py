@@ -85,8 +85,9 @@ def team_currently_playing(window):
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                team_info.append(get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index))
-                teams_with_data.append(team_has_data)
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+                team_info.append(info)
+                teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
