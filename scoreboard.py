@@ -22,7 +22,7 @@ else:
 
 import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
-from internet_connection import get_network_interface, get_router_ip, is_connected, reconnect
+from internet_connection import get_network_interface, is_connected, reconnect
 from grab_team_logos import grab_team_logos
 from gui_setup import setup_gui
 from get_data import get_data
@@ -56,7 +56,6 @@ for i in range(len(teams)):
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
 
-router_ip = get_router_ip()
 network_interface = get_network_interface()
 grab_team_logos(teams, TEAM_LOGO_SIZE)
 window = setup_gui()
@@ -227,7 +226,7 @@ while True:
             window.close()
 
     except:
-        while not is_connected(router_ip):
+        while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
             time.sleep(20)  # Check every 20 seconds
