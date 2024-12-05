@@ -27,6 +27,7 @@ from grab_team_logos import grab_team_logos
 from gui_setup import setup_gui
 from get_data import get_data
 from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
+from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING
 
 SPORT_URLS = []
 team_has_data = False
@@ -122,8 +123,8 @@ def team_currently_playing(window):
                         elif team_info[display_index]['away_redzone'] and key == 'away_score':
                             window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
 
-                    if "nba" in SPORT_URLS[display_index] and key == 'sport_specific_info':
-                        window['sport_specific_info'].update(value=value, font=(FONT, 56))
+                    if "nba" in SPORT_URLS[display_index] and key == 'top_info':
+                        window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
                 window.read(timeout=5000)
 
@@ -183,14 +184,14 @@ while True:
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
-                window['sport_specific_info'].update(font=(FONT, 42))
+                window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
                 # Change Size of game info if length is too long
-                if len(team_info[display_index]['info']) > 38:
-                    window['info'].update(font=(FONT, 86))
+                if len(team_info[display_index]['bottom_info']) > CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING:
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
                 else:
-                    window['info'].update(font=(FONT, INFO_TXT_SIZE))
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
                 for key, value in team_info[display_index].items():
 

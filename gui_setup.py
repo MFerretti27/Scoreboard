@@ -1,6 +1,6 @@
 import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from hardware_setup import INFO_TXT_SIZE, SCORE_TXT_SIZE, RECORD_TXT_SIZE, HYPHEN_SIZE, FONT, TIMEOUT_SIZE
-
+from hardware_setup import COLUMN_WIDTH, COLUMN_HIGHT, NOT_PLAYING_TOP_INFO_SIZE
 
 def setup_gui():
     sg.theme("black")
@@ -25,13 +25,13 @@ def setup_gui():
 
     layout = [[
         sg.Push(),
-        sg.Column(away_record_layout, element_justification='center', pad=(45,30), size=(800,1000)),
-        sg.Frame("",score_layout, element_justification='center', border_width=0, size=(800,1000)),
-        sg.Column(home_record_layout, element_justification='center', pad=(45,30), size=(800,1000)),
+        sg.Column(away_record_layout, element_justification='center', size=(COLUMN_WIDTH,COLUMN_HIGHT)),
+        sg.Frame("",score_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH,COLUMN_HIGHT)),
+        sg.Column(home_record_layout, element_justification='center', size=(COLUMN_WIDTH,COLUMN_HIGHT)),
         sg.Push()
         ],
-        [sg.VPush()],[sg.Push(), sg.Text("Created by:",font=(FONT, 72), key='sport_specific_info'), sg.Push()],
-        [sg.VPush()],[sg.Push(), sg.Text("Matthew Ferretti",font=(FONT, INFO_TXT_SIZE), auto_size_text= True, size=(None,None), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
+        [sg.VPush()],[sg.Push(), sg.Text("Top Info",font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()],
+        [sg.VPush()],[sg.Push(), sg.Text("Bottom Info",font=(FONT, INFO_TXT_SIZE), auto_size_text= True, size=(None,None), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
         [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=(FONT, 10), key='personal')]
         ]
 
