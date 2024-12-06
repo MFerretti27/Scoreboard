@@ -7,12 +7,12 @@ def setup_gui():
 
     home_record_layout =[
         [sg.Image("sport_logos/team0_logos/DET.png", key='home_logo')],
-        [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='home_record')]
+        [sg.Text("HOME",font=(FONT, RECORD_TXT_SIZE), key='home_record')]
         ]
 
     away_record_layout =[
         [sg.Image("sport_logos/team0_logos/PIT.png", key='away_logo'), sg.Push()],
-        [sg.Text("0-0",font=(FONT, RECORD_TXT_SIZE), key='away_record')]
+        [sg.Text("AWAY",font=(FONT, RECORD_TXT_SIZE), key='away_record')]
         ]
 
     score_layout =[[sg.Text(" ",font=(FONT, 50), key='blank_space', pad=(0,100))],

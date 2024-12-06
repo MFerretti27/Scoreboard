@@ -24,7 +24,7 @@ def get_data(URL, team, sport, network_logos):
             team_info['away_score'] = (competition["competitors"][1]["score"])
             team_info['away_record'] = (competition["competitors"][1]["records"][0]["summary"])
             team_info['home_record'] = (competition["competitors"][0]["records"][0]["summary"])
-            team_info['info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
+            team_info['bottom_info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
 
             # Data only used in this function
             home_name =(competition["competitors"][0]["team"]["abbreviation"])
@@ -42,17 +42,17 @@ def get_data(URL, team, sport, network_logos):
                     if team[1] in filepath[0]: team_info['network_logo'] = filepath[0]
 
             # Check if Team is Currently Playing
-            if "PM" not in str(team_info['info']) and "AM" not in str(team_info['info']):
+            if "PM" not in str(team_info['bottom_info']) and "AM" not in str(team_info['bottom_info']):
                 currently_playing = True
 
             # Check if Team is Done Playing
-            if "Delayed" in str(team_info['info']) or "Postponed" in str(team_info['info']) or "Final" in str(team_info['info']):
+            if "Delayed" in str(team_info['bottom_info']) or "Postponed" in str(team_info['bottom_info']) or "Final" in str(team_info['bottom_info']):
                  currently_playing = False
-                 team_info['info'] = str(team_info['info']).upper()
+                 team_info['bottom_info'] = str(team_info['bottom_info']).upper()
 
             # Check if Game hasn't been played yet
             elif not currently_playing:
-                team_info['info'] = str(team_info['info'] + "@ " + venue)
+                team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
                 overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
                 spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
                 if "nhl" in URL:
