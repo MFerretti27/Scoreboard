@@ -6,7 +6,7 @@ def get_data(URL, team, sport, network_logos):
     team_has_data = False
     index = 0
     team_info = {}
-    team_info['sport_specific_info'] = ''
+    team_info['top_info'] = ''
     currently_playing = False
 
     resp = requests.get(URL)
@@ -56,9 +56,9 @@ def get_data(URL, team, sport, network_logos):
                 overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
                 spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
                 if "nhl" in URL:
-                    team_info['sport_specific_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                    team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
                 else:
-                    team_info['sport_specific_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+                    team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # If looking at NFL team get this data (only if currently playing)
             if "nfl" in URL and currently_playing:
@@ -70,7 +70,7 @@ def get_data(URL, team, sport, network_logos):
                 away_timeouts =  nfl_data.get('situation', {}).get('awayTimeouts')
                 home_timeouts =  nfl_data.get('situation', {}).get('homeTimeouts')
                 if down is not None and spot is not None:
-                    team_info['sport_specific_info'] = str(down) + " on " + str(spot)
+                    team_info['top_info'] = str(down) + " on " + str(spot)
 
                 team_info['home_possession'] = False
                 team_info['away_possession'] = False
@@ -103,8 +103,8 @@ def get_data(URL, team, sport, network_logos):
                 team_info['timeouts'] = timeouts
 
                 temp = str(team_info['bottom_info'])
-                team_info['bottom_info'] = str(team_info['sport_specific_info'])
-                team_info['sport_specific_info'] = temp
+                team_info['bottom_info'] = str(team_info['top_info'])
+                team_info['top_info'] = temp
 
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
@@ -116,7 +116,7 @@ def get_data(URL, team, sport, network_logos):
                 away_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][5]["displayValue"]))
                 away_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][15]["displayValue"]))
 
-                team_info['sport_specific_info'] = \
+                team_info['top_info'] = \
                     "FG% " + home_field_goal_pct + "  3PT% " + home_3pt_pct + \
                     "\t\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
 
