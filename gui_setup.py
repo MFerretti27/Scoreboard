@@ -31,7 +31,7 @@ def setup_gui():
         sg.Push()
         ],
         [sg.VPush()],[sg.Push(), sg.Text("Top Info",font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()],
-        [sg.VPush()],[sg.Push(), sg.Text("Bottom Info",font=(FONT, INFO_TXT_SIZE), auto_size_text= True, size=(None,None), key='info'), sg.Push()],[sg.VPush()],[sg.Push()],
+        [sg.VPush()],[sg.Push(), sg.Text("Bottom Info",font=(FONT, INFO_TXT_SIZE), auto_size_text= True, size=(None,None), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()],
         [sg.Push(), sg.Text("Created by: Matthew Ferretti",font=(FONT, 10), key='personal')]
         ]
 
