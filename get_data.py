@@ -102,8 +102,8 @@ def get_data(URL, team, sport, network_logos):
 
                 team_info['timeouts'] = timeouts
 
-                temp = str(team_info["info"])
-                team_info["info"] = str(team_info['sport_specific_info'])
+                temp = str(team_info['bottom_info'])
+                team_info['bottom_info'] = str(team_info['sport_specific_info'])
                 team_info['sport_specific_info'] = temp
 
             # If looking at NBA team get this data (only if currently playing)
@@ -123,12 +123,12 @@ def get_data(URL, team, sport, network_logos):
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
                  # outs = (response_as_json["events"][index]["competitions"][0]["outsText"])
-                if 'Bot' in str(team_info.get("info")): # Replace Bot with Bottom for baseball innings
-                    team_info["info"].replace('bot', 'Bottom')
+                if 'Bot' in str(team_info.get('bottom_info')): # Replace Bot with Bottom for baseball innings
+                    team_info['bottom_info'].replace('bot', 'Bottom')
 
             # Remove Timezone Characters in info
-            if 'EDT' in team_info.get("info"): team_info["info"] = team_info["info"].replace('EDT', '')
-            elif 'EST' in team_info["info"]: team_info["info"] = team_info["info"].replace('EST', '')
+            if 'EDT' in team_info.get('bottom_info'): team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '')
+            elif 'EST' in team_info['bottom_info']: team_info['bottom_info'] = team_info['bottom_info'].replace('EST', '')
 
             # Get Logos Location for Teams
             team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + away_name + ".png")
