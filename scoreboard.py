@@ -97,7 +97,11 @@ def team_currently_playing(window):
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
+
+                # Reset text color, underline and timeouts, for new display
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+                window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+                window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
 
                 for key, value in team_info[display_index].items():
 
@@ -143,7 +147,10 @@ def team_currently_playing(window):
             
             display_index = (display_index + 1) % len(teams)
     
-    print("No Team Playing")
+    # Reset font and color to ensure everything is back to normal
+    window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+    window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+    print("\nNo Team Currently Playing\n")
     fetch_timer = 180 * 1000 #  Put back to fetching every 3 minutes if no team playing
     return team_info
 
