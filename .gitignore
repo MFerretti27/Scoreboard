@@ -5,3 +5,5 @@
 sport_logos/
 
 venv/
+
+__pycache__/*
