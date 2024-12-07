@@ -26,7 +26,7 @@ from internet_connection import get_network_interface, is_connected, reconnect
 from grab_team_logos import grab_team_logos
 from gui_setup import setup_gui
 from get_data import get_data
-from clock import display_clock
+from clock import clock
 from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
 from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING
 
@@ -236,7 +236,9 @@ while True:
             window.close()
 
         if True not in teams_with_data:
-            display_clock(window, teams_with_data, SPORT_URLS)
+            message = "No Data For Any Teams"
+            print("\nNo Teams with Displaying Clock\n")
+            clock(window, teams_with_data, SPORT_URLS, network_logos, message)
 
     except:
         time_till_clock = 0
@@ -246,7 +248,9 @@ while True:
             time.sleep(20)  # Check every 20 seconds
             time_till_clock = time_till_clock + 1
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
-                display_clock(window, teams_with_data, SPORT_URLS)
+                message = "No Internet Connection"
+                print("\nNo Internet connection Displaying Clock\n")
+                display_clock(window, teams_with_data, SPORT_URLS, network_logos, message)
 
         time.sleep(2)
         print("Internet connection is active")
