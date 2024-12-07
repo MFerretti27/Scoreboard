@@ -26,6 +26,7 @@ from internet_connection import get_network_interface, is_connected, reconnect
 from grab_team_logos import grab_team_logos
 from gui_setup import setup_gui
 from get_data import get_data
+from clock import display_clock
 from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
 from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING
 
@@ -234,10 +235,18 @@ while True:
         if event == sg.WIN_CLOSED: # TODO: Quit if any key pressed
             window.close()
 
+        if True not in teams_with_data:
+            display_clock(window, teams_with_data, SPORT_URLS)
+
     except:
+        time_till_clock = 0
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
             time.sleep(20)  # Check every 20 seconds
+            time_till_clock = time_till_clock + 1
+            if time_till_clock >= 12: # If no connection within 4 minutes display clock
+                display_clock(window, teams_with_data, SPORT_URLS)
+
         time.sleep(2)
         print("Internet connection is active")

@@ -1,4 +1,3 @@
-adafruit-circuitpython-requests
 adafruit-circuitpython-ticks
 FreeSimpleGUI
 pillow
