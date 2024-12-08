@@ -21,6 +21,7 @@ else:
     exit()
 
 import FreeSimpleGUI as sg # pip install FreeSimpleGUI
+from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from internet_connection import get_network_interface, is_connected, reconnect
 from grab_team_logos import grab_team_logos
@@ -162,6 +163,7 @@ def team_currently_playing(window):
 ##################################
 team_info = []
 teams_with_data = []
+saved_data = {}
 display_index = 0
 try:
     for fetch_index in range(len(teams)):
@@ -195,11 +197,24 @@ while True:
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
-                team_info.append(info)
-                teams_with_data.append(data)
                 if currently_playing:
                     returned_data = team_currently_playing(window)
                     team_info = returned_data
+                
+                # Save data for NBA, NHL, MLB data to display longer than data is available
+                elif data == True and "Final" in info['bottom_info'] and "nfl" not in teams[fetch_index][1]:
+                    saved_data[teams[fetch_index][1]] = [info, datetime.now()]
+                elif teams[fetch_index][1] in saved_data and data == False:
+                    current_date = datetime.now()
+                    date_difference = current_date - saved_data[teams[fetch_index][1]][1]
+                    # Check if 3 days have passed
+                    if date_difference <= timedelta(days=3):
+                        team_info.append(saved_data[teams[fetch_index][1]][0])
+                        teams_with_data.append(True)
+                        continue
+                
+                team_info.append(info)
+                teams_with_data.append(data)
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
 
@@ -259,7 +274,7 @@ while True:
         time_till_clock = 0
         if is_connected():
             message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, [], SPORT_URLS, network_logos, message)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
@@ -268,7 +283,7 @@ while True:
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+                teams_with_data = clock(window, [], SPORT_URLS, network_logos, message)
 
         time.sleep(2)
         print("Internet connection is active")
