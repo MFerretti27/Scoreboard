@@ -128,7 +128,7 @@ def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
 
                 away_stats = "FG: " + away_field_goal_made + "/" + away_field_goal_attempt + " 3PT: " + away_3pt_made + "/" + away_3pt_attempt
                 home_stats = "FG: " + home_field_goal_made + "/" + home_field_goal_attempt + " 3PT: " + home_3pt_made + "/" + home_3pt_attempt
-                team_info['top_info'] = away_stats + "\t\t\t " + home_stats
+                team_info['top_info'] = away_stats + "\t\t " + home_stats
 
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:
