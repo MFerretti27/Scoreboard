@@ -97,7 +97,7 @@ def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
                     if away_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
                     elif away_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF   ")
                     elif away_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
-                    elif away_timeouts == 0: timeouts = timeouts + ("\t")
+                    elif away_timeouts == 0: timeouts = timeouts + ("  ")
 
                     timeouts = timeouts + ("\t\t")
 

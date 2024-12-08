@@ -29,7 +29,7 @@ from gui_setup import setup_gui
 from get_data import get_data
 from clock import clock
 from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
-from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING
+from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING, PLAYING_TOP_INFO_SIZE
 
 SPORT_URLS = []
 team_has_data = False
@@ -104,6 +104,7 @@ def team_currently_playing(window):
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
                 window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
                 window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
+                window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color ='white')
 
                 for key, value in team_info[display_index].items():
 
