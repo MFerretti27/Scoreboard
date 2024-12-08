@@ -1,14 +1,14 @@
 import platform
 import subprocess
-import re
+import sys
 import psutil  # pip install psutil
 import os 
 import time
 
 
-def get_network_interface():
+def get_network_interface() -> str:
     '''Get the current Network interface being used e.g. eth0 or wlan'''
-    if platform.system() == 'Windows': return
+    if platform.system() == 'Windows': return ''
     elif platform.system() == 'Darwin': return "en0"
     else:
         interfaces = psutil.net_if_stats()  # Get interface stats (up/down status)
@@ -39,8 +39,12 @@ def is_connected() -> bool:
     except subprocess.CalledProcessError:
         return False
 
-def reconnect(network_interface):
-    """Attempt to reconnect by restarting the network interface."""
+def reconnect(network_interface) -> None:
+    """Attempt to reconnect by restarting the network interface.
+        Mac and Windows should reconnect without restarting network interface
+    """
+    if platform.system() == 'Windows': return
+    elif platform.system() == 'Darwin': return
     print("No internet connection. Attempting to reconnect...")
     os.system(f"sudo ifconfig {network_interface} down")
     time.sleep(1)

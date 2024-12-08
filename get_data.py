@@ -1,8 +1,14 @@
 import requests # pip install requests
 import gc
 
-def get_data(URL, team, sport, network_logos):
-    '''The actual API and display function'''
+def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
+    '''Retrieve Data from ESPN API
+    
+    :param URL: URL link to ESPN to get API data
+    :param team: Team to get data for
+    :param sport: The sport that the team you are getting is
+    :param network_logos: Dictionary giving file location of network logos
+    '''
     team_has_data = False
     index = 0
     team_info = {}
@@ -108,17 +114,21 @@ def get_data(URL, team, sport, network_logos):
 
             # If looking at NBA team get this data (only if currently playing)
             if "nba" in URL and currently_playing:
-                home_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
-                                        [0]["statistics"][5]["displayValue"]))
-                home_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"]
-                                        [0]["statistics"][15]["displayValue"]))
+                home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
+                home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
+                
+                home_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
+                home_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
 
-                away_field_goal_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][5]["displayValue"]))
-                away_3pt_pct = ((response_as_json["events"][index]["competitions"][0]["competitors"][1]["statistics"][15]["displayValue"]))
+                away_field_goal_attempt = ((competition["competitors"][1]["statistics"][3]["displayValue"]))
+                away_field_goal_made = ((competition["competitors"][1]["statistics"][4]["displayValue"]))
 
-                team_info['top_info'] = \
-                    "FG% " + home_field_goal_pct + "  3PT% " + home_3pt_pct + \
-                    "\t\t   FG% " + away_field_goal_pct + "  3PT% " + away_3pt_pct
+                away_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
+                away_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
+
+                away_stats = "FG: " + away_field_goal_made + "/" + away_field_goal_attempt + " 3PT: " + away_3pt_made + "/" + away_3pt_attempt
+                home_stats = "FG: " + home_field_goal_made + "/" + home_field_goal_attempt + " 3PT: " + home_3pt_made + "/" + home_3pt_attempt
+                team_info['top_info'] = away_stats + "\t\t\t " + home_stats
 
             # If looking at MLB team get this data (only if currently playing)
             if "mlb" in URL and currently_playing:

@@ -163,11 +163,26 @@ def team_currently_playing(window):
 team_info = []
 teams_with_data = []
 display_index = 0
-for fetch_index in range(len(teams)):
-    print(f"\nFetching data for {teams[fetch_index][0]}")
-    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
-    team_info.append(info)
-    teams_with_data.append(data)
+try:
+    for fetch_index in range(len(teams)):
+        print(f"\nFetching data for {teams[fetch_index][0]}")
+        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+        team_info.append(info)
+        teams_with_data.append(data)
+except:
+    time_till_clock = 0
+    if is_connected():
+        message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+        teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+    while not is_connected():
+        print("Internet connection is down, trying to reconnect...")
+        reconnect(network_interface)
+        time.sleep(20)  # Check every 20 seconds
+        time_till_clock = time_till_clock + 1
+        if time_till_clock >= 2: # If no connection within 4 minutes display clock
+            message = "No Internet Connection"
+            print("\nNo Internet connection Displaying Clock\n")
+            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
 
 event, values = window.read(timeout=5000)
 
@@ -238,10 +253,13 @@ while True:
         if True not in teams_with_data:
             message = "No Data For Any Teams"
             print("\nNo Teams with Displaying Clock\n")
-            clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
 
     except:
         time_till_clock = 0
+        if is_connected():
+            message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
@@ -250,7 +268,7 @@ while True:
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                display_clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+                teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
 
         time.sleep(2)
         print("Internet connection is active")

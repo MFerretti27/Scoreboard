@@ -2,7 +2,8 @@ import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from hardware_setup import INFO_TXT_SIZE, SCORE_TXT_SIZE, RECORD_TXT_SIZE, HYPHEN_SIZE, FONT, TIMEOUT_SIZE
 from hardware_setup import COLUMN_WIDTH, COLUMN_HIGHT, NOT_PLAYING_TOP_INFO_SIZE
 
-def setup_gui():
+def setup_gui() -> sg.Window:
+    '''Create General user interface'''
     sg.theme("black")
 
     home_record_layout =[

@@ -48,7 +48,9 @@ def clock(window, teams_with_data, SPORT_URLS, network_logos, message) -> None:
                 fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
         except:
             print("Failed to Get Data")
-            while not is_connected():
+            if is_connected():
+                message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+            if not is_connected():
                 network_interface = get_network_interface()
                 print("Internet connection is down, trying to reconnect...")
                 reconnect(network_interface)
@@ -60,3 +62,4 @@ def clock(window, teams_with_data, SPORT_URLS, network_logos, message) -> None:
     window["away_score"].update(font=(FONT, SCORE_TXT_SIZE))
     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
     window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+    return teams_with_data
