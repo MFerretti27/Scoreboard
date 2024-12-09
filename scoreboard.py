@@ -131,6 +131,9 @@ def team_currently_playing(window):
                 print(f"{teams[display_index][0]} is not currently playing and wont Display")
             
             display_index = (display_index + 1) % len(teams)
+        
+        if event == sg.WIN_CLOSED or isinstance(event, str):  # Any key press or window close
+            window.close()
     
     # Reset font and color to ensure everything is back to normal
     window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
@@ -242,7 +245,7 @@ while True:
 
             display_index = (display_index + 1) % len(teams)
 
-        if event == sg.WIN_CLOSED: # TODO: Quit if any key pressed
+        if event == sg.WIN_CLOSED or isinstance(event, str):  # Any key press or window close
             window.close()
 
         if True not in teams_with_data:
