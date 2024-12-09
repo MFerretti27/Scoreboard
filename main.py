@@ -13,6 +13,7 @@ def create_virtualenv(venv_dir):
         if platform.system() == 'Debian':
             print(f"Ensuring script can reset the network interface on a Raspberry Pi without sudo command")
             subprocess.call(['sudo', 'sh ', 'setcap cap_net_admin=eip /sbin/ifconfig'])
+            subprocess.call(['lshw', '-c' , 'network'])
 
     else:
         print(f"Virtual environment already exists in {venv_dir}.")
