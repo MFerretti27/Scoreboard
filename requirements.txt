@@ -1,8 +1,6 @@
-adafruit-circuitpython-requests
 adafruit-circuitpython-ticks
 FreeSimpleGUI
 pillow
 PySimpleGUI
 requests
 setuptools
-psutil
