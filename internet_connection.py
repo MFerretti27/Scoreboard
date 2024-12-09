@@ -84,8 +84,14 @@ def reconnect(network_interface: str) -> None:
         if network_interface == None:
             if platform.system() == 'Darwin':
                 network_interface = 'en0'
-            else:
-                network_interface = 'wlan0'
+            else: # For Raspberry both try resetting both
+                os.system(f"sudo ifconfig eth0 down")
+                time.sleep(5)
+                os.system(f"sudo ifconfig eth0 up")
+                os.system(f"sudo ifconfig wlan0 down")
+                time.sleep(5)
+                os.system(f"sudo ifconfig wlan0 up")
+                return
 
     try:
         if platform.system() == 'Windows':
