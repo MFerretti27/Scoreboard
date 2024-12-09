@@ -4,4 +4,3 @@ pillow
 PySimpleGUI
 requests
 setuptools
-psutil

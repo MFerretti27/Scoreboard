@@ -2,7 +2,7 @@
 import datetime
 import time
 from get_data import get_data
-from internet_connection import get_network_interface, is_connected, reconnect
+from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from constants import teams, INFO_TXT_SIZE, CLOCK_TXT_SIZE, SCORE_TXT_SIZE, HYPHEN_SIZE, FONT, TIMEOUT_SIZE, NOT_PLAYING_TOP_INFO_SIZE
 
@@ -53,9 +53,8 @@ def clock(window, SPORT_URLS, network_logos, message) -> None:
             if is_connected():
                 message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
             if not is_connected():
-                network_interface = get_network_interface()
                 print("Internet connection is down, trying to reconnect...")
-                reconnect(network_interface)
+                reconnect()
                 time.sleep(20)  # Check every 20 seconds
 
     # Reset Text Font Size

@@ -23,7 +23,7 @@ else:
 import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
-from internet_connection import get_network_interface, is_connected, reconnect
+from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos
 from gui_setup import gui_setup
 from get_data import get_data
@@ -42,7 +42,6 @@ for i in range(len(teams)):
     sport_name = teams[i][2]
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
-network_interface = get_network_interface()
 get_team_logos(teams, TEAM_LOGO_SIZE)
 window = gui_setup()
 
@@ -156,19 +155,16 @@ try:
         team_info.append(info)
         teams_with_data.append(data)
 except:
-    time_till_clock = 0
     if is_connected():
         message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
         teams_with_data = clock(window, SPORT_URLS, network_logos, message)
     while not is_connected():
         print("Internet connection is down, trying to reconnect...")
-        reconnect(network_interface)
+        reconnect()
         time.sleep(20)  # Check every 20 seconds
-        time_till_clock = time_till_clock + 1
-        if time_till_clock >= 2: # If no connection within 4 minutes display clock
-            message = "No Internet Connection"
-            print("\nNo Internet connection Displaying Clock\n")
-            teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+        message = "No Internet Connection"
+        print("\nNo Internet connection Displaying Clock\n")
+        teams_with_data = clock(window, SPORT_URLS, network_logos, message)
 
 event, values = window.read(timeout=5000)
 
@@ -261,13 +257,15 @@ while True:
             teams_with_data = clock(window, SPORT_URLS, network_logos, message)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
-            reconnect(network_interface)
+            reconnect()
             time.sleep(20)  # Check every 20 seconds
-            time_till_clock = time_till_clock + 1
+
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
                 teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+
+            time_till_clock = time_till_clock + 1
 
         time.sleep(2)
         print("Internet connection is active")
