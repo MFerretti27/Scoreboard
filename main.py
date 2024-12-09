@@ -5,15 +5,20 @@ import platform
 import venv
 
 def create_virtualenv(venv_dir):
-    """Creates a virtual environment in the specified directory."""
+    """Creates a virtual environment in the specified directory"""
     if not os.path.exists(venv_dir):
         print(f"Creating virtual environment in {venv_dir}...")
         venv.create(venv_dir, with_pip=True)
+
+        if platform.system() == 'Debian':
+            print(f"Ensuring script can reset the network interface on a Raspberry Pi without sudo command")
+            subprocess.call(['sudo', 'sh ', 'setcap cap_net_admin=eip /sbin/ifdown && setcap cap_net_admin=eip /sbin/ifup'])
+
     else:
         print(f"Virtual environment already exists in {venv_dir}.")
 
 def install_requirements(venv_dir, requirements_file):
-    """Installs dependencies from a requirements.txt file."""
+    """Installs dependencies from a requirements.txt file"""
     if os.path.exists(requirements_file):
         print(f"Installing dependencies from {requirements_file}...")
         pip_executable = os.path.join(venv_dir, 'Scripts', 'pip') if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'pip')
@@ -22,7 +27,7 @@ def install_requirements(venv_dir, requirements_file):
         print(f"No requirements file found at {requirements_file}.")
 
 def run_program_in_venv(venv_dir, program_script):
-    """Runs a Python program inside the virtual environment."""
+    """Runs a Python program inside the virtual environment"""
     python_executable = os.path.join(venv_dir, 'Scripts', 'python') if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'python')
     
     if not os.path.exists(python_executable):
@@ -35,7 +40,7 @@ def run_program_in_venv(venv_dir, program_script):
 
 def main():
     venv_dir = './venv'  # Virtual environment directory
-    requirements_file = 'requirements.txt'  # Optional: Path to your requirements.txt
+    requirements_file = 'requirements.txt'  # Path to your requirements.txt
     program_script = 'scoreboard.py'  # Replace with the name of your program
 
     create_virtualenv(venv_dir)
