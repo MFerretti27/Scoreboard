@@ -8,7 +8,7 @@ import time
 def get_network_interface() -> str:
     '''Get the current Network interface being used e.g. eth0 or wlan'''
 
-    network_interface = 'None, Internet is Off'
+    network_interface = None
     try:
         if platform.system() == 'Windows': 
             result = subprocess.run("netsh interface show interface", capture_output=True, text=True, check=True)
@@ -78,6 +78,8 @@ def reconnect(network_interface: str) -> None:
 
        :param network_interface: Interface to shut down and start up, reconnecting internet
     """
+    if network_interface == None:
+        get_network_interface()
     try:
         if platform.system() == 'Windows':
             subprocess.run(["netsh", "interface", "set", "interface", network_interface, "disable"], check=True)
