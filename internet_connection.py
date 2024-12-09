@@ -79,7 +79,7 @@ def reconnect(network_interface: str) -> None:
        :param network_interface: Interface to shut down and start up, reconnecting internet
     """
     if network_interface == None:
-        get_network_interface()
+        network_interface = get_network_interface()
         # If it still cant get network interface default wifi network interface
         if network_interface == None:
             if platform.system() == 'Darwin':
