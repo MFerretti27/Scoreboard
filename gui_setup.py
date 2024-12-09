@@ -38,7 +38,7 @@ def gui_setup() -> sg.Window:
         ]
 
     # Create the window
-    window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True).Finalize()
+    window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True, return_keyboard_events=True).Finalize()
     window.Maximize()
     window.TKroot.config(cursor="none")
 
