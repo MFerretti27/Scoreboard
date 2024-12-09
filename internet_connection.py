@@ -78,20 +78,6 @@ def reconnect(network_interface: str) -> None:
 
        :param network_interface: Interface to shut down and start up, reconnecting internet
     """
-    if network_interface == None:
-        network_interface = get_network_interface()
-        # If it still cant get network interface default wifi network interface
-        if network_interface == None:
-            if platform.system() == 'Darwin':
-                network_interface = 'en0'
-            else: # For Raspberry both try resetting both
-                os.system(f"sudo ifconfig eth0 down")
-                time.sleep(5)
-                os.system(f"sudo ifconfig eth0 up")
-                os.system(f"sudo ifconfig wlan0 down")
-                time.sleep(5)
-                os.system(f"sudo ifconfig wlan0 up")
-                return
 
     try:
         if platform.system() == 'Windows':
@@ -105,9 +91,9 @@ def reconnect(network_interface: str) -> None:
             subprocess.run(["networksetup", "-setairportpower", network_interface, "on"], check=True)
 
         else:
-            os.system(f"sudo ifconfig {network_interface} down")
+            os.system(f"sudo nmcli radio wifi off")
             time.sleep(5)
-            os.system(f"sudo ifconfig {network_interface} up")
+            os.system(f"sudo nmcli radio wifi on")
 
     except subprocess.CalledProcessError as e:
         print(f"Error resetting the network interface {network_interface}: {e}")
