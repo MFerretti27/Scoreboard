@@ -24,44 +24,27 @@ import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from internet_connection import get_network_interface, is_connected, reconnect
-from grab_team_logos import grab_team_logos
-from gui_setup import setup_gui
+from get_team_logos import get_team_logos
+from gui_setup import gui_setup
 from get_data import get_data
-from clock import clock
-from hardware_setup import teams, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
-from hardware_setup import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING, PLAYING_TOP_INFO_SIZE
+from display_clock import clock
+from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
+from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING, PLAYING_TOP_INFO_SIZE
 
 SPORT_URLS = []
-team_has_data = False
-currently_playing = False
 display_clock = ticks_ms() # Start Timer for Switching Display
 display_timer = 25 * 1000 # how often the display should update in seconds
 fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
-
-network_logos = {
-    "ABC": ["Networks/ABC.png", 5],
-    "CBS": ["Networks/CBS.png", 1],
-    "ESPN": ["Networks/ESPN.png", 5],
-    "FOX": ["Networks/FOX.png", 2],
-    "MLB": ["Networks/MLB_Network.png", 3],
-    "NBC": ["Networks/NBC.png", 8],
-    "Prime": ["Networks/Prime.png", 10],
-    "TNT": ["Networks/TNT.png", 7],
-    # "NBA TV": ["Networks/NBA_TV.png", 5],
-    "NBA": ["Networks/NBA_League.png", 1],
-    "NFL": ["Networks/NFL_NET.png", 2],
-}
 
 for i in range(len(teams)):
     sport_league = teams[i][1]
     sport_name = teams[i][2]
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
-
 network_interface = get_network_interface()
-grab_team_logos(teams, TEAM_LOGO_SIZE)
-window = setup_gui()
+get_team_logos(teams, TEAM_LOGO_SIZE)
+window = gui_setup()
 
 ##########################################
 #                                        #

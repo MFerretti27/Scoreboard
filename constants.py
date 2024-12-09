@@ -24,3 +24,18 @@ NBA_TOP_INFO_SIZE = 56
 PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING = 36
+
+
+network_logos = {
+    "ABC": ["Networks/ABC.png", 5],
+    "CBS": ["Networks/CBS.png", 1],
+    "ESPN": ["Networks/ESPN.png", 5],
+    "FOX": ["Networks/FOX.png", 2],
+    "MLB": ["Networks/MLB_Network.png", 3],
+    "NBC": ["Networks/NBC.png", 8],
+    "Prime": ["Networks/Prime.png", 10],
+    "TNT": ["Networks/TNT.png", 7],
+    # "NBA TV": ["Networks/NBA_TV.png", 5],
+    "NBA": ["Networks/NBA_League.png", 1],
+    "NFL": ["Networks/NFL_NET.png", 2],
+}

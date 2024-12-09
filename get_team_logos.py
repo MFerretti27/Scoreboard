@@ -2,11 +2,6 @@ import os
 from PIL import Image  # pip install pillow
 import requests # pip install requests
 
-##################################
-#                                #
-#   Grab all Logos (done once)   #
-#                                #
-##################################
 def resize_image(image_path: str, sport_dir: str, abbreviation: str, scale_factor: int) -> None:
     ''' Resize image to fit better on Monitor
     
@@ -28,7 +23,7 @@ def resize_image(image_path: str, sport_dir: str, abbreviation: str, scale_facto
     new_path_png = os.path.join(sport_dir, f"{abbreviation}.png")
     img_resized.save(new_path_png)
 
-def grab_team_logos(teams: dict, TEAM_LOGO_SIZE: int) -> None:
+def get_team_logos(teams: dict, TEAM_LOGO_SIZE: int) -> None:
     ''' Create a base directory to store the logos if it doesn't exist
 
     :param teams: Dictionary with teams to display
