@@ -6,7 +6,7 @@ from internet_connection import get_network_interface, is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
 from constants import teams, INFO_TXT_SIZE, CLOCK_TXT_SIZE, SCORE_TXT_SIZE, HYPHEN_SIZE, FONT, TIMEOUT_SIZE, NOT_PLAYING_TOP_INFO_SIZE
 
-def clock(window, teams_with_data, SPORT_URLS, network_logos, message) -> None:
+def clock(window, SPORT_URLS, network_logos, message) -> None:
     '''If no team has any data then display clock
 
     :param window: Window Element that controls GUI
@@ -17,6 +17,7 @@ def clock(window, teams_with_data, SPORT_URLS, network_logos, message) -> None:
 
     fetch_clock = ticks_ms() # Start Timer for Switching Display
     fetch_timer = 180 * 1000 # how often the display should update in seconds
+    teams_with_data = []
 
     while True not in teams_with_data:
         current_time = datetime.datetime.now()

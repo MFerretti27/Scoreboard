@@ -159,7 +159,7 @@ except:
     time_till_clock = 0
     if is_connected():
         message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-        teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+        teams_with_data = clock(window, SPORT_URLS, network_logos, message)
     while not is_connected():
         print("Internet connection is down, trying to reconnect...")
         reconnect(network_interface)
@@ -168,7 +168,7 @@ except:
         if time_till_clock >= 2: # If no connection within 4 minutes display clock
             message = "No Internet Connection"
             print("\nNo Internet connection Displaying Clock\n")
-            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, SPORT_URLS, network_logos, message)
 
 event, values = window.read(timeout=5000)
 
@@ -258,7 +258,7 @@ while True:
         time_till_clock = 0
         if is_connected():
             message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-            teams_with_data = clock(window, [], SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, SPORT_URLS, network_logos, message)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect(network_interface)
@@ -267,7 +267,7 @@ while True:
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                teams_with_data = clock(window, [], SPORT_URLS, network_logos, message)
+                teams_with_data = clock(window, SPORT_URLS, network_logos, message)
 
         time.sleep(2)
         print("Internet connection is active")
