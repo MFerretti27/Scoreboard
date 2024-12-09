@@ -8,7 +8,7 @@ import time
 def get_network_interface() -> str:
     '''Get the current Network interface being used e.g. eth0 or wlan'''
 
-    network_interface = ''
+    network_interface = 'None, Internet is Off'
     try:
         if platform.system() == 'Windows': 
             result = subprocess.run("netsh interface show interface", capture_output=True, text=True, check=True)
