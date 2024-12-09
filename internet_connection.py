@@ -80,6 +80,13 @@ def reconnect(network_interface: str) -> None:
     """
     if network_interface == None:
         get_network_interface()
+        # If it still cant get network interface default wifi network interface
+        if network_interface == None:
+            if platform.system() == 'Darwin':
+                network_interface = 'en0'
+            else:
+                network_interface = 'wlan0'
+
     try:
         if platform.system() == 'Windows':
             subprocess.run(["netsh", "interface", "set", "interface", network_interface, "disable"], check=True)
