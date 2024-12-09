@@ -99,9 +99,9 @@ def reconnect(network_interface: str) -> None:
             subprocess.run(["networksetup", "-setairportpower", network_interface, "on"], check=True)
 
         else:
-            subprocess.run(['/sbin/ifdown', network_interface], check=True)
+            os.system(f"sudo ifconfig {network_interface} down")
             time.sleep(5)
-            subprocess.run(['/sbin/ifup', network_interface], check=True)
+            os.system(f"sudo ifconfig {network_interface} up")
 
     except subprocess.CalledProcessError as e:
         print(f"Error resetting the network interface {network_interface}: {e}")
