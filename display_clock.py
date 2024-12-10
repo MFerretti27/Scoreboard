@@ -1,3 +1,6 @@
+'''Display a Clock When Internet Connection Goes Out, When Grabbing Data from ESPN API Fails,
+   Or When There is No Team Data to Display
+'''
 
 import datetime
 import time
@@ -55,7 +58,7 @@ def clock(window, SPORT_URLS, network_logos, message) -> None:
             if not is_connected():
                 print("Internet connection is down, trying to reconnect...")
                 reconnect()
-                time.sleep(20)  # Check every 20 seconds
+                time.sleep(20)  # Wait 20 seconds for connection
 
     # Reset Text Font Size
     window["hyphen"].update(value='-',font=(FONT, HYPHEN_SIZE))

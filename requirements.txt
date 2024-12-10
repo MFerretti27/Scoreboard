@@ -3,4 +3,3 @@ FreeSimpleGUI
 pillow
 PySimpleGUI
 requests
-setuptools
