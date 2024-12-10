@@ -21,7 +21,7 @@ def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
     response_as_json = resp.json()
     print(f"Looking for:  {team[0]}")
     for event in response_as_json["events"]:
-        if team[0] in event["name"]:
+        if team[0].upper() in event["name"].upper():
             print(f"Found Game: {team[0]}")
             team_has_data = True
 

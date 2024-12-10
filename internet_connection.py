@@ -6,7 +6,7 @@ import os
 import time
 
 def is_connected() -> bool:
-    """Check if there's an internet connection by pinging a router"""
+    """Check if there's an internet connection by pinging 8.8.8.8"""
     try:
         # Ping host with one packet and timeout of 2 seconds
         subprocess.check_call(["ping", "-c", "1", "-W", "2", "8.8.8.8"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -16,7 +16,6 @@ def is_connected() -> bool:
 
 def reconnect() -> None:
     """Attempt to reconnect internet"""
-
     try:
         if platform.system() == 'Windows':
             subprocess.run(["netsh", "interface", "set", "interface", "Wi-fi", "disable"], check=True)

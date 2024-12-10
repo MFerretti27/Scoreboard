@@ -5,8 +5,8 @@ from PIL import Image  # pip install pillow
 import requests # pip install requests
 
 def resize_image(image_path: str, sport_dir: str, abbreviation: str, scale_factor: int) -> None:
-    ''' Resize image to fit better on Monitor
-    
+    '''Resize image to fit better on Monitor
+
     :param image_path: Path of where image was downloaded
     :param sport_dir: Folder were new resized image should be put
     :param abbreviation: Team abbreviation to use as file name
@@ -68,7 +68,7 @@ def get_team_logos(teams: dict, TEAM_LOGO_SIZE: int) -> None:
                         file.write(chunk)
 
                 # Open, resize, and save the image with PIL
-                with Image.open(img_path_png) as the_img:
+                with Image.open(img_path_png):
                     resize_image(img_path_png, sport_dir, abbreviation, TEAM_LOGO_SIZE)
 
                 # Delete the original .png file
