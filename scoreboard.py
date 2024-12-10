@@ -24,7 +24,7 @@ from gui_setup import gui_setup
 from get_data import get_data
 from display_clock import clock
 from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
-from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING, PLAYING_TOP_INFO_SIZE
+from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARACTERS_FIT_ON_SCREEN, PLAYING_TOP_INFO_SIZE
 
 SPORT_URLS = []
 display_clock = ticks_ms() # Start Timer for Switching Display
@@ -201,7 +201,7 @@ while True:
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
                 # Change Size of game info if length is too long
-                if len(team_info[display_index]['bottom_info']) > CHARTERS_FIT_ON_SCREEN_INFO_NOT_PLAYING:
+                if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
                 else:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
