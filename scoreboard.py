@@ -1,9 +1,4 @@
-'''
-Script to Display a Scoreboard for your Favorite Teams 
-
-@Requirements: Python must be installed and in PATH
-@Author: Matthew Ferretti
-'''
+'''Script to Display a Scoreboard for your Favorite Teams'''
 
 # Common imports (should be on all computers)
 import os

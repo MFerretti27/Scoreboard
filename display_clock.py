@@ -1,3 +1,6 @@
+'''Display a Clock When Internet Connection Goes Out, When Grabbing Data from ESPN API Fails,
+   Or When There is No Team Data to Display
+'''
 
 import datetime
 import time

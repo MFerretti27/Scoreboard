@@ -1,3 +1,5 @@
+'''Use ESPN API to Grab Major League Sports Teams logo and Resize based in Constant'''
+
 import os
 from PIL import Image  # pip install pillow
 import requests # pip install requests

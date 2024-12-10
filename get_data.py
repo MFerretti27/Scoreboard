@@ -1,3 +1,5 @@
+'''Grab Data for ESPN API'''
+
 import requests # pip install requests
 import gc
 
@@ -18,8 +20,8 @@ def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
     resp = requests.get(URL)
     response_as_json = resp.json()
     print(f"Looking for:  {team[0]}")
-    for e in response_as_json["events"]:
-        if team[0] in e["name"]:
+    for event in response_as_json["events"]:
+        if team[0] in event["name"]:
             print(f"Found Game: {team[0]}")
             team_has_data = True
 
@@ -59,8 +61,8 @@ def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
             # Check if Game hasn't been played yet
             elif not currently_playing:
                 team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
-                overUnder = (response_as_json["events"][index]["competitions"][0]["odds"][0]["overUnder"])
-                spread = (response_as_json["events"][index]["competitions"][0]["odds"][0]["details"])
+                overUnder = (competition["odds"][0]["overUnder"])
+                spread = (competition["odds"][0]["details"])
                 if "nhl" in URL:
                     team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
                 else:

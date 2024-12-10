@@ -1,3 +1,5 @@
+'''Functions to Check Internet Connection and try to Reconnect'''
+
 import platform
 import subprocess
 import os 
