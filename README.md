@@ -25,9 +25,9 @@ Using Python run the main.py file e.g. ```python main.py```
   - pillow <br />
   - PySimpleGUI <br />
   - requests <br />
-
 <br />
-- On the first time running the scoreboard.py file will create a sports_logos folder and will fetch all logos for the leagues of the teams you want to be displayed. **<ins>If you change teams you want to be displayed or change the order of the teams displayed then you will have to delete the sports_logo folder and on the next run it will re-download all the logos</ins>** <br />
+
+- On the first time running the scoreboard.py file will create a sports_logos folder and will fetch all logos for the leagues of the teams you want to be displayed. **<ins>If you change teams you want to be displayed or change the order of the teams displayed then you will have to delete the sports_logo folder and on the next run it will re-download all the logos</ins>** <br /><br />
 - If the script fails to get data from ESPN API, or None of your specified teams have any data, or if internet connection goes out the script will disaply a clock. It will display a clock until internet connection is restored (script will handle reconnecting to internet) or if one of your specified teams have data again <br />
 
 ## Requirments
