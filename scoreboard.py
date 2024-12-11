@@ -23,7 +23,7 @@ from get_team_logos import get_team_logos
 from gui_setup import gui_setup
 from get_data import get_data
 from display_clock import clock
-from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE
+from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE, SPACE_ONE_CHARACTER_TAKES_UP
 from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARACTERS_FIT_ON_SCREEN, PLAYING_TOP_INFO_SIZE
 
 SPORT_URLS = []
@@ -202,7 +202,8 @@ while True:
 
                 # Change Size of game info if length is too long
                 if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
+                    characters_over = len(team_info[display_index]['bottom_info']) - CHARACTERS_FIT_ON_SCREEN
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - (SPACE_ONE_CHARACTER_TAKES_UP * characters_over)))
                 else:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
