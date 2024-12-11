@@ -24,7 +24,7 @@ from gui_setup import gui_setup
 from get_data import get_data
 from display_clock import clock
 from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE, SPACE_ONE_CHARACTER_TAKES_UP
-from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARACTERS_FIT_ON_SCREEN, PLAYING_TOP_INFO_SIZE
+from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARACTERS_FIT_ON_SCREEN, PLAYING_TOP_INFO_SIZE, NETWORK_LOGOS_SIZE
 
 SPORT_URLS = []
 display_clock = ticks_ms() # Start Timer for Switching Display
@@ -85,14 +85,10 @@ def team_currently_playing(window):
 
                 for key, value in team_info[display_index].items():
 
-                    if "network_logo" in key:
-                        for network, file in network_logos.items():
-                            if network in value: size = file[1]  # Index 1 is how much to decrease logo size
-
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
-                        window[key].update(filename=value, subsample=size)
+                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color ='white')
     
@@ -209,14 +205,10 @@ while True:
 
                 for key, value in team_info[display_index].items():
 
-                    if "network_logo" in key:
-                        for network, file in network_logos.items():
-                            if network in value: size = file[1]  # Index 1 is how much to decrease logo size
-
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
-                        window[key].update(filename=value, subsample=size)
+                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color ='white')
 
