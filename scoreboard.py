@@ -173,13 +173,17 @@ while True:
                     team_info = returned_data
                 
                 # Save data for NBA, NHL, MLB data to display longer than data is available
-                elif data == True and "Final" in info['bottom_info'] and "nfl" not in teams[fetch_index][1]:
-                    saved_data[teams[fetch_index][1]] = [info, datetime.now()]
-                elif teams[fetch_index][1] in saved_data and data == False:
+                if data == True and "FINAL" in info['bottom_info'] and "nfl" not in teams[fetch_index][1]:
+                    saved_data[teams[fetch_index][0]] = [info, datetime.now()]
+                    print("Saving Data to display longer that its available")
+                elif teams[fetch_index][0] in saved_data and data == False:
+                    print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][1]][1]
-                    # Check if 3 days have passed
-                    if date_difference <= timedelta(days=3):
+                    print(date_difference)
+                    # Check if 2 days have passed after data is no longer available
+                    if date_difference <= timedelta(days=2):
+                        print("Yes it should display")
                         team_info.append(saved_data[teams[fetch_index][1]][0])
                         teams_with_data.append(True)
                         continue

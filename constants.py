@@ -40,14 +40,14 @@ TEAM_LOGO_SIZE = 1.5
 NETWORK_LOGOS_SIZE = 1
 
 network_logos = {
-    "ABC": ["Networks/ABC.png"],
-    "CBS": ["Networks/CBS.png"],
-    "ESPN": ["Networks/ESPN.png"],
-    "FOX": ["Networks/FOX.png"],
-    "MLB": ["Networks/MLB_Network.png"],
-    "NBC": ["Networks/NBC.png"],
-    "Prime": ["Networks/Prime.png"],
-    "TNT": ["Networks/TNT.png"],
-    "NBA": ["Networks/NBA_League.png"],
-    "NFL": ["Networks/NFL_NET.png"],
+    "ABC": "Networks/ABC.png",
+    "CBS": "Networks/CBS.png",
+    "ESPN": "Networks/ESPN.png",
+    "FOX": "Networks/FOX.png",
+    "MLB": "Networks/MLB_Network.png",
+    "NBC": "Networks/NBC.png",
+    "Prime": "Networks/Prime.png",
+    "TNT": "Networks/TNT.png",
+    "NBA": "Networks/NBA_League.png",
+    "NFL": "Networks/NFL_NET.png",
 }
