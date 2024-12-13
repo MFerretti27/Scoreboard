@@ -28,7 +28,7 @@ SPACE_ONE_CHARACTER_TAKES_UP = 6
 
 # Display Spacing
 COLUMN_WIDTH = 630 # Width should split the screen in threes
-COLUMN_HIGHT = 750
+COLUMN_HEIGHT = 750
 CHARACTERS_FIT_ON_SCREEN = 41
 SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO = 20
 SPACE_BETWEEN_TOP_AND_SCORE = 250
@@ -51,4 +51,5 @@ network_logos = {
     "TNT": "Networks/TNT.png",
     "NBA": "Networks/NBA_League.png",
     "NFL": "Networks/NFL_NET.png",
+    "NHL": "Networks/NHL_NET.png",
 }
