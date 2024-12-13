@@ -46,7 +46,7 @@ def clock(window, SPORT_URLS, message) -> None:
                 teams_with_data.clear()
                 for fetch_index in range(len(teams)):
                     print(f"\nFetching data for {teams[fetch_index][0]}")
-                    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+                    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
                     teams_with_data.append(data)
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer) # Reset Timer if display updated
