@@ -2,8 +2,6 @@
 
 import FreeSimpleGUI as sg # pip install FreeSimpleGUI
 from constants import *
-from constants import COLUMN_WIDTH, COLUMN_HIGHT, NOT_PLAYING_TOP_INFO_SIZE, INFO_SPACE_HEIGHT
-from constants import SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO, SPACE_BETWEEN_TOP_AND_LOGOS, SPACE_BETWEEN_TOP_AND_SCORE
 
 def gui_setup() -> sg.Window:
     '''Create General User Interface'''
@@ -33,9 +31,9 @@ def gui_setup() -> sg.Window:
     
     layout = [[
         sg.Push(),
-        sg.Column(away_record_layout, element_justification='center', size=(COLUMN_WIDTH,COLUMN_HIGHT)),
-        sg.Frame("",score_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH,COLUMN_HIGHT)),
-        sg.Column(home_record_layout, element_justification='center', size=(COLUMN_WIDTH,COLUMN_HIGHT)),
+        sg.Frame("",away_record_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH,COLUMN_HEIGHT)),
+        sg.Frame("",score_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH,COLUMN_HEIGHT)),
+        sg.Frame("",home_record_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH,COLUMN_HEIGHT)),
         sg.Push()
         ],
         [sg.Frame("",top_info_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH * 3, INFO_SPACE_HEIGHT))],
