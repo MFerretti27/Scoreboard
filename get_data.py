@@ -47,7 +47,7 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                     team_info['network_logo'] = filepath
                     break
                 else:  # If it cant find logo league logo as defaults
-                    if team[1].upper in filepath: team_info['network_logo'] = filepath
+                    if team[1].upper() in filepath: team_info['network_logo'] = filepath
 
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['bottom_info']) and "AM" not in str(team_info['bottom_info']):
@@ -63,13 +63,13 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                 team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
                 overUnder = (competition["odds"][0]["overUnder"])
                 spread = (competition["odds"][0]["details"])
-                if "nhl" in URL:
+                if "NHL" in URL.upper():
                     team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
                 else:
                     team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # If looking at NFL team get this data (only if currently playing)
-            if "nfl" in URL and currently_playing:
+            if "NFL" in URL.upper() and currently_playing:
                 nfl_data = response_as_json["events"][index]["competitions"][0]
                 down = nfl_data.get('situation', {}).get('shortDownDistanceText')
                 red_zone = nfl_data.get('situation', {}).get('isRedZone')
@@ -115,7 +115,7 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                 team_info['top_info'] = temp
 
             # If looking at NBA team get this data (only if currently playing)
-            if "nba" in URL and currently_playing:
+            if "NBA"in URL.upper() and currently_playing:
                 home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
                 home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
                 
@@ -133,7 +133,7 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                 team_info['top_info'] = away_stats + "\t\t " + home_stats
 
             # If looking at MLB team get this data (only if currently playing)
-            if "mlb" in URL and currently_playing:
+            if "MLB" in URL.upper() and currently_playing:
                  # outs = (response_as_json["events"][index]["competitions"][0]["outsText"])
                 if 'Bot' in str(team_info.get('bottom_info')): # Replace Bot with Bottom for baseball innings
                     team_info['bottom_info'].replace('bot', 'Bottom')

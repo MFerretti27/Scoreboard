@@ -97,7 +97,7 @@ def team_currently_playing(window, teams):
                         window[key].update(value=value, text_color ='white')
     
                     # Football Specific
-                    if "nfl" in SPORT_URLS[display_index]:
+                    if "NFL" in SPORT_URLS[display_index].upper():
                         if team_info[display_index]['home_possession'] and key == 'home_score':
                             window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         elif team_info[display_index]['away_possession'] and key == 'away_score':
@@ -108,7 +108,7 @@ def team_currently_playing(window, teams):
                             window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
 
                     # NBA Specific
-                    if "nba" in SPORT_URLS[display_index] and key == 'top_info':
+                    if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
                 window.read(timeout=5000)
