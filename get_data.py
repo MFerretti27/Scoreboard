@@ -47,7 +47,7 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                     team_info['network_logo'] = filepath
                     break
                 else:  # If it cant find logo league logo as defaults
-                    if team[1] in filepath: team_info['network_logo'] = filepath
+                    if team[1].upper in filepath: team_info['network_logo'] = filepath
 
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['bottom_info']) and "AM" not in str(team_info['bottom_info']):
