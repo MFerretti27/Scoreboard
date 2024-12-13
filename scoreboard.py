@@ -23,8 +23,7 @@ from get_team_logos import get_team_logos
 from gui_setup import gui_setup
 from get_data import get_data
 from display_clock import clock
-from constants import teams, network_logos, TEAM_LOGO_SIZE, INFO_TXT_SIZE, SCORE_TXT_SIZE, FONT, TIMEOUT_SIZE, SPACE_ONE_CHARACTER_TAKES_UP
-from constants import NBA_TOP_INFO_SIZE, NOT_PLAYING_TOP_INFO_SIZE, CHARACTERS_FIT_ON_SCREEN, PLAYING_TOP_INFO_SIZE, NETWORK_LOGOS_SIZE
+from constants import *
 
 SPORT_URLS = []
 display_clock = ticks_ms() # Start Timer for Switching Display
@@ -45,27 +44,33 @@ window = gui_setup()
 #  Display only Teams currently playing  #
 #                                        #
 ##########################################
-def team_currently_playing(window):
-    '''Display only games that are playing'''
-    global teams, display_clock, fetch_clock, network_logos
+def team_currently_playing(window, teams):
+    '''Display only games that are playing
+    
+    :param window: Window Element that controls GUI
+    :param teams: Array of teams to search data for
+    '''
 
     teams_currently_playing = []
     first_time = True
     team_info = []
     teams_with_data = []
     display_index = 0
+
+    display_clock = ticks_ms() # Start Timer for Switching Display
+    fetch_clock = ticks_ms() # Start Timer for Switching Display
     display_timer = 25 * 1000 # how often the display should update in seconds
     fetch_timer = 25 * 1000 # how often the display should update in seconds
 
     while True in teams_currently_playing or first_time:
-        first_time = False
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
+            first_time = False
             teams_with_data.clear()
             team_info.clear()
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
                 team_info.append(info)
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
@@ -84,7 +89,6 @@ def team_currently_playing(window):
                 window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color ='white')
 
                 for key, value in team_info[display_index].items():
-
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
@@ -103,6 +107,7 @@ def team_currently_playing(window):
                         elif team_info[display_index]['away_redzone'] and key == 'away_score':
                             window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color ='red')
 
+                    # NBA Specific
                     if "nba" in SPORT_URLS[display_index] and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
@@ -130,9 +135,10 @@ def team_currently_playing(window):
     fetch_timer = 180 * 1000 #  Put back to fetching every 3 minutes if no team playing
     return team_info
 
+
 ##################################
 #                                #
-#          Event Loop            #
+#    Get Data for First Time     #
 #                                #
 ##################################
 team_info = []
@@ -142,23 +148,31 @@ display_index = 0
 try:
     for fetch_index in range(len(teams)):
         print(f"\nFetching data for {teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
         team_info.append(info)
         teams_with_data.append(data)
+        if currently_playing:
+                returned_data = team_currently_playing(window, teams)
+                team_info = returned_data
 except:
     if is_connected():
         message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-        teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+        teams_with_data = clock(window, SPORT_URLS, message)
     while not is_connected():
         print("Internet connection is down, trying to reconnect...")
         reconnect()
         time.sleep(20)  # Check every 20 seconds
         message = "No Internet Connection"
         print("\nNo Internet connection Displaying Clock\n")
-        teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+        teams_with_data = clock(window, SPORT_URLS, message)
 
 event, values = window.read(timeout=5000)
 
+##################################
+#                                #
+#          Event Loop            #
+#                                #
+##################################
 while True:
     try:
         # Fetch Data
@@ -167,9 +181,9 @@ while True:
             team_info.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index, network_logos)
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
                 if currently_playing:
-                    returned_data = team_currently_playing(window)
+                    returned_data = team_currently_playing(window, teams)
                     team_info = returned_data
                 
                 # Save data for NBA, NHL, MLB data to display longer than data is available
@@ -208,7 +222,6 @@ while True:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
                 for key, value in team_info[display_index].items():
-
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
                     elif "network_logo" in key:
@@ -240,13 +253,13 @@ while True:
         if True not in teams_with_data:
             message = "No Data For Any Teams"
             print("\nNo Teams with Displaying Clock\n")
-            teams_with_data = clock(window, teams_with_data, SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, teams_with_data, SPORT_URLS, message)
 
     except:
         time_till_clock = 0
         if is_connected():
             message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-            teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+            teams_with_data = clock(window, SPORT_URLS, message)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect()
@@ -255,7 +268,7 @@ while True:
             if time_till_clock >= 12: # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                teams_with_data = clock(window, SPORT_URLS, network_logos, message)
+                teams_with_data = clock(window, SPORT_URLS, message)
 
             time_till_clock = time_till_clock + 1
 

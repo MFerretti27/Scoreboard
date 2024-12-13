@@ -39,6 +39,7 @@ INFO_SPACE_HEIGHT = 200
 TEAM_LOGO_SIZE = 1.5
 NETWORK_LOGOS_SIZE = 1
 
+# Network Logo File Locations
 network_logos = {
     "ABC": "Networks/ABC.png",
     "CBS": "Networks/CBS.png",

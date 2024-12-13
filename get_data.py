@@ -2,14 +2,14 @@
 
 import requests # pip install requests
 import gc
+from constants import network_logos
 
-def get_data(URL: str, team: str, sport: str, network_logos: dict) -> tuple:
+def get_data(URL: str, team: str, sport: str) -> tuple:
     '''Retrieve Data from ESPN API
     
     :param URL: URL link to ESPN to get API data
     :param team: Team to get data for
     :param sport: The sport that the team you are getting is
-    :param network_logos: Dictionary giving file location of network logos
     '''
     team_has_data = False
     index = 0
