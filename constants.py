@@ -6,7 +6,6 @@
 teams = [
     ["Detroit Lions", "nfl", "football"],
     ["Detroit Tigers", "mlb", "baseball"],
-    ["Pittsburgh Steelers", "nfl", "football"],
     ["Detroit Red Wings", "nhl", "hockey"],
     ["Detroit Pistons", "nba", "basketball"]
 ]
@@ -18,7 +17,7 @@ FONT = "Calibri"
 SCORE_TXT_SIZE = 100
 INFO_TXT_SIZE = 64
 RECORD_TXT_SIZE = 74
-CLOCK_TXT_SIZE = 204
+CLOCK_TXT_SIZE =150
 HYPHEN_SIZE = 84
 TIMEOUT_SIZE = 24
 NBA_TOP_INFO_SIZE = 46
@@ -30,8 +29,8 @@ SPACE_ONE_CHARACTER_TAKES_UP = 4
 COLUMN_WIDTH = 630 # Width should split the screen in threes
 COLUMN_HEIGHT = 750
 CHARACTERS_FIT_ON_SCREEN = 41
-SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO = 50
-SPACE_BETWEEN_TOP_AND_SCORE = 250
+SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO = 25
+SPACE_BETWEEN_TOP_AND_SCORE = 275
 SPACE_BETWEEN_TOP_AND_LOGOS = 0
 INFO_SPACE_HEIGHT = 140
 
