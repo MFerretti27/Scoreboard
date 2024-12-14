@@ -43,7 +43,7 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
             away_team_id = competition["competitors"][1]["id"]
 
             for network, filepath in network_logos.items():
-                if network in broadcast: 
+                if network.upper() in broadcast.upper(): 
                     team_info['network_logo'] = filepath
                     break
                 else:  # If it cant find logo league logo as defaults
