@@ -161,6 +161,12 @@ except:
     if is_connected():
         message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
         teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
+
     while not is_connected():
         print("Internet connection is down, trying to reconnect...")
         reconnect()
@@ -168,6 +174,11 @@ except:
         message = "No Internet Connection"
         print("\nNo Internet connection Displaying Clock\n")
         teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
 event, values = window.read(timeout=5000)
 
@@ -197,7 +208,6 @@ while True:
                     print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
-                    print(date_difference)
                     # Check if 2 days have passed after data is no longer available
                     if date_difference <= timedelta(days=2):
                         print("Yes it should display")
@@ -255,14 +265,24 @@ while True:
 
         if True not in teams_with_data:
             message = "No Data For Any Teams"
-            print("\nNo Teams with Displaying Clock\n")
-            teams_with_data = clock(window, teams_with_data, SPORT_URLS, message)
+            print("\nNo Teams with Data Displaying Clock\n")
+            teams_with_data = clock(window, SPORT_URLS, message)
+            # Reset timers
+            while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                display_clock = ticks_add(display_clock, display_timer)
+            while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
     except:
         time_till_clock = 0
         if is_connected():
             message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
             teams_with_data = clock(window, SPORT_URLS, message)
+            # Reset timers
+            while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                display_clock = ticks_add(display_clock, display_timer)
+            while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                fetch_clock = ticks_add(fetch_clock, fetch_timer)
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect()
@@ -272,6 +292,11 @@ while True:
                 message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
                 teams_with_data = clock(window, SPORT_URLS, message)
+                # Reset timers
+                while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                    display_clock = ticks_add(display_clock, display_timer)
+                while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                    fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
             time_till_clock = time_till_clock + 1
 
