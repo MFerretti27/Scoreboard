@@ -111,7 +111,7 @@ def team_currently_playing(window, teams):
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
-                window.read(timeout=5000)
+                event, values = window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
