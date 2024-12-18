@@ -208,7 +208,7 @@ while True:
                     print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
-                    # Check if 2 days have passed after data is no longer available
+                    # Check if 3 days have passed after data is no longer available
                     if date_difference <= timedelta(days=3):
                         print("Yes it should display")
                         team_info.append(saved_data[teams[fetch_index][0]][0])
