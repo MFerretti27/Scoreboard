@@ -32,8 +32,8 @@ fetch_clock = ticks_ms() # Start Timer for Switching Display
 fetch_timer = 180 * 1000 # how often the display should update in seconds
 
 for i in range(len(teams)):
-    sport_league = teams[i][1]
-    sport_name = teams[i][2]
+    sport_league = teams[i][1].lower()
+    sport_name = teams[i][2].lower()
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
 get_team_logos(teams, TEAM_LOGO_SIZE)
@@ -44,7 +44,7 @@ window = gui_setup()
 #  Display only Teams currently playing  #
 #                                        #
 ##########################################
-def team_currently_playing(window, teams):
+def team_currently_playing(window: sg.Window, teams: list) -> list:
     '''Display only games that are playing
     
     :param window: Window Element that controls GUI
@@ -61,7 +61,7 @@ def team_currently_playing(window, teams):
     fetch_clock = ticks_ms() # Start Timer for Switching Display
     display_timer = 25 * 1000 # how often the display should update in seconds
     fetch_timer = 25 * 1000 # how often the display should update in seconds
-    event, values = window.read(timeout=5000)
+    event = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -71,7 +71,7 @@ def team_currently_playing(window, teams):
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
                 team_info.append(info)
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
@@ -112,7 +112,7 @@ def team_currently_playing(window, teams):
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
-                event, values = window.read(timeout=5000)
+                event = window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
@@ -129,9 +129,7 @@ def team_currently_playing(window, teams):
             
             display_index = (display_index + 1) % len(teams)
         
-        if event == sg.WIN_CLOSED or 'Escape' in event:
-            time.sleep(7)
-            window.close()
+        if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()
     
     # Reset font and color to ensure everything is back to normal
@@ -154,7 +152,7 @@ display_index = 0
 try:
     for fetch_index in range(len(teams)):
         print(f"\nFetching data for {teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
+        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
         team_info.append(info)
         teams_with_data.append(data)
         if currently_playing:
@@ -183,7 +181,7 @@ except:
         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
             fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
-event, values = window.read(timeout=5000)
+event = window.read(timeout=5000)
 
 ##################################
 #                                #
@@ -198,7 +196,7 @@ while True:
             team_info.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], fetch_index)
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
                 if currently_playing:
                     returned_data = team_currently_playing(window, teams)
                     team_info = returned_data
@@ -213,7 +211,7 @@ while True:
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
                     # Check if 3 days have passed after data is no longer available
                     if date_difference <= timedelta(days=3):
-                        print("Yes it should display")
+                        print(f"Yes it will display, time its been: {date_difference}")
                         team_info.append(saved_data[teams[fetch_index][0]][0])
                         teams_with_data.append(True)
                         continue
@@ -245,7 +243,7 @@ while True:
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color ='white')
 
-                event, values = window.read(timeout=5000)
+                event = window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
@@ -263,7 +261,7 @@ while True:
 
             display_index = (display_index + 1) % len(teams)
 
-        if event == sg.WIN_CLOSED or 'Escape' in event:
+        if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             break
 
         if True not in teams_with_data:

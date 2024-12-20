@@ -4,7 +4,7 @@ import requests # pip install requests
 import gc
 from constants import network_logos
 
-def get_data(URL: str, team: str, sport: str) -> tuple:
+def get_data(URL: str, team: str, sport: str) -> list:
     '''Retrieve Data from ESPN API
     
     :param URL: URL link to ESPN to get API data
@@ -35,8 +35,8 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
             team_info['bottom_info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
 
             # Data only used in this function
-            home_name =(competition["competitors"][0]["team"]["abbreviation"])
-            away_name = (competition["competitors"][1]["team"]["abbreviation"])
+            home_name =(competition["competitors"][0]["team"]["displayName"])
+            away_name = (competition["competitors"][1]["team"]["displayName"])
             venue = (competition["venue"]["fullName"])
             broadcast = (competition["broadcast"])
             home_team_id = competition["competitors"][0]["id"]
@@ -143,8 +143,8 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
             elif 'EST' in team_info['bottom_info']: team_info['bottom_info'] = team_info['bottom_info'].replace('EST', '')
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + away_name + ".png")
-            team_info["home_logo"] = (f"sport_logos/team" + str(sport) + "_logos/" + home_name + ".png")
+            team_info["away_logo"] = (f"sport_logos/{sport.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"sport_logos/{sport.upper()}/{home_name.upper()}.png")
 
             break
         else:

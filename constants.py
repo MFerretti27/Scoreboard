@@ -50,5 +50,5 @@ network_logos = {
     "TNT": "Networks/TNT.png",
     "NBA": "Networks/NBA_League.png",
     "NFL": "Networks/NFL_NET.png",
-    "NHL": "Networks/NHL_Network.png",
+    "NHL": "Networks/NHL_NET.png",
 }
