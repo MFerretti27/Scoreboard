@@ -61,6 +61,7 @@ def team_currently_playing(window, teams):
     fetch_clock = ticks_ms() # Start Timer for Switching Display
     display_timer = 25 * 1000 # how often the display should update in seconds
     fetch_timer = 25 * 1000 # how often the display should update in seconds
+    event, values = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -111,7 +112,7 @@ def team_currently_playing(window, teams):
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
-                window.read(timeout=5000)
+                event, values = window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
                 original_index = display_index
@@ -127,6 +128,11 @@ def team_currently_playing(window, teams):
                 print(f"{teams[display_index][0]} is not currently playing and wont Display")
             
             display_index = (display_index + 1) % len(teams)
+        
+        if event == sg.WIN_CLOSED or 'Escape' in event:
+            time.sleep(7)
+            window.close()
+            exit()
     
     # Reset font and color to ensure everything is back to normal
     window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
