@@ -119,8 +119,8 @@ def get_data(URL: str, team: str, sport: str) -> tuple:
                 home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
                 home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
                 
-                home_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
-                home_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
+                home_3pt_attempt = ((competition["competitors"][0]["statistics"][11]["displayValue"]))
+                home_3pt_made = ((competition["competitors"][0]["statistics"][12]["displayValue"]))
 
                 away_field_goal_attempt = ((competition["competitors"][1]["statistics"][3]["displayValue"]))
                 away_field_goal_made = ((competition["competitors"][1]["statistics"][4]["displayValue"]))

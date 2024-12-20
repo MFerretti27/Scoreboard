@@ -61,6 +61,7 @@ def team_currently_playing(window, teams):
     fetch_clock = ticks_ms() # Start Timer for Switching Display
     display_timer = 25 * 1000 # how often the display should update in seconds
     fetch_timer = 25 * 1000 # how often the display should update in seconds
+    event, values = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -129,7 +130,9 @@ def team_currently_playing(window, teams):
             display_index = (display_index + 1) % len(teams)
         
         if event == sg.WIN_CLOSED or 'Escape' in event:
-            break
+            time.sleep(7)
+            window.close()
+            exit()
     
     # Reset font and color to ensure everything is back to normal
     window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color ='white')
@@ -208,8 +211,8 @@ while True:
                     print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
-                    # Check if 2 days have passed after data is no longer available
-                    if date_difference <= timedelta(days=2):
+                    # Check if 3 days have passed after data is no longer available
+                    if date_difference <= timedelta(days=3):
                         print("Yes it should display")
                         team_info.append(saved_data[teams[fetch_index][0]][0])
                         teams_with_data.append(True)
