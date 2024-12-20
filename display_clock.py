@@ -21,8 +21,8 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
 
     fetch_clock = ticks_ms() # Start Timer for Switching Display
     fetch_timer = 180 * 1000 # how often the display should update in seconds
-    fetch_picture = ticks_ms() # Start Timer for Switching Display
-    fetch_picture_timer = 60 * 1000 # how often the display should update in seconds
+    fetch_picture = ticks_ms() # Start Timer for Switching picture
+    fetch_picture_timer = 60 * 1000 # how often the picture should update in seconds
     teams_with_data = []
     first_time = True
 
