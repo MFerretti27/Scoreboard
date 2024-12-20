@@ -4,6 +4,7 @@
 
 import datetime
 import time
+import FreeSimpleGUI as sg
 from get_data import get_data
 from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff # pip3 install adafruit-circuitpython-ticks
@@ -38,7 +39,11 @@ def clock(window, SPORT_URLS, message) -> None:
         window["home_logo"].update(filename="sport_logos/team0_logos/DET.png")
         window["bottom_info"].update(value=date,font=(FONT, SCORE_TXT_SIZE))
         window["top_info"].update(value=message,font=(FONT, TIMEOUT_SIZE))
-        window.read(timeout=5000)
+        event, values = window.read(timeout=5000)
+        if event == sg.WIN_CLOSED or 'Escape' in event:
+            time.sleep(6)
+            window.close()
+            exit()
 
         # Fetch to see if any teams have data now
         try:
