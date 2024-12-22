@@ -200,6 +200,11 @@ while True:
                 if currently_playing:
                     returned_data = team_currently_playing(window, teams)
                     team_info = returned_data
+                    # Reset timers
+                    while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                        display_clock = ticks_add(display_clock, display_timer)
+                    while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                        fetch_clock = ticks_add(fetch_clock, fetch_timer)
                 
                 # Save data for NBA, NHL, MLB data to display longer than data is available
                 if data == True and "FINAL" in info['bottom_info'] and "nfl" not in teams[fetch_index][1]:
