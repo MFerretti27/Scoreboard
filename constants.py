@@ -4,9 +4,10 @@
 # If you change teams you want to be displayed or change the order of the teams displayed then 
 # you will have to delete the sports_logo folder and on the next run it will re-download all the logos
 teams = [
-    ["Detroit Lions", "nfl", "football"],
-    ["Detroit Tigers", "mlb", "baseball"],
     ["Pittsburgh Steelers", "nfl", "football"],
+    ["Detroit Lions", "nfl", "football"],
+    ["Pittsburgh Pirates", "mlb", "baseball"],
+    ["Detroit Tigers", "mlb", "baseball"],
     ["Detroit Red Wings", "nhl", "hockey"],
     ["Detroit Pistons", "nba", "basketball"]
 ]
