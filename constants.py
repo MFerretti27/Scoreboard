@@ -9,6 +9,7 @@ teams = [
     ["Pittsburgh Pirates", "mlb", "baseball"],
     ["Detroit Tigers", "mlb", "baseball"],
     ["Detroit Red Wings", "nhl", "hockey"],
+    ["Pittsburgh Penguins", "nhl", "hockey"],
     ["Detroit Pistons", "nba", "basketball"]
 ]
 
