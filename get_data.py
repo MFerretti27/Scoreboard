@@ -2,14 +2,13 @@
 
 import requests # pip install requests
 import gc
-from constants import network_logos
+from constants import *
 
-def get_data(URL: str, team: str, sport: str) -> list:
+def get_data(URL: str, team: str) -> list:
     '''Retrieve Data from ESPN API
     
     :param URL: URL link to ESPN to get API data
     :param team: Team to get data for
-    :param sport: The sport that the team you are getting is
     '''
     team_has_data = False
     index = 0
@@ -22,7 +21,13 @@ def get_data(URL: str, team: str, sport: str) -> list:
     print(f"Looking for:  {team[0]}")
     for event in response_as_json["events"]:
         if team[0].upper() in event["name"].upper():
-            print(f"Found Game: {team[0]}")
+            playing_against = event["name"].split(" at ")
+            playing_against.remove(team[0])
+            print(f"Found Game: {team[0]} Playing Against: {playing_against[0]}")
+
+            if playing_each_other(team[0], playing_against[0]):
+                return team_info, team_has_data, currently_playing
+
             team_has_data = True
 
             competition = response_as_json["events"][index]["competitions"][0]
@@ -143,8 +148,8 @@ def get_data(URL: str, team: str, sport: str) -> list:
             elif 'EST' in team_info['bottom_info']: team_info['bottom_info'] = team_info['bottom_info'].replace('EST', '')
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"sport_logos/{sport.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"sport_logos/{sport.upper()}/{home_name.upper()}.png")
+            team_info["away_logo"] = (f"sport_logos/{team[1].upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"sport_logos/{team[1].upper()}/{home_name.upper()}.png")
 
             break
         else:
@@ -153,3 +158,29 @@ def get_data(URL: str, team: str, sport: str) -> list:
     resp.close()
     gc.collect()
     return team_info, team_has_data, currently_playing
+
+
+def playing_each_other(current_team: str, playing_against: str) -> bool:
+    '''Check if the team is playing another team you are following
+    
+    :param current_team: Team you are looking for
+    :param team_playing: Team that is playing against the team you are looking for
+    '''
+
+    current_team_index = 0
+
+    # Get index of current team getting data for
+    for index in range(len(teams)):
+        if current_team in teams[index]:
+            current_team_index = index
+            break
+
+    # if team playing against is in teams array and is after a team that already has data got
+    for index, team in enumerate(teams):
+        if playing_against.upper() in team[0].upper() and index > current_team_index:
+            print("Teams are playing each other, already got data for one of the teams")
+            return True
+
+    # 2 team you are following are not playing each other
+    # or teams are playing each other but it is the first time you are getting data for one of the teams
+    return False

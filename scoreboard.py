@@ -71,7 +71,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                 team_info.append(info)
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
@@ -149,37 +149,37 @@ team_info = []
 teams_with_data = []
 saved_data = {}
 display_index = 0
-try:
-    for fetch_index in range(len(teams)):
-        print(f"\nFetching data for {teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
-        team_info.append(info)
-        teams_with_data.append(data)
-        if currently_playing:
-                returned_data = team_currently_playing(window, teams)
-                team_info = returned_data
-except:
-    if is_connected():
-        message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
-        teams_with_data = clock(window, SPORT_URLS, message)
-        # Reset timers
-        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-            display_clock = ticks_add(display_clock, display_timer)
-        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-            fetch_clock = ticks_add(fetch_clock, fetch_timer)
+# try:
+for fetch_index in range(len(teams)):
+    print(f"\nFetching data for {teams[fetch_index][0]}")
+    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+    team_info.append(info)
+    teams_with_data.append(data)
+    if currently_playing:
+            returned_data = team_currently_playing(window, teams)
+            team_info = returned_data
+# except:
+#     if is_connected():
+#         message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+#         teams_with_data = clock(window, SPORT_URLS, message)
+#         # Reset timers
+#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+#             display_clock = ticks_add(display_clock, display_timer)
+#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
-    while not is_connected():
-        print("Internet connection is down, trying to reconnect...")
-        reconnect()
-        time.sleep(20)  # Check every 20 seconds
-        message = "No Internet Connection"
-        print("\nNo Internet connection Displaying Clock\n")
-        teams_with_data = clock(window, SPORT_URLS, message)
-        # Reset timers
-        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-            display_clock = ticks_add(display_clock, display_timer)
-        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-            fetch_clock = ticks_add(fetch_clock, fetch_timer)
+#     while not is_connected():
+#         print("Internet connection is down, trying to reconnect...")
+#         reconnect()
+#         time.sleep(20)  # Check every 20 seconds
+#         message = "No Internet Connection"
+#         print("\nNo Internet connection Displaying Clock\n")
+#         teams_with_data = clock(window, SPORT_URLS, message)
+#         # Reset timers
+#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+#             display_clock = ticks_add(display_clock, display_timer)
+#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
 event = window.read(timeout=5000)
 
@@ -196,7 +196,7 @@ while True:
             team_info.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
+                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                 if currently_playing:
                     returned_data = team_currently_playing(window, teams)
                     team_info = returned_data

@@ -59,7 +59,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
                 teams_with_data.clear()
                 for fetch_index in range(len(teams)):
                     print(f"\nFetching data for {teams[fetch_index][0]}")
-                    data = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
+                    data = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                     teams_with_data.append(data[1])
                     print(teams_with_data)
 
