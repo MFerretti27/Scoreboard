@@ -61,6 +61,13 @@ def get_data(URL: str, team: str, sport: str) -> list:
             # Check if Game hasn't been played yet
             elif not currently_playing:
                 team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
+                overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
+                spread = competition.get('odds', [{}])[0].get('details', 'N/A')
+                if "NHL" in URL.upper():
+                    team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                else:
+                    team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+
 
             # If looking at NFL team get this data (only if currently playing)
             if "NFL" in URL.upper() and currently_playing:
