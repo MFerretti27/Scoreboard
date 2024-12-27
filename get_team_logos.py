@@ -2,9 +2,10 @@
 
 import os
 from PIL import Image  # pip install pillow
-import requests # pip install requests
+import requests  # pip install requests
 import random
 from constants import *
+
 
 def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: int) -> None:
     '''Resize image to fit better on Monitor
@@ -16,16 +17,17 @@ def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: 
     '''
     # Open an image file using Pillow
     img = Image.open(image_path)
-    
+
     # Calculate new size based on scale factor
     width, height = img.size
     new_width = int(width * scale_factor)
     new_height = int(height * scale_factor)
-    
+
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
     new_path_png = os.path.join(sport_dir, f"{team_name}.png")
     img_resized.save(new_path_png)
+
 
 def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
     ''' Create a base directory to store the logos if it doesn't exist
@@ -80,7 +82,6 @@ def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
 
         if os.path.exists('sport_logos'):
             print("All logos have been downloaded!")
-
 
 
 def get_random_logo() -> dict:
