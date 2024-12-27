@@ -18,12 +18,14 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
     :param window: Window Element that controls GUI
     :param SPORT_URLS: URL links to grab data to see if situation has changed
     :param message: Message to display why script is showing clock
+
+    :return team_info: List of Boolean values representing if team is has data to display
     '''
 
-    fetch_clock = ticks_ms()  # Start Timer for Switching Display
-    fetch_timer = 180 * 1000  # how often the display should update in seconds
-    fetch_picture = ticks_ms()  # Start Timer for Switching picture
-    fetch_picture_timer = 60 * 1000  # how often the picture should update in seconds
+    fetch_clock = ticks_ms()  # Start timer for switching display
+    fetch_timer = 180 * 1000  # How often the display should update in seconds
+    fetch_picture = ticks_ms()  # Start timer for switching picture
+    fetch_picture_timer = 60 * 1000  # How often the picture should update in seconds
     teams_with_data = []
     first_time = True
 
@@ -36,14 +38,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
         current_time = datetime.datetime.now()
         hour = current_time.hour if current_time.hour < 13 else current_time.hour - 12
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
-        # if current_time.hour > 12:
-        #     hour = current_time.hour - 12
-        # else:
-        #     hour = current_time.hour
-        # if current_time.minute < 10:
-        #     minute = "0" + str(current_time.minute)
-        # else:
-        #     minute = current_time.minute
+
         date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
         window["hyphen"].update(value=':', font=(FONT, SCORE_TXT_SIZE))
         window["home_score"].update(value=minute, font=(FONT, CLOCK_TXT_SIZE))
@@ -61,19 +56,19 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
             window.close()
             exit()
 
-        # Fetch to see if any teams have data now
+        # Fetch to see if any teams have data to return to main loop
         try:
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
                 teams_with_data.clear()
                 for fetch_index in range(len(teams)):
                     print(f"\nFetching data for {teams[fetch_index][0]}")
-                    data = get_data(SPORT_URLS[fetch_index], teams[fetch_index], teams[fetch_index][1])
+                    data = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                     teams_with_data.append(data[1])
                     print(teams_with_data)
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if display updated
-        except:
-            print("Failed to Get Data")
+        except Exception as error:
+            print(f"Failed to Get Data, Error: {error}")
             if is_connected():
                 message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
             if not is_connected():

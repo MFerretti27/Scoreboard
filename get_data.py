@@ -5,25 +5,31 @@ import gc
 from constants import network_logos
 
 
-def get_data(URL: str, team: str, sport: str) -> list:
+def get_data(URL: str, team: str) -> list:
     '''Retrieve Data from ESPN API
 
     :param URL: URL link to ESPN to get API data
-    :param team: Team to get data for
-    :param sport: The sport that the team you are getting is
+    :param team: Index of teams array to get data for
+
+    :return team_info: List of Boolean values representing if team is has data to display
     '''
     team_has_data = False
+    currently_playing = False
+
     index = 0
     team_info = {}
+    team_name = team[0]
+    team_sport = team[1]
+    # Need to set this to empty string to avoid displaying old info
+    # If team_info does not have top_info then display will not update
     team_info['top_info'] = ''
-    currently_playing = False
 
     resp = requests.get(URL)
     response_as_json = resp.json()
-    print(f"Looking for:  {team[0]}")
+    print(f"Looking for:  {team_name}")
     for event in response_as_json["events"]:
-        if team[0].upper() in event["name"].upper():
-            print(f"Found Game: {team[0]}")
+        if team_name.upper() in event["name"].upper():
+            print(f"Found Game: {team_name}")
             team_has_data = True
 
             competition = response_as_json["events"][index]["competitions"][0]
@@ -56,7 +62,7 @@ def get_data(URL: str, team: str, sport: str) -> list:
                 currently_playing = True
 
             # Check if Team is Done Playing
-            if "Delayed" in str(team_info['bottom_info']) or "Postponed" in str(team_info['bottom_info']) or "Final" in str(team_info['bottom_info']):
+            if any(keyword in str(team_info['bottom_info']) for keyword in ["Delayed", "Postponed", "Final"]):
                 currently_playing = False
                 team_info['bottom_info'] = str(team_info['bottom_info']).upper()
 
@@ -97,20 +103,13 @@ def get_data(URL: str, team: str, sport: str) -> list:
 
                 timeouts = ''
                 if home_timeouts is not None and away_timeouts is not None:
-                    if away_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
-                    elif away_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF   ")
-                    elif away_timeouts == 1: timeouts = timeouts + ("\u25CF  ")
-                    elif away_timeouts == 0: timeouts = timeouts + ("  ")
+                    timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                    timeouts = timeouts + ("\t\t")
+                    timeouts += timeout_map.get(away_timeouts, "")
+                    timeouts += timeout_map.get(home_timeouts, "")
+                    team_info['timeouts'] = timeouts + (f"{away_timeouts}\t\t{home_timeouts}")
 
-                    if home_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
-                    elif home_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF  ")
-                    elif home_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
-                    elif home_timeouts == 0: timeouts = timeouts + ("\t")
-
-                team_info['timeouts'] = timeouts
-
+                # Swap top and bottom info for NFL (I think it looks better displayed this way)
                 temp = str(team_info['bottom_info'])
                 team_info['bottom_info'] = str(team_info['top_info'])
                 team_info['top_info'] = temp
@@ -129,8 +128,11 @@ def get_data(URL: str, team: str, sport: str) -> list:
                 away_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
                 away_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
 
-                away_stats = "FG: " + away_field_goal_made + "/" + away_field_goal_attempt + " 3PT: " + away_3pt_made + "/" + away_3pt_attempt
-                home_stats = "FG: " + home_field_goal_made + "/" + home_field_goal_attempt + " 3PT: " + home_3pt_made + "/" + home_3pt_attempt
+                away_stats = \
+                    f"FG: {away_field_goal_made}/{away_field_goal_attempt} 3PT: {away_3pt_made}/{away_3pt_attempt}"
+                home_stats = \
+                    f"FG: {home_field_goal_made}/{home_field_goal_attempt} 3PT: {home_3pt_made}/{home_3pt_attempt}"
+
                 team_info['top_info'] = away_stats + "\t\t " + home_stats
 
             # If looking at MLB team get this data (only if currently playing)
@@ -146,8 +148,8 @@ def get_data(URL: str, team: str, sport: str) -> list:
                 team_info['bottom_info'] = team_info['bottom_info'].replace('EST', '')
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"sport_logos/{sport.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"sport_logos/{sport.upper()}/{home_name.upper()}.png")
+            team_info["away_logo"] = (f"sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
 
             break
         else:

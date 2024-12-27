@@ -35,7 +35,7 @@ def reconnect() -> None:
             time.sleep(5)
             os.system("sudo nmcli radio wifi on")
 
-    except subprocess.CalledProcessError as e:
-        print(f"Error resetting the network interface : {e}")
+    except subprocess.CalledProcessError as error:
+        print(f"Error resetting the network interface : {error}")
 
     time.sleep(5)  # Wait for the network interface to come back up

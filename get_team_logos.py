@@ -85,7 +85,10 @@ def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
 
 
 def get_random_logo() -> dict:
-    '''Get 2 random teams from teams array, if only one team then it will return the only team there'''
+    '''Get 2 random teams from teams array, if only one team then it will return the only team there
+
+    :return logos: Dictionary with team logos
+    '''
     logos = {}
     if len(teams) >= 2:
         random_indexes = random.sample(range(len(teams)), 2)

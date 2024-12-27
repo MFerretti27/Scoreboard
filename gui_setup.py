@@ -12,12 +12,12 @@ def gui_setup() -> sg.Window:
     files = get_random_logo()
 
     home_record_layout = [
-        [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS,0)))],
+        [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))],
         [sg.Text("HOME", font=(FONT, RECORD_TXT_SIZE), key='home_record')]
     ]
 
     away_record_layout = [
-        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS,0)))],
+        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))],
         [sg.Text("AWAY", font=(FONT, RECORD_TXT_SIZE), key='away_record')]
     ]
 
@@ -47,6 +47,6 @@ def gui_setup() -> sg.Window:
     # Create the window
     window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True, return_keyboard_events=True).Finalize()
     window.Maximize()
-    window.TKroot.config(cursor="none")
+    window.TKroot.config(cursor="none")  # Remove cursor from screen
 
     return window
