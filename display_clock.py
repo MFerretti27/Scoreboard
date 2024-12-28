@@ -70,7 +70,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
         except Exception as error:
             print(f"Failed to Get Data, Error: {error}")
             if is_connected():
-                message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+                message = f'Failed to Get Info From ESPN, Error:{error}'
             if not is_connected():
                 print("Internet connection is down, trying to reconnect...")
                 reconnect()
