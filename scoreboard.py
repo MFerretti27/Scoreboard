@@ -164,7 +164,7 @@ try:
 except Exception as error:
     print(f"Error: {error}")
     if is_connected():
-        message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+        message = f'Failed to Get Info From ESPN, Error:{error}'
         teams_with_data = clock(window, SPORT_URLS, message)
         # Reset timers
         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
@@ -287,7 +287,7 @@ while True:
         print(f"Error: {error}")
         time_till_clock = 0
         if is_connected():
-            message = 'Failed to Get Info From ESPN, ESPN Changed API EndPoints, Update Script'
+            message = f'Failed to Get Info From ESPN, Error:{error}'
             teams_with_data = clock(window, SPORT_URLS, message)
             # Reset timers
             while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
