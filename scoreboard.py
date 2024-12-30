@@ -270,6 +270,7 @@ while True:
 
             display_index = (display_index + 1) % len(teams)
 
+        event = window.read(timeout=5000)
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             break
 
