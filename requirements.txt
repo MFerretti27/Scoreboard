@@ -3,3 +3,4 @@ FreeSimpleGUI
 pillow
 PySimpleGUI
 requests
+flake8
