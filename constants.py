@@ -52,4 +52,5 @@ network_logos = {
     "NBA": "Networks/NBA_League.png",
     "NFL": "Networks/NFL_NET.png",
     "NHL": "Networks/NHL_Network.png",
+    "Netflix": "Networks/Netflix.png",
 }
