@@ -103,11 +103,19 @@ def get_data(URL: str, team: str) -> list:
 
                 timeouts = ''
                 if home_timeouts is not None and away_timeouts is not None:
-                    timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
+                    if away_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
+                    elif away_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF   ")
+                    elif away_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
+                    elif away_timeouts == 0: timeouts = timeouts + ("  ")
 
-                    timeouts += timeout_map.get(away_timeouts, "")
-                    timeouts += timeout_map.get(home_timeouts, "")
-                    team_info['timeouts'] = timeouts + (f"{away_timeouts}\t\t{home_timeouts}")
+                    timeouts = timeouts + ("\t\t")
+
+                    if home_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
+                    elif home_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF  ")
+                    elif home_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
+                    elif home_timeouts == 0: timeouts = timeouts + ("\t")
+
+                team_info['timeouts'] = timeouts
 
                 # Swap top and bottom info for NFL (I think it looks better displayed this way)
                 temp = str(team_info['bottom_info'])
