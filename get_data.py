@@ -2,7 +2,30 @@
 
 import requests  # pip install requests
 import gc
-from constants import network_logos
+from constants import network_logos, teams
+
+should_skip = False
+
+
+def check_playing_each_other(home_team: str, away_team: str) -> bool:
+    '''Check if the two teams are playing each other
+
+    :param home_team: Name of home team
+    :param away_team: Name of away team
+
+    :return: Boolean value representing if the two teams are playing each other
+    '''
+    global should_skip
+    for x in teams:
+        for y in teams:
+            if home_team.upper() in [y[0].upper(), x[0].upper()] and away_team.upper() in [x[0].upper(), y[0].upper()]:
+                if should_skip:  # Only skip one team, the one further down teams list
+                    print(f"{home_team} is playing {away_team}, skipping to not display twice")
+                    should_skip = not should_skip
+                    return True
+                should_skip = not should_skip
+                return False  # Found teams playing each other, but should not skip first instance
+    return False
 
 
 def get_data(URL: str, team: str) -> list:
@@ -26,7 +49,6 @@ def get_data(URL: str, team: str) -> list:
 
     resp = requests.get(URL)
     response_as_json = resp.json()
-    print(f"Looking for:  {team_name}")
     for event in response_as_json["events"]:
         if team_name.upper() in event["name"].upper():
             print(f"Found Game: {team_name}")
@@ -48,6 +70,10 @@ def get_data(URL: str, team: str) -> list:
             broadcast = (competition["broadcast"])
             home_team_id = competition["competitors"][0]["id"]
             away_team_id = competition["competitors"][1]["id"]
+
+            if check_playing_each_other(home_name, away_name):
+                team_has_data = False
+                return team_info, team_has_data, currently_playing
 
             for network, filepath in network_logos.items():
                 if network.upper() in broadcast.upper():
@@ -103,19 +129,12 @@ def get_data(URL: str, team: str) -> list:
 
                 timeouts = ''
                 if home_timeouts is not None and away_timeouts is not None:
-                    if away_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
-                    elif away_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF   ")
-                    elif away_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
-                    elif away_timeouts == 0: timeouts = timeouts + ("  ")
+                    timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                    timeouts = timeouts + ("\t\t")
-
-                    if home_timeouts == 3: timeouts = timeouts + ("\u25CF  \u25CF  \u25CF")
-                    elif home_timeouts == 2: timeouts = timeouts + ("\u25CF  \u25CF  ")
-                    elif home_timeouts == 1: timeouts = timeouts + ("\u25CF\t")
-                    elif home_timeouts == 0: timeouts = timeouts + ("\t")
-
-                team_info['timeouts'] = timeouts
+                    timeouts += timeout_map.get(away_timeouts, "")
+                    timeouts += "\t\t"
+                    timeouts += timeout_map.get(home_timeouts, "")
+                    team_info['timeouts'] = timeouts
 
                 # Swap top and bottom info for NFL (I think it looks better displayed this way)
                 temp = str(team_info['bottom_info'])
