@@ -135,11 +135,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()
 
-    # Reset font and color to ensure everything is back to normal
-    window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
     print("\nNo Team Currently Playing\n")
-    fetch_timer = 180 * 1000  # Put back to fetching every 3 minutes if no team playing
     return team_info
 
 
@@ -274,7 +270,7 @@ while True:
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             break
 
-        if True not in teams_with_data:
+        if True not in teams_with_data:  # No data to display
             message = "No Data For Any Teams"
             print("\nNo Teams with Data Displaying Clock\n")
             teams_with_data = clock(window, SPORT_URLS, message)
@@ -288,13 +284,23 @@ while True:
         print(f"Error: {error}")
         time_till_clock = 0
         if is_connected():
-            message = f'Failed to Get Info From ESPN, Error:{error}'
-            teams_with_data = clock(window, SPORT_URLS, message)
+            while time_till_clock < 12:
+                try:
+                    get_data(SPORT_URLS[display_index], teams[display_index])
+                    break  # If data is fetched successfully, break out of loop
+                except Exception:
+                    print("Could not get data for team, trying again")
+                time.sleep(30)
+                time_till_clock = time_till_clock + 1
+            if time_till_clock <= 12:  # 6 minutes without data, display clock
+                message = f'Failed to Get Info From ESPN, Error:{error}'
+                teams_with_data = clock(window, SPORT_URLS, message)
             # Reset timers
             while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                 display_clock = ticks_add(display_clock, display_timer)
             while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)
+
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
             reconnect()
