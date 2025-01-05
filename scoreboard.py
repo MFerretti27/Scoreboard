@@ -136,6 +136,9 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             exit()
 
     print("\nNo Team Currently Playing\n")
+    # Reset font and color to ensure everything is back to normal
+    window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
+    window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
     return team_info
 
 
