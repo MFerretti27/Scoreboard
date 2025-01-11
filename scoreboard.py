@@ -295,7 +295,7 @@ while True:
                     print("Could not get data for team, trying again")
                 time.sleep(30)
                 time_till_clock = time_till_clock + 1
-            if time_till_clock <= 12:  # 6 minutes without data, display clock
+            if time_till_clock >= 12:  # 6 minutes without data, display clock
                 message = f'Failed to Get Info From ESPN, Error:{error}'
                 teams_with_data = clock(window, SPORT_URLS, message)
             # Reset timers
