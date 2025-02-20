@@ -44,7 +44,7 @@ def get_data(URL: str, team: str) -> list:
     team_name = team[0]
     team_sport = team[1]
     # Need to set this to empty string to avoid displaying old info
-    # If team_info does not have top_info then display will not update
+    # If team_info does not have top_info then display will not update for it
     team_info['top_info'] = ''
 
     resp = requests.get(URL)
@@ -71,6 +71,7 @@ def get_data(URL: str, team: str) -> list:
             home_team_id = competition["competitors"][0]["id"]
             away_team_id = competition["competitors"][1]["id"]
 
+            # Check if two of your teams are playing each other to not display same data twice
             if check_playing_each_other(home_name, away_name):
                 team_has_data = False
                 return team_info, team_has_data, currently_playing
@@ -113,25 +114,18 @@ def get_data(URL: str, team: str) -> list:
                 if down is not None and spot is not None:
                     team_info['top_info'] = str(down) + " on " + str(spot)
 
-                team_info['home_possession'] = False
-                team_info['away_possession'] = False
-                team_info['home_redzone'] = False
-                team_info['away_redzone'] = False
-                # Find who has possession and pass information to represent possession
-                if possession is not None and possession == home_team_id:
-                    team_info['home_possession'] = True
-                    if red_zone:
-                        team_info['home_redzone'] = True
-                elif possession is not None and possession == away_team_id:
-                    team_info['away_possession'] = True
-                    if red_zone:
-                        team_info['away_redzone'] = True
+                team_info.update({
+                    'home_possession': possession == home_team_id,
+                    'away_possession': possession == away_team_id,
+                    'home_redzone': possession == home_team_id and red_zone,
+                    'away_redzone': possession == away_team_id and red_zone
+                })
 
-                timeouts = ''
+                team_info['timeouts'] = ''
                 if home_timeouts is not None and away_timeouts is not None:
                     timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                    timeouts += timeout_map.get(away_timeouts, "")
+                    timeouts = timeout_map.get(away_timeouts, "")
                     timeouts += "\t\t"
                     timeouts += timeout_map.get(home_timeouts, "")
                     team_info['timeouts'] = timeouts
@@ -164,23 +158,20 @@ def get_data(URL: str, team: str) -> list:
 
             # If looking at MLB team get this data (only if currently playing)
             if "MLB" in URL.upper() and currently_playing:
-                # outs = (response_as_json["events"][index]["competitions"][0]["outsText"])
+                # outs = (competition["outsText"])
                 if 'Bot' in str(team_info.get('bottom_info')):  # Replace Bot with Bottom for baseball innings
                     team_info['bottom_info'].replace('bot', 'Bottom')
 
             # Remove Timezone Characters in info
-            if 'EDT' in team_info.get('bottom_info'):
-                team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '')
-            elif 'EST' in team_info['bottom_info']:
-                team_info['bottom_info'] = team_info['bottom_info'].replace('EST', '')
+            team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
 
             # Get Logos Location for Teams
             team_info["away_logo"] = (f"sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
             team_info["home_logo"] = (f"sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
 
-            break
+            break  # Found team in sports events and got data, no need to continue looking
         else:
-            index += 1
+            index += 1  # Continue looking for team in sports league events
 
     resp.close()
     gc.collect()
