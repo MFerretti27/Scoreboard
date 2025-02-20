@@ -65,6 +65,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
                     data = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                     teams_with_data.append(data[1])
                     print(teams_with_data)
+                    message = "No Data For Any Teams"
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if display updated
         except Exception as error:
