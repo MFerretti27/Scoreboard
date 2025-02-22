@@ -120,6 +120,10 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     # NBA Specific display size for top info
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+                    
+                    # MLB Specific display size for bottom info
+                    if "MLB" in SPORT_URLS[display_index].upper() and key == 'top_info':
+                        window['bottom_info'].update(value=value, font=(FONT, 80))
 
                 event = window.read(timeout=5000)
 

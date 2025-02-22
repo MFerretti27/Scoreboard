@@ -22,11 +22,12 @@ def gui_setup() -> sg.Window:
     ]
 
     score_layout = [
-        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0))),
-         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0))),
-         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0)))],
+        [sg.Text("", font=(FONT, SCORE_TXT_SIZE-70), key='baseball_inning', pad=((0, 0), (100, 0)))],
+        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE - 250, 0))),
+         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE - 250, 0))),
+         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE - 250 , 0)))],
         [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='timeouts')],
-        [sg.Image("", key='network_logo', pad=((0, 0), (SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO, 0)))]
+        [sg.Image("", key='network_logo', pad=((0, 0), (25, 0)))]
     ]
 
     top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Top Info", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]

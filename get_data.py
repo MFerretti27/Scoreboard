@@ -43,9 +43,10 @@ def get_data(URL: str, team: str) -> list:
     team_info = {}
     team_name = team[0]
     team_sport = team[1]
-    # Need to set this to empty string to avoid displaying old info
-    # If team_info does not have top_info then display will not update for it
+    # Need to set these to empty string to avoid displaying old info, other texts always get updated below
+    # If team_info does not have top_info/baseball_inning then it will not update for it below
     team_info['top_info'] = ''
+    team_info['baseball_inning'] = ''
 
     resp = requests.get(URL)
     response_as_json = resp.json()
@@ -103,7 +104,9 @@ def get_data(URL: str, team: str) -> list:
                 else:
                     team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
-            # If looking at NFL team get this data (only if currently playing)
+            ####################################################################
+            # If looking at NFL team, get NFL specific data if currently playing
+            ####################################################################
             if "NFL" in URL.upper() and currently_playing:
                 down = competition.get('situation', {}).get('shortDownDistanceText')
                 red_zone = competition.get('situation', {}).get('isRedZone')
@@ -135,7 +138,9 @@ def get_data(URL: str, team: str) -> list:
                 team_info['bottom_info'] = str(team_info['top_info'])
                 team_info['top_info'] = temp
 
-            # If looking at NBA team get this data (only if currently playing)
+            ####################################################################
+            # If looking at NBA team, get NBA specific data if currently playing
+            ####################################################################
             if "NBA" in URL.upper() and currently_playing:
                 home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
                 home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
@@ -156,12 +161,51 @@ def get_data(URL: str, team: str) -> list:
 
                 team_info['top_info'] = away_stats + "\t\t " + home_stats
 
-            # If looking at MLB team get this data (only if currently playing)
+            ####################################################################
+            # If looking at MLB team, get MLB specific data if currently playing
+            ####################################################################
             if "MLB" in URL.upper() and currently_playing:
-                outs = (competition["outsText"])
-                team_info['bottom_info'] = (f"{outs} Outs")
-                if 'Bot' in str(team_info.get('bottom_info')):  # Replace Bot with Bottom for baseball innings
-                    team_info['bottom_info'].replace('bot', 'Bottom')
+                team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
+
+                # Change to display inning above score
+                team_info['baseball_inning'] = team_info['bottom_info']
+                team_info['bottom_info'] = ""
+                
+                # Get who is pitching and batting, if info is available 
+                pitcher = (competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A"))
+                batter = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A"))
+                due_up = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A"))
+                
+                if pitcher != "N/A":
+                    team_info['bottom_info'] += (f"P: {pitcher}   ")
+                if batter != "N/A":
+                    team_info['bottom_info'] += (f"AB: {batter}")
+                elif due_up != "N/A":
+                    team_info['bottom_info'] += (f"DueUp: {batter}")
+
+                # If inning is changing do not display count and move inning to display below score
+                if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
+                    outs = (competition["outsText"])
+                    balls = (competition["situation"]["balls"])
+                    strikes = (competition["situation"]["strikes"])
+                    team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
+                else:
+                    team_info['bottom_info'] = team_info['baseball_inning']
+                    team_info['baseball_inning'] = ""
+
+                # Get runners position
+                onFirst = (competition["situation"]["onFirst"])
+                onSecond = (competition["situation"]["onSecond"])
+                onThird = (competition["situation"]["onThird"])
+
+                # if onFirst and not onSecond and not onThird:
+                # elif not onFirst and onSecond and not onThird:
+                # elif not onFirst and not onSecond and onThird:
+                # elif onFirst and not onSecond and onThird:
+                # elif onFirst and onSecond and not onThird:
+                # elif not onFirst and onSecond and onThird:
+                # elif onFirst and onSecond and onThird:
+                # elif not onFirst and not onSecond and not onThird:
 
             # Remove Timezone Characters in info
             team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
