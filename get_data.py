@@ -158,7 +158,8 @@ def get_data(URL: str, team: str) -> list:
 
             # If looking at MLB team get this data (only if currently playing)
             if "MLB" in URL.upper() and currently_playing:
-                # outs = (competition["outsText"])
+                outs = (competition["outsText"])
+                team_info['bottom_info'] = (f"{outs} Outs")
                 if 'Bot' in str(team_info.get('bottom_info')):  # Replace Bot with Bottom for baseball innings
                     team_info['bottom_info'].replace('bot', 'Bottom')
 

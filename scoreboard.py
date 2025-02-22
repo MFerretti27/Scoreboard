@@ -86,6 +86,12 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
 
+                # Change Size of game info if length is too long
+                if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
+                else:
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
+
                 # Reset text color, underline and timeouts, for new display
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
                 window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
@@ -238,8 +244,7 @@ while True:
 
                 # Change Size of game info if length is too long
                 if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
-                    characters_over = len(team_info[display_index]['bottom_info']) - CHARACTERS_FIT_ON_SCREEN
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - (SPACE_ONE_CHARACTER_TAKES_UP * characters_over)))
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
                 else:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
