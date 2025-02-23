@@ -122,8 +122,12 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
                     
                     # MLB Specific display size for bottom info
-                    if "MLB" in SPORT_URLS[display_index].upper() and key == 'top_info':
-                        window['bottom_info'].update(value=value, font=(FONT, 80))
+                    if "MLB" in SPORT_URLS[display_index].upper():
+                        if key == 'bottom_info':
+                            window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
+                        elif key == 'network_logo':
+                            window[key].update(filename=value, subsample=BASES_SIZE)
+
 
                 event = window.read(timeout=5000)
 
