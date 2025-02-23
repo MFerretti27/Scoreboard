@@ -198,14 +198,19 @@ def get_data(URL: str, team: str) -> list:
                 onSecond = (competition["situation"]["onSecond"])
                 onThird = (competition["situation"]["onThird"])
 
-                # if onFirst and not onSecond and not onThird:
-                # elif not onFirst and onSecond and not onThird:
-                # elif not onFirst and not onSecond and onThird:
-                # elif onFirst and not onSecond and onThird:
-                # elif onFirst and onSecond and not onThird:
-                # elif not onFirst and onSecond and onThird:
-                # elif onFirst and onSecond and onThird:
-                # elif not onFirst and not onSecond and not onThird:
+                base_conditions = {
+                    (True, False, False): "on_first.png",
+                    (False, True, False): "on_second.png",
+                    (False, False, True): "on_third.png",
+                    (True, False, True): "on_first_third.png",
+                    (True, True, False): "on_first_second.png",
+                    (False, True, True): "on_second_third.png",
+                    (True, True, True): "on_first_second_third.png",
+                    (False, False, False): "empty_base.png"
+                }
+
+                # Display runners on base
+                team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
 
             # Remove Timezone Characters in info
             team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
