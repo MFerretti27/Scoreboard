@@ -207,7 +207,7 @@ def get_data(URL: str, team: str) -> list:
                     (True, True, False): "on_first_second.png",
                     (False, True, True): "on_second_third.png",
                     (True, True, True): "on_first_second_third.png",
-                    (False, False, False): "empty_base.png"
+                    (False, False, False): "empty_bases.png"
                 }
 
                 # Display runners on base
