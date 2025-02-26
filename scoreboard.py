@@ -109,25 +109,24 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     # Football specific display information
                     if "NFL" in SPORT_URLS[display_index].upper():
                         if team_info[display_index]['home_possession'] and key == 'home_score':
-                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         elif team_info[display_index]['away_possession'] and key == 'away_score':
-                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         if team_info[display_index]['home_redzone'] and key == 'home_score':
-                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
                         elif team_info[display_index]['away_redzone'] and key == 'away_score':
-                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
 
                     # NBA Specific display size for top info
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
-                    
+
                     # MLB Specific display size for bottom info
                     if "MLB" in SPORT_URLS[display_index].upper():
                         if key == 'bottom_info':
                             window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                         elif key == 'network_logo':
                             window[key].update(filename=value, subsample=BASES_SIZE)
-
 
                 event = window.read(timeout=5000)
 

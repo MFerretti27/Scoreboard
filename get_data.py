@@ -172,10 +172,10 @@ def get_data(URL: str, team: str) -> list:
                 team_info['baseball_inning'] = team_info['bottom_info']
                 team_info['bottom_info'] = ""
 
-                # Get who is pitching and batting, if info is available 
-                pitcher = (competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A"))
-                batter = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A"))
-                due_up = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A"))
+                # Get who is pitching and batting, if info is available
+                pitcher = competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
+                batter = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
+                due_up = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A")
 
                 if pitcher != "N/A":
                     team_info['bottom_info'] += (f"P: {pitcher}   ")
