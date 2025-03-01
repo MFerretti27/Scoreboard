@@ -93,7 +93,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
                 # Reset text color, underline and timeouts, for new display
-                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='yellow')
                 window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
