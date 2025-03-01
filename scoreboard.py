@@ -63,7 +63,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     display_clock = ticks_ms()  # Start timer for switching display
     fetch_clock = ticks_ms()  # Start timer for switching display
     display_timer = 25 * 1000  # How often the display should update in seconds
-    fetch_timer = 25 * 1000  # How often the display should update in seconds
+    fetch_timer = 25 * 1000  # How to fetch for data in seconds
     event = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
