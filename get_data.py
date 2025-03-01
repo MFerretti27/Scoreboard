@@ -90,7 +90,8 @@ def get_data(URL: str, team: str) -> list:
                 currently_playing = True
 
             # Check if Team is Done Playing
-            if any(keyword in str(team_info['bottom_info']) for keyword in ["Delayed", "Postponed", "Final"]):
+            if any(keyword in str(team_info['bottom_info'])
+                   for keyword in ["Delayed", "Postponed", "Final", "Canceled"]):
                 currently_playing = False
                 team_info['bottom_info'] = str(team_info['bottom_info']).upper()
 
@@ -171,10 +172,10 @@ def get_data(URL: str, team: str) -> list:
                 team_info['baseball_inning'] = team_info['bottom_info']
                 team_info['bottom_info'] = ""
 
-                # Get who is pitching and batting, if info is available 
-                pitcher = (competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A"))
-                batter = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A"))
-                due_up = (competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A"))
+                # Get who is pitching and batting, if info is available
+                pitcher = competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
+                batter = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
+                due_up = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A")
 
                 if pitcher != "N/A":
                     team_info['bottom_info'] += (f"P: {pitcher}   ")
@@ -206,7 +207,7 @@ def get_data(URL: str, team: str) -> list:
                     (True, True, False): "on_first_second.png",
                     (False, True, True): "on_second_third.png",
                     (True, True, True): "on_first_second_third.png",
-                    (False, False, False): "empty_base.png"
+                    (False, False, False): "empty_bases.png"
                 }
 
                 # Display runners on base
