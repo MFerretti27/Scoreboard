@@ -1,8 +1,8 @@
 '''Change Sizes of all Text, logos and Spacing here for GUI'''
 
-# The team names you want to follow, *must match* in order -> [team name, sport league, sport name]
-# If you change teams you want to be displayed or change the order of the teams displayed then
-# you will have to delete the sports_logo folder and on the next run it will re-download all the logos
+# The team names you want to follow, *MUST MATCH* in order -> [team name, sport league, sport name]
+# If you add a new league then you will have to delete the sports_logo folder and then the next time it runs
+# the logos will be re-downloaded
 teams = [
     ["Detroit Lions", "nfl", "football"],
     ["Detroit Tigers", "mlb", "baseball"],
@@ -22,9 +22,11 @@ CLOCK_TXT_SIZE = 204
 HYPHEN_SIZE = 84
 TIMEOUT_SIZE = 34
 NBA_TOP_INFO_SIZE = 56
+MLB_BOTTOM_INFO_SIZE = 80
 PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 36
 SPACE_ONE_CHARACTER_TAKES_UP = 6
+TOP_TXT_SIZE = 80
 
 # Display Spacing
 COLUMN_WIDTH = 500  # Width should split the screen in threes
@@ -38,6 +40,7 @@ INFO_SPACE_HEIGHT = 125
 # Logo Sizes
 TEAM_LOGO_SIZE = 1
 NETWORK_LOGOS_SIZE = 2
+BASE_SIZES = 5
 
 # Network Logo File Locations
 network_logos = {

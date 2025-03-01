@@ -63,7 +63,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     display_clock = ticks_ms()  # Start timer for switching display
     fetch_clock = ticks_ms()  # Start timer for switching display
     display_timer = 25 * 1000  # How often the display should update in seconds
-    fetch_timer = 25 * 1000  # How often the display should update in seconds
+    fetch_timer = 25 * 1000  # How to fetch for data in seconds
     event = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
@@ -86,8 +86,14 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
 
+                # Change Size of game info if length is too long
+                if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
+                else:
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
+
                 # Reset text color, underline and timeouts, for new display
-                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='yellow')
                 window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
@@ -103,17 +109,24 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     # Football specific display information
                     if "NFL" in SPORT_URLS[display_index].upper():
                         if team_info[display_index]['home_possession'] and key == 'home_score':
-                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         elif team_info[display_index]['away_possession'] and key == 'away_score':
-                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         if team_info[display_index]['home_redzone'] and key == 'home_score':
-                            window['home_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
                         elif team_info[display_index]['away_redzone'] and key == 'away_score':
-                            window['away_score'].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
 
                     # NBA Specific display size for top info
                     if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+
+                    # MLB Specific display size for bottom info
+                    if "MLB" in SPORT_URLS[display_index].upper():
+                        if key == 'bottom_info':
+                            window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
+                        elif key == 'network_logo':
+                            window[key].update(filename=value, subsample=BASES_SIZE)
 
                 event = window.read(timeout=5000)
 
@@ -238,8 +251,7 @@ while True:
 
                 # Change Size of game info if length is too long
                 if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
-                    characters_over = len(team_info[display_index]['bottom_info']) - CHARACTERS_FIT_ON_SCREEN
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - (SPACE_ONE_CHARACTER_TAKES_UP * characters_over)))
+                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
                 else:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
