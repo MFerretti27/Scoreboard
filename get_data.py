@@ -100,10 +100,17 @@ def get_data(URL: str, team: str) -> list:
                 team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
                 overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
                 spread = competition.get('odds', [{}])[0].get('details', 'N/A')
-                if "NHL" in URL.upper():
+                if "NHL" in URL.upper() or "MLB" in URL.upper():
                     team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
                 else:
                     team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+
+            # Remove Timezone Characters in info
+            team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
+
+            # Get Logos Location for Teams
+            team_info["away_logo"] = (f"sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
 
             ####################################################################
             # If looking at NFL team, get NFL specific data if currently playing
@@ -189,8 +196,15 @@ def get_data(URL: str, team: str) -> list:
                     outs = (competition["outsText"])
                     balls = (competition["situation"]["balls"])
                     strikes = (competition["situation"]["strikes"])
+                    home_hits = (competition["competitors"][0]["hits"])
+                    away_hits = (competition["competitors"][1]["hits"])
+                    home_errors = (competition["competitors"][0]["errors"])
+                    away_errors = (competition["competitors"][1]["errors"])
+                    team_info['timeouts'] = (f"Hits:{away_hits} Errors:{away_errors}\t\
+                                             Hits:{home_hits} Errors:{home_errors}")
                     team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
                 else:
+                    team_info['top_info'] = team_info['bottom_info']
                     team_info['bottom_info'] = team_info['baseball_inning']
                     team_info['baseball_inning'] = ""
 
@@ -212,13 +226,6 @@ def get_data(URL: str, team: str) -> list:
 
                 # Display runners on base
                 team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
-
-            # Remove Timezone Characters in info
-            team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
-
-            # Get Logos Location for Teams
-            team_info["away_logo"] = (f"sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
 
             break  # Found team in sports events and got data, no need to continue looking
         else:

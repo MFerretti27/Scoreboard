@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos
-from gui_setup import gui_setup
+from gui_setup import gui_setup, will_text_fit_on_screen
 from get_data import get_data
 from display_clock import clock
 from constants import *
@@ -93,7 +93,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
 
                 # Reset text color, underline and timeouts, for new display
-                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='yellow')
+                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
                 window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
                 window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
@@ -108,6 +108,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
                     # Football specific display information
                     if "NFL" in SPORT_URLS[display_index].upper():
+                        window['timeouts'].update(value=value, text_color='yellow')
                         if team_info[display_index]['home_possession'] and key == 'home_score':
                             window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
                         elif team_info[display_index]['away_possession'] and key == 'away_score':
@@ -130,7 +131,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
                 event = window.read(timeout=5000)
 
-                # Find next team to display (skip teams with no data)
+                # Find next team to display (skip teams not playing)
                 original_index = display_index
                 display_clock = ticks_add(display_clock, display_timer)
                 for x in range(len(teams)):
@@ -249,12 +250,6 @@ while True:
                 window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
-                # Change Size of game info if length is too long
-                if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
-                else:
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
-
                 for key, value in team_info[display_index].items():
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
@@ -281,7 +276,18 @@ while True:
 
             display_index = (display_index + 1) % len(teams)
 
-        event = window.read(timeout=5000)
+        # Scroll bottom info if text is too long
+        if will_text_fit_on_screen(team_info[original_index]['bottom_info']):
+            text = team_info[original_index]['bottom_info'] + "         "
+            for _ in range(2):
+                for count in range(len(text)):
+                    event = window.read(timeout=100)
+                    text = text[1:] + text[0]
+                    window["bottom_info"].update(value=text)
+                time.sleep(5)
+        else:
+            event = window.read(timeout=5000)
+
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             break
 

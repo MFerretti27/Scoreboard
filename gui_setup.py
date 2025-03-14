@@ -50,4 +50,19 @@ def gui_setup() -> sg.Window:
     window.Maximize()
     window.TKroot.config(cursor="none")  # Remove cursor from screen
 
+    print(f"Screen Width: {sg.Window.get_screen_size()[0]}")
+    print(f"Screen Height: {sg.Window.get_screen_size()[1]}")
+
     return window
+
+
+def will_text_fit_on_screen(text: str) -> bool:
+    '''Check if text will fit on screen'''
+    screen_width = sg.Window.get_screen_size()[0]  # Get screen width
+    char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
+
+    # Calculate text width
+    text_width = len(text) * char_width
+
+    print(f"text {text_width}, screen {screen_width}")
+    return text_width >= screen_width
