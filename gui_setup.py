@@ -64,5 +64,8 @@ def will_text_fit_on_screen(text: str) -> bool:
     # Calculate text width
     text_width = len(text) * char_width
 
-    print(f"text {text_width}, screen {screen_width}")
-    return text_width >= screen_width
+    if text_width >= screen_width:
+        print(f"Bottom Text will scroll, text size: {text_width}, screen size: {screen_width}")
+        return True
+    else:
+        return False

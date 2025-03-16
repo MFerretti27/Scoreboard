@@ -165,6 +165,7 @@ team_info = []
 teams_with_data = []
 saved_data = {}
 display_index = 0
+should_scroll = False
 try:
     for fetch_index in range(len(teams)):
         print(f"\nFetching data for {teams[fetch_index][0]}")
@@ -250,6 +251,11 @@ while True:
                 window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
+                if will_text_fit_on_screen(team_info[display_index]['bottom_info']):
+                    should_scroll = True
+                else:
+                    should_scroll = False
+
                 for key, value in team_info[display_index].items():
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
@@ -277,7 +283,7 @@ while True:
             display_index = (display_index + 1) % len(teams)
 
         # Scroll bottom info if text is too long
-        if will_text_fit_on_screen(team_info[original_index]['bottom_info']):
+        if should_scroll:
             text = team_info[original_index]['bottom_info'] + "         "
             for _ in range(2):
                 for count in range(len(text)):
