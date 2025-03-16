@@ -22,10 +22,10 @@ def gui_setup() -> sg.Window:
     ]
 
     score_layout = [
-        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='baseball_inning', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0)))],
-        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0))),
-         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0))),
-         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE , 0)))],
+        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='baseball_inning', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0)))],
+        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0))),
+         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE, 0))),
+         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_SCORE , 0)))],
         [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='timeouts')],
         [sg.Image("", key='network_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))]
     ]
@@ -46,7 +46,7 @@ def gui_setup() -> sg.Window:
     ]
 
     # Create the window
-    window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True, return_keyboard_events=True).Finalize()
+    window = sg.Window("Scoreboard", layout, no_titlebar=False, resizable=True, return_keyboard_events=True).Finalize()
     window.Maximize()
     window.TKroot.config(cursor="none")  # Remove cursor from screen
 

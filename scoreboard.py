@@ -127,7 +127,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         if key == 'bottom_info':
                             window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                         elif key == 'network_logo':
-                            window[key].update(filename=value, subsample=BASES_SIZE)
+                            window[key].update(filename=value, subsample=BASE_SIZES)
 
                 event = window.read(timeout=5000)
 
