@@ -330,8 +330,8 @@ while True:
 
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
-            # reconnect()
-            # time.sleep(20)  # Check every 20 seconds
+            reconnect()
+            time.sleep(20)  # Check every 20 seconds
 
             if time_till_clock >= 12:  # If no connection within 4 minutes display clock
                 message = "No Internet Connection"
