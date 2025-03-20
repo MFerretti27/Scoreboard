@@ -44,7 +44,7 @@ def get_data(URL: str, team: str) -> list:
     team_name = team[0]
     team_sport = team[1]
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
-    # If team_info does not have top_info/baseball_inning then it will not update for it below
+    # these may not get updated and therefore display old info
     team_info['top_info'] = ''
     team_info['baseball_inning'] = ''
 
@@ -77,6 +77,7 @@ def get_data(URL: str, team: str) -> list:
                 team_has_data = False
                 return team_info, team_has_data, currently_playing
 
+            # Get Network game is on and display logo
             for network, filepath in network_logos.items():
                 if network.upper() in broadcast.upper():
                     team_info['network_logo'] = filepath
@@ -200,7 +201,8 @@ def get_data(URL: str, team: str) -> list:
                     away_hits = (competition["competitors"][1]["hits"])
                     home_errors = (competition["competitors"][0]["errors"])
                     away_errors = (competition["competitors"][1]["errors"])
-                    team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\tHits: {home_hits} Errors: {home_errors}")
+                    team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\t\
+                                             Hits: {home_hits} Errors: {home_errors}")
                     team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
                 else:
                     team_info['top_info'] = team_info['bottom_info']
