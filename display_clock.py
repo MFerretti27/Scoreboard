@@ -74,6 +74,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
                 message = f'Failed to Get Info From ESPN, Error:{error}'
             if not is_connected():
                 print("Internet connection is down, trying to reconnect...")
+                message = "No Internet Connection"
                 reconnect()
                 time.sleep(20)  # Wait 20 seconds for connection
 

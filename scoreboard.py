@@ -51,7 +51,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     :param window: Window Element that controls GUI
     :param teams: Array of teams to search data for
 
-    :return team_info: List of Boolean values representing if team is has data to display
+    :return team_info: List of information for teams following
     '''
 
     teams_currently_playing = []
@@ -173,8 +173,7 @@ try:
         team_info.append(info)
         teams_with_data.append(data)
         if currently_playing:
-            returned_data = team_currently_playing(window, teams)
-            team_info = returned_data
+            team_info = team_currently_playing(window, teams)
 except Exception as error:
     print(f"Error: {error}")
     if is_connected():
@@ -187,9 +186,6 @@ except Exception as error:
             fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
     while not is_connected():
-        print("Internet connection is down, trying to reconnect...")
-        reconnect()
-        time.sleep(20)
         message = "No Internet Connection"
         print("\nNo Internet connection Displaying Clock\n")
         teams_with_data = clock(window, SPORT_URLS, message)
@@ -216,8 +212,7 @@ while True:
                 print(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
                 if currently_playing:
-                    returned_data = team_currently_playing(window, teams)
-                    team_info = returned_data
+                    team_info = team_currently_playing(window, teams)
                     # Reset timers
                     while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                         display_clock = ticks_add(display_clock, display_timer)
@@ -225,7 +220,7 @@ while True:
                         fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
                 # Save data for NBA, NHL, MLB data to display longer than data is available
-                if data is True and "FINAL" in info['bottom_info'] and "nfl" not in teams[fetch_index][1]:
+                if data is True and "FINAL" in info['bottom_info'] and "NFL" not in teams[fetch_index][1].upper():
                     saved_data[teams[fetch_index][0]] = [info, datetime.now()]
                     print("Saving Data to display longer that its available")
                 elif teams[fetch_index][0] in saved_data and data is False:
@@ -234,7 +229,7 @@ while True:
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
                     # Check if 3 days have passed after data is no longer available
                     if date_difference <= timedelta(days=3):
-                        print(f"Yes it will display, time its been: {date_difference}")
+                        print(f"It will display, time its been: {date_difference}")
                         team_info.append(saved_data[teams[fetch_index][0]][0])
                         teams_with_data.append(True)
                         continue
@@ -341,8 +336,6 @@ while True:
                     fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
             time_till_clock = time_till_clock + 1
-
-        time.sleep(2)
         print("Internet connection is active")
 
 window.close()
