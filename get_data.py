@@ -201,8 +201,7 @@ def get_data(URL: str, team: str) -> list:
                     away_hits = (competition["competitors"][1]["hits"])
                     home_errors = (competition["competitors"][0]["errors"])
                     away_errors = (competition["competitors"][1]["errors"])
-                    team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\t\
-                                             Hits: {home_hits} Errors: {home_errors}")
+                    team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\tHits: {home_hits} Errors: {home_errors}")
                     team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
                 else:
                     team_info['top_info'] = team_info['bottom_info']
