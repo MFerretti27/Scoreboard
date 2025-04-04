@@ -59,6 +59,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     team_info = []
     teams_with_data = []
     display_index = 0
+    stay_on_team = False
 
     display_clock = ticks_ms()  # Start timer for switching display
     fetch_clock = ticks_ms()  # Start timer for switching display
@@ -84,13 +85,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
-                print(f"\n{teams[display_index][0]} is currently playing, updating display\n")
-
-                # Change Size of game info if length is too long
-                if len(team_info[display_index]['bottom_info']) > CHARACTERS_FIT_ON_SCREEN:
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE - 10))
-                else:
-                    window['bottom_info'].update(font=(FONT, INFO_TXT_SIZE))
+                print(f"\n{teams[display_index][0]} is currently playing, updating display")
 
                 # Reset text color, underline and timeouts, for new display
                 window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
@@ -132,22 +127,36 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 event = window.read(timeout=5000)
 
                 # Find next team to display (skip teams not playing)
-                original_index = display_index
-                display_clock = ticks_add(display_clock, display_timer)
-                for x in range(len(teams)):
-                    if teams_currently_playing[(original_index + x) % len(teams)] is False:
-                        display_index = (display_index + 1) % len(teams)
-                        print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
-                    elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
-                        print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
-                        break
+                if not stay_on_team:  # If space pressed, stay on current team playing
+                    original_index = display_index
+                    display_clock = ticks_add(display_clock, display_timer)
+                    for x in range(len(teams)):
+                        if teams_currently_playing[(original_index + x) % len(teams)] is False:
+                            display_index = (display_index + 1) % len(teams)
+                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                        elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
+                            print(f"\nFound next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                            break
+                else:
+                    print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
             else:
                 print(f"{teams[display_index][0]} is not currently playing and wont Display")
 
-            display_index = (display_index + 1) % len(teams)
+            if not stay_on_team:
+                display_index = (display_index + 1) % len(teams)
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()
+        elif 'Caps_Lock' in event[0] and not stay_on_team:
+            display_index = original_index
+            stay_on_team = True
+            window['bottom_info'].update(value="Staying on Current Team")
+            window.read(timeout=500)
+        elif 'Shift_L' in event[0] or 'Shift_R' in event[0] and stay_on_team or "Final" in info["bottom_info"]:
+            stay_on_team = False
+            window['bottom_info'].update(value="No Longer Staying on Current Team")
+            window.read(timeout=500)
+            time.sleep(2)
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal
