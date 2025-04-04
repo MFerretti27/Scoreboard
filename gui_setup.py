@@ -3,6 +3,7 @@
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from constants import *
 from get_team_logos import get_random_logo
+import math
 
 
 def gui_setup() -> sg.Window:
@@ -11,23 +12,36 @@ def gui_setup() -> sg.Window:
     sg.theme("black")
     files = get_random_logo()
 
+    window_width = sg.Window.get_screen_size()[0]
+    window_height = sg.Window.get_screen_size()[1]
+
+    column_width = window_width / 3
+    column_height = window_height * .66
+    info_height = window_height * (1/6.75)
+    space_between_score = column_width / 8
+
+    print(f"\n\nWindow Width: {math.ceil(window_width)}, Window Height: {math.ceil(window_height)}")
+    print(f"Column Width: {math.ceil(column_width)}, Column Height: {math.ceil(column_height)}")
+    print(f"Info Height: {math.ceil(info_height)}")
+    print(f"Space Between Score: {math.ceil(space_between_score)}\n\n")
+
     home_record_layout = [
-        [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))],
+        [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (0, 0)))],
         [sg.Text("HOME", font=(FONT, RECORD_TXT_SIZE), key='home_record')]
     ]
 
     away_record_layout = [
-        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))],
+        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
         [sg.Text("AWAY", font=(FONT, RECORD_TXT_SIZE), key='away_record')]
     ]
 
     score_layout = [
-        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='baseball_inning', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0)))],
-        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0))),
-         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE, 0))),
-         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (SPACE_BETWEEN_TOP_TXT_AND_SCORE , 0)))],
+        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='baseball_inning', pad=((0, 0), (space_between_score, 0)))],
+        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (space_between_score, 0))),
+         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (space_between_score, 0))),
+         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (space_between_score , 0)))],
         [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='timeouts')],
-        [sg.Image("", key='network_logo', pad=((0, 0), (SPACE_BETWEEN_TOP_AND_LOGOS, 0)))]
+        [sg.Image("", key='network_logo')]
     ]
 
     top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Top Info", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
@@ -35,13 +49,13 @@ def gui_setup() -> sg.Window:
 
     layout = [[
         sg.Push(),
-        sg.Frame("", away_record_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH, COLUMN_HEIGHT)),
-        sg.Frame("", score_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH, COLUMN_HEIGHT)),
-        sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH, COLUMN_HEIGHT)),
+        sg.Frame("", away_record_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
+        sg.Frame("", score_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
+        sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
         sg.Push()
     ],
-        [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH * 3, INFO_SPACE_HEIGHT))],
-        [sg.Frame("", bottom_info_layout, element_justification='center', border_width=0, size=(COLUMN_WIDTH * 3, INFO_SPACE_HEIGHT))],
+        [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
+        [sg.Frame("", bottom_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
         [sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(FONT, 10), key='personal')]
     ]
 
@@ -49,9 +63,6 @@ def gui_setup() -> sg.Window:
     window = sg.Window("Scoreboard", layout, no_titlebar=True, resizable=True, return_keyboard_events=True).Finalize()
     window.Maximize()
     window.TKroot.config(cursor="none")  # Remove cursor from screen
-
-    print(f"Screen Width: {sg.Window.get_screen_size()[0]}")
-    print(f"Screen Height: {sg.Window.get_screen_size()[1]}")
 
     return window
 
