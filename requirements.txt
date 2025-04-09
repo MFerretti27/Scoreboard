@@ -4,3 +4,4 @@ pillow
 PySimpleGUI
 requests
 flake8
+MLB-StatsAPI

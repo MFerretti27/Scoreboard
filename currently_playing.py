@@ -39,68 +39,69 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             teams_with_data.append(data)
             teams_currently_playing.append(currently_playing)
 
+        if teams_with_data[display_index] and teams_currently_playing[display_index]:
+            print(f"\n{teams[display_index][0]} is currently playing, updating display")
+
+            # Reset text color, underline and timeouts, for new display
+            window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
+            window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
+            window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
+            window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
+
+            for key, value in team_info[display_index].items():
+                if "home_logo" in key or "away_logo" in key:
+                    window[key].update(filename=value)
+                elif "network_logo" in key:
+                    window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                elif "possession" not in key and "redzone" not in key:
+                    window[key].update(value=value, text_color='white')
+
+                # Football specific display information
+                if "NFL" in SPORT_URLS[display_index].upper():
+                    window['timeouts'].update(value=value, text_color='yellow')
+                    if team_info[display_index]['home_possession'] and key == 'home_score':
+                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                    elif team_info[display_index]['away_possession'] and key == 'away_score':
+                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                    if team_info[display_index]['home_redzone'] and key == 'home_score':
+                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                    elif team_info[display_index]['away_redzone'] and key == 'away_score':
+                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+
+                # NBA Specific display size for top info
+                if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
+                    window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+
+                # MLB Specific display size for bottom info
+                if "MLB" in SPORT_URLS[display_index].upper():
+                    if key == 'bottom_info':
+                        window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
+                    elif key == 'network_logo':
+                        window[key].update(filename=value, subsample=BASES_SIZE)
+
+            event = window.read(timeout=500)
+
         # Display Team Information
-        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
-            if teams_with_data[display_index] and teams_currently_playing[display_index]:
-                print(f"\n{teams[display_index][0]} is currently playing, updating display")
-
-                # Reset text color, underline and timeouts, for new display
-                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-                window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-                window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-                window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
-
-                for key, value in team_info[display_index].items():
-                    if "home_logo" in key or "away_logo" in key:
-                        window[key].update(filename=value)
-                    elif "network_logo" in key:
-                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
-                    elif "possession" not in key and "redzone" not in key:
-                        window[key].update(value=value, text_color='white')
-
-                    # Football specific display information
-                    if "NFL" in SPORT_URLS[display_index].upper():
-                        window['timeouts'].update(value=value, text_color='yellow')
-                        if team_info[display_index]['home_possession'] and key == 'home_score':
-                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
-                        elif team_info[display_index]['away_possession'] and key == 'away_score':
-                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
-                        if team_info[display_index]['home_redzone'] and key == 'home_score':
-                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
-                        elif team_info[display_index]['away_redzone'] and key == 'away_score':
-                            window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
-
-                    # NBA Specific display size for top info
-                    if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
-                        window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
-
-                    # MLB Specific display size for bottom info
-                    if "MLB" in SPORT_URLS[display_index].upper():
-                        if key == 'bottom_info':
-                            window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
-                        elif key == 'network_logo':
-                            window[key].update(filename=value, subsample=BASES_SIZE)
-
-                event = window.read(timeout=5000)
-
-                # Find next team to display (skip teams not playing)
-                if not stay_on_team:  # If space pressed, stay on current team playing
-                    original_index = display_index
-                    display_clock = ticks_add(display_clock, display_timer)
-                    for x in range(len(teams)):
-                        if teams_currently_playing[(original_index + x) % len(teams)] is False:
-                            display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
-                        elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"\nFound next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
-                            break
-                else:
-                    print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+        if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
+            first_time = False
+            # Find next team to display (skip teams not playing)
+            # if not stay_on_team:  # If space pressed, stay on current team playing
+            original_index = display_index
+            display_clock = ticks_add(display_clock, display_timer)
+            for x in range(len(teams)):
+                if teams_currently_playing[(original_index + x) % len(teams)] is False:
+                    display_index = (display_index + 1) % len(teams)
+                    print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
+                    print(f"\nFound next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                    break
             else:
-                print(f"{teams[display_index][0]} is not currently playing and wont Display")
+                print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+        else:
+            print(f"{teams[display_index][0]} is not currently playing and wont Display")
 
-            if not stay_on_team:
-                display_index = (display_index + 1) % len(teams)
+            # if not stay_on_team:
+            #     display_index = (display_index + 1) % len(teams)
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()

@@ -1,5 +1,6 @@
 '''Grab Data for ESPN API'''
 
+import statsapi
 import requests  # pip install requests
 import gc
 from constants import network_logos, teams
@@ -174,6 +175,9 @@ def get_data(URL: str, team: str) -> list:
             # If looking at MLB team, get MLB specific data if currently playing
             ####################################################################
             if "MLB" in URL.upper() and currently_playing:
+                fields = "linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck,fullName,result,description,eventType"
+                data = statsapi.schedule(team=116)
+                live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": fields})
                 team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
 
                 # Change to display inning above score
@@ -183,29 +187,27 @@ def get_data(URL: str, team: str) -> list:
                 # Get who is pitching and batting, if info is available
                 pitcher = competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
                 batter = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
-                due_up = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("dueUp", "N/A")
+                due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 
                 if pitcher != "N/A":
                     team_info['bottom_info'] += (f"P: {pitcher}   ")
                 if batter != "N/A":
                     team_info['bottom_info'] += (f"AB: {batter}")
-                elif due_up != "N/A":
-                    team_info['bottom_info'] += (f"DueUp: {batter}")
 
                 # If inning is changing do not display count and move inning to display below score
                 if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
                     outs = (competition["outsText"])
-                    balls = (competition["situation"]["balls"])
-                    strikes = (competition["situation"]["strikes"])
+                    balls = live["liveData"]["linescore"].get("balls", 0)
+                    strikes = live["liveData"]["linescore"].get("strikes", 0)
                     home_hits = (competition["competitors"][0]["hits"])
                     away_hits = (competition["competitors"][1]["hits"])
                     home_errors = (competition["competitors"][0]["errors"])
                     away_errors = (competition["competitors"][1]["errors"])
                     team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\tHits: {home_hits} Errors: {home_errors}")
-                    team_info['top_info'] += (f"{outs}")
+                    team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
                 else:
-                    team_info['top_info'] = team_info['bottom_info']
-                    team_info['bottom_info'] = team_info['baseball_inning']
+                    team_info['bottom_info'] += (f"DueUp: {due_up}")
+                    team_info['top_info'] = team_info['baseball_inning']
                     team_info['baseball_inning'] = ""
 
                 # Get runners position
