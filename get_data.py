@@ -8,6 +8,22 @@ from constants import network_logos, teams
 should_skip = False
 
 
+def get_mlb_team_id(team: str) -> int:
+    '''Get MLB Team ID from team name
+
+    :param team: Name of MLB team to get ID for
+
+    :return: Team ID
+    '''
+    teams = statsapi.get('teams', {'sportIds': 1})['teams']
+    id_list = {t["clubName"]: t["id"] for t in teams}
+    for key, value in id_list.items():
+        if key.upper() in team.upper():
+            return value
+
+    raise ValueError(f"Unknown MLB team name: {team}")
+
+
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
     '''Check if the two teams are playing each other
 
@@ -176,7 +192,7 @@ def get_data(URL: str, team: str) -> list:
             ####################################################################
             if "MLB" in URL.upper() and currently_playing:
                 fields = "linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck,fullName,result,description,eventType"
-                data = statsapi.schedule(team=116)
+                data = statsapi.schedule(team=get_mlb_team_id(team=team_name))
                 live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": fields})
                 team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
 
@@ -190,9 +206,9 @@ def get_data(URL: str, team: str) -> list:
                 due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 
                 if pitcher != "N/A":
-                    team_info['bottom_info'] += (f"P: {pitcher}   ")
+                    team_info['bottom_info'] += (f"P: {pitcher.split()[-1]}   ")
                 if batter != "N/A":
-                    team_info['bottom_info'] += (f"AB: {batter}")
+                    team_info['bottom_info'] += (f"AB: {batter.split()[-1]}")
 
                 # If inning is changing do not display count and move inning to display below score
                 if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
