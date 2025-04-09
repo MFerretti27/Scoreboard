@@ -106,6 +106,7 @@ while True:
                 # Save data for NBA, NHL, MLB data to display longer than data is available
                 if data is True and "FINAL" in info['bottom_info'] and "NFL" not in teams[fetch_index][1].upper():
                     saved_data[teams[fetch_index][0]] = [info, datetime.now()]
+                    info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                     print("Saving Data to display longer that its available")
                 elif teams[fetch_index][0] in saved_data and data is False:
                     print("Data is no longer available, checking if should display")
