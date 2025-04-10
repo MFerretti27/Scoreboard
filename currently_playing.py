@@ -51,7 +51,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                     window[key].update(filename=value)
                 elif "network_logo" in key:
                     window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
-                elif "possession" not in key and "redzone" not in key:
+                elif "possession" not in key and "redzone" not in key and "bonus" not in key:
                     window[key].update(value=value, text_color='white')
 
                 # Football specific display information
@@ -69,6 +69,12 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                 # NBA Specific display size for top info
                 if "NBA" in SPORT_URLS[display_index].upper() and key == 'top_info':
                     window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+                    window['timeouts'].update(value=value, text_color='yellow')
+
+                    if team_info[display_index]['home_bonus'] and key == 'home_score':
+                        window[key].update(value=value, text_color='orange')
+                    if team_info[display_index]['away_bonus'] and key == 'away_score':
+                        window[key].update(value=value, text_color='orange')
 
                 # MLB Specific display size for bottom info
                 if "MLB" in SPORT_URLS[display_index].upper():
@@ -95,11 +101,9 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                     break
             else:
                 print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
-        else:
-            print(f"{teams[display_index][0]} is not currently playing and wont Display")
 
             # if not stay_on_team:
-            #     display_index = (display_index + 1) % len(teams)
+            display_index = (display_index + 1) % len(teams)
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()

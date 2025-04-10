@@ -5,3 +5,4 @@ PySimpleGUI
 requests
 flake8
 MLB-StatsAPI
+nba_api

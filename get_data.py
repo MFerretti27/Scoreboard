@@ -1,6 +1,7 @@
 '''Grab Data for ESPN API'''
 
 import statsapi
+from nba_api.live.nba.endpoints import scoreboard
 import requests  # pip install requests
 import gc
 from constants import network_logos, teams
@@ -186,6 +187,41 @@ def get_data(URL: str, team: str) -> list:
                     f"FG: {home_field_goal_made}/{home_field_goal_attempt} 3PT: {home_3pt_made}/{home_3pt_attempt}"
 
                 team_info['top_info'] = away_stats + "\t\t " + home_stats
+
+                # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
+                games = scoreboard.ScoreBoard()
+                data = games.get_dict()
+                for game in data["scoreboard"]["games"]:
+                    if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
+                            game["awayTeam"]["teamName"].upper() in team_name.upper():
+                        if game["homeTeam"]["inBonus"] == 1:
+                            team_info['home_bonus'] = True
+                        else:
+                            team_info['home_bonus'] = False
+                        if game["awayTeam"]["inBonus"] == 1:
+                            team_info['away_bonus'] = True
+                        else:
+                            team_info['away_bonus'] = False
+                    else:
+                        team_info['home_bonus'] = False
+                        team_info['away_bonus'] = False
+
+                home_timeouts = game.get("homeTeam", {}).get("timeoutsRemaining", "",)
+                away_timeouts = game.get("awayTeam", {}).get("timeoutsRemaining", "",)
+
+                timeout_map = {7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                               6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                               5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                               4: "\u25CF  \u25CF  \u25CF  \u25CF",
+                               3: "\u25CF  \u25CF  \u25CF",
+                               2: "\u25CF  \u25CF",
+                               1: "\u25CF",
+                               0: ""}
+
+                timeouts = timeout_map.get(away_timeouts, "")
+                timeouts += "\t\t"
+                timeouts += timeout_map.get(home_timeouts, "")
+                team_info['timeouts'] = timeouts
 
             ####################################################################
             # If looking at MLB team, get MLB specific data if currently playing
