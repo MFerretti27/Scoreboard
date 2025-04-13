@@ -94,9 +94,11 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                     if key == 'bottom_info':
                         window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     elif key == 'network_logo':
+                        if "Networks" in team_info[display_index]['network_logo']:
+                            value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value, subsample=BASES_SIZE)
 
-            event = window.read(timeout=500)
+            event = window.read(timeout=1000)
 
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
@@ -106,9 +108,8 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                 # if not stay_on_team:  # If space pressed, stay on current team playing
                 original_index = display_index
                 display_clock = ticks_add(display_clock, display_timer)
-                for x in range(len(teams)):
+                for x in range(len(teams) * 2):
                     if teams_currently_playing[(original_index + x) % len(teams)] is False:
-                        print(f"{display_index}, this")
                         display_index = (display_index + 1) % len(teams)
                         print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                     elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
@@ -118,17 +119,18 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                 #     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
                 # if not stay_on_team:
-            else:
-                display_index = (display_index + 1) % len(teams)
+            display_index = (display_index + 1) % len(teams)
 
         if should_scroll:
-            text = team_info[display_index]['bottom_info'] + "         "
+            text = team_info[original_index]['bottom_info'] + "         "
             for _ in range(2):
                 for _ in range(len(text)):
                     event = window.read(timeout=100)
                     text = text[1:] + text[0]
                     window["bottom_info"].update(value=text)
                 time.sleep(5)
+            display_clock = ticks_add(display_clock, display_timer)
+            should_scroll = False
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()

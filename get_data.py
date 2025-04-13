@@ -203,15 +203,19 @@ def get_data(URL: str, team: str) -> list:
                             home_team_bonus = False
                         elif game["homeTeam"]["inBonus"] is None:
                             team_info['home_bonus'] = home_team_bonus
+                        else:
+                            team_info['home_bonus'] = False
 
                         if game["awayTeam"]["inBonus"] == "1":
                             team_info['away_bonus'] = True
                             away_team_bonus = True
-                        elif game["homeTeam"]["inBonus"] == "0":
+                        elif game["awayTeam"]["inBonus"] == "0":
                             team_info['away_bonus'] = False
                             away_team_bonus = False
                         elif game["awayTeam"]["inBonus"] is None:
                             team_info['away_bonus'] = away_team_bonus
+                        else:
+                            team_info['away_bonus'] = False
 
                         home_timeouts = game["homeTeam"]["timeoutsRemaining"]
                         away_timeouts = game["awayTeam"]["timeoutsRemaining"]
@@ -260,9 +264,9 @@ def get_data(URL: str, team: str) -> list:
 
                 # If inning is changing do not display count and move inning to display below score
                 if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
-                    outs = (competition["outsText"])
-                    balls = live["liveData"]["linescore"].get("balls", 0)
-                    strikes = live["liveData"]["linescore"].get("strikes", 0)
+                    outs = (competition.get("outsText", "0 Outs"))
+                    balls = live["liveData"]["linescore"].get("balls", "0")
+                    strikes = live["liveData"]["linescore"].get("strikes", "0")
                     try:
                         play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
                         pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
@@ -301,7 +305,10 @@ def get_data(URL: str, team: str) -> list:
                 }
 
                 # Display runners on base
-                team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                if base_conditions.get((onFirst, onSecond, onThird)) is None:
+                    team_info['network_logo'] = f"baseball_base_images/empty_bases.png"
+                else:
+                    team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
 
             break  # Found team in sports events and got data, no need to continue looking
         else:

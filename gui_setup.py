@@ -40,8 +40,8 @@ def gui_setup() -> sg.Window:
         [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (space_between_score, 0))),
          sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (space_between_score, 0))),
          sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (space_between_score , 0)))],
-        [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='away_timeouts', pad=((0, 50), (0 , 0))),
-         sg.Text("", font=(FONT, TIMEOUT_SIZE), key='home_timeouts', pad=((50, 0), (0 , 0)))],
+        [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='away_timeouts', pad=((0, 50), (0 , 25))),
+         sg.Text("", font=(FONT, TIMEOUT_SIZE), key='home_timeouts', pad=((50, 0), (0 , 25)))],
         [sg.Image("", key='network_logo')]
     ]
 
