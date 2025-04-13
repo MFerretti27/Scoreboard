@@ -5,11 +5,11 @@ from nba_api.live.nba.endpoints import scoreboard
 import requests  # pip install requests
 import gc
 from constants import network_logos, teams
-import re
 
 should_skip = False
 home_team_bonus = False
 away_team_bonus = False
+
 
 def get_mlb_team_id(team: str) -> int:
     '''Get MLB Team ID from team name
@@ -26,24 +26,6 @@ def get_mlb_team_id(team: str) -> int:
 
     raise ValueError(f"Unknown MLB team name: {team}")
 
-def check_still_in_bonus() -> list:
-    '''Check if team is still in bouns as it sometimes will say a team isnt
-    
-    :param quarter: The current quarter the game is in
-
-    Return: List of booleans representing if team should still be in bonus
-    '''
-    home_team_bonus, away_team_bonus
-
-    print(f"HERE {home_team_bonus} {away_team_bonus}")
-    if home_team_bonus and away_team_bonus:
-        return True, True
-    elif home_team_bonus:
-        return False, True
-    elif away_team_bonus:
-        return True, False
-    else:
-        return False, False
 
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
     '''Check if the two teams are playing each other
@@ -219,7 +201,7 @@ def get_data(URL: str, team: str) -> list:
                         elif game["homeTeam"]["inBonus"] == "0":
                             team_info['home_bonus'] = False
                             home_team_bonus = False
-                        elif game["homeTeam"]["inBonus"] == None:
+                        elif game["homeTeam"]["inBonus"] is None:
                             team_info['home_bonus'] = home_team_bonus
 
                         if game["awayTeam"]["inBonus"] == "1":
@@ -228,24 +210,24 @@ def get_data(URL: str, team: str) -> list:
                         elif game["homeTeam"]["inBonus"] == "0":
                             team_info['away_bonus'] = False
                             away_team_bonus = False
-                        elif game["awayTeam"]["inBonus"] == None:
+                        elif game["awayTeam"]["inBonus"] is None:
                             team_info['away_bonus'] = away_team_bonus
 
                         home_timeouts = game["homeTeam"]["timeoutsRemaining"]
                         away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
-                        if game["homeTeam"]["inBonus"] == None and game["awayTeam"]["inBonus"] == None:
+                        if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
                             home_timeouts = home_timeouts + 1
                             away_timeouts = away_timeouts + 1
- 
+
                         timeout_map = {7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                                    4: "\u25CF  \u25CF  \u25CF  \u25CF",
-                                    3: "\u25CF  \u25CF  \u25CF",
-                                    2: "\u25CF  \u25CF",
-                                    1: "\u25CF",
-                                    0: ""}
+                                       6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                                       5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                                       4: "\u25CF  \u25CF  \u25CF  \u25CF",
+                                       3: "\u25CF  \u25CF  \u25CF",
+                                       2: "\u25CF  \u25CF",
+                                       1: "\u25CF",
+                                       0: ""}
                         team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
                         team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
 
@@ -255,7 +237,9 @@ def get_data(URL: str, team: str) -> list:
             # If looking at MLB team, get MLB specific data if currently playing
             ####################################################################
             if "MLB" in URL.upper() and currently_playing:
-                fields = "linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck,fullName,result,description,eventType,details,type,description,currentPlay,playEvents,isPitch"
+                fields = ("linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck," +
+                          "fullName,result,description,eventType,details,type,description,currentPlay," +
+                          "playEvents,isPitch")
                 data = statsapi.schedule(team=get_mlb_team_id(team=team_name))
                 live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": fields})
                 team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
@@ -318,8 +302,6 @@ def get_data(URL: str, team: str) -> list:
 
                 # Display runners on base
                 team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
-
-                print(live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", ""))
 
             break  # Found team in sports events and got data, no need to continue looking
         else:

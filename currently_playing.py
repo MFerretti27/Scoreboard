@@ -86,7 +86,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
 
                     if team_info[display_index]['home_bonus'] and key == "home_score":
                         window[key].update(value=value, text_color='orange')
-                    if team_info[display_index]['away_bonus']and key == "away_score":
+                    if team_info[display_index]['away_bonus'] and key == "away_score":
                         window[key].update(value=value, text_color='orange')
 
                 # MLB Specific display size for bottom info
@@ -100,24 +100,26 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
 
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
-            first_time = False
-            # Find next team to display (skip teams not playing)
-            if not stay_on_team:  # If space pressed, stay on current team playing
+            if teams_with_data[display_index] and teams_currently_playing[display_index]:
+                first_time = False
+                # Find next team to display (skip teams not playing)
+                # if not stay_on_team:  # If space pressed, stay on current team playing
                 original_index = display_index
                 display_clock = ticks_add(display_clock, display_timer)
                 for x in range(len(teams)):
                     if teams_currently_playing[(original_index + x) % len(teams)] is False:
+                        print(f"{display_index}, this")
                         display_index = (display_index + 1) % len(teams)
                         print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                     elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
                         print(f"\nFound next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                         break
+                # else:
+                #     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+
+                # if not stay_on_team:
             else:
-                print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
-
-            if not stay_on_team:
                 display_index = (display_index + 1) % len(teams)
-
 
         if should_scroll:
             text = team_info[display_index]['bottom_info'] + "         "
