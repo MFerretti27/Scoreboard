@@ -129,7 +129,8 @@ while True:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
                 window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
-                window['timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+                window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+                window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
 
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
@@ -163,7 +164,7 @@ while True:
         if should_scroll:
             text = team_info[original_index]['bottom_info'] + "         "
             for _ in range(2):
-                for count in range(len(text)):
+                for _ in range(len(text)):
                     event = window.read(timeout=100)
                     text = text[1:] + text[0]
                     window["bottom_info"].update(value=text)

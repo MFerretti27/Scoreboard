@@ -5,9 +5,11 @@ from nba_api.live.nba.endpoints import scoreboard
 import requests  # pip install requests
 import gc
 from constants import network_logos, teams
+import re
 
 should_skip = False
-
+home_team_bonus = False
+away_team_bonus = False
 
 def get_mlb_team_id(team: str) -> int:
     '''Get MLB Team ID from team name
@@ -24,6 +26,24 @@ def get_mlb_team_id(team: str) -> int:
 
     raise ValueError(f"Unknown MLB team name: {team}")
 
+def check_still_in_bonus() -> list:
+    '''Check if team is still in bouns as it sometimes will say a team isnt
+    
+    :param quarter: The current quarter the game is in
+
+    Return: List of booleans representing if team should still be in bonus
+    '''
+    home_team_bonus, away_team_bonus
+
+    print(f"HERE {home_team_bonus} {away_team_bonus}")
+    if home_team_bonus and away_team_bonus:
+        return True, True
+    elif home_team_bonus:
+        return False, True
+    elif away_team_bonus:
+        return True, False
+    else:
+        return False, False
 
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
     '''Check if the two teams are playing each other
@@ -54,6 +74,7 @@ def get_data(URL: str, team: str) -> list:
 
     :return team_info: List of Boolean values representing if team is has data to display
     '''
+    global home_team_bonus, away_team_bonus
     team_has_data = False
     currently_playing = False
 
@@ -151,14 +172,11 @@ def get_data(URL: str, team: str) -> list:
                     'away_redzone': possession == away_team_id and red_zone
                 })
 
-                team_info['timeouts'] = ''
                 if home_timeouts is not None and away_timeouts is not None:
                     timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                    timeouts = timeout_map.get(away_timeouts, "")
-                    timeouts += "\t\t"
-                    timeouts += timeout_map.get(home_timeouts, "")
-                    team_info['timeouts'] = timeouts
+                    team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
+                    team_info['home_timeouts'] += timeout_map.get(home_timeouts, "")
 
                 # Swap top and bottom info for NFL (I think it looks better displayed this way)
                 temp = str(team_info['bottom_info'])
@@ -194,40 +212,50 @@ def get_data(URL: str, team: str) -> list:
                 for game in data["scoreboard"]["games"]:
                     if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
                             game["awayTeam"]["teamName"].upper() in team_name.upper():
-                        if game["homeTeam"]["inBonus"] == 1:
+
+                        if game["homeTeam"]["inBonus"] == "1":
                             team_info['home_bonus'] = True
-                        else:
+                            home_team_bonus = True
+                        elif game["homeTeam"]["inBonus"] == "0":
                             team_info['home_bonus'] = False
-                        if game["awayTeam"]["inBonus"] == 1:
+                            home_team_bonus = False
+                        elif game["homeTeam"]["inBonus"] == None:
+                            team_info['home_bonus'] = home_team_bonus
+
+                        if game["awayTeam"]["inBonus"] == "1":
                             team_info['away_bonus'] = True
-                        else:
+                            away_team_bonus = True
+                        elif game["homeTeam"]["inBonus"] == "0":
                             team_info['away_bonus'] = False
-                    else:
-                        team_info['home_bonus'] = False
-                        team_info['away_bonus'] = False
+                            away_team_bonus = False
+                        elif game["awayTeam"]["inBonus"] == None:
+                            team_info['away_bonus'] = away_team_bonus
 
-                home_timeouts = game.get("homeTeam", {}).get("timeoutsRemaining", "",)
-                away_timeouts = game.get("awayTeam", {}).get("timeoutsRemaining", "",)
+                        home_timeouts = game["homeTeam"]["timeoutsRemaining"]
+                        away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
-                timeout_map = {7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                               6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                               5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                               4: "\u25CF  \u25CF  \u25CF  \u25CF",
-                               3: "\u25CF  \u25CF  \u25CF",
-                               2: "\u25CF  \u25CF",
-                               1: "\u25CF",
-                               0: ""}
+                        if game["homeTeam"]["inBonus"] == None and game["awayTeam"]["inBonus"] == None:
+                            home_timeouts = home_timeouts + 1
+                            away_timeouts = away_timeouts + 1
+ 
+                        timeout_map = {7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                                    4: "\u25CF  \u25CF  \u25CF  \u25CF",
+                                    3: "\u25CF  \u25CF  \u25CF",
+                                    2: "\u25CF  \u25CF",
+                                    1: "\u25CF",
+                                    0: ""}
+                        team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
+                        team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
 
-                timeouts = timeout_map.get(away_timeouts, "")
-                timeouts += "\t\t"
-                timeouts += timeout_map.get(home_timeouts, "")
-                team_info['timeouts'] = timeouts
+                        break  # Found team and got data needed
 
             ####################################################################
             # If looking at MLB team, get MLB specific data if currently playing
             ####################################################################
             if "MLB" in URL.upper() and currently_playing:
-                fields = "linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck,fullName,result,description,eventType"
+                fields = "linescore,batter,inHole,onDeck,liveData,balls,strikes,plays,offense,onDeck,fullName,result,description,eventType,details,type,description,currentPlay,playEvents,isPitch"
                 data = statsapi.schedule(team=get_mlb_team_id(team=team_name))
                 live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": fields})
                 team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
@@ -251,11 +279,21 @@ def get_data(URL: str, team: str) -> list:
                     outs = (competition["outsText"])
                     balls = live["liveData"]["linescore"].get("balls", 0)
                     strikes = live["liveData"]["linescore"].get("strikes", 0)
+                    try:
+                        play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
+                        pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
+                        if pitch.get("isPitch", True):
+                            team_info['top_info'] += pitch["details"]["type"]["description"] + "  "
+                        if play:
+                            team_info['bottom_info'] = play
+                    except:
+                        continue
                     home_hits = (competition["competitors"][0]["hits"])
                     away_hits = (competition["competitors"][1]["hits"])
                     home_errors = (competition["competitors"][0]["errors"])
                     away_errors = (competition["competitors"][1]["errors"])
-                    team_info['timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}\tHits: {home_hits} Errors: {home_errors}")
+                    team_info['away_timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}")
+                    team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
                     team_info['top_info'] += (f"{balls}-{strikes}, {outs}")
                 else:
                     team_info['bottom_info'] += (f"DueUp: {due_up}")
@@ -280,6 +318,8 @@ def get_data(URL: str, team: str) -> list:
 
                 # Display runners on base
                 team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+
+                print(live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", ""))
 
             break  # Found team in sports events and got data, no need to continue looking
         else:
