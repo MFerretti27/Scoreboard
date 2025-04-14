@@ -50,34 +50,34 @@ teams_with_data = []
 saved_data = {}
 display_index = 0
 should_scroll = False
-# try:
-for fetch_index in range(len(teams)):
-    print(f"\nFetching data for {teams[fetch_index][0]}")
-    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
-    team_info.append(info)
-    teams_with_data.append(data)
-    if currently_playing:
-        team_info = team_currently_playing(window, teams, SPORT_URLS)
-# except Exception as error:
-#     print(f"Error: {error}")
-#     if is_connected():
-#         message = f'Failed to Get Info From ESPN, Error:{error}'
-#         teams_with_data = clock(window, SPORT_URLS, message)
-#         # Reset timers
-#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-#             display_clock = ticks_add(display_clock, display_timer)
-#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+try:
+    for fetch_index in range(len(teams)):
+        print(f"\nFetching data for {teams[fetch_index][0]}")
+        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+        team_info.append(info)
+        teams_with_data.append(data)
+        if currently_playing:
+            team_info = team_currently_playing(window, teams, SPORT_URLS)
+except Exception as error:
+    print(f"Error: {error}")
+    if is_connected():
+        message = f'Failed to Get Info From ESPN, Error:{error}'
+        teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
-#     while not is_connected():
-#         message = "No Internet Connection"
-#         print("\nNo Internet connection Displaying Clock\n")
-#         teams_with_data = clock(window, SPORT_URLS, message)
-#         # Reset timers
-#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-#             display_clock = ticks_add(display_clock, display_timer)
-#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+    while not is_connected():
+        message = "No Internet Connection"
+        print("\nNo Internet connection Displaying Clock\n")
+        teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
 event = window.read(timeout=5000)
 
@@ -103,8 +103,8 @@ while True:
                     while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                         fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
-                # Save data for NBA, NHL, MLB data to display longer than data is available
-                if data is True and "FINAL" in info['bottom_info'] and "NFL" not in teams[fetch_index][1].upper():
+                # Save data for to display longer than data is available (minimum 3 days)
+                if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
                     saved_data[teams[fetch_index][0]] = [info, datetime.now()]
                     info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                     print("Saving Data to display longer that its available")

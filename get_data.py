@@ -274,7 +274,7 @@ def get_data(URL: str, team: str) -> list:
                             team_info['top_info'] += pitch["details"]["type"]["description"] + "  "
                         if play:
                             team_info['bottom_info'] = play
-                    except:
+                    except KeyError:
                         continue
                     home_hits = (competition["competitors"][0]["hits"])
                     away_hits = (competition["competitors"][1]["hits"])
@@ -306,7 +306,7 @@ def get_data(URL: str, team: str) -> list:
 
                 # Display runners on base
                 if base_conditions.get((onFirst, onSecond, onThird)) is None:
-                    team_info['network_logo'] = f"baseball_base_images/empty_bases.png"
+                    team_info['network_logo'] = "baseball_base_images/empty_bases.png"
                 else:
                     team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
 

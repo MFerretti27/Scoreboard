@@ -105,21 +105,21 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 first_time = False
                 # Find next team to display (skip teams not playing)
-                # if not stay_on_team:  # If space pressed, stay on current team playing
-                original_index = display_index
-                display_clock = ticks_add(display_clock, display_timer)
-                for x in range(len(teams) * 2):
-                    if teams_currently_playing[(original_index + x) % len(teams)] is False:
-                        display_index = (display_index + 1) % len(teams)
-                        print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
-                    elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
-                        print(f"\nFound next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
-                        break
+                if not stay_on_team:  # If space pressed, stay on current team playing
+                    original_index = display_index
+                    display_clock = ticks_add(display_clock, display_timer)
+                    for x in range(len(teams) * 2):
+                        if teams_currently_playing[(original_index + x) % len(teams)] is False:
+                            display_index = (display_index + 1) % len(teams)
+                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                        elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
+                            print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                            break
                 # else:
                 #     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
-                # if not stay_on_team:
-            display_index = (display_index + 1) % len(teams)
+            if not stay_on_team:
+                display_index = (display_index + 1) % len(teams)
 
         if should_scroll:
             text = team_info[original_index]['bottom_info'] + "         "
@@ -134,18 +134,18 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             exit()
-        # elif 'Caps_Lock' in event[0] and not stay_on_team:
-        #     display_index = original_index
-        #     stay_on_team = True
-        #     window['bottom_info'].update(value="Staying on Current Team")
-        #     window.read(timeout=500)
-        #     time.sleep(5)
-        # elif (('Shift_L' in event[0] or 'Shift_R' in event[0]) and stay_on_team) or \
-        #      (stay_on_team and "Final" in info["bottom_info"]):
-        #     stay_on_team = False
-        #     window['bottom_info'].update(value="No Longer Staying on Current Team")
-        #     window.read(timeout=500)
-        #     time.sleep(5)
+        elif 'Caps_Lock' in event[0] and not stay_on_team:
+            display_index = original_index
+            stay_on_team = True
+            window['bottom_info'].update(value="Staying on Current Team")
+            window.read(timeout=500)
+            time.sleep(5)
+        elif (('Shift_L' in event[0] or 'Shift_R' in event[0]) and stay_on_team) or \
+             (stay_on_team and "Final" in info["bottom_info"]):
+            stay_on_team = False
+            window['bottom_info'].update(value="No Longer Staying on Current Team")
+            window.read(timeout=500)
+            time.sleep(5)
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal

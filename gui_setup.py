@@ -45,8 +45,8 @@ def gui_setup() -> sg.Window:
         [sg.Image("", key='network_logo')]
     ]
 
-    top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Top Info", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
-    bottom_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Bottom Info", font=(FONT, INFO_TXT_SIZE), auto_size_text=True, size=(None, None), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()]]
+    top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
+    bottom_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Fetching Data...", font=(FONT, INFO_TXT_SIZE), auto_size_text=True, size=(None, None), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()]]
 
     layout = [[
         sg.Push(),
