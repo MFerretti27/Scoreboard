@@ -1,7 +1,7 @@
 from constants import *
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
-from get_data import get_data
+from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen
 import time
 
@@ -24,7 +24,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
     should_scroll = False
 
     display_clock = ticks_ms()  # Start timer for switching display
-    display_timer = 25 * 1000  # How often the display should update in seconds
+    display_timer = 35 * 1000  # How often the display should update in seconds
     event = window.read(timeout=5000)
 
     while True in teams_currently_playing or first_time:
@@ -45,19 +45,21 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             # Reset text color, underline and timeouts, for new display
             window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
             window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
+            window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
             window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
             window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-            window['top_info'].update(font=(FONT, PLAYING_TOP_INFO_SIZE), text_color='white')
+            window['baseball_inning'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
 
             should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
             for key, value in team_info[display_index].items():
-                if "home_logo" in key or "away_logo" in key:
-                    window[key].update(filename=value)
-                elif "network_logo" in key:
-                    window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
-                elif "possession" not in key and "redzone" not in key and "bonus" not in key:
-                    window[key].update(value=value)
+                if "KANSAS CITY ROYALS" not in str(value):
+                    if "home_logo" in key or "away_logo" in key:
+                        window[key].update(filename=value)
+                    elif "network_logo" in key:
+                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                    elif "possession" not in key and "redzone" not in key and "bonus" not in key:
+                        window[key].update(value=value)
 
                 # Football specific display information
                 if "NFL" in SPORT_URLS[display_index].upper():
@@ -97,8 +99,15 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         if "Networks" in team_info[display_index]['network_logo']:
                             value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value, subsample=BASES_SIZE)
+                    elif key == 'baseball_inning':
+                        window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
-            event = window.read(timeout=1000)
+                # NHL Specific display size for bottom info
+                if "NHL" in SPORT_URLS[display_index].upper():
+                    if key == 'top_info':
+                        window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+
+            event = window.read(timeout=5000)
 
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
@@ -115,14 +124,14 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
                             print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                             break
-                # else:
-                #     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+                else:
+                    print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
             if not stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
         if should_scroll:
-            text = team_info[original_index]['bottom_info'] + "         "
+            text = team_info[display_index]['bottom_info'] + "         "
             for _ in range(2):
                 for _ in range(len(text)):
                     event = window.read(timeout=100)

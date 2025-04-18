@@ -6,6 +6,18 @@ import requests  # pip install requests
 import random
 from constants import *
 
+def new_league_added() -> bool:
+    '''Check if new league has been added to teams array.'''
+
+    folder_path = 'sports_logos'
+    folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
+
+    for league_name in teams:
+        if league_name[1].upper() not in folder_names:
+            return True
+
+    return False
+
 
 def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: int) -> None:
     '''Resize image to fit better on Monitor
@@ -29,59 +41,72 @@ def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: 
     img_resized.save(new_path_png)
 
 
-def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
+def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
     ''' Create a base directory to store the logos if it doesn't exist
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
+    logo_directories = []
+
+    # Loop through each league to get the teams
+    for i in range(len(teams)):
+        sport_league = teams[i][1].lower()
+        sport_name = teams[i][2].lower()
+        if not os.path.exists(f"{sport_league.upper()}"):
+            logo_directories.append(f"{sport_league.upper()}")
+
+            # Create a directory for the current sport if it doesn't exist
+            sport_dir = os.path.join('sport_logos', logo_directories[i])
+            if not os.path.exists(sport_dir):
+                os.makedirs(sport_dir)
+
+            # Fetch the JSON data
+            url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
+            response = requests.get(url)
+            data = response.json()
+
+            # Extract team data
+            teams_data = data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', [])
+
+            # Download, process, resize, and save each logo
+            for team in teams_data:
+                team_name = team['team']["displayName"]
+                logo_url = team['team']['logos'][0]['href']
+                team_name = team_name.upper()
+
+                print(f"Downloading logo for {team_name} from {teams[i][1]}...")
+
+                img_path_png = os.path.join(sport_dir, f"{team_name}_Original.png")
+                response = requests.get(logo_url, stream=True)
+                with open(img_path_png, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        file.write(chunk)
+
+                # Open, resize, and save the image with PIL
+                with Image.open(img_path_png):
+                    resize_image(img_path_png, sport_dir, team_name, TEAM_LOGO_SIZE)
+
+                # Delete the original .png file
+                os.remove(img_path_png)
+
+    if os.path.exists('sport_logos'):
+        print("All logos have been downloaded!")
+
+
+def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
+    '''Determine if logos need to be downloaded
+    
+    :param teams: Dictionary with teams to display
+    :param TEAM_LOGO_SIZE: Size of team logos to display
+    '''
     if not os.path.exists('sport_logos'):
         os.makedirs('sport_logos')
-        logo_directories = []
+        download_team_logos(teams, TEAM_LOGO_SIZE)
 
-        # Loop through each league to get the teams
-        for i in range(len(teams)):
-            sport_league = teams[i][1].lower()
-            sport_name = teams[i][2].lower()
-            if not os.path.exists(f"{sport_league.upper()}"):
-                logo_directories.append(f"{sport_league.upper()}")
+    elif new_league_added():
+        download_team_logos(teams, TEAM_LOGO_SIZE)
 
-                # Create a directory for the current sport if it doesn't exist
-                sport_dir = os.path.join('sport_logos', logo_directories[i])
-                if not os.path.exists(sport_dir):
-                    os.makedirs(sport_dir)
-
-                # Fetch the JSON data
-                url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
-                response = requests.get(url)
-                data = response.json()
-
-                # Extract team data
-                teams_data = data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', [])
-
-                # Download, process, resize, and save each logo
-                for team in teams_data:
-                    team_name = team['team']["displayName"]
-                    logo_url = team['team']['logos'][0]['href']
-                    team_name = team_name.upper()
-
-                    print(f"Downloading logo for {team_name} from {teams[i][1]}...")
-
-                    img_path_png = os.path.join(sport_dir, f"{team_name}_Original.png")
-                    response = requests.get(logo_url, stream=True)
-                    with open(img_path_png, 'wb') as file:
-                        for chunk in response.iter_content(chunk_size=1024):
-                            file.write(chunk)
-
-                    # Open, resize, and save the image with PIL
-                    with Image.open(img_path_png):
-                        resize_image(img_path_png, sport_dir, team_name, TEAM_LOGO_SIZE)
-
-                    # Delete the original .png file
-                    os.remove(img_path_png)
-
-        if os.path.exists('sport_logos'):
-            print("All logos have been downloaded!")
 
 
 def get_random_logo() -> dict:

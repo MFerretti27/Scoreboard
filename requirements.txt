@@ -1,8 +1,8 @@
 adafruit-circuitpython-ticks
 FreeSimpleGUI
 pillow
-PySimpleGUI
 requests
 flake8
 MLB-StatsAPI
 nba_api
+nhl-api-py
