@@ -10,7 +10,7 @@ from .get_team_id import get_mlb_team_id
 
 API_FIELDS = (
     "gameData,game,datetime,dateTime,officialDate,status,detailedState,abstractGameState,teams,home,away,"
-    + "teamName,record,wins,losses,fullName,liveData,plays,currentPlay,result,playEvents,isPitch,"
+    + "teamName,record,wins,losses,fullName,liveData,plays,currentPlay,result,playEvents,isPitch,runs,"
     + "details,type,code,description,linescore,outs,balls,strikes,inningState,currentInningOrdinal,"
     + "offense,batter,inHole,onDeck,first,second,third,pitcher,wins,hits,errors,pitching,currentInning"
 )
@@ -117,13 +117,17 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     team_info['baseball_inning'] = inning_state + " " + str(inning_number)
 
     # Get pitcher and batter for bottom info
-    batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"].split()[-1]
+    batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
     batter = ' '.join(batter.split()[1:])  # Remove First Name
-    pitcher = live["liveData"]["linescore"]["offense"]["pitcher"]["fullName"].split()[-1]
+    pitcher = live["liveData"]["linescore"]["offense"]["pitcher"]["fullName"]
     pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
-    due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"].split()[-1]
+    due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 
-    team_info['bottom_info'] = f"P: {pitcher}   AB:{batter}"
+    team_info['bottom_info'] = ''
+    if pitcher != '':
+        team_info['bottom_info'] += (f"P: {pitcher}   ")
+    if batter != '':
+        team_info['bottom_info'] += (f"AB: {batter}")
 
     # If inning is changing do not display count and move inning to display below score
     if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:

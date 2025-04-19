@@ -60,6 +60,8 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
                     elif "possession" not in key and "redzone" not in key and "bonus" not in key:
                         window[key].update(value=value)
+                else:
+                    window[key].update(filename=value, subsample=9)
 
                 # Football specific display information
                 if "NFL" in SPORT_URLS[display_index].upper():
@@ -93,6 +95,8 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
 
                 # MLB Specific display size for bottom info
                 if "MLB" in SPORT_URLS[display_index].upper():
+                    if key == "top_info":
+                        window['top_info'].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     if key == 'bottom_info':
                         window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     elif key == 'network_logo':

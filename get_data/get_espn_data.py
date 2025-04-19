@@ -65,10 +65,10 @@ def get_data(URL: str, team: str) -> list:
         elif "NHL" in URL.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_info, team_name)
             return team_info, team_has_data, currently_playing
-        elif "NFL" in URL.upper():
-            raise Exception("Could Not Get NFL data")
-        else:
-            raise Exception("Could Not Get ESPN data")
+        # elif "NFL" in URL.upper():
+        #     raise Exception("Could Not Get NFL data")
+        # else:
+        #     raise Exception("Could Not Get ESPN data")
 
     for event in response_as_json["events"]:
         if team_name.upper() in event["name"].upper():
@@ -209,7 +209,7 @@ def get_data(URL: str, team: str) -> list:
                     print("Failed to get data from MLB API")
                     team_info = saved_info  # Try clause might modify dictionary
                     team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
-                    team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
+                    team_info['bottom_info'] = team_info['bottom_info'].replace('Mid', 'Middle')
 
                     # Change to display inning above score
                     team_info['baseball_inning'] = team_info['bottom_info']
