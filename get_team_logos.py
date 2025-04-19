@@ -48,17 +48,14 @@ def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
-    logo_directories = []
-
     # Loop through each league to get the teams
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
         sport_name = teams[i][2].lower()
-        if not os.path.exists(f"{sport_league.upper()}"):
-            logo_directories.append(f"{sport_league.upper()}")
+        if not os.path.exists(f"sport_logos/{sport_league.upper()}"):
 
             # Create a directory for the current sport if it doesn't exist
-            sport_dir = os.path.join('sport_logos', logo_directories[i])
+            sport_dir = os.path.join('sport_logos', sport_league.upper())
             if not os.path.exists(sport_dir):
                 os.makedirs(sport_dir)
 
