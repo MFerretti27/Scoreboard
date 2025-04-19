@@ -1,8 +1,6 @@
 '''Change Sizes of all Text, logos and Spacing here for GUI'''
 
 # The team names you want to follow, *MUST MATCH* in order -> [team name, sport league, sport name]
-# If you add a new league then you will have to delete the sports_logo folder and then the next time it runs
-# the logos will be re-downloaded
 teams = [
     ["Detroit Lions", "nfl", "football"],
     ["Detroit Tigers", "mlb", "baseball"],
