@@ -6,10 +6,11 @@ import requests  # pip install requests
 import random
 from constants import *
 
+
 def new_league_added() -> bool:
     '''Check if new league has been added to teams array.'''
 
-    folder_path = 'sports_logos'
+    folder_path = 'sport_logos'
     folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
 
     for league_name in teams:
@@ -96,7 +97,7 @@ def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
 
 def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
     '''Determine if logos need to be downloaded
-    
+
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
@@ -106,7 +107,6 @@ def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
 
     elif new_league_added():
         download_team_logos(teams, TEAM_LOGO_SIZE)
-
 
 
 def get_random_logo() -> dict:

@@ -9,7 +9,7 @@ from .get_team_id import get_nhl_game_id
 
 def get_all_nhl_data(team_name: str) -> dict:
     """Get all information for NHL team.
-    
+
     Call this if ESPN fails to get MLB data as backup.
 
     :param team_name: The team name to get information for
@@ -21,7 +21,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     id = get_nhl_game_id(team_name)
 
     resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
-    live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore") 
+    live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore")
     live = live_data.json()
     res = resp.json()
 
@@ -92,7 +92,7 @@ def get_all_nhl_data(team_name: str) -> dict:
 
 def append_nhl_data(team_info: dict, team_name: str) -> dict:
     """Get information for NHL team if playing.
-    
+
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
@@ -124,4 +124,3 @@ def append_nhl_data(team_info: dict, team_name: str) -> dict:
 
     resp.close()
     return team_info
-

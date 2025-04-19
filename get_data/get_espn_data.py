@@ -1,6 +1,5 @@
 '''Grab Data for ESPN API'''
 
-from nba_api.live.nba.endpoints import scoreboard
 import requests  # pip install requests
 import gc
 from constants import network_logos, teams
@@ -10,6 +9,7 @@ from .get_nba_data import append_nba_data
 from .get_series_data import get_series
 
 should_skip = False
+
 
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
     '''Check if the two teams are playing each other
@@ -56,7 +56,7 @@ def get_data(URL: str, team: str) -> list:
     try:
         resp = requests.get(URL)
         response_as_json = resp.json()
-    except:
+    except Exception:
         if "MLB" in URL.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name, team_info)
             return team_info, team_has_data, currently_playing
@@ -65,8 +65,10 @@ def get_data(URL: str, team: str) -> list:
         elif "NHL" in URL.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_info, team_name)
             return team_info, team_has_data, currently_playing
-        elif "NFL"in URL.upper():
+        elif "NFL" in URL.upper():
             raise Exception("Could Not Get NFL data")
+        else:
+            raise Exception("Could Not Get ESPN data")
 
     for event in response_as_json["events"]:
         if team_name.upper() in event["name"].upper():
@@ -90,8 +92,8 @@ def get_data(URL: str, team: str) -> list:
             home_team_id = competition["competitors"][0]["id"]
             away_team_id = competition["competitors"][1]["id"]
 
-            home_short_name =competition["competitors"][0]["team"]["shortDisplayName"]
-            away_short_name =competition["competitors"][1]["team"]["shortDisplayName"]
+            home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
+            away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
             # Display team names above score
             team_info["baseball_inning"] = f"{away_short_name} vs {home_short_name}"
@@ -203,7 +205,7 @@ def get_data(URL: str, team: str) -> list:
                     team_info = append_mlb_data(team_info, team_name)
 
                 # If call to API fails get MLB specific info from ESPN
-                except:
+                except Exception:
                     print("Failed to get data from MLB API")
                     team_info = saved_info  # Try clause might modify dictionary
                     team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
@@ -214,9 +216,13 @@ def get_data(URL: str, team: str) -> list:
                     team_info['bottom_info'] = ""
 
                     # Get who is pitching and batting, if info is available
-                    pitcher = competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
+                    pitcher = (
+                        competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
+                    )
                     pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
-                    batter = competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
+                    batter = (
+                        competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
+                    )
                     batter = ' '.join(batter.split()[1:])  # Remove First Name
                     if pitcher != "N/A":
                         team_info['bottom_info'] += (f"P: {pitcher}   ")
@@ -264,11 +270,11 @@ def get_data(URL: str, team: str) -> list:
                 saved_info = team_info
                 try:
                     team_info = append_nhl_data(team_info, team_name)
-                except:
+                except Exception:
                     print("Could not get info from NHL API")
                     team_info = saved_info  # Try clause might modify dictionary
 
-            # If got here with no top info to display, try displaing series info
+            # If got here with no top info to display, try displaying series info
             if team_info['top_info'] == "":
                 team_info['top_info'] = get_series(URL, team_name)
 

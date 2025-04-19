@@ -17,9 +17,10 @@ API_FIELDS = (
 
 last_inning = 0
 
+
 def get_all_mlb_data(team_name: str) -> dict:
     """Get all information for MLB team.
-    
+
     Call this if ESPN fails to get MLB data as backup.
 
     :param team_name: The team name to get information for
@@ -49,7 +50,7 @@ def get_all_mlb_data(team_name: str) -> dict:
         live_feed = response.json()
         venue = live_feed['gameData']['venue']['name']
         team_info["bottom_info"] = f"{game_time} @ {venue}"
-    except:
+    except Exception:
         team_info["bottom_info"] = time
 
     # Get Home and Away team logos
@@ -66,7 +67,6 @@ def get_all_mlb_data(team_name: str) -> dict:
 
     team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{away_team}")
     team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{home_team}")
-    
 
     # Get Home and Away team records
     home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
@@ -86,9 +86,10 @@ def get_all_mlb_data(team_name: str) -> dict:
 
     return team_info, True, currently_playing
 
-def append_mlb_data(team_info: dict, team_name) -> dict:
+
+def append_mlb_data(team_info: dict, team_name: str) -> dict:
     """Get information for MLB team if playing.
-    
+
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
@@ -99,8 +100,8 @@ def append_mlb_data(team_info: dict, team_name) -> dict:
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
 
     # Get Scores
-    team_info["home_score"] = live["liveData"]["linescore"]["teams"]["home"].get("runs", 0)
-    team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
+    team_info["home_score"] = str(live["liveData"]["linescore"]["teams"]["home"]["runs"])
+    team_info["away_score"] = str(live["liveData"]["linescore"]["teams"]["away"]["runs"])
 
     # Get game stats to display under score
     home_hits = live["liveData"]["linescore"]["teams"]["home"].get("hits", 0)
@@ -136,26 +137,26 @@ def append_mlb_data(team_info: dict, team_name) -> dict:
                 team_info['top_info'] += pitch["details"]["type"]["description"] + "  "
             if play:
                 team_info['bottom_info'] = play
-        except:
-            print("Couldnt get Pitch or play")
+        except Exception:
+            print("couldn't get Pitch or play")
         team_info['top_info'] += (f"{balls}-{strikes}, {outs} Outs")
     else:
         team_info['bottom_info'] = (f"DueUp: {due_up}")
         team_info['top_info'] = team_info['baseball_inning']
         team_info['baseball_inning'] = ""
 
-    bases = {"first": False, 
-            "second": False, 
-            "third": False}
-    
+    bases = {"first": False,
+             "second": False,
+             "third": False}
+
     for key, _ in bases.items():
         try:
-            # Dont need to store name of whoes on just has to ensure call is successfull
+            # Dont need to store name of whoes on just has to ensure call is successful
             _ = live["liveData"]["linescore"]["offense"][key]["fullName"]
             bases[key] = True
         except KeyError:
             bases[key] = False
-    
+
     base_conditions = {
         (True, False, False): "on_first.png",
         (False, True, False): "on_second.png",
