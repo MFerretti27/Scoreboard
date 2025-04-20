@@ -5,10 +5,14 @@ from PIL import Image  # pip install pillow
 import requests  # pip install requests
 import random
 from constants import *
+import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 
 
 def new_league_added() -> bool:
-    '''Check if new league has been added to teams array.'''
+    '''Check if new league has been added to teams array.
+
+    :return: True if new league added, False otherwise
+    '''
 
     folder_path = 'sport_logos'
     folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
@@ -28,13 +32,35 @@ def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: 
     :param team_name: Team name to use as file name
     :param scale_factor: What scale to resize the image to
     '''
+    window_width = sg.Window.get_screen_size()[0]
+    window_height = sg.Window.get_screen_size()[1]
+    column_width = window_width / 3
+    column_height = window_height * .66
+
     # Open an image file using Pillow
     img = Image.open(image_path)
 
     # Calculate new size based on scale factor
     width, height = img.size
-    new_width = int(width * scale_factor)
-    new_height = int(height * scale_factor)
+    new_width = width
+    new_height = height
+
+    iteration = 0
+    if width >= column_width:
+        while new_width > column_width or new_height > column_height:
+            new_width = int(width * (scale_factor - iteration))
+            new_height = int(height * (scale_factor - iteration))
+            iteration += .1
+            print(iteration)
+            print(f"New Width1: {new_width}, New Height: {new_height}")
+
+    if width <= column_width:
+        while new_width > column_width or new_height > column_height:
+            new_width = int(width * (scale_factor + iteration))
+            new_height = int(height * (scale_factor + iteration))
+            iteration += .1
+            print(team_name)
+            print(f"New Width: {new_width}, New Height: {new_height}, Scale Factor: {scale_factor}")
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)

@@ -155,15 +155,12 @@ while True:
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
                 for key, value in team_info[display_index].items():
-                    if "KANSAS CITY ROYALS" not in str(value):
-                        if "home_logo" in key or "away_logo" in key:
-                            window[key].update(filename=value)
-                        elif "network_logo" in key:
-                            window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
-                        elif "possession" not in key and "redzone" not in key:
-                            window[key].update(value=value, text_color='white')
-                    else:
-                        window[key].update(filename=value, subsample=9)
+                    if "home_logo" in key or "away_logo" in key:
+                        window[key].update(filename=value)
+                    elif "network_logo" in key:
+                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                    elif "possession" not in key and "redzone" not in key:
+                        window[key].update(value=value, text_color='white')
 
                 event = window.read(timeout=5000)
 
