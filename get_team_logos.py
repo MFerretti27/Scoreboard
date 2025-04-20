@@ -50,13 +50,16 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
             new_width = int(width * (1 - iteration))
             new_height = int(height * (1 - iteration))
             iteration += .1
+        new_width = int(width * (1 - (iteration - .1)))
+        new_height = int(height * (1 - (iteration - .1)))
 
     elif width <= column_width:
         while new_width <= column_width and new_height <= column_height:
             new_width = int(width * (1 + iteration))
             new_height = int(height * (1 + iteration))
-            print(f"New Width: {new_width}, New Height: {new_height}")
             iteration += .1
+        new_width = int(width * (1 - (iteration - .1)))
+        new_height = int(height * (1 - (iteration - .1)))
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)

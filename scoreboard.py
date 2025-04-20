@@ -123,10 +123,10 @@ while True:
                 if data is True and "FINAL" in info['bottom_info']:
                     if info not in saved_data.values() or one_value_differs(saved_data[teams[fetch_index][0]][0], info):
                         saved_data[teams[fetch_index][0]] = [info, datetime.now()]
-                        info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
+                        # info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
-                elif info in saved_data.values():
+                elif teams[fetch_index][0] in saved_data and data is False:
                     print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
