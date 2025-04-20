@@ -2,11 +2,11 @@
 from nba_api.live.nba.endpoints import scoreboard
 import os
 
+
 def get_all_nba_data(team_name: str):
     currently_playing = False
     has_data = False
     team_info = {}
-
 
     # Today's Score Board
     games = scoreboard.ScoreBoard()
@@ -16,17 +16,19 @@ def get_all_nba_data(team_name: str):
     for game in live["scoreboard"]["games"]:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
             has_data = True
-      
+
+            team_info["network_logo"] = ""
+
             # Get Bottom Info
-            team_info["game_status"] = game["gameStatusText"]
+            team_info["bottom_info"] = game["gameStatusText"]
 
             # Get above score text
-            team_info["homeTeam"] = game["homeTeam"]["teamName"]
-            team_info["awayTeam"] = game["awayTeam"]["teamName"]
+            home_team = game["homeTeam"]["teamName"]
+            away_team = game["awayTeam"]["teamName"]
             team_info["baseball_inning"] = f"{away_team} vs {home_team}"
 
             # Get team logos
-            folder_path = os.getcwd() + '/sport_logos/MLB/'
+            folder_path = os.getcwd() + '/sport_logos/NBA/'
             file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
             for file in file_names:
                 if home_team.upper() in file:
@@ -34,15 +36,15 @@ def get_all_nba_data(team_name: str):
                 if away_team.upper() in file:
                     away_team = file
 
-            team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{away_team}")
-            team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{home_team}")
+            team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/NBA/{away_team}")
+            team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/NBA/{home_team}")
 
-
-            team_info["homeTeamScore"] = "0"
-            team_info["awayTeamScore"] = "0"
+            team_info["home_score"] = "0"
+            team_info["away_score"] = "0"
 
     return team_info, has_data, currently_playing
-    
+
+
 def append_nba_data(team_info: dict, team_name: str) -> dict:
     """Get information for NBA team if playing.
 
