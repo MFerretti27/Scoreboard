@@ -45,22 +45,24 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     new_width = width
     new_height = height
 
-    iteration = 0
+    iteration = 1
     if width >= column_width:
         while new_width >= column_width and new_height >= column_height:
-            new_width = int(width * (1 - iteration))
-            new_height = int(height * (1 - iteration))
-            iteration += .1
-        new_width = int(width * (1 - (iteration + .1)))
-        new_height = int(height * (1 - (iteration + .1)))
+            new_width = int(width * iteration)
+            new_height = int(height * iteration)
+            iteration -= .01
+        new_width = int(width * (iteration - .01))
+        new_height = int(height * (iteration - .01))
 
     elif width <= column_width:
         while new_width <= column_width and new_height <= column_height:
-            new_width = int(width * (1 + iteration))
-            new_height = int(height * (1 + iteration))
-            iteration += .1
-        new_width = int(width * (1 - (iteration - .1)))
-        new_height = int(height * (1 - (iteration - .1)))
+            new_width = int(width * iteration)
+            new_height = int(height * iteration)
+            iteration += .01
+        new_width = int(width * (iteration - .01))
+        new_height = int(height * (iteration - .01))
+
+    print(f"Resizing {team_name} logo to {new_width} x {new_height}")
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
