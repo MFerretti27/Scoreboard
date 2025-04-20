@@ -35,6 +35,7 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     window_height = sg.Window.get_screen_size()[1]
     column_width = window_width / 3
     column_height = window_height * .66
+    column_height = column_height * (4/5)
 
     # Open an image file using Pillow
     img = Image.open(image_path)
@@ -50,8 +51,8 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
             new_width = int(width * (1 - iteration))
             new_height = int(height * (1 - iteration))
             iteration += .1
-        new_width = int(width * (1 - (iteration - .1)))
-        new_height = int(height * (1 - (iteration - .1)))
+        new_width = int(width * (1 - (iteration + .1)))
+        new_height = int(height * (1 - (iteration + .1)))
 
     elif width <= column_width:
         while new_width <= column_width and new_height <= column_height:
