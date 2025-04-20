@@ -46,15 +46,13 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
 
     iteration = 0
     if width >= column_width:
-        while new_width >= column_width or new_height >= column_height:
+        while new_width >= column_width and new_height >= column_height:
             new_width = int(width * (1 - iteration))
             new_height = int(height * (1 - iteration))
             iteration += .1
 
     elif width <= column_width:
-        first_time = True
-        while new_width <= (column_width - width) or new_height <= (column_height - height) or first_time:
-            first_time = False
+        while new_width <= column_width and new_height <= column_height:
             new_width = int(width * (1 + iteration))
             new_height = int(height * (1 + iteration))
             print(f"New Width: {new_width}, New Height: {new_height}")
