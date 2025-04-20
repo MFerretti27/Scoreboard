@@ -1,8 +1,6 @@
 '''Change Sizes of all Text, logos and Spacing here for GUI'''
 
 # The team names you want to follow, *MUST MATCH* in order -> [team name, sport league, sport name]
-# If you add a new league then you will have to delete the sports_logo folder and then the next time it runs
-# the logos will be re-downloaded
 teams = [
     ["Pittsburgh Steelers", "nfl", "football"],
     ["Detroit Lions", "nfl", "football"],
@@ -39,7 +37,7 @@ SPACE_BETWEEN_TOP_TXT_AND_SCORE = 100
 SPACE_BETWEEN_TOP_AND_LOGOS = 0
 INFO_SPACE_HEIGHT = 200
 
-# Logo Sizes
+# Logo Sizes, times amount to decrease size, 1 is the original size
 TEAM_LOGO_SIZE = 1.5
 NETWORK_LOGOS_SIZE = 1
 BASES_SIZE = 3

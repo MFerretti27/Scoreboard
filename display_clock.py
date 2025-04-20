@@ -6,7 +6,7 @@ import datetime
 import time
 import FreeSimpleGUI as sg
 from get_team_logos import get_random_logo
-from get_data import get_data
+from get_data.get_espn_data import get_data
 from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from constants import *
@@ -74,6 +74,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
                 message = f'Failed to Get Info From ESPN, Error:{error}'
             if not is_connected():
                 print("Internet connection is down, trying to reconnect...")
+                message = "No Internet Connection"
                 reconnect()
                 time.sleep(20)  # Wait 20 seconds for connection
 
