@@ -1,7 +1,7 @@
 '''Get MLB from MLB specific API'''
 import statsapi
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests
 import time
 from .get_series_data import get_current_series_mlb
@@ -28,7 +28,9 @@ def get_all_mlb_data(team_name: str) -> dict:
     team_info = {}
 
     currently_playing = False
-    data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True)
+    today = datetime.now().strftime("%Y-%m-%d")
+    three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+    data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True, start_date=today, end_date=three_days_later)
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     team_info['network_logo'] = ''
 

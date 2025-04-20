@@ -1,8 +1,9 @@
 '''Get series information'''
 import statsapi
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
+from nba_api.live.nba.endpoints import scoreboard
 
 
 def get_series(URL: str, team_name: str) -> dict:
@@ -11,27 +12,34 @@ def get_series(URL: str, team_name: str) -> dict:
         return (get_current_series_mlb(team_name))
     elif "NHL" in URL.upper():
         return (get_current_series_nhl(team_name))
+    elif "NBA" in URL.upper():
+        return (get_current_series_nba(team_name))
+    else:
+        return ""
 
 
 def get_current_series_mlb(team_name) -> str:
-    """Try to get the series information for baseball."""
+    """Try to get the series information for baseball team."""
     series_summary = ""
     try:
         team_id = get_mlb_team_id(team_name)
 
         # Get today's games for that team
         today = datetime.now().strftime("%Y-%m-%d")
-        schedule = statsapi.schedule(team=team_id, start_date=today, end_date=today)
+        three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+        schedule = statsapi.schedule(team=team_id, start_date=today, end_date=three_days_later)
 
         game = schedule[0]  # Take the first game today
-        series_summary = game.get("series_status")
+        series_summary = game.get("series_status", "")
+        if series_summary is None:
+            series_summary = ""
         return series_summary
     except Exception:
         return series_summary
 
 
 def get_current_series_nhl(team_name) -> str:
-    """Try to get the series information for hockey."""
+    """Try to get the series information for hockey team."""
     series_summary = ""
     try:
         id = get_nhl_game_id(team_name)
@@ -58,3 +66,18 @@ def get_current_series_nhl(team_name) -> str:
         return series_summary
     except Exception:
         series_summary
+
+
+def get_current_series_nba(team_name) -> str:
+    """Try to get the series information for basketball team."""
+    series_summary = ""
+    # Today's Score Board
+    games = scoreboard.ScoreBoard()
+    live = games.get_dict()
+    try:
+        for game in live["scoreboard"]["games"]:
+            if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
+                series_summary = game["seriesText"]
+        return series_summary
+    except Exception:
+        return series_summary

@@ -40,6 +40,20 @@ for i in range(len(teams)):
 get_team_logos(teams, TEAM_LOGO_SIZE)
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
 
+def one_value_differs(old_dictonary: dict, new_dictonary: dict) -> bool:
+    '''Helper function to determine data should be added to team info.
+
+    Determines if 2 dictonarys are the same except for 1 value, which would be date
+    added to bottom_info
+    
+    :param old_dictonary: dictonary stored for displaying longer
+    :param new_dictonary: dictonary gotten from api calls
+    '''
+    if old_dictonary.keys() != new_dictonary.keys():
+        return False
+    diff_count = sum(old_dictonary[k] != new_dictonary[k] for k in old_dictonary)
+    return diff_count == 1
+
 ##################################
 #                                #
 #    Get Data for First Time     #
@@ -50,34 +64,34 @@ teams_with_data = []
 saved_data = {}
 display_index = 0
 should_scroll = False
-# try:
-for fetch_index in range(len(teams)):
-    print(f"\nFetching data for {teams[fetch_index][0]}")
-    info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
-    team_info.append(info)
-    teams_with_data.append(data)
-    if currently_playing:
-        team_info = team_currently_playing(window, teams, SPORT_URLS)
-# except Exception as error:
-#     print(f"Error: {error}")
-#     if is_connected():
-#         message = f'Failed to Get Info From ESPN, Error:{error}'
-#         teams_with_data = clock(window, SPORT_URLS, message)
-#         # Reset timers
-#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-#             display_clock = ticks_add(display_clock, display_timer)
-#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+try:
+    for fetch_index in range(len(teams)):
+        print(f"\nFetching data for {teams[fetch_index][0]}")
+        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+        team_info.append(info)
+        teams_with_data.append(data)
+        if currently_playing:
+            team_info = team_currently_playing(window, teams, SPORT_URLS)
+except Exception as error:
+    print(f"Error: {error}")
+    if is_connected():
+        message = f'Failed to Get Info From ESPN, Error:{error}'
+        teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
-#     while not is_connected():
-#         message = "No Internet Connection"
-#         print("\nNo Internet connection Displaying Clock\n")
-#         teams_with_data = clock(window, SPORT_URLS, message)
-#         # Reset timers
-#         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-#             display_clock = ticks_add(display_clock, display_timer)
-#         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-#             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+    while not is_connected():
+        message = "No Internet Connection"
+        print("\nNo Internet connection Displaying Clock\n")
+        teams_with_data = clock(window, SPORT_URLS, message)
+        # Reset timers
+        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+            display_clock = ticks_add(display_clock, display_timer)
+        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
 event = window.read(timeout=5000)
 
@@ -104,10 +118,11 @@ while True:
                         fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
                 # Save data for to display longer than data is available (minimum 3 days)
-                if data is True and "FINAL" in info['bottom_info'] and info not in saved_data.values():
-                    saved_data[teams[fetch_index][0]] = [info, datetime.now()]
-                    info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
-                    print("Saving Data to display longer that its available")
+                if data is True and "FINAL" in info['bottom_info']:
+                    if info not in saved_data.values() or one_value_differs(saved_data[teams[fetch_index][0]][0], info):
+                        saved_data[teams[fetch_index][0]] = [info, datetime.now()]
+                        info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
+                        print("Saving Data to display longer that its available")
 
                 elif info in saved_data.values():
                     print("Data is no longer available, checking if should display")
@@ -140,12 +155,15 @@ while True:
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
                 for key, value in team_info[display_index].items():
-                    if "home_logo" in key or "away_logo" in key:
-                        window[key].update(filename=value)
-                    elif "network_logo" in key:
-                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
-                    elif "possession" not in key and "redzone" not in key:
-                        window[key].update(value=value, text_color='white')
+                    if "KANSAS CITY ROYALS" not in str(value):
+                        if "home_logo" in key or "away_logo" in key:
+                            window[key].update(filename=value)
+                        elif "network_logo" in key:
+                            window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                        elif "possession" not in key and "redzone" not in key:
+                            window[key].update(value=value, text_color='white')
+                    else:
+                        window[key].update(filename=value, subsample=9)
 
                 event = window.read(timeout=5000)
 

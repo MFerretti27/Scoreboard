@@ -5,7 +5,7 @@ import gc
 from constants import network_logos, teams
 from .get_mlb_data import get_all_mlb_data, append_mlb_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
-from .get_nba_data import append_nba_data
+from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_series_data import get_series
 
 should_skip = False
@@ -59,16 +59,15 @@ def get_data(URL: str, team: str) -> list:
     except Exception:
         if "MLB" in URL.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name, team_info)
-            return team_info, team_has_data, currently_playing
         elif "NBA" in URL.upper():
-            raise Exception("Could Not Get NBA data")
+            team_info, team_has_data, currently_playing = get_all_nba_data(team_info, team_name)
         elif "NHL" in URL.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_info, team_name)
-            return team_info, team_has_data, currently_playing
-        # elif "NFL" in URL.upper():
-        #     raise Exception("Could Not Get NFL data")
-        # else:
-        #     raise Exception("Could Not Get ESPN data")
+        elif "NFL" in URL.upper():
+            raise Exception("Could Not Get NFL data")
+        else:
+            raise Exception("Could Not Get ESPN data")
+        return team_info, team_has_data, currently_playing
 
     for event in response_as_json["events"]:
         if team_name.upper() in event["name"].upper():
