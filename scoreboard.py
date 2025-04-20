@@ -37,15 +37,16 @@ for i in range(len(teams)):
     sport_name = teams[i][2].lower()
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
-get_team_logos(teams, TEAM_LOGO_SIZE)
+get_team_logos(teams)
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
+
 
 def one_value_differs(old_dictonary: dict, new_dictonary: dict) -> bool:
     '''Helper function to determine data should be added to team info.
 
     Determines if 2 dictonarys are the same except for 1 value, which would be date
     added to bottom_info
-    
+
     :param old_dictonary: dictonary stored for displaying longer
     :param new_dictonary: dictonary gotten from api calls
     '''
@@ -53,6 +54,7 @@ def one_value_differs(old_dictonary: dict, new_dictonary: dict) -> bool:
         return False
     diff_count = sum(old_dictonary[k] != new_dictonary[k] for k in old_dictonary)
     return diff_count == 1
+
 
 ##################################
 #                                #

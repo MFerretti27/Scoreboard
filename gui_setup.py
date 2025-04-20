@@ -25,16 +25,27 @@ def gui_setup() -> sg.Window:
     print(f"Info Height: {math.ceil(info_height)}")
     print(f"Space Between Score: {math.ceil(space_between_score)}\n\n")
 
-    home_record_layout = [
+    home_logo_layout = [
         [sg.VPush()],
         [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (0, 0)))],
-        [sg.Text("HOME", font=(FONT, RECORD_TXT_SIZE), key='home_record')]
+        [sg.VPush()],
+    ]
+
+    away_logo_layout = [
+        [sg.VPush()],
+        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
+        [sg.VPush()],
     ]
 
     away_record_layout = [
-        [sg.VPush()],
-        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
-        [sg.Text("AWAY", font=(FONT, RECORD_TXT_SIZE), key='away_record')]
+        [sg.Push()],
+        [sg.Text("AWAY", font=(FONT, RECORD_TXT_SIZE), key='away_record', pad=((0, 0), (0, 0)))],
+        [sg.Push()],
+    ]
+    home_record_layout = [
+        [sg.Push()],
+        [sg.Text("HOME", font=(FONT, RECORD_TXT_SIZE), key='home_record', pad=((0, 0), (0, 0)))],
+        [sg.Push()],
     ]
 
     score_layout = [
@@ -50,11 +61,17 @@ def gui_setup() -> sg.Window:
     top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
     bottom_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Fetching Data...", font=(FONT, INFO_TXT_SIZE), auto_size_text=True, size=(None, None), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()]]
 
-    layout = [[
-        sg.Push(),
-        sg.Frame("", away_record_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
-        sg.Frame("", score_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
-        sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(column_width, column_height)),
+    layout = [
+    [
+        sg.Column([  # Vertical stack for away team
+            [sg.Frame("", away_logo_layout, element_justification='center', border_width=0, size=(column_width, column_height * (4/5)))],
+            [sg.Frame("", away_record_layout, element_justification='center', border_width=0, size=(column_width, column_height * (1/5)))]
+        ], element_justification='center', pad=((0, 0), (0, 0))),
+        sg.Frame("", score_layout, element_justification='center', border_width=0, size=(column_width, column_height), pad=((0, 0), (0, 0))),
+        sg.Column([  # Vertical stack for home team
+            [sg.Frame("", home_logo_layout, element_justification='center', border_width=0, size=(column_width, column_height * (4/5)))],
+            [sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(column_width, column_height * (1/5)))]
+        ], element_justification='center', pad=((0, 0), (0, 0))),
         sg.Push()
     ],
         [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],

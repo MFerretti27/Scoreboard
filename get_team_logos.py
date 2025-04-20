@@ -1,4 +1,4 @@
-'''Use ESPN API to Grab Major League Sports Teams logo and Resize based in Constant'''
+'''Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen'''
 
 import os
 from PIL import Image  # pip install pillow
@@ -24,13 +24,12 @@ def new_league_added() -> bool:
     return False
 
 
-def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: int) -> None:
+def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     '''Resize image to fit better on Monitor
 
     :param image_path: Path of where image was downloaded
     :param sport_dir: Folder were new resized image should be put
     :param team_name: Team name to use as file name
-    :param scale_factor: What scale to resize the image to
     '''
     window_width = sg.Window.get_screen_size()[0]
     window_height = sg.Window.get_screen_size()[1]
@@ -40,27 +39,26 @@ def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: 
     # Open an image file using Pillow
     img = Image.open(image_path)
 
-    # Calculate new size based on scale factor
+    # Calculate new size based monitor size
     width, height = img.size
     new_width = width
     new_height = height
 
     iteration = 0
     if width >= column_width:
-        while new_width > column_width or new_height > column_height:
-            new_width = int(width * (scale_factor - iteration))
-            new_height = int(height * (scale_factor - iteration))
+        while new_width >= column_width or new_height >= column_height:
+            new_width = int(width * (1 - iteration))
+            new_height = int(height * (1 - iteration))
             iteration += .1
-            print(iteration)
-            print(f"New Width1: {new_width}, New Height: {new_height}")
 
-    if width <= column_width:
-        while new_width > column_width or new_height > column_height:
-            new_width = int(width * (scale_factor + iteration))
-            new_height = int(height * (scale_factor + iteration))
+    elif width <= column_width:
+        first_time = True
+        while new_width <= (column_width - width) or new_height <= (column_height - height) or first_time:
+            first_time = False
+            new_width = int(width * (1 + iteration))
+            new_height = int(height * (1 + iteration))
+            print(f"New Width: {new_width}, New Height: {new_height}")
             iteration += .1
-            print(team_name)
-            print(f"New Width: {new_width}, New Height: {new_height}, Scale Factor: {scale_factor}")
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
@@ -68,7 +66,7 @@ def resize_image(image_path: str, sport_dir: str, team_name: str, scale_factor: 
     img_resized.save(new_path_png)
 
 
-def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
+def download_team_logos(teams: list) -> None:
     ''' Create a base directory to store the logos if it doesn't exist
 
     :param teams: Dictionary with teams to display
@@ -109,7 +107,7 @@ def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
 
                 # Open, resize, and save the image with PIL
                 with Image.open(img_path_png):
-                    resize_image(img_path_png, sport_dir, team_name, TEAM_LOGO_SIZE)
+                    resize_image(img_path_png, sport_dir, team_name)
 
                 # Delete the original .png file
                 os.remove(img_path_png)
@@ -118,7 +116,7 @@ def download_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
         print("All logos have been downloaded!")
 
 
-def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
+def get_team_logos(teams: list) -> None:
     '''Determine if logos need to be downloaded
 
     :param teams: Dictionary with teams to display
@@ -126,10 +124,10 @@ def get_team_logos(teams: list, TEAM_LOGO_SIZE: int) -> None:
     '''
     if not os.path.exists('sport_logos'):
         os.makedirs('sport_logos')
-        download_team_logos(teams, TEAM_LOGO_SIZE)
+        download_team_logos(teams)
 
     elif new_league_added():
-        download_team_logos(teams, TEAM_LOGO_SIZE)
+        download_team_logos(teams)
 
 
 def get_random_logo() -> dict:
