@@ -9,7 +9,7 @@ import time
 if sys.prefix != sys.base_prefix:
     print("\tYou are currently in a virtual environment.")
     if os.environ.get('DISPLAY', '') == '':
-        print('no display found. Using :0.0')
+        print('no display found. Using :0.0\n')
         os.environ.__setitem__('DISPLAY', ':0.0')
 else:
     print("Please go into virtual Environment by running main.py")
@@ -24,6 +24,7 @@ from gui_setup import gui_setup, will_text_fit_on_screen
 from currently_playing import team_currently_playing
 from get_data.get_espn_data import get_data
 from display_clock import clock
+from get_team_league import get_team_league
 from constants import *
 
 SPORT_URLS = []
@@ -31,6 +32,12 @@ display_clock = ticks_ms()  # Start Timer for Switching Display
 display_timer = 25 * 1000  # how often the display should update in seconds
 fetch_clock = ticks_ms()  # Start Timer for Switching Display
 fetch_timer = 180 * 1000  # how often the display should update in seconds
+
+# Get Team league and sport name, needed for various functions later in script
+for i in range(len(teams)):
+    league, sports_name = get_team_league(teams[i][0])  # Get the team league and sport name
+    teams[i].append(league)  # Add the league to the teams list
+    teams[i].append(sports_name)  # Add the sport name to the teams lists
 
 for i in range(len(teams)):
     sport_league = teams[i][1].lower()
@@ -41,18 +48,21 @@ get_team_logos(teams)
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
 
 
-def one_value_differs(old_dictonary: dict, new_dictonary: dict) -> bool:
+def one_value_differs(old_dictionary: dict, new_dictionary: dict) -> bool:
     '''Helper function to determine data should be added to team info.
 
-    Determines if 2 dictonarys are the same except for 1 value, which would be date
+    Determines if 2 dictionary are the same except for 1 value, which would be date
     added to bottom_info
 
-    :param old_dictonary: dictonary stored for displaying longer
-    :param new_dictonary: dictonary gotten from api calls
+    :param old_dictionary: dictionary stored for displaying longer
+    :param new_dictionary: dictionary gotten from api calls
     '''
-    if old_dictonary.keys() != new_dictonary.keys():
+    print(f"Old Dictionary: {old_dictionary}")
+    if old_dictionary.keys() != new_dictionary.keys():
+        print("here")
         return False
-    diff_count = sum(old_dictonary[k] != new_dictonary[k] for k in old_dictonary)
+    diff_count = sum(old_dictionary[k] != new_dictionary[k] for k in old_dictionary)
+    print(f"Diff count: {diff_count}")
     return diff_count == 1
 
 
@@ -121,12 +131,12 @@ while True:
 
                 # Save data for to display longer than data is available (minimum 3 days)
                 if data is True and "FINAL" in info['bottom_info']:
-                    if info not in saved_data.values() or one_value_differs(saved_data[teams[fetch_index][0]][0], info):
+                    if info not in saved_data.values():
                         saved_data[teams[fetch_index][0]] = [info, datetime.now()]
                         info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
-                elif info in saved_data.values():
+                elif teams[fetch_index][0] in saved_data and data is False:
                     print("Data is no longer available, checking if should display")
                     current_date = datetime.now()
                     date_difference = current_date - saved_data[teams[fetch_index][0]][1]
@@ -138,7 +148,7 @@ while True:
                         continue
                     # If greater than 3 days remove
                     else:
-                        del saved_data[teams[fetch_index][0]][0]
+                        del saved_data[teams[fetch_index][0]]
 
                 team_info.append(info)
                 teams_with_data.append(data)

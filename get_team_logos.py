@@ -35,6 +35,7 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     window_height = sg.Window.get_screen_size()[1]
     column_width = window_width / 3
     column_height = window_height * .66
+    column_height = column_height * (4 / 5)
 
     # Open an image file using Pillow
     img = Image.open(image_path)
@@ -44,21 +45,24 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     new_width = width
     new_height = height
 
-    iteration = 0
+    iteration = 1
     if width >= column_width:
-        while new_width >= column_width or new_height >= column_height:
-            new_width = int(width * (1 - iteration))
-            new_height = int(height * (1 - iteration))
-            iteration += .1
+        while new_width >= column_width and new_height >= column_height:
+            new_width = int(width * iteration)
+            new_height = int(height * iteration)
+            iteration -= .01
+        new_width = int(width * (iteration - .01))
+        new_height = int(height * (iteration - .01))
 
     elif width <= column_width:
-        first_time = True
-        while new_width <= (column_width - width) or new_height <= (column_height - height) or first_time:
-            first_time = False
-            new_width = int(width * (1 + iteration))
-            new_height = int(height * (1 + iteration))
-            print(f"New Width: {new_width}, New Height: {new_height}")
-            iteration += .1
+        while new_width <= column_width and new_height <= column_height:
+            new_width = int(width * iteration)
+            new_height = int(height * iteration)
+            iteration += .01
+        new_width = int(width * (iteration - .01))
+        new_height = int(height * (iteration - .01))
+
+    print(f"Resizing {team_name} logo to {new_width} x {new_height}")
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)

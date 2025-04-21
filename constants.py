@@ -1,12 +1,11 @@
-'''Change Sizes of all Text, logos and Spacing here for GUI'''
+'''Change Sizes of all Text, logos sizing here for GUI'''
 
-# The team names you want to follow, *MUST MATCH* in order -> [team name, sport league, sport name]
 teams = [
-    ["Detroit Lions", "nfl", "football"],
-    ["Detroit Tigers", "mlb", "baseball"],
-    ["Pittsburgh Steelers", "nfl", "football"],
-    ["Detroit Red Wings", "nhl", "hockey"],
-    ["Detroit Pistons", "nba", "basketball"]
+    ["Detroit Lions"],
+    ["Detroit Tigers"],
+    ["Pittsburgh Steelers"],
+    ["Detroit Red Wings"],
+    ["Detroit Pistons"]
 ]
 
 
@@ -23,20 +22,9 @@ NBA_TOP_INFO_SIZE = 56
 MLB_BOTTOM_INFO_SIZE = 80
 PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
-SPACE_ONE_CHARACTER_TAKES_UP = 6
 TOP_TXT_SIZE = 80
 
-# Display Spacing
-COLUMN_WIDTH = 850  # Width should split the screen in threes
-COLUMN_HEIGHT = 980
-CHARACTERS_FIT_ON_SCREEN = 38
-SPACE_BETWEEN_SCORE_AND_NETWORK_LOGO = 50
-SPACE_BETWEEN_TOP_TXT_AND_SCORE = 100
-SPACE_BETWEEN_TOP_AND_LOGOS = 0
-INFO_SPACE_HEIGHT = 200
-
 # Logo Sizes, times amount to decrease size, 1 is the original size
-TEAM_LOGO_SIZE = 1.5
 NETWORK_LOGOS_SIZE = 1
 BASES_SIZE = 3
 

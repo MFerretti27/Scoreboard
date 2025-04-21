@@ -6,3 +6,4 @@ flake8
 MLB-StatsAPI
 nba_api
 nhl-api-py
+rapidfuzz
