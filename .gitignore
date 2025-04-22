@@ -11,6 +11,5 @@ venv/
 */__pycache__/*
 __pycache__/*
 
-# Don't images if resized, change if additional images are added
-baseball_base_images/
-Networks/
+# Don't upload images if resized, change if additional images are added
+*.png*
