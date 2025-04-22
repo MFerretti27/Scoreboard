@@ -37,14 +37,11 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
     if "sport_logos" in image_path:
         column_width = window_width / 3
         column_height = window_height * .66
-        column_height = column_height * (4 / 5)
+        column_height = column_height * (4/5)
     else:
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (5/16)
-
-    print(column_height)
-    print(column_width)
 
     # Open an image file using Pillow
     img = Image.open(image_path)

@@ -172,7 +172,7 @@ def get_data(URL: str, team: str) -> list:
             if "NBA" in URL.upper() and currently_playing:
                 saved_info = team_info
                 try:
-                    team_info = append_nba_data()
+                    team_info = append_nba_data(team_info, team_name)
                 finally:
                     team_info = saved_info
                     home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))

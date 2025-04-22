@@ -157,7 +157,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
 
     for key, _ in bases.items():
         try:
-            # Dont need to store name of whoes on just has to ensure call is successful
+            # Dont need to store name of whose on just has to ensure call is successful
             _ = live["liveData"]["linescore"]["offense"][key]["fullName"]
             bases[key] = True
         except KeyError:

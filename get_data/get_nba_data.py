@@ -48,8 +48,6 @@ def get_all_nba_data(team_name: str):
 def append_nba_data(team_info: dict, team_name: str) -> dict:
     """Get information for NBA team if playing.
 
-    Call this if ESPN fails to get MLB data as backup.
-
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
