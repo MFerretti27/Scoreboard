@@ -19,7 +19,7 @@ import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from internet_connection import is_connected, reconnect
-from get_team_logos import get_team_logos
+from get_team_logos import get_team_logos, resize_images_from_folder
 from gui_setup import gui_setup, will_text_fit_on_screen
 from currently_playing import team_currently_playing
 from get_data.get_espn_data import get_data
@@ -45,6 +45,9 @@ for i in range(len(teams)):
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
 get_team_logos(teams)
+# window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
+resize_images_from_folder(["/Networks/", "/baseball_base_images/"])
+
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
 
 

@@ -4,8 +4,13 @@
 
 sport_logos/
 
+# Don't upload the venv folder
 venv/
 
+# Don't upload the bytecode files
 */__pycache__/*
-
 __pycache__/*
+
+# Don't images if resized, change if additional images are added
+baseball_base_images/
+Networks/

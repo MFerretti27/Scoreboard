@@ -66,7 +66,7 @@ def gui_setup() -> sg.Window:
 
     below_score_image = [
         [sg.VPush()],
-        [sg.Image("", key='network_logo')],
+        [sg.Image("baseball_base_images/empty_bases.png", key='network_logo')],
         [sg.VPush()],
     ]
 

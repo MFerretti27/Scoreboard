@@ -24,18 +24,27 @@ def new_league_added() -> bool:
     return False
 
 
-def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
+def resize_image(image_path: str, directory: str, file_name: str) -> None:
     '''Resize image to fit better on Monitor
 
     :param image_path: Path of where image was downloaded
-    :param sport_dir: Folder were new resized image should be put
-    :param team_name: Team name to use as file name
+    :param directory: Folder were new resized image should be put
+    :param file_name: Name to use as file name
     '''
     window_width = sg.Window.get_screen_size()[0]
     window_height = sg.Window.get_screen_size()[1]
-    column_width = window_width / 3
-    column_height = window_height * .66
-    column_height = column_height * (4 / 5)
+
+    if "sport_logos" in image_path:
+        column_width = window_width / 3
+        column_height = window_height * .66
+        column_height = column_height * (4 / 5)
+    else:
+        column_width = window_width / 3
+        column_height = window_height * .66
+        column_height = column_height * (5/16)
+
+    print(column_height)
+    print(column_width)
 
     # Open an image file using Pillow
     img = Image.open(image_path)
@@ -46,27 +55,30 @@ def resize_image(image_path: str, sport_dir: str, team_name: str) -> None:
     new_height = height
 
     iteration = 1
-    if width >= column_width:
-        while new_width >= column_width and new_height >= column_height:
+    if width > column_width or height > column_height:
+        while new_width >= column_width or new_height >= column_height:
             new_width = int(width * iteration)
             new_height = int(height * iteration)
             iteration -= .01
         new_width = int(width * (iteration - .01))
         new_height = int(height * (iteration - .01))
 
-    elif width <= column_width:
-        while new_width <= column_width and new_height <= column_height:
+    elif width < column_width or height < column_height:
+        while new_width <= column_width or new_height <= column_height:
             new_width = int(width * iteration)
             new_height = int(height * iteration)
             iteration += .01
         new_width = int(width * (iteration - .01))
         new_height = int(height * (iteration - .01))
 
-    print(f"Resizing {team_name} logo to {new_width} x {new_height}")
+    print(f"Resizing {file_name} logo to {new_width} x {new_height}")
+
+    if ".png" in file_name:
+        file_name = file_name.replace(".png", "")
 
     # Resize the image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    new_path_png = os.path.join(sport_dir, f"{team_name}.png")
+    new_path_png = os.path.join(directory, f"{file_name}.png")
     img_resized.save(new_path_png)
 
 
@@ -152,3 +164,16 @@ def get_random_logo() -> dict:
         logos[1] = [teams[random_indexes[0]][1].upper(), teams[random_indexes[0]][0].upper()]
 
     return logos
+
+
+def resize_images_from_folder(image_folder_path: list) -> None:
+    '''Resize all images in the folder.'''
+
+    for folder in image_folder_path:
+        folder_path = os.getcwd() + folder
+        file_names = [
+            f for f in os.listdir(folder_path)
+            if os.path.isfile(os.path.join(folder_path, f)) and f.lower().endswith('.png')
+        ]
+        for file in file_names:
+            resize_image(f"{folder_path}/{file}", folder_path, file)
