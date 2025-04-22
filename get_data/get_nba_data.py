@@ -17,7 +17,7 @@ def get_all_nba_data(team_name: str):
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
             has_data = True
 
-            team_info["network_logo"] = ""
+            team_info["under_score_image"] = ""
 
             # Get Bottom Info
             team_info["bottom_info"] = game["gameStatusText"]
@@ -25,7 +25,7 @@ def get_all_nba_data(team_name: str):
             # Get above score text
             home_team = game["homeTeam"]["teamName"]
             away_team = game["awayTeam"]["teamName"]
-            team_info["baseball_inning"] = f"{away_team} vs {home_team}"
+            team_info["obove_score_txt"] = f"{away_team} vs {home_team}"
 
             # Get team logos
             folder_path = os.getcwd() + '/sport_logos/NBA/'

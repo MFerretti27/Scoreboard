@@ -45,10 +45,8 @@ for i in range(len(teams)):
     SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
 
 get_team_logos(teams)
-# window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
-resize_images_from_folder(["/Networks/", "/baseball_base_images/"])
-
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
+resize_images_from_folder(["/Networks/", "/baseball_base_images/"])  # Resize images to fit on screen
 
 
 def one_value_differs(old_dictionary: dict, new_dictionary: dict) -> bool:
@@ -165,15 +163,15 @@ while True:
                 window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
                 window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
                 window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
-                window['baseball_inning'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+                window['obove_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
 
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
                 for key, value in team_info[display_index].items():
                     if "home_logo" in key or "away_logo" in key:
                         window[key].update(filename=value)
-                    elif "network_logo" in key:
-                        window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                    elif "under_score_image" in key:
+                        window[key].update(filename=value, subsample=under_score_imageS_SIZE)
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color='white')
 

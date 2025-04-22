@@ -32,7 +32,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
     data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True, start_date=today, end_date=three_days_later)
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
-    team_info['network_logo'] = ''
+    team_info['under_score_image'] = ''
 
     team_info["home_score"] = "0"
     team_info["away_score"] = "0"
@@ -58,7 +58,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     # Get Home and Away team logos
     home_team = live["gameData"]["teams"]["home"]["teamName"]
     away_team = live["gameData"]["teams"]["away"]["teamName"]
-    team_info["baseball_inning"] = f"{away_team} vs {home_team}"
+    team_info["obove_score_txt"] = f"{away_team} vs {home_team}"
     folder_path = os.getcwd() + '/sport_logos/MLB/'
     file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     for file in file_names:
@@ -116,7 +116,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     # Get inning
     inning_state = live["liveData"]["linescore"].get("inningState", "Top")
     inning_number = live["liveData"]["linescore"].get("currentInningOrdinal", 0)
-    team_info['baseball_inning'] = inning_state + " " + str(inning_number)
+    team_info['obove_score_txt'] = inning_state + " " + str(inning_number)
 
     # Get pitcher and batter for bottom info
     batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
@@ -132,7 +132,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         team_info['bottom_info'] += (f"AB: {batter}")
 
     # If inning is changing do not display count and move inning to display below score
-    if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
+    if "Mid" not in team_info['obove_score_txt'] and "End" not in team_info['obove_score_txt']:
         balls = live["liveData"]["linescore"].get("balls", 0)
         strikes = live["liveData"]["linescore"].get("strikes", 0)
         outs = live["liveData"]["linescore"].get("outs", 0)
@@ -148,8 +148,8 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         team_info['top_info'] += (f"{balls}-{strikes}, {outs} Outs")
     else:
         team_info['bottom_info'] = (f"DueUp: {due_up}")
-        team_info['top_info'] = team_info['baseball_inning']
-        team_info['baseball_inning'] = ""
+        team_info['top_info'] = team_info['obove_score_txt']
+        team_info['obove_score_txt'] = ""
 
     bases = {"first": False,
              "second": False,
@@ -176,6 +176,6 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
 
     # Display runners on base
     base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
-    team_info['network_logo'] = f"baseball_base_images/{base_image}"
+    team_info['under_score_image'] = f"baseball_base_images/{base_image}"
 
     return team_info

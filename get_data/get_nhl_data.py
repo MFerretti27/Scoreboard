@@ -2,7 +2,7 @@
 import requests
 from datetime import datetime, timezone
 import os
-from constants import network_logos
+from constants import under_score_images
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
@@ -27,12 +27,12 @@ def get_all_nhl_data(team_name: str) -> dict:
 
     team_info["home_score"] = "0"
     team_info["away_score"] = "0"
-    team_info["network_logo"] = ""
+    team_info["under_score_image"] = ""
 
     # Get team names
     away_team_name = live["awayTeam"]["commonName"]["default"]
     home_team_name = live["homeTeam"]["commonName"]["default"]
-    team_info["baseball_inning"] = f"{away_team_name} vs {home_team_name}"
+    team_info["obove_score_txt"] = f"{away_team_name} vs {home_team_name}"
 
     # Get team record
     record_data = requests.get("https://api-web.nhle.com/v1/standings/now")
@@ -71,9 +71,9 @@ def get_all_nhl_data(team_name: str) -> dict:
 
     # Get network logo
     broadcast = live["tvBroadcasts"][0]["network"]
-    for network, filepath in network_logos.items():
+    for network, filepath in under_score_images.items():
         if network.upper() in broadcast.upper():
-            team_info['network_logo'] = filepath
+            team_info['under_score_image'] = filepath
             break
 
     # Check if game is playing

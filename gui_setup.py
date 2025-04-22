@@ -52,7 +52,7 @@ def gui_setup() -> sg.Window:
     above_score_layout = [
         [sg.VPush()],
         [sg.Push()],
-        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='baseball_inning', pad=((0, 0), (space_between_score, 0)))],
+        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='obove_score_txt', pad=((0, 0), (space_between_score, 0)))],
         [sg.Push()],
     ]
 
@@ -66,7 +66,7 @@ def gui_setup() -> sg.Window:
 
     below_score_image = [
         [sg.VPush()],
-        [sg.Image("baseball_base_images/empty_bases.png", key='network_logo')],
+        [sg.Image("", key='under_score_image')],
         [sg.VPush()],
     ]
 

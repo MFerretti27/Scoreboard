@@ -2,7 +2,7 @@
 
 import requests  # pip install requests
 import gc
-from constants import network_logos, teams
+from constants import under_score_images, teams
 from .get_mlb_data import get_all_mlb_data, append_mlb_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_nba_data import append_nba_data, get_all_nba_data
@@ -50,8 +50,8 @@ def get_data(URL: str, team: str) -> list:
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
     team_info['top_info'] = ''
-    team_info['baseball_inning'] = ''
-    team_info['network_logo'] = ''
+    team_info['obove_score_txt'] = ''
+    team_info['under_score_image'] = ''
 
     try:
         resp = requests.get(URL)
@@ -95,7 +95,7 @@ def get_data(URL: str, team: str) -> list:
             away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
             # Display team names above score
-            team_info["baseball_inning"] = f"{away_short_name} vs {home_short_name}"
+            team_info["obove_score_txt"] = f"{away_short_name} vs {home_short_name}"
 
             # Check if two of your teams are playing each other to not display same data twice
             if check_playing_each_other(home_name, away_name):
@@ -103,9 +103,9 @@ def get_data(URL: str, team: str) -> list:
                 return team_info, team_has_data, currently_playing
 
             # Get Network game is on and display logo
-            for network, filepath in network_logos.items():
+            for network, filepath in under_score_images.items():
                 if network.upper() in broadcast.upper():
-                    team_info['network_logo'] = filepath
+                    team_info['under_score_image'] = filepath
                     break
 
             # Check if Team is Currently Playing
@@ -211,7 +211,7 @@ def get_data(URL: str, team: str) -> list:
                     team_info['bottom_info'] = team_info['bottom_info'].replace('Mid', 'Middle')
 
                     # Change to display inning above score
-                    team_info['baseball_inning'] = team_info['bottom_info']
+                    team_info['obove_score_txt'] = team_info['bottom_info']
                     team_info['bottom_info'] = ""
 
                     # Get who is pitching and batting, if info is available
@@ -236,13 +236,13 @@ def get_data(URL: str, team: str) -> list:
                     team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
 
                     # If inning is changing do not display count and move inning to display below score
-                    if "Mid" not in team_info['baseball_inning'] and "End" not in team_info['baseball_inning']:
+                    if "Mid" not in team_info['obove_score_txt'] and "End" not in team_info['obove_score_txt']:
                         outs = (competition.get("outsText", "0 Outs"))
                         team_info['top_info'] += (f"{outs}")
                     else:
                         team_info['bottom_info'] = ""
-                        team_info['top_info'] = team_info['baseball_inning']
-                        team_info['baseball_inning'] = ""
+                        team_info['top_info'] = team_info['obove_score_txt']
+                        team_info['obove_score_txt'] = ""
 
                     # Get runners position
                     onFirst = (competition["situation"]["onFirst"])
@@ -260,7 +260,7 @@ def get_data(URL: str, team: str) -> list:
                     }
 
                     # Display runners on base
-                    team_info['network_logo'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                    team_info['under_score_image'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
 
             ####################################################################
             # If looking at NHL team, get NHL specific data if currently playing

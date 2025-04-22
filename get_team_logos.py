@@ -49,7 +49,7 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
     # Open an image file using Pillow
     img = Image.open(image_path)
 
-    # Calculate new size based monitor size
+    # Calculate new size based on screen size
     width, height = img.size
     new_width = width
     new_height = height

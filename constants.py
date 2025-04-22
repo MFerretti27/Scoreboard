@@ -25,11 +25,11 @@ NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 
 # Logo Sizes, times amount to decrease size, 1 is the original size
-NETWORK_LOGOS_SIZE = 1
+under_score_imageS_SIZE = 1
 BASES_SIZE = 3
 
 # Network Logo File Locations
-network_logos = {
+under_score_images = {
     "ABC": "Networks/ABC.png",
     "CBS": "Networks/CBS.png",
     "ESPN": "Networks/ESPN.png",

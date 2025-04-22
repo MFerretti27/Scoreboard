@@ -48,15 +48,15 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
             window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
             window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-            window['baseball_inning'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+            window['obove_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
 
             should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
             for key, value in team_info[display_index].items():
                 if "home_logo" in key or "away_logo" in key:
                     window[key].update(filename=value)
-                elif "network_logo" in key:
-                    window[key].update(filename=value, subsample=NETWORK_LOGOS_SIZE)
+                elif "under_score_image" in key:
+                    window[key].update(filename=value, subsample=under_score_imageS_SIZE)
                 elif "possession" not in key and "redzone" not in key and "bonus" not in key:
                     window[key].update(value=value)
 
@@ -96,11 +96,11 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         window['top_info'].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     if key == 'bottom_info':
                         window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
-                    elif key == 'network_logo':
-                        if "Networks" in team_info[display_index]['network_logo']:
+                    elif key == 'under_score_image':
+                        if "Networks" in team_info[display_index]['under_score_image']:
                             value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value, subsample=BASES_SIZE)
-                    elif key == 'baseball_inning':
+                    elif key == 'obove_score_txt':
                         window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info

@@ -46,7 +46,7 @@ def clock(window: sg.Window, SPORT_URLS: list, message: str) -> list:
         window["home_record"].update(value='')
         window["away_record"].update(value='')
         window["away_logo"].update(filename=f"sport_logos/{files[0][0]}/{files[0][1]}.png")
-        window["network_logo"].update(filename='')
+        window["under_score_image"].update(filename='')
         window["home_logo"].update(filename=f"sport_logos/{files[1][0]}/{files[1][1]}.png")
         window["bottom_info"].update(value=date, font=(FONT, SCORE_TXT_SIZE))
         window["top_info"].update(value=message, font=(FONT, TIMEOUT_SIZE))
