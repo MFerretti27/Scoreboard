@@ -32,7 +32,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     # Get team names
     away_team_name = live["awayTeam"]["commonName"]["default"]
     home_team_name = live["homeTeam"]["commonName"]["default"]
-    team_info["obove_score_txt"] = f"{away_team_name} vs {home_team_name}"
+    team_info["above_score_txt"] = f"{away_team_name} vs {home_team_name}"
 
     # Get team record
     record_data = requests.get("https://api-web.nhle.com/v1/standings/now")

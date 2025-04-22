@@ -48,7 +48,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
             window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
             window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-            window['obove_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+            window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
 
             should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
@@ -100,7 +100,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         if "Networks" in team_info[display_index]['under_score_image']:
                             value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value, subsample=BASES_SIZE)
-                    elif key == 'obove_score_txt':
+                    elif key == 'above_score_txt':
                         window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info

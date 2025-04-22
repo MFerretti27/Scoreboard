@@ -52,7 +52,7 @@ def gui_setup() -> sg.Window:
     above_score_layout = [
         [sg.VPush()],
         [sg.Push()],
-        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='obove_score_txt', pad=((0, 0), (space_between_score, 0)))],
+        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='above_score_txt', pad=((0, 0), (space_between_score, 0)))],
         [sg.Push()],
     ]
 

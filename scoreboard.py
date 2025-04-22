@@ -163,7 +163,7 @@ while True:
                 window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
                 window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
                 window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
-                window['obove_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+                window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
 
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 

@@ -50,7 +50,7 @@ def get_data(URL: str, team: str) -> list:
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
     team_info['top_info'] = ''
-    team_info['obove_score_txt'] = ''
+    team_info['above_score_txt'] = ''
     team_info['under_score_image'] = ''
 
     try:
@@ -95,7 +95,7 @@ def get_data(URL: str, team: str) -> list:
             away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
             # Display team names above score
-            team_info["obove_score_txt"] = f"{away_short_name} vs {home_short_name}"
+            team_info["above_score_txt"] = f"{away_short_name} vs {home_short_name}"
 
             # Check if two of your teams are playing each other to not display same data twice
             if check_playing_each_other(home_name, away_name):
@@ -211,7 +211,7 @@ def get_data(URL: str, team: str) -> list:
                     team_info['bottom_info'] = team_info['bottom_info'].replace('Mid', 'Middle')
 
                     # Change to display inning above score
-                    team_info['obove_score_txt'] = team_info['bottom_info']
+                    team_info['above_score_txt'] = team_info['bottom_info']
                     team_info['bottom_info'] = ""
 
                     # Get who is pitching and batting, if info is available
@@ -236,13 +236,13 @@ def get_data(URL: str, team: str) -> list:
                     team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
 
                     # If inning is changing do not display count and move inning to display below score
-                    if "Mid" not in team_info['obove_score_txt'] and "End" not in team_info['obove_score_txt']:
+                    if "Mid" not in team_info['above_score_txt'] and "End" not in team_info['above_score_txt']:
                         outs = (competition.get("outsText", "0 Outs"))
                         team_info['top_info'] += (f"{outs}")
                     else:
                         team_info['bottom_info'] = ""
-                        team_info['top_info'] = team_info['obove_score_txt']
-                        team_info['obove_score_txt'] = ""
+                        team_info['top_info'] = team_info['above_score_txt']
+                        team_info['above_score_txt'] = ""
 
                     # Get runners position
                     onFirst = (competition["situation"]["onFirst"])
