@@ -60,7 +60,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     # Get Home and Away team logos
     home_team = live["gameData"]["teams"]["home"]["teamName"]
     away_team = live["gameData"]["teams"]["away"]["teamName"]
-    team_info["above_score_txt"] = f"{away_team} vs {home_team}"
+    team_info["above_score_txt"] = f"{away_team} @ {home_team}"
     folder_path = os.getcwd() + '/sport_logos/MLB/'
     file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     for file in file_names:

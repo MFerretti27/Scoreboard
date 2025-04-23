@@ -25,7 +25,7 @@ def get_all_nba_data(team_name: str):
             # Get above score text
             home_team = game["homeTeam"]["teamName"]
             away_team = game["awayTeam"]["teamName"]
-            team_info["above_score_txt"] = f"{away_team} vs {home_team}"
+            team_info["above_score_txt"] = f"{away_team} @ {home_team}"
 
             # Get team logos
             folder_path = os.getcwd() + '/sport_logos/NBA/'

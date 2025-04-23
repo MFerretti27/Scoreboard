@@ -95,7 +95,7 @@ def get_data(URL: str, team: str) -> list:
             away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
             # Display team names above score
-            team_info["above_score_txt"] = f"{away_short_name} vs {home_short_name}"
+            team_info["above_score_txt"] = f"{away_short_name} @ {home_short_name}"
 
             # Check if two of your teams are playing each other to not display same data twice
             if check_playing_each_other(home_name, away_name):
