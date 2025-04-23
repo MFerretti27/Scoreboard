@@ -53,15 +53,15 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     iteration = 1
     if width > column_width or height > column_height:
-        while new_width >= column_width or new_height >= column_height:
+        while new_width >= column_width and new_height >= column_height:
             new_width = int(width * iteration)
             new_height = int(height * iteration)
             iteration -= .01
-        new_width = int(width * (iteration - .01))
-        new_height = int(height * (iteration - .01))
+        # new_width = int(width * (iteration - .01))
+        # new_height = int(height * (iteration - .01))
 
     elif width < column_width or height < column_height:
-        while new_width <= column_width or new_height <= column_height:
+        while new_width <= column_width and new_height <= column_height:
             new_width = int(width * iteration)
             new_height = int(height * iteration)
             iteration += .01
