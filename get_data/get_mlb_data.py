@@ -30,7 +30,9 @@ def get_all_mlb_data(team_name: str) -> dict:
     currently_playing = False
     today = datetime.now().strftime("%Y-%m-%d")
     three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
-    data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True, start_date=today, end_date=three_days_later)
+    data = statsapi.schedule(
+        team=get_mlb_team_id(team=team_name), include_series_status=True, start_date=today, end_date=three_days_later
+    )
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     team_info['under_score_image'] = ''
 
@@ -148,8 +150,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         team_info['top_info'] += (f"{balls}-{strikes}, {outs} Outs")
     else:
         team_info['bottom_info'] = (f"DueUp: {due_up}")
-        team_info['top_info'] = team_info['above_score_txt']
-        team_info['above_score_txt'] = ""
+        team_info['top_info'] = ""
 
     bases = {"first": False,
              "second": False,

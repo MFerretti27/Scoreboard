@@ -241,8 +241,6 @@ def get_data(URL: str, team: str) -> list:
                         team_info['top_info'] += (f"{outs}")
                     else:
                         team_info['bottom_info'] = ""
-                        team_info['top_info'] = team_info['above_score_txt']
-                        team_info['above_score_txt'] = ""
 
                     # Get runners position
                     onFirst = (competition["situation"]["onFirst"])
@@ -260,7 +258,9 @@ def get_data(URL: str, team: str) -> list:
                     }
 
                     # Display runners on base
-                    team_info['under_score_image'] = f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                    team_info['under_score_image'] = (
+                        f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                    )
 
             ####################################################################
             # If looking at NHL team, get NHL specific data if currently playing

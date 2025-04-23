@@ -49,24 +49,6 @@ window = gui_setup()  # Must run after get_team_logos, it uses the logos downloa
 resize_images_from_folder(["/Networks/", "/baseball_base_images/"])  # Resize images to fit on screen
 
 
-def one_value_differs(old_dictionary: dict, new_dictionary: dict) -> bool:
-    '''Helper function to determine data should be added to team info.
-
-    Determines if 2 dictionary are the same except for 1 value, which would be date
-    added to bottom_info
-
-    :param old_dictionary: dictionary stored for displaying longer
-    :param new_dictionary: dictionary gotten from api calls
-    '''
-    print(f"Old Dictionary: {old_dictionary}")
-    if old_dictionary.keys() != new_dictionary.keys():
-        print("here")
-        return False
-    diff_count = sum(old_dictionary[k] != new_dictionary[k] for k in old_dictionary)
-    print(f"Diff count: {diff_count}")
-    return diff_count == 1
-
-
 ##################################
 #                                #
 #    Get Data for First Time     #
@@ -131,11 +113,13 @@ while True:
                         fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
                 # Save data for to display longer than data is available (minimum 3 days)
-                if data is True and "FINAL" in info['bottom_info']:
-                    if info not in saved_data.values():
-                        saved_data[teams[fetch_index][0]] = [info, datetime.now()]
-                        info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
-                        print("Saving Data to display longer that its available")
+                if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
+                    saved_data[teams[fetch_index][0]] = info
+                    info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
+                    print("Saving Data to display longer that its available")
+
+                elif teams[fetch_index][0] in saved_data and data is True:
+                    info['bottom_info'] = saved_data[teams[fetch_index][0]]['bottom_info']
 
                 elif teams[fetch_index][0] in saved_data and data is False:
                     print("Data is no longer available, checking if should display")
