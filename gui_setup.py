@@ -115,3 +115,12 @@ def will_text_fit_on_screen(text: str) -> bool:
         return True
     else:
         return False
+
+def reset_window_elements(window):
+    window['top_info'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+    window['bottom_info'].update(value='', font=(FONT, INFO_TXT_SIZE))
+    window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+    window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
+    window['home_record'].update(value='', font=(FONT, RECORD_TXT_SIZE))
+    window['away_record'].update(value='', font=(FONT, RECORD_TXT_SIZE))
+    window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))

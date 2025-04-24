@@ -24,10 +24,6 @@ PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 
-# Logo Sizes, times amount to decrease size, 1 is the original size
-under_score_imageS_SIZE = 1
-BASES_SIZE = 3
-
 # Network Logo File Locations
 under_score_images = {
     "ABC": "Networks/ABC.png",

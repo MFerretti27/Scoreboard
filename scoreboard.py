@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos, resize_images_from_folder
-from gui_setup import gui_setup, will_text_fit_on_screen
+from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements
 from currently_playing import team_currently_playing
 from get_data.get_espn_data import get_data
 from display_clock import clock
@@ -59,6 +59,7 @@ teams_with_data = []
 saved_data = {}
 display_index = 0
 should_scroll = False
+no_spoiler_mode = False
 try:
     for fetch_index in range(len(teams)):
         print(f"\nFetching data for {teams[fetch_index][0]}")
@@ -104,7 +105,19 @@ while True:
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
-                if currently_playing:
+
+                # No Spoiler Mode dont display live Data
+                if no_spoiler_mode and (currently_playing or "FINAL" in info['bottom_info']):
+                    if currently_playing:
+                        info["top_info"] = "Game Currently Playing"
+                    elif "FINAL" in info['bottom_info']:
+                        info["top_info"] = "Game Finished Playing"
+                    info['bottom_info'] = "No Spoiler Mode On"
+                    info["under_score_image"], info["above_score_txt"] = ('',) * 2
+                    info["home_score"], info["away_score"] = ('0',) * 2
+                
+                # If Game in Play call function to display data differently
+                elif currently_playing:
                     team_info = team_currently_playing(window, teams, SPORT_URLS)
                     # Reset timers
                     while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
@@ -128,7 +141,7 @@ while True:
                     # Check if 3 days have passed after data is no longer available
                     if date_difference <= timedelta(days=3):
                         print(f"It will display, time its been: {date_difference}")
-                        team_info.append(saved_data[teams[fetch_index][0]][0])
+                        team_info.append(saved_data[teams[fetch_index][0]])
                         teams_with_data.append(True)
                         continue
                     # If greater than 3 days remove
@@ -144,18 +157,13 @@ while True:
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
-                window['top_info'].update(font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
-                window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
-                window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE))
-                window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+                reset_window_elements(window)
 
                 should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
                 for key, value in team_info[display_index].items():
-                    if "home_logo" in key or "away_logo" in key:
+                    if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                         window[key].update(filename=value)
-                    elif "under_score_image" in key:
-                        window[key].update(filename=value, subsample=under_score_imageS_SIZE)
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color='white')
 
@@ -172,9 +180,6 @@ while True:
                         break
 
                 display_clock = ticks_add(display_clock, display_timer)
-            else:
-                print(f"{teams[display_index][0]} has no Data and wont Display")
-
             display_index = (display_index + 1) % len(teams)
 
         # Scroll bottom info if text is too long

@@ -53,10 +53,8 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
             for key, value in team_info[display_index].items():
-                if "home_logo" in key or "away_logo" in key:
+                if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
-                elif "under_score_image" in key:
-                    window[key].update(filename=value, subsample=under_score_imageS_SIZE)
                 elif "possession" not in key and "redzone" not in key and "bonus" not in key:
                     window[key].update(value=value)
 
