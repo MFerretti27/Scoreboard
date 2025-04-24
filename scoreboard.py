@@ -39,8 +39,8 @@ for i in range(len(teams)):
     teams[i].append(sports_name)  # Add the sport name to the teams lists
 
 get_team_logos(teams)
-window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
-resize_images_from_folder(["images/Networks/", "images/baseball_base_images/"])  # Resize images to fit on screen
+window = gui_setup()  # Must run after get_team_logos, function uses the logos downloaded
+resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])  # Resize images to fit on screen
 
 
 ##################################
