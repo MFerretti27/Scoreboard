@@ -1,39 +1,47 @@
-"""This module provides a Timer."""
+import asyncio
 import time
 
 
 class Timer:
-    """This class provides functionality to check if a certain time interval has expired."""
-    def __init__(self, seconds) -> None:
-        """Initializes the timer with a specified interval in seconds.
-
-        :param interval_seconds: The interval in seconds for the timer.
-        """
+    """Asynchronous timer with pause, resume, reset, and expiration checking."""
+    def __init__(self, seconds: float):
         self.interval = seconds
         self.next_time = time.time() + self.interval
+        self._paused = False
+        self._pause_time = None
 
-    def expired(self) -> bool:
-        """Checks if the timer has expired.
+    async def expired(self) -> bool:
+        """Asynchronously checks if the timer has expired.
 
-        :return: True if the timer has expired, otherwise False.
+        Waits non-blockingly until the interval has passed, taking pause state into account.
         """
-        now = time.time()
-        if now >= self.next_time:
-            self.next_time = now + self.interval  # ⏱ reset immediately
-            return True
-        return False
+        while True:
+            if self._paused:
+                await asyncio.sleep(0.1)
+                continue
+
+            now = time.time()
+            if now >= self.next_time:
+                self.next_time = now + self.interval  # Reset next time
+                return True
+            await asyncio.sleep(0.1)  # Check periodically
 
     def reset(self) -> None:
-        """Resets the timer to the current time."""
+        """Resets the timer to start the countdown again from now."""
         self.next_time = time.time() + self.interval
-        print("Timer reset!")
+        print("⏱️ Timer reset!")
 
     def pause(self) -> None:
         """Pauses the timer."""
-        self.paused = True
-        print("Timer paused.")
+        if not self._paused:
+            self._paused = True
+            self._pause_time = time.time()
+            print("⏸️ Timer paused.")
 
     def resume(self) -> None:
-        """Resumes the timer."""
-        self.paused = False
-        print("Timer resumed.")
+        """Resumes the timer and adjusts the next_time accordingly."""
+        if self._paused:
+            pause_duration = time.time() - self._pause_time
+            self.next_time += pause_duration
+            self._paused = False
+            print("▶️ Timer resumed.")

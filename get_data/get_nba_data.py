@@ -2,6 +2,9 @@
 from nba_api.live.nba.endpoints import scoreboard
 import os
 
+home_team_bonus = False
+away_team_bonus = False
+
 
 def get_all_nba_data(team_name: str):
     currently_playing = False
@@ -53,6 +56,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
     :return team_info: Dictionary where data is stored to display
     """
+    global home_team_bonus, away_team_bonus
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
     games = scoreboard.ScoreBoard()
     data = games.get_dict()

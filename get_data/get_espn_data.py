@@ -112,7 +112,7 @@ def get_data(team: str) -> list:
             file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
             for file in file_names:
                 if broadcast.upper() in file:
-                    team_info['under_score_image'] = file
+                    team_info["under_score_image"] = (f"{os.getcwd()}/images/Networks/{file}")
                     break
 
             # Check if Team is Currently Playing

@@ -26,15 +26,19 @@ def gui_setup() -> sg.Window:
     print(f"Space Between Score: {math.ceil(space_between_score)}\n\n")
 
     home_logo_layout = [
+        [sg.Push()],
         [sg.VPush()],
         [sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (0, 0)))],
         [sg.VPush()],
+        [sg.Push()],
     ]
 
     away_logo_layout = [
+        [sg.Push()],
         [sg.VPush()],
         [sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
         [sg.VPush()],
+        [sg.Push()],
     ]
 
     away_record_layout = [

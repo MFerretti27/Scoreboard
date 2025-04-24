@@ -42,6 +42,7 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (5/16)
+        print(f"column_width: {column_width} column_height: {column_height}")
 
     # Open an image file using Pillow
     img = Image.open(image_path)
@@ -53,22 +54,22 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     iteration = 1
     if width > column_width or height > column_height:
-        while new_width >= column_width and new_height >= column_height:
-            new_width = int(width * iteration)
-            new_height = int(height * iteration)
-            iteration -= .01
-        # new_width = int(width * (iteration - .01))
-        # new_height = int(height * (iteration - .01))
+        width_ratio = column_width / width
+        height_ratio = column_height / height
+        scale_factor = min(width_ratio, height_ratio)
+
+        new_width = int(width * scale_factor)
+        new_height = int(height * scale_factor)
 
     elif width < column_width or height < column_height:
-        while new_width <= column_width and new_height <= column_height:
+        while new_width < column_width and new_height < column_height:
             new_width = int(width * iteration)
             new_height = int(height * iteration)
-            iteration += .01
-        new_width = int(width * (iteration - .01))
-        new_height = int(height * (iteration - .01))
+            iteration += .001
+        new_width = int(width * (iteration + .005))
+        new_height = int(height * (iteration + .005))
 
-    print(f"Resizing {file_name} logo to {new_width} x {new_height}")
+    print(f"Resizing {file_name} logo to {new_width}x{new_height} from {width}x{height}")
 
     if ".png" in file_name:
         file_name = file_name.replace(".png", "")
