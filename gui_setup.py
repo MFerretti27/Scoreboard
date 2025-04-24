@@ -27,13 +27,13 @@ def gui_setup() -> sg.Window:
 
     home_logo_layout = [
         [sg.VPush()],
-        [sg.Image(f"sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (0, 0)))],
+        [sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key='home_logo', pad=((0, 0), (0, 0)))],
         [sg.VPush()],
     ]
 
     away_logo_layout = [
         [sg.VPush()],
-        [sg.Image(f"sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
+        [sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key='away_logo', pad=((0, 0), (0, 0)))],
         [sg.VPush()],
     ]
 
