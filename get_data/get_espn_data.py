@@ -47,9 +47,10 @@ def get_data(team: str) -> list:
     index = 0
     team_info = {}
     team_name = team[0]
-    team_sport = team[1]
-    team_league = team[2]
+    team_league = team[1].lower()
+    team_sport = team[2].lower()
     url = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
+    print(url)
 
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
@@ -60,7 +61,8 @@ def get_data(team: str) -> list:
     try:
         resp = requests.get(url)
         response_as_json = resp.json()
-    except Exception:
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from ESPN API: {e}")
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name, team_info)
         elif "NBA" in team_league.upper():
@@ -107,7 +109,7 @@ def get_data(team: str) -> list:
                 return team_info, team_has_data, currently_playing
 
             # Get Network and display logo if possible
-            folder_path = os.getcwd() + 'images/Networks/'
+            folder_path = os.getcwd() + '/images/Networks/'
             file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
             for file in file_names:
                 if broadcast.upper() in file:
