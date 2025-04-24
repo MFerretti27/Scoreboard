@@ -50,7 +50,6 @@ def get_data(team: str) -> list:
     team_league = team[1].lower()
     team_sport = team[2].lower()
     url = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
-    print(url)
 
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
@@ -140,8 +139,8 @@ def get_data(team: str) -> list:
             team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"images/sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"images/sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
+            team_info["away_logo"] = (f"images/sport_logos/{team_league.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"images/sport_logos/{team_league.upper()}/{home_name.upper()}.png")
 
             ####################################################################
             # If looking at NFL team, get NFL specific data if currently playing
@@ -267,7 +266,7 @@ def get_data(team: str) -> list:
 
                     # Display runners on base
                     team_info['under_score_image'] = (
-                        f"baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                        f"images/baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
                     )
 
             ####################################################################

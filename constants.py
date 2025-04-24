@@ -24,18 +24,5 @@ PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 
-# Network Logo File Locations
-under_score_images = {
-    "ABC": "Networks/ABC.png",
-    "CBS": "Networks/CBS.png",
-    "ESPN": "Networks/ESPN.png",
-    "FOX": "Networks/FOX.png",
-    "MLB": "Networks/MLB_Network.png",
-    "NBC": "Networks/NBC.png",
-    "Prime": "Networks/Prime.png",
-    "TNT": "Networks/TNT.png",
-    "NBA": "Networks/NBA_League.png",
-    "NFL": "Networks/NFL_NET.png",
-    "NHL": "Networks/NHL_Network.png",
-    "Netflix": "Networks/Netflix.png",
-}
+# Delay in getting live data
+LIVE_DATA_DELAY = 0

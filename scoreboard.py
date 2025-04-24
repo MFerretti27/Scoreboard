@@ -17,7 +17,6 @@ else:
 
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from datetime import datetime, timedelta
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos, resize_images_from_folder
 from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements
@@ -26,11 +25,10 @@ from get_data.get_espn_data import get_data
 from display_clock import clock
 from get_team_league import get_team_league
 from constants import *
+from timer import Timer
 
-display_clock = ticks_ms()  # Start Timer for Switching Display
-display_timer = 25 * 1000  # how often the display should update in seconds
-fetch_clock = ticks_ms()  # Start Timer for Switching Display
-fetch_timer = 180 * 1000  # how often the display should update in seconds
+display_timer = Timer(30)   # switch display every 30 seconds
+fetch_timer = Timer(180)   # fetch data every 180 seconds
 
 # Get Team league and sport name, needed for various functions later in script
 for i in range(len(teams)):
@@ -61,25 +59,19 @@ try:
         team_info.append(info)
         teams_with_data.append(data)
         if currently_playing:
+            display_timer.pause(), fetch_timer.pause()  # Pause timers
             team_info = team_currently_playing(window, teams)
+            display_timer.reset(), fetch_timer.reset()  # Reset timers
 except Exception as error:
     print(f"Error: {error}")
     if is_connected():
-        teams_with_data = clock(window, message=f'Failed to Get Info From ESPN, Error:{error}')
-        # Reset timers
-        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-            display_clock = ticks_add(display_clock, display_timer)
-        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-            fetch_clock = ticks_add(fetch_clock, fetch_timer)
-
-    while not is_connected():
+        message = f'Failed to Get Info From ESPN, Error:{error}'
+    elif not is_connected():
         print("\nNo Internet connection Displaying Clock\n")
-        teams_with_data = clock(window, message="No Internet Connection")
-        # Reset timers
-        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-            display_clock = ticks_add(display_clock, display_timer)
-        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-            fetch_clock = ticks_add(fetch_clock, fetch_timer)
+        message = "No Internet Connection"
+    display_timer.pause(), fetch_timer.pause()  # Pause timers
+    teams_with_data = clock(window, message)
+    display_timer.reset(), fetch_timer.reset()  # Reset timers
 
 event = window.read(timeout=5000)
 
@@ -91,7 +83,7 @@ event = window.read(timeout=5000)
 while True:
     try:
         # Fetch Data
-        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
+        if fetch_timer.expired():
             teams_with_data.clear()
             team_info.clear()
             for fetch_index in range(len(teams)):
@@ -110,12 +102,9 @@ while True:
 
                 # If Game in Play call function to display data differently
                 elif currently_playing:
+                    display_timer.pause(), fetch_timer.pause()  # Pause timers
                     team_info = team_currently_playing(window, teams)
-                    # Reset timers
-                    while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-                        display_clock = ticks_add(display_clock, display_timer)
-                    while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-                        fetch_clock = ticks_add(fetch_clock, fetch_timer)
+                    display_timer.reset(), fetch_timer.reset()  # Reset timers
 
                 # Save data for to display longer than data is available (minimum 3 days)
                 if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -143,10 +132,8 @@ while True:
                 team_info.append(info)
                 teams_with_data.append(data)
 
-            fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if display updated
-
         # Display Team Information
-        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
+        if display_timer.expired():
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
                 reset_window_elements(window)
@@ -171,7 +158,6 @@ while True:
                         print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                         break
 
-                display_clock = ticks_add(display_clock, display_timer)
             display_index = (display_index + 1) % len(teams)
 
         # Scroll bottom info if text is too long
@@ -191,14 +177,13 @@ while True:
 
         if True not in teams_with_data:  # No data to display
             print("\nNo Teams with Data Displaying Clock\n")
+            display_timer.pause(), fetch_timer.pause()  # Pause timers
             teams_with_data = clock(window, message="No Data For Any Teams")
-            # Reset timers
-            while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-                display_clock = ticks_add(display_clock, display_timer)
-            while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-                fetch_clock = ticks_add(fetch_clock, fetch_timer)
+            display_timer.reset(), fetch_timer.reset()  # Reset timers
 
     except Exception as error:
+        display_timer.pause(), fetch_timer.pause()  # Pause timers
+
         print(f"Error: {error}")
         time_till_clock = 0
         if is_connected():
@@ -212,11 +197,6 @@ while True:
                 time_till_clock = time_till_clock + 1
             if time_till_clock >= 12:  # 6 minutes without data, display clock
                 teams_with_data = clock(window, message=f'Failed to Get Info From ESPN, Error:{error}')
-            # Reset timers
-            while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-                display_clock = ticks_add(display_clock, display_timer)
-            while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-                fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
@@ -226,14 +206,10 @@ while True:
             if time_till_clock >= 12:  # If no connection within 4 minutes display clock
                 print("\nNo Internet connection Displaying Clock\n")
                 teams_with_data = clock(window, message="No Internet Connection")
-                # Reset timers
-                while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
-                    display_clock = ticks_add(display_clock, display_timer)
-                while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
-                    fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
             time_till_clock = time_till_clock + 1
-        print("Internet connection is active")
+
+        display_timer.reset(), fetch_timer.reset()  # Reset timers
 
 window.close()
 exit()

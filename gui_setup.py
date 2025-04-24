@@ -116,7 +116,8 @@ def will_text_fit_on_screen(text: str) -> bool:
     else:
         return False
 
-def reset_window_elements(window):
+def reset_window_elements(window: sg.Window) -> None:
+    '''Reset window elements to default values'''
     window['top_info'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
     window['bottom_info'].update(value='', font=(FONT, INFO_TXT_SIZE), text_color='white')
     window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')

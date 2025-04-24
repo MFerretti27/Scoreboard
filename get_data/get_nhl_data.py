@@ -2,7 +2,6 @@
 import requests
 from datetime import datetime, timezone
 import os
-from constants import under_score_images
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
@@ -70,11 +69,11 @@ def get_all_nhl_data(team_name: str) -> dict:
     team_info["bottom_info"] = f"{game_time} @ {venue}"
 
     # Get network logo
-    broadcast = live["tvBroadcasts"][0]["network"]
-    for network, filepath in under_score_images.items():
-        if network.upper() in broadcast.upper():
-            team_info['under_score_image'] = filepath
-            break
+    # broadcast = live["tvBroadcasts"][0]["network"]
+    # for network, filepath in under_score_images.items():
+    #     if network.upper() in broadcast.upper():
+    #         team_info['under_score_image'] = filepath
+    #         break
 
     # Check if game is playing
     if "LIVE" in res["seasonSeries"][2]["gameState"]:
