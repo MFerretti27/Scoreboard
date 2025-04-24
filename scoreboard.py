@@ -27,7 +27,6 @@ from display_clock import clock
 from get_team_league import get_team_league
 from constants import *
 
-SPORT_URLS = []
 display_clock = ticks_ms()  # Start Timer for Switching Display
 display_timer = 25 * 1000  # how often the display should update in seconds
 fetch_clock = ticks_ms()  # Start Timer for Switching Display
@@ -39,14 +38,9 @@ for i in range(len(teams)):
     teams[i].append(league)  # Add the league to the teams list
     teams[i].append(sports_name)  # Add the sport name to the teams lists
 
-for i in range(len(teams)):
-    sport_league = teams[i][1].lower()
-    sport_name = teams[i][2].lower()
-    SPORT_URLS.append(f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/scoreboard")
-
 get_team_logos(teams)
 window = gui_setup()  # Must run after get_team_logos, it uses the logos downloaded
-resize_images_from_folder(["/Networks/", "/baseball_base_images/"])  # Resize images to fit on screen
+resize_images_from_folder(["images/Networks/", "images/baseball_base_images/"])  # Resize images to fit on screen
 
 
 ##################################
@@ -63,16 +57,15 @@ no_spoiler_mode = False
 try:
     for fetch_index in range(len(teams)):
         print(f"\nFetching data for {teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+        info, data, currently_playing = get_data(teams[fetch_index])
         team_info.append(info)
         teams_with_data.append(data)
         if currently_playing:
-            team_info = team_currently_playing(window, teams, SPORT_URLS)
+            team_info = team_currently_playing(window, teams)
 except Exception as error:
     print(f"Error: {error}")
     if is_connected():
-        message = f'Failed to Get Info From ESPN, Error:{error}'
-        teams_with_data = clock(window, SPORT_URLS, message)
+        teams_with_data = clock(window, message=f'Failed to Get Info From ESPN, Error:{error}')
         # Reset timers
         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
             display_clock = ticks_add(display_clock, display_timer)
@@ -80,9 +73,8 @@ except Exception as error:
             fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
     while not is_connected():
-        message = "No Internet Connection"
         print("\nNo Internet connection Displaying Clock\n")
-        teams_with_data = clock(window, SPORT_URLS, message)
+        teams_with_data = clock(window, message="No Internet Connection")
         # Reset timers
         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
             display_clock = ticks_add(display_clock, display_timer)
@@ -104,7 +96,7 @@ while True:
             team_info.clear()
             for fetch_index in range(len(teams)):
                 print(f"\nFetching data for {teams[fetch_index][0]}")
-                info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+                info, data, currently_playing = get_data(teams[fetch_index])
 
                 # No Spoiler Mode dont display live Data
                 if no_spoiler_mode and (currently_playing or "FINAL" in info['bottom_info']):
@@ -115,10 +107,10 @@ while True:
                     info['bottom_info'] = "No Spoiler Mode On"
                     info["under_score_image"], info["above_score_txt"] = ('',) * 2
                     info["home_score"], info["away_score"] = ('0',) * 2
-                
+
                 # If Game in Play call function to display data differently
                 elif currently_playing:
-                    team_info = team_currently_playing(window, teams, SPORT_URLS)
+                    team_info = team_currently_playing(window, teams)
                     # Reset timers
                     while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                         display_clock = ticks_add(display_clock, display_timer)
@@ -198,9 +190,8 @@ while True:
             break
 
         if True not in teams_with_data:  # No data to display
-            message = "No Data For Any Teams"
             print("\nNo Teams with Data Displaying Clock\n")
-            teams_with_data = clock(window, SPORT_URLS, message)
+            teams_with_data = clock(window, message="No Data For Any Teams")
             # Reset timers
             while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                 display_clock = ticks_add(display_clock, display_timer)
@@ -213,15 +204,14 @@ while True:
         if is_connected():
             while time_till_clock < 12:
                 try:
-                    get_data(SPORT_URLS[display_index], teams[display_index])
+                    get_data(teams[display_index])
                     break  # If data is fetched successfully, break out of loop
                 except Exception:
                     print("Could not get data for team, trying again")
                 time.sleep(30)
                 time_till_clock = time_till_clock + 1
             if time_till_clock >= 12:  # 6 minutes without data, display clock
-                message = f'Failed to Get Info From ESPN, Error:{error}'
-                teams_with_data = clock(window, SPORT_URLS, message)
+                teams_with_data = clock(window, message=f'Failed to Get Info From ESPN, Error:{error}')
             # Reset timers
             while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                 display_clock = ticks_add(display_clock, display_timer)
@@ -234,9 +224,8 @@ while True:
             time.sleep(20)  # Check every 20 seconds
 
             if time_till_clock >= 12:  # If no connection within 4 minutes display clock
-                message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                teams_with_data = clock(window, SPORT_URLS, message)
+                teams_with_data = clock(window, message="No Internet Connection")
                 # Reset timers
                 while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                     display_clock = ticks_add(display_clock, display_timer)

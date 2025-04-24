@@ -14,7 +14,7 @@ def new_league_added() -> bool:
     :return: True if new league added, False otherwise
     '''
 
-    folder_path = 'sport_logos'
+    folder_path = 'images/sport_logos'
     folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
 
     for league_name in teams:
@@ -89,10 +89,10 @@ def download_team_logos(teams: list) -> None:
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
         sport_name = teams[i][2].lower()
-        if not os.path.exists(f"sport_logos/{sport_league.upper()}"):
+        if not os.path.exists(f"images/sport_logos/{sport_league.upper()}"):
 
             # Create a directory for the current sport if it doesn't exist
-            sport_dir = os.path.join('sport_logos', sport_league.upper())
+            sport_dir = os.path.join('images/sport_logos', sport_league.upper())
             if not os.path.exists(sport_dir):
                 os.makedirs(sport_dir)
 
@@ -135,8 +135,8 @@ def get_team_logos(teams: list) -> None:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
-    if not os.path.exists('sport_logos'):
-        os.makedirs('sport_logos')
+    if not os.path.exists('images/sport_logos'):
+        os.makedirs('images/sport_logos')
         download_team_logos(teams)
 
     elif new_league_added():

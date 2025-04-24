@@ -49,15 +49,15 @@ def get_all_nhl_data(team_name: str) -> dict:
             break
 
     # Get team logos
-    folder_path = os.getcwd() + '/sport_logos/NHL/'
+    folder_path = os.getcwd() + 'images/sport_logos/NHL/'
     file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     for file in file_names:
         if home_team_name.upper() in file:
             home_team = file
         if away_team_name.upper() in file:
             away_team = file
-    team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/NHL/{away_team}")
-    team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/NHL/{home_team}")
+    team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{away_team}")
+    team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{home_team}")
 
     # Get bottom_info
     iso_string = res["seasonSeries"][2]["startTimeUTC"]

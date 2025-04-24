@@ -11,5 +11,3 @@ venv/
 */__pycache__/*
 __pycache__/*
 
-# Don't upload images if resized, change if additional images are added
-*.png*

@@ -2,7 +2,8 @@
 
 import requests  # pip install requests
 import gc
-from constants import under_score_images, teams
+import os
+from constants import teams
 from .get_mlb_data import get_all_mlb_data, append_mlb_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_nba_data import append_nba_data, get_all_nba_data
@@ -32,7 +33,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_data(URL: str, team: str) -> list:
+def get_data(team: str) -> list:
     '''Retrieve Data from ESPN API
 
     :param URL: URL link to ESPN to get API data
@@ -47,6 +48,9 @@ def get_data(URL: str, team: str) -> list:
     team_info = {}
     team_name = team[0]
     team_sport = team[1]
+    team_league = team[2]
+    url = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
+
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
     team_info['top_info'] = ''
@@ -54,16 +58,16 @@ def get_data(URL: str, team: str) -> list:
     team_info['under_score_image'] = ''
 
     try:
-        resp = requests.get(URL)
+        resp = requests.get(url)
         response_as_json = resp.json()
     except Exception:
-        if "MLB" in URL.upper():
+        if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name, team_info)
-        elif "NBA" in URL.upper():
+        elif "NBA" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nba_data(team_info, team_name)
-        elif "NHL" in URL.upper():
+        elif "NHL" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_info, team_name)
-        elif "NFL" in URL.upper():
+        elif "NFL" in team_league.upper():
             raise Exception("Could Not Get NFL data")
         else:
             raise Exception("Could Not Get ESPN data")
@@ -102,10 +106,12 @@ def get_data(URL: str, team: str) -> list:
                 team_has_data = False
                 return team_info, team_has_data, currently_playing
 
-            # Get Network game is on and display logo
-            for network, filepath in under_score_images.items():
-                if network.upper() in broadcast.upper():
-                    team_info['under_score_image'] = filepath
+            # Get Network and display logo if possible
+            folder_path = os.getcwd() + 'images/Networks/'
+            file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+            for file in file_names:
+                if broadcast.upper() in file:
+                    team_info['under_score_image'] = file
                     break
 
             # Check if Team is Currently Playing
@@ -123,7 +129,7 @@ def get_data(URL: str, team: str) -> list:
                 team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
                 overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
                 spread = competition.get('odds', [{}])[0].get('details', 'N/A')
-                if "NHL" in URL.upper() or "MLB" in URL.upper():
+                if "NHL" in team_league.upper() or "MLB" in team_league.upper():
                     team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
                 else:
                     team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
@@ -132,13 +138,13 @@ def get_data(URL: str, team: str) -> list:
             team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
+            team_info["away_logo"] = (f"images/sport_logos/{team_sport.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"images/sport_logos/{team_sport.upper()}/{home_name.upper()}.png")
 
             ####################################################################
             # If looking at NFL team, get NFL specific data if currently playing
             ####################################################################
-            if "NFL" in URL.upper() and currently_playing:
+            if "NFL" in team_league.upper() and currently_playing:
                 down = competition.get('situation', {}).get('shortDownDistanceText')
                 red_zone = competition.get('situation', {}).get('isRedZone')
                 spot = competition.get('situation', {}).get('possessionText')
@@ -169,7 +175,7 @@ def get_data(URL: str, team: str) -> list:
             ####################################################################
             # If looking at NBA team, get NBA specific data if currently playing
             ####################################################################
-            if "NBA" in URL.upper() and currently_playing:
+            if "NBA" in team_league.upper() and currently_playing:
                 saved_info = team_info
                 try:
                     team_info = append_nba_data(team_info, team_name)
@@ -197,7 +203,7 @@ def get_data(URL: str, team: str) -> list:
             ####################################################################
             # If looking at MLB team, get MLB specific data if currently playing
             ####################################################################
-            if "MLB" in URL.upper() and currently_playing:
+            if "MLB" in team_league.upper() and currently_playing:
                 saved_info = team_info
                 # Get info from specific MLB API, has more data and updates faster
                 try:
@@ -265,7 +271,7 @@ def get_data(URL: str, team: str) -> list:
             ####################################################################
             # If looking at NHL team, get NHL specific data if currently playing
             ####################################################################
-            if "NHL" in URL.upper() and currently_playing:
+            if "NHL" in team_league.upper() and currently_playing:
                 saved_info = team_info
                 try:
                     team_info = append_nhl_data(team_info, team_name)
@@ -275,7 +281,7 @@ def get_data(URL: str, team: str) -> list:
 
             # If got here with no top info to display, try displaying series info
             if team_info['top_info'] == "":
-                team_info['top_info'] = get_series(URL, team_name)
+                team_info['top_info'] = get_series(team_league, team_name)
 
             break  # Found team in sports events and got data, no need to continue looking
         else:

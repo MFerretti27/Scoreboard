@@ -61,7 +61,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     home_team = live["gameData"]["teams"]["home"]["teamName"]
     away_team = live["gameData"]["teams"]["away"]["teamName"]
     team_info["above_score_txt"] = f"{away_team} @ {home_team}"
-    folder_path = os.getcwd() + '/sport_logos/MLB/'
+    folder_path = os.getcwd() + 'images/sport_logos/MLB/'
     file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     for file in file_names:
         if home_team.upper() in file:
@@ -69,8 +69,8 @@ def get_all_mlb_data(team_name: str) -> dict:
         if away_team.upper() in file:
             away_team = file
 
-    team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{away_team}")
-    team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/MLB/{home_team}")
+    team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/MLB/{away_team}")
+    team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/MLB/{home_team}")
 
     # Get Home and Away team records
     home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
@@ -177,6 +177,6 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
 
     # Display runners on base
     base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
-    team_info['under_score_image'] = f"baseball_base_images/{base_image}"
+    team_info['under_score_image'] = f"images/baseball_base_images/{base_image}"
 
     return team_info

@@ -4,9 +4,10 @@ from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafr
 from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen
 import time
+from gui_setup import reset_window_elements
 
 
-def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
+def team_currently_playing(window: sg.Window, teams: list) -> list:
     '''Display only games that are playing
 
     :param window: Window Element that controls GUI
@@ -22,6 +23,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
     display_index = 0
     stay_on_team = False
     should_scroll = False
+    sport_league = teams[display_index][2]
 
     display_clock = ticks_ms()  # Start timer for switching display
     display_timer = 35 * 1000  # How often the display should update in seconds
@@ -34,7 +36,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
         teams_currently_playing.clear()
         for fetch_index in range(len(teams)):
             print(f"\nFetching data for {teams[fetch_index][0]}")
-            info, data, currently_playing = get_data(SPORT_URLS[fetch_index], teams[fetch_index])
+            info, data, currently_playing = get_data(teams[fetch_index])
             team_info.append(info)
             teams_with_data.append(data)
             teams_currently_playing.append(currently_playing)
@@ -43,12 +45,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
             print(f"\n{teams[display_index][0]} is currently playing, updating display")
 
             # Reset text color, underline and timeouts, for new display
-            window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-            window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-            window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-            window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-            window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-            window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE))
+            reset_window_elements(window)
 
             should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
@@ -59,7 +56,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                     window[key].update(value=value)
 
                 # Football specific display information
-                if "NFL" in SPORT_URLS[display_index].upper():
+                if "NFL" in sport_league.upper():
                     if key == "home_timeouts":
                         window['home_timeouts'].update(value=value, text_color='yellow')
                     elif key == "away_timeouts":
@@ -75,7 +72,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
 
                 # NBA Specific display size for top info
-                if "NBA" in SPORT_URLS[display_index].upper():
+                if "NBA" in sport_league.upper():
                     if key == "top_info":
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
                     elif key == "home_timeouts":
@@ -89,7 +86,7 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                         window[key].update(value=value, text_color='orange')
 
                 # MLB Specific display size for bottom info
-                if "MLB" in SPORT_URLS[display_index].upper():
+                if "MLB" in sport_league.upper():
                     if key == "top_info":
                         window['top_info'].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     if key == 'bottom_info':
@@ -97,12 +94,12 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
                     elif key == 'under_score_image':
                         if "Networks" in team_info[display_index]['under_score_image']:
                             value = "baseball_base_images/empty_bases.png"
-                        window[key].update(filename=value, subsample=BASES_SIZE)
+                        window[key].update(filename=value)
                     elif key == 'above_score_txt':
                         window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
-                if "NHL" in SPORT_URLS[display_index].upper():
+                if "NHL" in sport_league.upper():
                     if key == 'top_info':
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
@@ -157,6 +154,5 @@ def team_currently_playing(window: sg.Window, teams: list, SPORT_URLS) -> list:
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal
-    window['home_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['away_score'].update(font=(FONT, SCORE_TXT_SIZE), text_color='white')
+    reset_window_elements(window)
     return team_info

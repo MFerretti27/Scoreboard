@@ -28,7 +28,7 @@ def get_all_nba_data(team_name: str):
             team_info["above_score_txt"] = f"{away_team} @ {home_team}"
 
             # Get team logos
-            folder_path = os.getcwd() + '/sport_logos/NBA/'
+            folder_path = os.getcwd() + 'images/sport_logos/NBA/'
             file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
             for file in file_names:
                 if home_team.upper() in file:
@@ -36,8 +36,8 @@ def get_all_nba_data(team_name: str):
                 if away_team.upper() in file:
                     away_team = file
 
-            team_info["away_logo"] = (f"{os.getcwd()}/sport_logos/NBA/{away_team}")
-            team_info["home_logo"] = (f"{os.getcwd()}/sport_logos/NBA/{home_team}")
+            team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{away_team}")
+            team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{home_team}")
 
             team_info["home_score"] = "0"
             team_info["away_score"] = "0"

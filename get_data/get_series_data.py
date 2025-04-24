@@ -6,13 +6,13 @@ from .get_team_id import get_mlb_team_id, get_nhl_game_id
 from nba_api.live.nba.endpoints import scoreboard
 
 
-def get_series(URL: str, team_name: str) -> dict:
+def get_series(team_league: str, team_name: str) -> dict:
     '''Try to get series information based of Team.'''
-    if "MLB" in URL.upper():
+    if "MLB" in team_league.upper():
         return (get_current_series_mlb(team_name))
-    elif "NHL" in URL.upper():
+    elif "NHL" in team_league.upper():
         return (get_current_series_nhl(team_name))
-    elif "NBA" in URL.upper():
+    elif "NBA" in team_league.upper():
         return (get_current_series_nba(team_name))
     else:
         return ""
