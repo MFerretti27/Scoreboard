@@ -17,12 +17,17 @@ def get_all_nhl_data(team_name: str) -> dict:
     """
     team_info = {}
     currently_playing = False
-    id = get_nhl_game_id(team_name)
+    has_data = False
+    try:
+        id = get_nhl_game_id(team_name)
+    except Exception:
+        return team_info, has_data, currently_playing
 
     resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
     live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore")
     live = live_data.json()
     res = resp.json()
+    has_data = True
 
     team_info["home_score"] = "0"
     team_info["away_score"] = "0"
@@ -86,7 +91,7 @@ def get_all_nhl_data(team_name: str) -> dict:
 
     resp.close()
     live_data.close()
-    return team_info, True, currently_playing
+    return team_info, has_data, currently_playing
 
 
 def append_nhl_data(team_info: dict, team_name: str) -> dict:

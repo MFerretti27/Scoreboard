@@ -15,7 +15,6 @@ else:
     print("Please go into virtual Environment by running main.py")
     exit()
 
-import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
@@ -168,13 +167,10 @@ while True:
             event = window.read(timeout=5000)
 
         check_events(window, event)  # Check for events
-        print(constants.no_spoiler_mode)
 
         if True not in teams_with_data:  # No data to display
             print("\nNo Teams with Data Displaying Clock\n")
-            display_timer.pause(), fetch_timer.pause()  # Pause timers
             teams_with_data = clock(window, message="No Data For Any Teams")
-            display_timer.reset(), fetch_timer.reset()  # Reset timers
 
     except Exception as error:
         print(f"Error: {error}")
@@ -214,6 +210,3 @@ while True:
 
             time_till_clock = time_till_clock + 1
         print("Internet connection is active")
-
-window.close()
-exit()
