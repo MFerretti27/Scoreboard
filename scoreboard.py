@@ -20,17 +20,18 @@ from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafr
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos, resize_images_from_folder
-from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements
+from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode
 from currently_playing import team_currently_playing
 from get_data.get_espn_data import get_data
 from display_clock import clock
 from get_team_league import get_team_league
-from constants import *
+import constants
 
 display_clock = ticks_ms()  # Start Timer for Switching Display
 display_timer = 25 * 1000  # how often the display should update in seconds
 fetch_clock = ticks_ms()  # Start Timer for Switching Display
 fetch_timer = 180 * 1000  # how often the display should update in seconds
+teams = constants.teams
 
 # Get Team league and sport name, needed for various functions later in script
 for i in range(len(teams)):
@@ -91,23 +92,9 @@ while True:
                 print(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(teams[fetch_index])
 
-                # No Spoiler Mode dont display live Data
-                if no_spoiler_mode and (currently_playing or "FINAL" in info['bottom_info']):
-                    if currently_playing:
-                        info["top_info"] = "Game Currently Playing"
-                    elif "FINAL" in info['bottom_info']:
-                        info["top_info"] = "Game Finished Playing"
-                    info['bottom_info'] = "No Spoiler Mode On"
-                    info["under_score_image"], info["above_score_txt"] = ('',) * 2
-                    info["home_score"], info["away_score"] = ('N/A',) * 2
-                    info['home_record'] = ""
-                    info['away_record'] = ""
-
                 # If Game in Play call function to display data differently
-                elif currently_playing:
-                    display_timer.pause(), fetch_timer.pause()  # Pause timers
+                if currently_playing:
                     team_info = team_currently_playing(window, teams)
-                    display_timer.reset(), fetch_timer.reset()  # Reset timers
 
                 # Save data for to display longer than data is available (minimum 3 days)
                 if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -134,7 +121,8 @@ while True:
 
                 team_info.append(info)
                 teams_with_data.append(data)
-        fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if data fetched
+
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if data fetched
 
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer:
@@ -150,6 +138,8 @@ while True:
                     elif "possession" not in key and "redzone" not in key:
                         window[key].update(value=value, text_color='white')
 
+                if constants.no_spoiler_mode:
+                    set_spoiler_mode(window, currently_playing=False)
                 event = window.read(timeout=5000)
 
                 # Find next team to display (skip teams with no data)
@@ -177,12 +167,8 @@ while True:
         else:
             event = window.read(timeout=5000)
 
-        if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
-            break
-        elif ('Up' in event[0]):
-            no_spoiler_mode = True
-        elif ('Down' in event[0]):
-            no_spoiler_mode = False
+        check_events(window, event)  # Check for events
+        print(constants.no_spoiler_mode)
 
         if True not in teams_with_data:  # No data to display
             print("\nNo Teams with Data Displaying Clock\n")
@@ -191,8 +177,6 @@ while True:
             display_timer.reset(), fetch_timer.reset()  # Reset timers
 
     except Exception as error:
-        display_timer.pause(), fetch_timer.pause()  # Pause timers
-
         print(f"Error: {error}")
         time_till_clock = 0
         if is_connected():
@@ -205,7 +189,13 @@ while True:
                 time.sleep(30)
                 time_till_clock = time_till_clock + 1
             if time_till_clock >= 12:  # 6 minutes without data, display clock
-                teams_with_data = clock(window, message=f'Failed to Get Info From ESPN, Error:{error}')
+                message = f'Failed to Get Info From ESPN, Error:{error}'
+                teams_with_data = clock(window, message)
+            # Reset timers
+            while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                display_clock = ticks_add(display_clock, display_timer)
+            while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
         while not is_connected():
             print("Internet connection is down, trying to reconnect...")
@@ -213,12 +203,17 @@ while True:
             time.sleep(20)  # Check every 20 seconds
 
             if time_till_clock >= 12:  # If no connection within 4 minutes display clock
+                message = "No Internet Connection"
                 print("\nNo Internet connection Displaying Clock\n")
-                teams_with_data = clock(window, message="No Internet Connection")
+                teams_with_data = clock(window, message)
+                # Reset timers
+                while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                    display_clock = ticks_add(display_clock, display_timer)
+                while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                    fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
             time_till_clock = time_till_clock + 1
-
-        display_timer.reset(), fetch_timer.reset()  # Reset timers
+        print("Internet connection is active")
 
 window.close()
 exit()

@@ -1,9 +1,9 @@
 from constants import *
+import constants
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from get_data.get_espn_data import get_data
-from gui_setup import will_text_fit_on_screen
+from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
 import time
-from gui_setup import reset_window_elements
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 
 
@@ -21,7 +21,6 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     team_info = []
     teams_with_data = []
     display_index = 0
-    stay_on_team = False
     should_scroll = False
     global no_spoiler_mode
 
@@ -104,17 +103,8 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     if key == 'top_info':
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
-                if no_spoiler_mode:
-                    window["top_info"].update(value="Game Currently Playing")
-                    window['bottom_info'].update(value="No Spoiler Mode On")
-                    window["under_score_image"].update(filename='')
-                    window["above_score_txt"].update(value='')
-                    window["home_score"].update(value='N/A', text_color='white')
-                    window["away_score"].update(value='N/A', text_color='white')
-                    window['home_timeouts'].update(value='')
-                    window['away_timeouts'].update(value='')
-                    window['home_record'].update(value='')
-                    window['away_record'].update(value='')
+                if constants.no_spoiler_mode:
+                    set_spoiler_mode(window)
 
             event = window.read(timeout=5000)
 
@@ -123,7 +113,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 first_time = False
                 # Find next team to display (skip teams not playing)
-                if not stay_on_team:  # If space pressed, stay on current team playing
+                if not constants.stay_on_team:  # If space pressed, stay on current team playing
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:
@@ -136,7 +126,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
             display_clock = ticks_add(display_clock, display_timer)
-            if not stay_on_team:
+            if not constants.stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
         if should_scroll:
@@ -149,24 +139,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 time.sleep(5)
             should_scroll = False
 
-        if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
-            exit()
-        elif 'Caps_Lock' in event[0] and not stay_on_team:
+        check_events(window, event)
+        if constants.stay_on_team:
             display_index = original_index
-            stay_on_team = True
-            window['bottom_info'].update(value="Staying on Current Team")
-            window.read(timeout=500)
-            time.sleep(5)
-        elif (('Shift_L' in event[0] or 'Shift_R' in event[0]) and stay_on_team) or \
-             (stay_on_team and "Final" in info["bottom_info"]):
-            stay_on_team = False
-            window['bottom_info'].update(value="No Longer Staying on Current Team")
-            window.read(timeout=500)
-            time.sleep(5)
-        elif ('Up' in event[0]):
-            no_spoiler_mode = True
-        elif ('Down' in event[0]):
-            no_spoiler_mode = False
+        if constants.stay_on_team and teams_with_data[display_index] is False:
+            constants.stay_on_team = False
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal
