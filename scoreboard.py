@@ -16,6 +16,7 @@ else:
     exit()
 
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
 from get_team_logos import get_team_logos, resize_images_from_folder
@@ -25,10 +26,11 @@ from get_data.get_espn_data import get_data
 from display_clock import clock
 from get_team_league import get_team_league
 from constants import *
-from timer import Timer
 
-display_timer = Timer(30)   # switch display every 30 seconds
-fetch_timer = Timer(180)   # fetch data every 180 seconds
+display_clock = ticks_ms()  # Start Timer for Switching Display
+display_timer = 25 * 1000  # how often the display should update in seconds
+fetch_clock = ticks_ms()  # Start Timer for Switching Display
+fetch_timer = 180 * 1000  # how often the display should update in seconds
 
 # Get Team league and sport name, needed for various functions later in script
 for i in range(len(teams)):
@@ -82,7 +84,7 @@ for fetch_index in range(len(teams)):
 while True:
     try:
         # Fetch Data
-        if fetch_timer.expired():
+        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
             teams_with_data.clear()
             team_info.clear()
             for fetch_index in range(len(teams)):
@@ -132,9 +134,10 @@ while True:
 
                 team_info.append(info)
                 teams_with_data.append(data)
+        fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if data fetched
 
         # Display Team Information
-        if display_timer.expired():
+        if ticks_diff(ticks_ms(), display_clock) >= display_timer:
             if teams_with_data[display_index]:
                 print(f"\nUpdating Display for {teams[display_index][0]}")
                 reset_window_elements(window)
@@ -159,6 +162,7 @@ while True:
                         print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                         break
 
+            display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
             display_index = (display_index + 1) % len(teams)
 
         # Scroll bottom info if text is too long

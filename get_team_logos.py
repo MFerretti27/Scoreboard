@@ -42,7 +42,6 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (5/16)
-        print(f"column_width: {column_width} column_height: {column_height}")
 
     # Open an image file using Pillow
     img = Image.open(image_path)
