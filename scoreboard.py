@@ -51,7 +51,6 @@ teams_with_data = []
 saved_data = {}
 display_index = 0
 should_scroll = False
-no_spoiler_mode = False
 # try:
 for fetch_index in range(len(teams)):
     print(f"\nFetching data for {teams[fetch_index][0]}")
@@ -98,7 +97,9 @@ while True:
                         info["top_info"] = "Game Finished Playing"
                     info['bottom_info'] = "No Spoiler Mode On"
                     info["under_score_image"], info["above_score_txt"] = ('',) * 2
-                    info["home_score"], info["away_score"] = ('0',) * 2
+                    info["home_score"], info["away_score"] = ('N/A',) * 2
+                    info['home_record'] = ""
+                    info['away_record'] = ""
 
                 # If Game in Play call function to display data differently
                 elif currently_playing:
@@ -174,6 +175,10 @@ while True:
 
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             break
+        elif ('Up' in event[0]):
+            no_spoiler_mode = True
+        elif ('Down' in event[0]):
+            no_spoiler_mode = False
 
         if True not in teams_with_data:  # No data to display
             print("\nNo Teams with Data Displaying Clock\n")

@@ -31,8 +31,8 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
     :param directory: Folder were new resized image should be put
     :param file_name: Name to use as file name
     '''
-    window_width = sg.Window.get_screen_size()[0]
-    window_height = sg.Window.get_screen_size()[1]
+    window_width = sg.Window.get_screen_size()[0] * .9
+    window_height = sg.Window.get_screen_size()[1] * .9
 
     if "sport_logos" in image_path:
         column_width = window_width / 3

@@ -26,3 +26,5 @@ TOP_TXT_SIZE = 80
 
 # Delay in getting live data
 LIVE_DATA_DELAY = 0
+
+no_spoiler_mode = False

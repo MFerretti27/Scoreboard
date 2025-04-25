@@ -23,7 +23,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     display_index = 0
     stay_on_team = False
     should_scroll = False
-    sport_league = teams[display_index][2]
+    global no_spoiler_mode
 
     display_timer = Timer(30)   # switch display every 30 seconds
     fetch_timer = Timer(LIVE_DATA_DELAY)   # fetch based of variable in constants.py
@@ -45,6 +45,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 print(f"\n{teams[display_index][0]} is currently playing, updating display")
+                sport_league = teams[display_index][1]
 
                 # Reset text color, underline and timeouts, for new display
                 reset_window_elements(window)
@@ -105,6 +106,18 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         if key == 'top_info':
                             window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
+                    if no_spoiler_mode:
+                        window["top_info"].update(value="Game Currently Playing")
+                        window['bottom_info'].update(value="No Spoiler Mode On")
+                        window["under_score_image"].update(filename='')
+                        window["above_score_txt"].update(value='')
+                        window["home_score"].update(value='N/A', text_color='white')
+                        window["away_score"].update(value='N/A', text_color='white')
+                        window['home_timeouts'].update(value='')
+                        window['away_timeouts'].update(value='')
+                        window['home_record'].update(value='')
+                        window['away_record'].update(value='')
+
                 event = window.read(timeout=5000)
 
         # Display Team Information
@@ -151,6 +164,10 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             window['bottom_info'].update(value="No Longer Staying on Current Team")
             window.read(timeout=500)
             time.sleep(5)
+        elif ('Up' in event[0]):
+            no_spoiler_mode = True
+        elif ('Down' in event[0]):
+            no_spoiler_mode = False
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal
