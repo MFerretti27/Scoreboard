@@ -60,9 +60,7 @@ for fetch_index in range(len(teams)):
     team_info.append(info)
     teams_with_data.append(data)
     if currently_playing:
-        display_timer.pause(), fetch_timer.pause()  # Pause timers
         team_info = team_currently_playing(window, teams)
-        display_timer.reset(), fetch_timer.reset()  # Reset timers
 # except Exception as error:
 #     print(f"Error: {error}")
 #     if is_connected():
