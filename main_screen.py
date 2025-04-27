@@ -11,6 +11,20 @@ import constants
 filename = "constants.py"
 FONT = "Helvetica"
 
+setting_keys = [
+    "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
+    "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
+
+    "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
+
+    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
+
+    "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
+    "display_nfl_timeouts", "display_nfl_redzone",
+
+    "display_records", "display_venue", "display_network", "display_series", "display_odds",
+]
+
 
 class RedirectText(io.StringIO):
     '''Redirect print statements'''
@@ -133,9 +147,9 @@ def create_team_selection_layout(window_width, window_height, league):
 def create_settings_layout(window_width, window_height):
     title_size = max(12, window_width // 20)
     button_size = max(12, window_width // 40)
-    subtitle_size = max(12, window_width // 40)
     text_size = max(12, window_width // 80)
-    text_input_size = max(12, window_width // 800)
+    message_size = max(12, window_width // 800)
+    text_input_size = max(4, window_width // 800)
     checkbox_width = max(20, window_width // 85)
     checkbox_height = max(2, window_height // 60)
     checkbox_size = max(12, window_width // 80)
@@ -158,48 +172,113 @@ def create_settings_layout(window_width, window_height):
     general_setting_layout = sg.Frame(
         '',
         [
-            [sg.Push(), sg.Text("General Settings", font=(FONT, subtitle_size)), sg.Push()],
-
+            [
+                sg.Checkbox("Display Records", key="display_records",
+                            size=(checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("display_records", False), expand_x=True),
+                sg.Checkbox("Display Venue", key="display_venue",
+                            size=(checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("display_venue", False), expand_x=True),
+                sg.Checkbox("Display Network", key="display_network",
+                            size=(checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("display_network", False), expand_x=True),
+                sg.Checkbox("Display Odds", key="display_odds",
+                            size=(checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("display_odds", False), expand_x=True),
+                sg.Checkbox("Display Series", key="display_series",
+                            size=(checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("display_series", False), expand_x=True),
+            ],
             # Row containing "Live Data Delay", Input, Live Data Message, and Delay Text
             [
-                sg.Text("Live Data Delay:", font=(FONT, button_size)),
-                sg.Input(key='live_delay', enable_events=True, size=(text_size, 1),
-                         font=('Arial', text_size), default_text=str(settings.get("LIVE_DATA_DELAY", 0))),
-                sg.Text("", font=(FONT, text_input_size), key="Live_data_message", text_color='red'),
-                sg.Push(),
-                sg.Column([
-                    [sg.Checkbox("Display Records", key="display_records",
-                                 size=(checkbox_width, checkbox_height),
-                                 font=(FONT, checkbox_size),
-                                 default=settings.get("display_records", False))],
-                    [sg.Checkbox("Display Venue", key="display_venue",
-                                 size=(checkbox_width, checkbox_height),
-                                 font=(FONT, checkbox_size),
-                                 default=settings.get("display_venue", False))],
-                ]),
-                sg.Column([
-                    [sg.Checkbox("Display Network", key="display_network",
-                                 size=(checkbox_width, checkbox_height),
-                                 font=(FONT, checkbox_size),
-                                 default=settings.get("display_network", False))],
-                    [sg.Checkbox("Display Odds", key="display_odds",
-                                 size=(checkbox_width, checkbox_height),
-                                 font=(FONT, checkbox_size),
-                                 default=settings.get("display_odds", False))],
-                ]),
+                sg.Column(
+                    [
+                        [sg.Text("Live Data Delay:", font=(FONT, button_size)),
+                         sg.Input(key='live_delay', enable_events=True, size=(text_input_size, 1),
+                                  font=('Arial', text_size),
+                                  default_text=str(settings.get("LIVE_DATA_DELAY", 0))),
+                         sg.Text("", font=(FONT, message_size), key="Live_data_message", text_color='red',
+                                 expand_x=True)],
+                        [sg.Text("Delay in seconds to display live data",
+                                 font=(FONT, message_size, "italic"),
+                                 pad=(button_size, 0, 0, 0))],
+                    ],
+                    expand_x=True
+                ),
             ],
-
-            [sg.Text("*Delay in seconds to display live data", font=(FONT, text_input_size),
-                     pad=(button_size, 0, 0, 0))],
-
+            [
+                sg.Column(
+                    [
+                        [sg.Text("Fetch Timer:", font=(FONT, button_size)),
+                         sg.Input(key='fetch_not_playing', enable_events=True, size=(text_input_size, 1),
+                                  font=('Arial', text_size),
+                                  default_text=str(settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
+                         sg.Text("", font=(FONT, message_size), key="fetch_not_playing_message", text_color='red',
+                                 expand_x=True)],
+                        [sg.Text("How often to get data when no team is playing",
+                                 font=(FONT, message_size, "italic"),
+                                 pad=(button_size, 0, 0, 0))],
+                    ],
+                    expand_x=True
+                ),
+                sg.Column(
+                    [
+                        [sg.Text("Display Timer:", font=(FONT, button_size)),
+                         sg.Input(key='display_not_playing', enable_events=True, size=(text_input_size, 1),
+                                  font=('Arial', text_size),
+                                  default_text=str(settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
+                         sg.Text("", font=(FONT, message_size), key="display_not_playing_message", text_color='red',
+                                 expand_x=True)],
+                        [sg.Text("How often to Display each team when no team is playing",
+                                 font=(FONT, message_size, "italic"),
+                                 pad=(button_size, 0, 0, 0))],
+                    ],
+                    expand_x=True
+                ),
+            ],
+            [
+                sg.Column(
+                    [
+                        [sg.Text("Fetch Timer (LIVE):", font=(FONT, button_size)),
+                         sg.Input(key='fetch_playing', enable_events=True, size=(text_input_size, 1),
+                                  font=('Arial', text_size),
+                                  default_text=str(settings.get("FETCH_DATA_PLAYING_TIMER", 0))),
+                         sg.Text("", font=(FONT, message_size), key="fetch_playing_message", text_color='red',
+                                 expand_x=True)],
+                        [sg.Text("How often to get data when team is playing",
+                                 font=(FONT, message_size, "italic"),
+                                 pad=(button_size, 0, 0, 0))],
+                    ],
+                    expand_x=True
+                ),
+                sg.Column(
+                    [
+                        [sg.Text("Display Timer (LIVE):", font=(FONT, button_size)),
+                         sg.Input(key='display_playing', enable_events=True, size=(text_input_size, 1),
+                                  font=('Arial', text_size),
+                                  default_text=str(settings.get("DISPLAY_PLAYING_TIMER", 0))),
+                         sg.Text("", font=(FONT, message_size), key="display_playing_message", text_color='red',
+                                 expand_x=True)],
+                        [sg.Text("How often to Display each team when teams is playing",
+                                 font=(FONT, message_size, "italic"),
+                                 pad=(button_size, 0, 0, 0))],
+                    ],
+                    expand_x=True
+                ),
+            ],
             # Row containing "Change Font" label
             [sg.Text("Change Font:", font=(FONT, button_size)),
-             sg.Text("", font=(FONT, text_input_size), key="font_message", text_color='red'),
+             sg.Text("", font=(FONT, message_size), key="font_message", text_color='red'),
              ],
 
             # Adding the checkboxes using the font
             *[
-                [sg.Checkbox(f, key=f"font_{f}", font=(f, text_input_size), expand_x=True,
+                [sg.Checkbox(f, key=f"font_{f}", font=(f, message_size), expand_x=True,
                              default=(f == settings["FONT"])) for f in row]
                 for row in font_rows
             ],
@@ -208,7 +287,7 @@ def create_settings_layout(window_width, window_height):
         expand_x=True,
         relief=sg.RELIEF_SOLID,
         border_width=2,
-        pad=(0, button_size, 0, 0),
+        pad=(0, 0)
     )
 
     specific_settings_layout = sg.Frame(
@@ -408,29 +487,26 @@ def read_teams_from_file():
     return teams
 
 
-def update_settings(live_data_delay, font_selected, selected_items):
+def update_settings(live_data_delay, fetch_timer, fetch_timer_live, display_timer, display_timer_live,
+                    font_selected, selected_items):
     with open(filename, "r") as file:
         contents = file.readlines()
-
-    setting_keys = [
-        "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
-        "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
-
-        "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
-
-        "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
-
-        "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
-        "display_nfl_timeouts", "display_nfl_redzone",
-
-        "display_records", "display_venue", "display_network", "display_game_time", "display_odds",
-    ]
 
     for i, line in enumerate(contents):
         if line.strip().startswith("LIVE_DATA_DELAY ="):
             contents[i] = f"LIVE_DATA_DELAY = {live_data_delay}\n"
         if line.strip().startswith("FONT ="):
             contents[i] = f'FONT = "{font_selected}"\n'
+        if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
+            contents[i] = f'FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n'
+        if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
+            contents[i] = f'FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n'
+        if line.strip().startswith("FETCH_DATA_PLAYING_TIMER ="):
+            contents[i] = f'FETCH_DATA_PLAYING_TIMER = {fetch_timer_live}\n'
+        if line.strip().startswith("DISPLAY_NOT_PLAYING_TIMER ="):
+            contents[i] = f'DISPLAY_NOT_PLAYING_TIMER = {display_timer}\n'
+        if line.strip().startswith("DISPLAY_PLAYING_TIMER ="):
+            contents[i] = f'DISPLAY_PLAYING_TIMER = {display_timer_live}\n'
 
     for key, selected in zip(setting_keys, selected_items):
         for i, line in enumerate(contents):
@@ -444,7 +520,9 @@ def update_settings(live_data_delay, font_selected, selected_items):
 def read_settings_from_file():
     settings = {}
     keys_to_find = [
-        "FONT", "LIVE_DATA_DELAY",
+        "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
+        "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER",
+
         "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
         "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
 
@@ -455,7 +533,7 @@ def read_settings_from_file():
         "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
         "display_nfl_timeouts", "display_nfl_redzone",
 
-        "display_records", "display_venue", "display_network", "display_game_time", "display_odds",
+        "display_records", "display_venue", "display_network", "display_series", "display_odds",
     ]
 
     with open(filename, "r") as file:
@@ -466,6 +544,26 @@ def read_settings_from_file():
             if line.strip().startswith(f"{key} ="):
                 value = line.strip().split("=")[-1].strip()
                 if key == "LIVE_DATA_DELAY":
+                    try:
+                        settings[key] = int(value)
+                    except ValueError:
+                        settings[key] = 0
+                elif key == "FETCH_DATA_NOT_PLAYING_TIMER":
+                    try:
+                        settings[key] = int(value)
+                    except ValueError:
+                        settings[key] = 0
+                elif key == "FETCH_DATA_PLAYING_TIMER":
+                    try:
+                        settings[key] = int(value)
+                    except ValueError:
+                        settings[key] = 0
+                elif key == "DISPLAY_NOT_PLAYING_TIMER":
+                    try:
+                        settings[key] = int(value)
+                    except ValueError:
+                        settings[key] = 0
+                elif key == "DISPLAY_PLAYING_TIMER":
                     try:
                         settings[key] = int(value)
                     except ValueError:
@@ -526,31 +624,50 @@ def main():
             window["teams_removed"].update(value=teams_removed)
 
         elif event == "Save" and current_window == "settings":
-            setting_keys = [
-                "display_last_pitch", "display_play_description",
-                "display_nba_timeouts", "display_nba_bonus",
-                "display_nhl_sog", "display_nhl_power_play",
-                "display_nfl_timeouts", "display_nfl_redzone"
-            ]
+
             selected_items = [values.get(key, False) for key in setting_keys]
+
             live_data_delay = values['live_delay']
+            fetch_timer = values['fetch_not_playing']
+            fetch_timer_live = values['fetch_playing']
+            display_timer = values['display_not_playing']
+            display_timer_live = values['display_playing']
+
             font_selected = [key for key in values if key.startswith("font_") and values[key]]
-            if live_data_delay.isdigit() and len(font_selected) == 1:
-                window["Live_data_message"].update(value="")
-                window["font_message"].update(value="")
-                live_data_delay = int(live_data_delay)
+
+            if (live_data_delay.isdigit() and fetch_timer.isdigit() and fetch_timer_live.isdigit()
+                and display_timer.isdigit() and display_timer_live.isdigit() and len(font_selected) == 1):
+
                 font_selected = font_selected[0].replace('"', '').replace('font_', '') if font_selected else FONT
-                update_settings(live_data_delay, font_selected, selected_items)
+                update_settings(int(live_data_delay), int(fetch_timer), int(fetch_timer_live), int(display_timer),
+                                int(display_timer_live), font_selected, selected_items)
+
                 FONT = font_selected
                 window.refresh()
+                window["Live_data_message"].update(value="")
+                window["font_message"].update(value="")
                 window["confirmation_message"].update(value="Settings saved successfully!")
+                window["Live_data_message"].update(value="")
+                window["fetch_not_playing_message"].update(value="")
+                window["fetch_playing_message"].update(value="")
+                window["display_playing_message"].update(value="")
+                window["font_message"].update(value="")
                 continue
-            elif not live_data_delay.isdigit():
+
+            if not live_data_delay.isdigit():
                 window["Live_data_message"].update(value="Please Enter Digits Only")
-                window["confirmation_message"].update(value="")
+            if not fetch_timer.isdigit():
+                window["fetch_not_playing_message"].update(value="Please Enter Digits Only")
+            if not fetch_timer_live.isdigit():
+                window["fetch_playing_message"].update(value="Please Enter Digits Only")
+            if not display_timer.isdigit():
+                window["display_not_playing_message"].update(value="Please Enter Digits Only")
+            if not display_timer_live.isdigit():
+                window["display_playing_message"].update(value="Please Enter Digits Only")
             if len(font_selected) > 1:
                 window["font_message"].update(value="Please Only Select One Font")
-                window["confirmation_message"].update(value="")
+
+            window["confirmation_message"].update(value="")
 
         elif event == "Start" or ("Return" in event and current_window == "main"):
             redirect = RedirectText(window)  # Create an instance of RedirectText

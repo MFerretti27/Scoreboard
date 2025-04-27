@@ -3,7 +3,7 @@
 import requests  # pip install requests
 import gc
 import os
-from constants import teams
+import constants
 from .get_mlb_data import get_all_mlb_data, append_mlb_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_nba_data import append_nba_data, get_all_nba_data
@@ -21,8 +21,8 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     :return: Boolean value representing if the two teams are playing each other
     '''
     global should_skip
-    for x in teams:
-        for y in teams:
+    for x in constants.teams:
+        for y in constants.teams:
             if home_team.upper() in [y[0].upper(), x[0].upper()] and away_team.upper() in [x[0].upper(), y[0].upper()]:
                 if should_skip:  # Only skip one team, the one further down teams list
                     print(f"{home_team} is playing {away_team}, skipping to not display twice")
@@ -84,8 +84,11 @@ def get_data(team: str) -> list:
             # Data returned
             team_info['home_score'] = (competition["competitors"][0]["score"])
             team_info['away_score'] = (competition["competitors"][1]["score"])
-            team_info['away_record'] = (competition["competitors"][1]["records"][0]["summary"])
-            team_info['home_record'] = (competition["competitors"][0]["records"][0]["summary"])
+
+            if constants.display_records:
+                team_info['away_record'] = (competition["competitors"][1]["records"][0]["summary"])
+                team_info['home_record'] = (competition["competitors"][0]["records"][0]["summary"])
+
             team_info['bottom_info'] = (response_as_json["events"][index]["status"]["type"]["shortDetail"])
 
             # Data only used in this function
@@ -108,12 +111,13 @@ def get_data(team: str) -> list:
                 return team_info, team_has_data, currently_playing
 
             # Get Network and display logo if possible
-            folder_path = os.getcwd() + '/images/Networks/'
-            file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-            for file in file_names:
-                if broadcast.upper() in file:
-                    team_info["under_score_image"] = (f"{os.getcwd()}/images/Networks/{file}")
-                    break
+            if constants.display_network:
+                folder_path = os.getcwd() + '/images/Networks/'
+                file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+                for file in file_names:
+                    if broadcast.upper() in file:
+                        team_info["under_score_image"] = (f"{os.getcwd()}/images/Networks/{file}")
+                        break
 
             # Check if Team is Currently Playing
             if "PM" not in str(team_info['bottom_info']) and "AM" not in str(team_info['bottom_info']):
@@ -127,13 +131,18 @@ def get_data(team: str) -> list:
 
             # Check if Game hasn't been played yet
             elif not currently_playing:
-                team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
-                overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
-                spread = competition.get('odds', [{}])[0].get('details', 'N/A')
-                if "NHL" in team_league.upper() or "MLB" in team_league.upper():
-                    team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                if constants.display_venue:
+                    team_info['bottom_info'] = str(team_info['bottom_info'] + "@ " + venue)
                 else:
-                    team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+                    team_info['bottom_info'] = str(team_info['bottom_info'])
+
+                if constants.display_odds:
+                    overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
+                    spread = competition.get('odds', [{}])[0].get('details', 'N/A')
+                    if "NHL" in team_league.upper() or "MLB" in team_league.upper():
+                        team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                    else:
+                        team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
 
             # Remove Timezone Characters in info
             team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
@@ -152,21 +161,30 @@ def get_data(team: str) -> list:
                 possession = competition.get('situation', {}).get('possession')
                 away_timeouts = competition.get('situation', {}).get('awayTimeouts')
                 home_timeouts = competition.get('situation', {}).get('homeTimeouts')
-                if down is not None and spot is not None:
+
+                if not constants.display_nfl_clock:
+                    team_info['bottom_info'] = ""
+
+                if down is not None and spot is not None and constants.display_nfl_down:
                     team_info['top_info'] = str(down) + " on " + str(spot)
 
-                team_info.update({
-                    'home_possession': possession == home_team_id,
-                    'away_possession': possession == away_team_id,
-                    'home_redzone': possession == home_team_id and red_zone,
-                    'away_redzone': possession == away_team_id and red_zone
-                })
+                if constants.display_nfl_redzone:
+                    team_info.update({
+                        'home_redzone': possession == home_team_id and red_zone,
+                        'away_redzone': possession == away_team_id and red_zone
+                    })
+                if constants.display_nfl_possession:
+                    team_info.update({
+                        'home_possession': possession == home_team_id,
+                        'away_possession': possession == away_team_id,
+                    })
 
-                if home_timeouts is not None and away_timeouts is not None:
-                    timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
+                if constants.display_nfl_timeouts:
+                    if home_timeouts is not None and away_timeouts is not None:
+                        timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                    team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
-                    team_info['home_timeouts'] += timeout_map.get(home_timeouts, "")
+                        team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
+                        team_info['home_timeouts'] += timeout_map.get(home_timeouts, "")
 
                 # Swap top and bottom info for NFL (I think it looks better displayed this way)
                 temp = str(team_info['bottom_info'])
@@ -181,25 +199,28 @@ def get_data(team: str) -> list:
                 try:
                     team_info = append_nba_data(team_info, team_name)
                 finally:
-                    team_info = saved_info
-                    home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
-                    home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
+                    if constants.display_nba_shooting:
+                        team_info = saved_info
+                        home_field_goal_attempt = ((competition["competitors"][0]["statistics"][3]["displayValue"]))
+                        home_field_goal_made = ((competition["competitors"][0]["statistics"][4]["displayValue"]))
 
-                    home_3pt_attempt = ((competition["competitors"][0]["statistics"][11]["displayValue"]))
-                    home_3pt_made = ((competition["competitors"][0]["statistics"][12]["displayValue"]))
+                        home_3pt_attempt = ((competition["competitors"][0]["statistics"][11]["displayValue"]))
+                        home_3pt_made = ((competition["competitors"][0]["statistics"][12]["displayValue"]))
 
-                    away_field_goal_attempt = ((competition["competitors"][1]["statistics"][3]["displayValue"]))
-                    away_field_goal_made = ((competition["competitors"][1]["statistics"][4]["displayValue"]))
+                        away_field_goal_attempt = ((competition["competitors"][1]["statistics"][3]["displayValue"]))
+                        away_field_goal_made = ((competition["competitors"][1]["statistics"][4]["displayValue"]))
 
-                    away_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
-                    away_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
+                        away_3pt_attempt = ((competition["competitors"][1]["statistics"][11]["displayValue"]))
+                        away_3pt_made = ((competition["competitors"][1]["statistics"][12]["displayValue"]))
 
-                    away_stats = \
-                        f"FG: {away_field_goal_made}/{away_field_goal_attempt} 3PT: {away_3pt_made}/{away_3pt_attempt}"
-                    home_stats = \
-                        f"FG: {home_field_goal_made}/{home_field_goal_attempt} 3PT: {home_3pt_made}/{home_3pt_attempt}"
+                        away_stats = \
+                            f"FG: {away_field_goal_made}/{away_field_goal_attempt} 3PT: {away_3pt_made}/{away_3pt_attempt}"
+                        home_stats = \
+                            f"FG: {home_field_goal_made}/{home_field_goal_attempt} 3PT: {home_3pt_made}/{home_3pt_attempt}"
 
-                    team_info['top_info'] = away_stats + "\t\t " + home_stats
+                        team_info['top_info'] = away_stats + "\t\t " + home_stats
+                if constants.display_nba_clock:
+                    team_info["bottom_info"] = ""
 
             ####################################################################
             # If looking at MLB team, get MLB specific data if currently playing
@@ -222,52 +243,56 @@ def get_data(team: str) -> list:
                     team_info['bottom_info'] = ""
 
                     # Get who is pitching and batting, if info is available
-                    pitcher = (
-                        competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
-                    )
-                    pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
-                    batter = (
-                        competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
-                    )
-                    batter = ' '.join(batter.split()[1:])  # Remove First Name
-                    if pitcher != "N/A":
-                        team_info['bottom_info'] += (f"P: {pitcher}   ")
-                    if batter != "N/A":
-                        team_info['bottom_info'] += (f"AB: {batter}")
+                    if constants.display_pitcher_batter:
+                        pitcher = (
+                            competition.get("situation", {}).get("pitcher", {}).get("athlete", {}).get("shortName", "N/A")
+                        )
+                        pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
+                        batter = (
+                            competition.get("situation", {}).get("batter", {}).get("athlete", {}).get("shortName", "N/A")
+                        )
+                        batter = ' '.join(batter.split()[1:])  # Remove First Name
+                        if pitcher != "N/A":
+                            team_info['bottom_info'] += (f"P: {pitcher}   ")
+                        if batter != "N/A":
+                            team_info['bottom_info'] += (f"AB: {batter}")
 
-                    home_hits = (competition["competitors"][0]["hits"])
-                    away_hits = (competition["competitors"][1]["hits"])
-                    home_errors = (competition["competitors"][0]["errors"])
-                    away_errors = (competition["competitors"][1]["errors"])
-                    team_info['away_timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}")
-                    team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
+                    if constants.hits_errors:
+                        home_hits = (competition["competitors"][0]["hits"])
+                        away_hits = (competition["competitors"][1]["hits"])
+                        home_errors = (competition["competitors"][0]["errors"])
+                        away_errors = (competition["competitors"][1]["errors"])
+                        team_info['away_timeouts'] = (f"Hits: {away_hits} Errors: {away_errors}")
+                        team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
 
                     # If inning is changing do not display count and move inning to display below score
                     if "Mid" not in team_info['above_score_txt'] and "End" not in team_info['above_score_txt']:
-                        outs = (competition.get("outsText", "0 Outs"))
-                        team_info['top_info'] += (f"{outs}")
+                        if constants.display_outs:
+                            outs = (competition.get("outsText", "0 Outs"))
+                            team_info['top_info'] += (f"{outs}")
                     else:
                         team_info['bottom_info'] = ""
 
-                    # Get runners position
-                    onFirst = (competition["situation"]["onFirst"])
-                    onSecond = (competition["situation"]["onSecond"])
-                    onThird = (competition["situation"]["onThird"])
-                    base_conditions = {
-                        (True, False, False): "on_first.png",
-                        (False, True, False): "on_second.png",
-                        (False, False, True): "on_third.png",
-                        (True, False, True): "on_first_third.png",
-                        (True, True, False): "on_first_second.png",
-                        (False, True, True): "on_second_third.png",
-                        (True, True, True): "on_first_second_third.png",
-                        (False, False, False): "empty_bases.png"
-                    }
+                    if constants.display_bases:
+                        # Get runners position
+                        onFirst = (competition["situation"]["onFirst"])
+                        onSecond = (competition["situation"]["onSecond"])
+                        onThird = (competition["situation"]["onThird"])
+                        base_conditions = {
+                            (True, False, False): "on_first.png",
+                            (False, True, False): "on_second.png",
+                            (False, False, True): "on_third.png",
+                            (True, False, True): "on_first_third.png",
+                            (True, True, False): "on_first_second.png",
+                            (False, True, True): "on_second_third.png",
+                            (True, True, True): "on_first_second_third.png",
+                            (False, False, False): "empty_bases.png"
+                        }
 
-                    # Display runners on base
-                    team_info['under_score_image'] = (
-                        f"images/baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
-                    )
+                        # Display runners on base
+                        team_info['under_score_image'] = (
+                            f"images/baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                        )
 
             ####################################################################
             # If looking at NHL team, get NHL specific data if currently playing
@@ -281,7 +306,7 @@ def get_data(team: str) -> list:
                     team_info = saved_info  # Try clause might modify dictionary
 
             # If got here with no top info to display, try displaying series info
-            if team_info['top_info'] == "" and not currently_playing:
+            if team_info['top_info'] == "" and not currently_playing and constants.display_series:
                 team_info['top_info'] = get_series(team_league, team_name)
 
             break  # Found team in sports events and got data, no need to continue looking

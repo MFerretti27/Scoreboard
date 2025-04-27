@@ -1,4 +1,4 @@
 [flake8]
 max-line-length = 120
 exclude = gui_setup.py # exclude the GUI setup file
-ignore = F403 F405, W504
+ignore = F403 F405, W504 W503 E129

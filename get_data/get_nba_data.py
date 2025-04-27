@@ -1,6 +1,7 @@
 '''Get NBA from NBA specific API'''
 from nba_api.live.nba.endpoints import scoreboard
 import os
+import constants
 
 home_team_bonus = False
 away_team_bonus = False
@@ -64,47 +65,49 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
         if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
                 game["awayTeam"]["teamName"].upper() in team_name.upper():
 
-            if game["homeTeam"]["inBonus"] == "1":
-                team_info['home_bonus'] = True
-                home_team_bonus = True
-            elif game["homeTeam"]["inBonus"] == "0":
-                team_info['home_bonus'] = False
-                home_team_bonus = False
-            elif game["homeTeam"]["inBonus"] is None:
-                team_info['home_bonus'] = home_team_bonus
-            else:
-                team_info['home_bonus'] = False
+            if constants.display_nba_bonus:
+                if game["homeTeam"]["inBonus"] == "1":
+                    team_info['home_bonus'] = True
+                    home_team_bonus = True
+                elif game["homeTeam"]["inBonus"] == "0":
+                    team_info['home_bonus'] = False
+                    home_team_bonus = False
+                elif game["homeTeam"]["inBonus"] is None:
+                    team_info['home_bonus'] = home_team_bonus
+                else:
+                    team_info['home_bonus'] = False
 
-            if game["awayTeam"]["inBonus"] == "1":
-                team_info['away_bonus'] = True
-                away_team_bonus = True
-            elif game["awayTeam"]["inBonus"] == "0":
-                team_info['away_bonus'] = False
-                away_team_bonus = False
-            elif game["awayTeam"]["inBonus"] is None:
-                team_info['away_bonus'] = away_team_bonus
-            else:
-                team_info['away_bonus'] = False
+                if game["awayTeam"]["inBonus"] == "1":
+                    team_info['away_bonus'] = True
+                    away_team_bonus = True
+                elif game["awayTeam"]["inBonus"] == "0":
+                    team_info['away_bonus'] = False
+                    away_team_bonus = False
+                elif game["awayTeam"]["inBonus"] is None:
+                    team_info['away_bonus'] = away_team_bonus
+                else:
+                    team_info['away_bonus'] = False
 
-            home_timeouts = game["homeTeam"]["timeoutsRemaining"]
-            away_timeouts = game["awayTeam"]["timeoutsRemaining"]
+            if constants.display_nba_timeouts:
+                home_timeouts = game["homeTeam"]["timeoutsRemaining"]
+                away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
-            if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
-                home_timeouts = home_timeouts + 1
-                away_timeouts = away_timeouts + 1
+                if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
+                    home_timeouts = home_timeouts + 1
+                    away_timeouts = away_timeouts + 1
 
-            timeout_map = {
-                7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                4: "\u25CF  \u25CF  \u25CF  \u25CF",
-                3: "\u25CF  \u25CF  \u25CF",
-                2: "\u25CF  \u25CF",
-                1: "\u25CF",
-                0: ""
-            }
-            team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
-            team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
+                timeout_map = {
+                    7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
+                    4: "\u25CF  \u25CF  \u25CF  \u25CF",
+                    3: "\u25CF  \u25CF  \u25CF",
+                    2: "\u25CF  \u25CF",
+                    1: "\u25CF",
+                    0: ""
+                }
+                team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
+                team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
 
             break  # Found team and got data needed
 

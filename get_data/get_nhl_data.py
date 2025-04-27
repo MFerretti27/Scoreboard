@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import os
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
+import constants
 
 
 def get_all_nhl_data(team_name: str) -> dict:
@@ -39,18 +40,19 @@ def get_all_nhl_data(team_name: str) -> dict:
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Get team record
-    record_data = requests.get("https://api-web.nhle.com/v1/standings/now")
-    record = record_data.json()
-    for team in record["standings"]:
-        if home_team_name in team["teamName"]["default"]:
-            team_info["home_record"] = str(team["wins"]) + "-"
-            team_info["home_record"] += str(team["losses"])
-            break
-    for team in record["standings"]:
-        if away_team_name in team["teamName"]["default"]:
-            team_info["away_record"] = str(team["wins"]) + "-"
-            team_info["away_record"] += str(team["losses"])
-            break
+    if constants.display_records:
+        record_data = requests.get("https://api-web.nhle.com/v1/standings/now")
+        record = record_data.json()
+        for team in record["standings"]:
+            if home_team_name in team["teamName"]["default"]:
+                team_info["home_record"] = str(team["wins"]) + "-"
+                team_info["home_record"] += str(team["losses"])
+                break
+        for team in record["standings"]:
+            if away_team_name in team["teamName"]["default"]:
+                team_info["away_record"] = str(team["wins"]) + "-"
+                team_info["away_record"] += str(team["losses"])
+                break
 
     # Get team logos
     folder_path = os.getcwd() + '/images/sport_logos/NHL/'
@@ -70,15 +72,11 @@ def get_all_nhl_data(team_name: str) -> dict:
     local_time = utc_time.astimezone()
 
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
-    venue = live["venue"]["default"]
-    team_info["bottom_info"] = f"{game_time} @ {venue}"
-
-    # Get network logo
-    # broadcast = live["tvBroadcasts"][0]["network"]
-    # for network, filepath in under_score_images.items():
-    #     if network.upper() in broadcast.upper():
-    #         team_info['under_score_image'] = filepath
-    #         break
+    if constants.display_venue:
+        venue = live["venue"]["default"]
+        team_info["bottom_info"] = f"{game_time} @ {venue}"
+    else:
+        team_info["bottom_info"] = f"{game_time}"
 
     # Check if game is playing
     if "LIVE" in res["seasonSeries"][2]["gameState"]:
@@ -107,20 +105,22 @@ def append_nhl_data(team_info: dict, team_name: str) -> dict:
     res = resp.json()
 
     # Get top info
-    away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
-    home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
-    team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
+    if constants.display_nhl_sog:
+        away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
+        home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
+        team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
 
     # get bottom info
-    clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
-    period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])
-    if period == "1":
-        period += "st"
-    elif period == "2":
-        period += "nd"
-    elif period == "3":
-        period += "rd"
-    team_info["bottom_info"] = f"{clock} - {period}"
+    if constants.display_nhl_clock:
+        clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
+        period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])
+        if period == "1":
+            period += "st"
+        elif period == "2":
+            period += "nd"
+        elif period == "3":
+            period += "rd"
+        team_info["bottom_info"] = f"{clock} - {period}"
 
     # Get score
     team_info["home_score"] = res["linescore"]["totals"]["home"]
