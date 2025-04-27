@@ -281,7 +281,7 @@ def get_data(team: str) -> list:
                     team_info = saved_info  # Try clause might modify dictionary
 
             # If got here with no top info to display, try displaying series info
-            if team_info['top_info'] == "":
+            if team_info['top_info'] == "" and not currently_playing:
                 team_info['top_info'] = get_series(team_league, team_name)
 
             break  # Found team in sports events and got data, no need to continue looking

@@ -79,7 +79,7 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
     img_resized.save(new_path_png)
 
 
-def download_team_logos(teams: list) -> None:
+def download_team_logos(window, teams: list) -> None:
     ''' Create a base directory to store the logos if it doesn't exist
 
     :param teams: Dictionary with teams to display
@@ -111,6 +111,7 @@ def download_team_logos(teams: list) -> None:
                 team_name = team_name.upper()
 
                 print(f"Downloading logo for {team_name} from {teams[i][1]}...")
+                print()
 
                 img_path_png = os.path.join(sport_dir, f"{team_name}_Original.png")
                 response = requests.get(logo_url, stream=True)
@@ -124,12 +125,13 @@ def download_team_logos(teams: list) -> None:
 
                 # Delete the original .png file
                 os.remove(img_path_png)
+                window.refresh()  # Refresh to display text
 
     if os.path.exists('sport_logos'):
         print("All logos have been downloaded!")
 
 
-def get_team_logos(teams: list) -> None:
+def get_team_logos(window, teams: list) -> None:
     '''Determine if logos need to be downloaded
 
     :param teams: Dictionary with teams to display
@@ -137,10 +139,10 @@ def get_team_logos(teams: list) -> None:
     '''
     if not os.path.exists('images/sport_logos'):
         os.makedirs('images/sport_logos')
-        download_team_logos(teams)
+        download_team_logos(window, teams)
 
     elif new_league_added():
-        download_team_logos(teams)
+        download_team_logos(window, teams)
 
 
 def get_random_logo() -> dict:

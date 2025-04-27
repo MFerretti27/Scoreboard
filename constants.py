@@ -9,7 +9,7 @@ teams = [
 ]
 
 
-FONT = "Calibri"
+FONT = "Arial"
 
 # Text Sizes
 SCORE_TXT_SIZE = 150
@@ -25,7 +25,46 @@ NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 
 # Delay in getting live data
-LIVE_DATA_DELAY = 0
+LIVE_DATA_DELAY = 60
+
+###################################
+# Settings telling what to display
+###################################
+
+# MLB
+display_last_pitch = True
+display_play_description = True
+display_bases = True
+display_balls_strikes = True
+display_hits_errors = True
+display_pitcher_batter = True
+display_inning = True
+display_outs = True
+
+# NBA
+display_nba_timeouts = True
+display_nba_bonus = True
+display_nba_clock = True
+display_nba_shooting = True
+
+# NHL
+display_nhl_sog = True
+display_nhl_power_play = True
+display_nhl_clock = True
+
+# NFL
+display_nfl_timeouts = True
+display_nfl_redzone = True
+display_nfl_clock = True
+display_nfl_down = True
+display_nfl_possession = True
+
+# General
+display_records = True
+display_venue = True
+display_network = True
+display_game_time = True
+display_odds = True
 
 no_spoiler_mode = False
 stay_on_team = False

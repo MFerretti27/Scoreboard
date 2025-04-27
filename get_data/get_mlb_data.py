@@ -11,7 +11,7 @@ from .get_team_id import get_mlb_team_id
 API_FIELDS = (
     "gameData,game,datetime,dateTime,officialDate,status,detailedState,abstractGameState,teams,home,away,"
     + "teamName,record,wins,losses,fullName,liveData,plays,currentPlay,result,playEvents,isPitch,runs,"
-    + "details,type,code,description,linescore,outs,balls,strikes,inningState,currentInningOrdinal,"
+    + "details,type,code,description,linescore,outs,balls,strikes,inningState,currentInningOrdinal,defense,"
     + "offense,batter,inHole,onDeck,first,second,third,pitcher,wins,hits,errors,pitching,currentInning"
 )
 
@@ -123,7 +123,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     # Get pitcher and batter for bottom info
     batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
     batter = ' '.join(batter.split()[1:])  # Remove First Name
-    pitcher = live["liveData"]["linescore"]["offense"]["pitcher"]["fullName"]
+    pitcher = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
     pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
     due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 

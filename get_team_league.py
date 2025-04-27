@@ -5,7 +5,7 @@ The function returns a tuple containing the league and sport name if a match is 
 
 from rapidfuzz import process, fuzz
 
-NBA_TEAMS = [
+NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
     "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets", "Detroit Pistons", "Golden State Warriors",
     "Houston Rockets", "Indiana Pacers", "LA Clippers", "Los Angeles Lakers", "Memphis Grizzlies",
@@ -14,7 +14,7 @@ NBA_TEAMS = [
     "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors", "Utah Jazz", "Washington Wizards"
 ]
 
-MLB_TEAMS = [
+MLB = [
     "Arizona Diamondbacks", "Atlanta Braves", "Baltimore Orioles", "Boston Red Sox", "Chicago White Sox",
     "Chicago Cubs", "Cincinnati Reds", "Cleveland Guardians", "Colorado Rockies", "Detroit Tigers",
     "Houston Astros", "Kansas City Royals", "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins",
@@ -23,7 +23,7 @@ MLB_TEAMS = [
     "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", "Toronto Blue Jays", "Washington Nationals"
 ]
 
-NFL_TEAMS = [
+NFL = [
     "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills", "Carolina Panthers",
     "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns", "Dallas Cowboys", "Denver Broncos",
     "Detroit Lions", "Green Bay Packers", "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars",
@@ -33,7 +33,7 @@ NFL_TEAMS = [
     "Tennessee Titans", "Washington Commanders"
 ]
 
-NHL_TEAMS = [
+NHL = [
     "Anaheim Ducks", "Arizona Coyotes", "Boston Bruins", "Buffalo Sabres", "Calgary Flames",
     "Carolina Hurricanes", "Chicago Blackhawks", "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars",
     "Detroit Red Wings", "Edmonton Oilers", "Florida Panthers", "Los Angeles Kings", "Minnesota Wild",
@@ -44,10 +44,10 @@ NHL_TEAMS = [
 ]
 
 ALL_TEAMS = {
-    "NBA": NBA_TEAMS,
-    "MLB": MLB_TEAMS,
-    "NFL": NFL_TEAMS,
-    "NHL": NHL_TEAMS
+    "NBA": NBA,
+    "MLB": MLB,
+    "NFL": NFL,
+    "NHL": NHL
 }
 
 
@@ -82,3 +82,15 @@ def get_team_league(team__name: str) -> tuple:
         return matched_team
     else:
         raise ValueError(f"Team '{team__name}' not found in any league.")
+
+
+# Get Team league and sport name, needed for various functions later in script
+def append_team_array(teams) -> None:
+    """Get the team league and sport name from the team list.
+
+    :param teams: List of teams
+    """
+    for i in range(len(teams)):
+        league, sports_name = get_team_league(teams[i][0])  # Get the team league and sport name
+        teams[i].append(league)  # Add the league to the teams list
+        teams[i].append(sports_name)  # Add the sport name to the teams lists

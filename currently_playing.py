@@ -22,10 +22,9 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     teams_with_data = []
     display_index = 0
     should_scroll = False
-    global no_spoiler_mode
 
     display_clock = ticks_ms()  # Start timer for switching display
-    display_timer = 35 * 1000  # How often the display should update in seconds
+    display_timer = 25 * 1000  # How often the display should update in seconds
 
     event = window.read(timeout=5000)
 
@@ -104,7 +103,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
                 if constants.no_spoiler_mode:
-                    set_spoiler_mode(window)
+                    set_spoiler_mode(window, True)
 
             event = window.read(timeout=5000)
 
@@ -140,9 +139,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             should_scroll = False
 
         check_events(window, event)
-        if constants.stay_on_team:
-            display_index = original_index
-        if constants.stay_on_team and teams_with_data[display_index] is False:
+        if constants.stay_on_team and sum(teams_currently_playing) == 1:
             constants.stay_on_team = False
 
     print("\nNo Team Currently Playing\n")

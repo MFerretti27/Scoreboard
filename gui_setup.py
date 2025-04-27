@@ -5,6 +5,7 @@ from constants import *
 from get_team_logos import get_random_logo
 import math
 import constants
+import time
 
 
 def gui_setup() -> sg.Window:
@@ -129,13 +130,14 @@ def reset_window_elements(window: sg.Window) -> None:
     window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
     window['home_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
     window['away_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
+    window['home_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
+    window['away_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
     window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
     window["hyphen"].update(value='-', font=(FONT, HYPHEN_SIZE), text_color='white')
 
 
 def check_events(window: sg.Window, events) -> None:
     '''Check for events in the window'''
-    global no_spoiler_mode
     if events[0] == sg.WIN_CLOSED or 'Escape' in events[0]:
         window.close()
         exit()
@@ -143,10 +145,16 @@ def check_events(window: sg.Window, events) -> None:
         constants.no_spoiler_mode = True
     elif ('Down' in events[0]):
         constants.no_spoiler_mode = False
-    elif 'Caps_Lock' in events[0] and not stay_on_team:
+    elif 'Caps_Lock' in events[0]:
         constants.stay_on_team = True
+        window["bottom_info"].update(value="Staying on Team")
+        window.refresh()
+        time.sleep(5)
     elif 'Shift_L' in events[0] or 'Shift_R' in events[0]:
         constants.stay_on_team = False
+        window["bottom_info"].update(value="Rotating Teams")
+        window.refresh()
+        time.sleep(5)
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool) -> sg.Window:
     if currently_playing:
