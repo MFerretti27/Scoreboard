@@ -27,50 +27,50 @@ TOP_TXT_SIZE = 80
 # Delay in getting live data
 LIVE_DATA_DELAY = 0
 
-FETCH_DATA_NOT_PLAYING_TIMER = "0"
-FETCH_DATA_PLAYING_TIMER = "0"
+FETCH_DATA_NOT_PLAYING_TIMER = 180
+FETCH_DATA_PLAYING_TIMER = 0
 
-DISPLAY_NOT_PLAYING_TIMER = "0"
-DISPLAY_PLAYING_TIMER = "0"
+DISPLAY_NOT_PLAYING_TIMER = 25
+DISPLAY_PLAYING_TIMER = 25
 
 ###################################
 # Settings telling what to display
 ###################################
 
 # MLB
-display_last_pitch = False
-display_play_description = False
-display_bases = False
-display_balls_strikes = False
-display_hits_errors = False
-display_pitcher_batter = False
-display_inning = False
-display_outs = False
+display_last_pitch = True
+display_play_description = True
+display_bases = True
+display_balls_strikes = True
+display_hits_errors = True
+display_pitcher_batter = True
+display_inning = True
+display_outs = True
 
 # NBA
-display_nba_timeouts = False
-display_nba_bonus = False
-display_nba_clock = False
-display_nba_shooting = False
+display_nba_timeouts = True
+display_nba_bonus = True
+display_nba_clock = True
+display_nba_shooting = True
 
 # NHL
-display_nhl_sog = False
-display_nhl_power_play = False
-display_nhl_clock = False
+display_nhl_sog = True
+display_nhl_power_play = True
+display_nhl_clock = True
 
 # NFL
-display_nfl_timeouts = False
-display_nfl_redzone = False
-display_nfl_clock = False
-display_nfl_down = False
-display_nfl_possession = False
+display_nfl_timeouts = True
+display_nfl_redzone = True
+display_nfl_clock = True
+display_nfl_down = True
+display_nfl_possession = True
 
 # General
-display_records = False
-display_venue = False
-display_network = False
-display_series = False
-display_odds = False
+display_records = True
+display_venue = True
+display_network = True
+display_series = True
+display_odds = True
 
 no_spoiler_mode = False
 stay_on_team = False
