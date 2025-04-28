@@ -10,7 +10,7 @@ from get_data.get_espn_data import get_data
 from gui_setup import reset_window_elements
 from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
-from constants import *
+from settings import *
 
 
 def clock(window: sg.Window, message: str) -> list:

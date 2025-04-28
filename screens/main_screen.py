@@ -1,16 +1,16 @@
-import FreeSimpleGUI as sg
+import FreeSimpleGUI as sg  # type: ignore
 import sys
 import io
 import tkinter as tk
-import scoreboard
+from screens import not_playing_screen
 from get_team_league import MLB, NHL, NBA, NFL
 from get_team_logos import get_team_logos
 from get_team_league import append_team_array
 from main import set_screen
-import constants
+import settings
 import platform
 
-filename = "constants.py"
+filename = "settings.py"
 FONT = "Helvetica"
 
 # List of setting keys to be updated
@@ -55,8 +55,15 @@ def create_main_layout(window_width):
     sg.theme("LightBlue6")
     text_size = max(12, window_width // 20)
     button_size = max(12, window_width // 40)
+    update_button_size = max(12, window_width // 80)
+    message_size = max(12, window_width // 60)
     layout = [
         [sg.Push(), sg.Text("Major League Scoreboard", font=(FONT, text_size)), sg.Push()],
+        [sg.Push(),
+         sg.Button("Restore from Version", font=(FONT, update_button_size)),
+         sg.Button("Check for Update", font=(FONT, update_button_size)),
+         sg.Push()],
+        [sg.Push(), sg.Text("", font=(FONT, message_size)), sg.Push()],
         [sg.VPush()],
         [
             sg.Push(),
@@ -707,14 +714,14 @@ def main():
             sys.stdout = redirect  # Redirect print statements to the window
             window["terminal_output"].update(visible=True)
             window.refresh()  # Refresh to display text
-            append_team_array(constants.teams)  # Get the team league and sport name
+            append_team_array(settings.teams)  # Get the team league and sport name
             window.refresh()  # Refresh to display text
-            get_team_logos(window, constants.teams)  # Get the team logos
+            get_team_logos(window, settings.teams)  # Get the team logos
             redirect.restore_stdout()  # Restore the original stdout after all output tasks are done
             window["terminal_output"].update(value="Starting scoreboard...")
             window.refresh()
             window.close()
-            scoreboard.main()
+            not_playing_screen.main()
             exit()
 
 

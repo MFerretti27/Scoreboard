@@ -56,7 +56,7 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
 
     # Run the program
     print(f"Running program {program_script} inside virtual environment...")
-    subprocess.call([python_executable, program_script])
+    subprocess.call([python_executable, "-m", program_script])
 
 
 def set_screen() -> None:
@@ -87,7 +87,7 @@ def remove_ds_files() -> None:
 def main():
     venv_dir = './venv'  # Virtual environment directory
     requirements_file = 'requirements.txt'  # Path to requirements file
-    program_script = 'main_screen.py'  # Name of main file to run
+    program_script = 'screens.main_screen'  # Name of main file to run
 
     create_virtualenv(venv_dir)
     install_requirements(venv_dir, requirements_file)

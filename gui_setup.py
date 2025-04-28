@@ -1,11 +1,11 @@
-'''Function to Create GUI using FreeSimpleGUI'''
+'''Module to Create and modify scoreboard GUI using FreeSimpleGUI'''
 
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
-from constants import *
+from settings import *
 from get_team_logos import get_random_logo
 import math
-import constants
-import main_screen
+import settings
+import screens.main_screen as main_screen
 import time
 import platform
 
@@ -150,16 +150,16 @@ def check_events(window: sg.Window, events) -> None:
         main_screen.main()
 
     elif ('Up' in events[0]):
-        constants.no_spoiler_mode = True
+        settings.no_spoiler_mode = True
     elif ('Down' in events[0]):
-        constants.no_spoiler_mode = False
+        settings.no_spoiler_mode = False
     elif 'Caps_Lock' in events[0]:
-        constants.stay_on_team = True
+        settings.stay_on_team = True
         window["bottom_info"].update(value="Staying on Team")
         window.refresh()
         time.sleep(5)
     elif 'Shift_L' in events[0] or 'Shift_R' in events[0]:
-        constants.stay_on_team = False
+        settings.stay_on_team = False
         window["bottom_info"].update(value="Rotating Teams")
         window.refresh()
         time.sleep(5)

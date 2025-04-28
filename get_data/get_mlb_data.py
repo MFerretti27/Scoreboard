@@ -6,7 +6,7 @@ import requests
 import time
 from .get_series_data import get_current_series_mlb
 from .get_team_id import get_mlb_team_id
-import constants
+import settings
 
 
 API_FIELDS = (
@@ -48,7 +48,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
 
     # Get venue
-    if constants.display_venue:
+    if settings.display_venue:
         try:
             game_id = data[0]["game_id"]
             url = f"https://statsapi.mlb.com/api/v1.1/game/{game_id}/feed/live"
@@ -75,7 +75,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/MLB/{home_team}")
 
     # Get Home and Away team records
-    if constants.display_records:
+    if settings.display_records:
         home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
         home_losses = live["gameData"]["teams"]["home"]["record"]["losses"]
         team_info['home_record'] = f"{str(home_wins)}-{str(home_losses)}"
@@ -111,7 +111,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     team_info["away_score"] = str(live["liveData"]["linescore"]["teams"]["away"]["runs"])
 
     # Get game stats to display under score
-    if constants.display_hits_errors:
+    if settings.display_hits_errors:
         home_hits = live["liveData"]["linescore"]["teams"]["home"].get("hits", 0)
         away_hits = live["liveData"]["linescore"]["teams"]["away"].get("hits", 0)
         home_errors = live["liveData"]["linescore"]["teams"]["home"].get("errors", 0)
@@ -120,13 +120,13 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         team_info['home_timeouts'] = (f"Hits: {home_hits} Errors: {home_errors}")
 
     # Get inning
-    if constants.display_inning:
+    if settings.display_inning:
         inning_state = live["liveData"]["linescore"].get("inningState", "Top")
         inning_number = live["liveData"]["linescore"].get("currentInningOrdinal", 0)
         team_info['above_score_txt'] = inning_state + " " + str(inning_number)
 
     # Get pitcher and batter for bottom info
-    if constants.display_pitcher_batter:
+    if settings.display_pitcher_batter:
         batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
         batter = ' '.join(batter.split()[1:])  # Remove First Name
         pitcher = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
@@ -143,26 +143,26 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     if "Mid" not in team_info['above_score_txt'] and "End" not in team_info['above_score_txt']:
         try:
             pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
-            if pitch.get("isPitch", True) and constants.display_last_pitch:
+            if pitch.get("isPitch", True) and settings.display_last_pitch:
                 team_info['top_info'] += pitch["details"]["type"]["description"] + "  "
 
             play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
-            if play and constants.display_play_description:
+            if play and settings.display_play_description:
                 team_info['bottom_info'] = play
         except Exception:
             print("couldn't get Pitch or play")
 
-        if constants.display_balls_strikes:
+        if settings.display_balls_strikes:
             balls = live["liveData"]["linescore"].get("balls", 0)
             strikes = live["liveData"]["linescore"].get("strikes", 0)
             outs = live["liveData"]["linescore"].get("outs", 0)
             team_info['top_info'] += (f"{balls}-{strikes}, {outs} Outs")
     else:
-        if constants.display_pitcher_batter:
+        if settings.display_pitcher_batter:
             team_info['bottom_info'] = (f"DueUp: {due_up}")
         team_info['top_info'] = ""
 
-    if constants.display_bases:
+    if settings.display_bases:
         bases = {"first": False,
                  "second": False,
                  "third": False}

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import os
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
-import constants
+import settings
 
 
 def get_all_nhl_data(team_name: str) -> dict:
@@ -40,7 +40,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Get team record
-    if constants.display_records:
+    if settings.display_records:
         record_data = requests.get("https://api-web.nhle.com/v1/standings/now")
         record = record_data.json()
         for team in record["standings"]:
@@ -72,7 +72,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     local_time = utc_time.astimezone()
 
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
-    if constants.display_venue:
+    if settings.display_venue:
         venue = live["venue"]["default"]
         team_info["bottom_info"] = f"{game_time} @ {venue}"
     else:
@@ -105,13 +105,13 @@ def append_nhl_data(team_info: dict, team_name: str) -> dict:
     res = resp.json()
 
     # Get top info
-    if constants.display_nhl_sog:
+    if settings.display_nhl_sog:
         away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
         home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
         team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
 
     # get bottom info
-    if constants.display_nhl_clock:
+    if settings.display_nhl_clock:
         clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
         period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])
         if period == "1":

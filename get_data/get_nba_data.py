@@ -1,7 +1,7 @@
 '''Get NBA from NBA specific API'''
 from nba_api.live.nba.endpoints import scoreboard
 import os
-import constants
+import settings
 
 home_team_bonus = False
 away_team_bonus = False
@@ -65,7 +65,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
         if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
                 game["awayTeam"]["teamName"].upper() in team_name.upper():
 
-            if constants.display_nba_bonus:
+            if settings.display_nba_bonus:
                 if game["homeTeam"]["inBonus"] == "1":
                     team_info['home_bonus'] = True
                     home_team_bonus = True
@@ -88,7 +88,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 else:
                     team_info['away_bonus'] = False
 
-            if constants.display_nba_timeouts:
+            if settings.display_nba_timeouts:
                 home_timeouts = game["homeTeam"]["timeoutsRemaining"]
                 away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 

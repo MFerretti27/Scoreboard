@@ -1,4 +1,4 @@
-'''Constants used to tell what to display'''
+'''Settings used to tell what to display'''
 
 teams = [
     ["Detroit Lions"],
@@ -73,6 +73,7 @@ display_network = True
 display_series = True
 display_odds = True
 display_date_ended = True
+always_get_logos = False
 
 # Options when running
 no_spoiler_mode = False

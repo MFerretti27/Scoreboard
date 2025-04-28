@@ -1,16 +1,16 @@
 '''Script to Display a Scoreboard for your Favorite Teams'''
 
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
 from get_team_logos import resize_images_from_folder
 from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode
-from currently_playing import team_currently_playing
+from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from main import set_screen
-from display_clock import clock
-import constants
+from screens.clock_screen import clock
+import settings
 
 
 ##################################
@@ -57,12 +57,13 @@ def main():
     display_timer = 25 * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for Switching Display
     fetch_timer = 180 * 1000  # how often the display should update in seconds
-    teams = constants.teams
+    teams = settings.teams
 
     set_screen()  # Set the screen to display on
     window = gui_setup()  # Must run after get_team_logos, function uses the logos downloaded
     resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])  # Resize images to fit on screen
-    team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)  # Get data for the first time
+    # Get data for the first times
+    team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)
 
     while True:
         try:
@@ -120,7 +121,7 @@ def main():
                         elif "possession" not in key and "redzone" not in key:
                             window[key].update(value=value, text_color='white')
 
-                    if constants.no_spoiler_mode:
+                    if settings.no_spoiler_mode:
                         set_spoiler_mode(window, currently_playing=False)
                     event = window.read(timeout=5000)
 

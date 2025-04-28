@@ -4,7 +4,7 @@ import os
 from PIL import Image  # pip install pillow
 import requests  # pip install requests
 import random
-from constants import *
+import settings
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 
 
@@ -17,7 +17,7 @@ def new_league_added() -> bool:
     folder_path = 'images/sport_logos'
     folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
 
-    for league_name in teams:
+    for league_name in settings.teams:
         if league_name[1].upper() not in folder_names:
             return True
 
@@ -37,11 +37,11 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
     if "sport_logos" in image_path:
         column_width = window_width / 3
         column_height = window_height * .66
-        column_height = column_height * (4/5)
+        column_height = column_height * (4 / 5)
     else:
         column_width = window_width / 3
         column_height = window_height * .66
-        column_height = column_height * (5/16)
+        column_height = column_height * (5 / 16)
 
     # Open an image file using Pillow
     img = Image.open(image_path)
@@ -137,8 +137,8 @@ def get_team_logos(window, teams: list) -> None:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
-    if not os.path.exists('images/sport_logos'):
-        os.makedirs('images/sport_logos')
+    if not os.path.exists('images/sport_logos') or settings.always_get_logos:
+        os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
 
     elif new_league_added():
@@ -151,16 +151,16 @@ def get_random_logo() -> dict:
     :return logos: Dictionary with team logos
     '''
     logos = {}
-    if len(teams) >= 2:
-        random_indexes = random.sample(range(len(teams)), 2)
+    if len(settings.teams) >= 2:
+        random_indexes = random.sample(range(len(settings.teams)), 2)
 
-        logos[0] = [teams[random_indexes[0]][1].upper(), teams[random_indexes[0]][0].upper()]
-        logos[1] = [teams[random_indexes[1]][1].upper(), teams[random_indexes[1]][0].upper()]
+        logos[0] = [settings.teams[random_indexes[0]][1].upper(), settings.teams[random_indexes[0]][0].upper()]
+        logos[1] = [settings.teams[random_indexes[1]][1].upper(), settings.teams[random_indexes[1]][0].upper()]
     # If only one team in teams array then only return the one file location for logo
     else:
         random_indexes = 0
-        logos[0] = [teams[random_indexes[0]][1].upper(), teams[random_indexes[0]][0].upper()]
-        logos[1] = [teams[random_indexes[0]][1].upper(), teams[random_indexes[0]][0].upper()]
+        logos[0] = [settings.teams[random_indexes[0]][1].upper(), settings.teams[random_indexes[0]][0].upper()]
+        logos[1] = [settings.teams[random_indexes[0]][1].upper(), settings.teams[random_indexes[0]][0].upper()]
 
     return logos
 

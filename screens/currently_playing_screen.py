@@ -1,5 +1,6 @@
-from constants import *
-import constants
+'''Module to display live information when team is currently playing.'''
+from settings import *
+import settings
 import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
 from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
@@ -102,7 +103,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     if key == 'top_info':
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
-                if constants.no_spoiler_mode:
+                if settings.no_spoiler_mode:
                     set_spoiler_mode(window, True)
 
             event = window.read(timeout=5000)
@@ -112,7 +113,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 first_time = False
                 # Find next team to display (skip teams not playing)
-                if not constants.stay_on_team:  # If space pressed, stay on current team playing
+                if not settings.stay_on_team:  # If space pressed, stay on current team playing
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:
@@ -125,7 +126,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
             display_clock = ticks_add(display_clock, display_timer)
-            if not constants.stay_on_team:
+            if not settings.stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
         if should_scroll:
@@ -139,8 +140,8 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             should_scroll = False
 
         check_events(window, event)
-        if constants.stay_on_team and sum(teams_currently_playing) == 1:
-            constants.stay_on_team = False
+        if settings.stay_on_team and sum(teams_currently_playing) == 1:
+            settings.stay_on_team = False
 
     print("\nNo Team Currently Playing\n")
     # Reset font and color to ensure everything is back to normal
