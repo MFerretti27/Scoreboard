@@ -56,7 +56,7 @@ def create_main_layout(window_width):
     text_size = max(12, window_width // 20)
     button_size = max(12, window_width // 40)
     layout = [
-        [sg.Push(), sg.Text("Major League Scoreboard", font=("Comic Sans MS", text_size)), sg.Push()],
+        [sg.Push(), sg.Text("Major League Scoreboard", font=(FONT, text_size)), sg.Push()],
         [sg.VPush()],
         [
             sg.Push(),
@@ -90,7 +90,7 @@ def create_main_layout(window_width):
     return layout
 
 
-def create_team_selection_layout(window_width, window_height, league):
+def create_team_selection_layout(window_width, league):
     checkboxes_per_column = 8
     selected_teams = read_teams_from_file()
 
@@ -101,16 +101,24 @@ def create_team_selection_layout(window_width, window_height, league):
         "NFL": NFL
     }.get(league, [])
 
-    checkbox_width = max(20, window_width // 85)
-    checkbox_height = max(2, window_height // 60)
-    checkbox_size = max(12, window_width // 80)
-    text_size = max(12, window_width // 20)
-    button_size = max(12, window_width // 30)
-    confirmation_txt_size = max(12, window_width // 60)
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    max_size = 100
+    text_size = min(max_size, max(60, int(65 * scale)))
+    checkbox_width = min(max_size, max(10, int(20 * scale)))
+    checkbox_height = min(max_size, max(2, int(2 * scale)))
+    checkbox_txt_size = min(max_size, max(20, int(22 * scale)))
+    button_size = min(max_size, max(48, int(50 * scale)))
+    confirmation_txt_size = min(max_size, max(10, int(24 * scale)))
 
     team_checkboxes = [
         sg.Checkbox(team, key=f"{team}", size=(checkbox_width, checkbox_height),
-                    font=(FONT, checkbox_size), pad=(5, 5), default=(team in selected_teams))
+                    font=(FONT, checkbox_txt_size), pad=(0, 0), default=(team in selected_teams))
         for team in team_names
     ]
 
@@ -120,22 +128,28 @@ def create_team_selection_layout(window_width, window_height, league):
     ]
 
     column_layouts = [
-        sg.Column([[cb] for cb in col], pad=(10, 0), element_justification='Center') for col in columns
+        sg.Column([[cb] for cb in col], pad=(0, 0), element_justification='Center') for col in columns
     ]
 
     layout = [
         [sg.VPush()],
         [sg.Push(), sg.Text(f"Choose {league} Team to Add", font=(FONT, text_size, "underline")), sg.Push()],
         [sg.VPush()],
-        [sg.Push(), *column_layouts, sg.Push()],
+        [[sg.VPush()],
+         sg.Push(), *column_layouts, sg.Push(),
+         [sg.VPush()],],
         [sg.VPush()],
-        [sg.Push(),
+        [[sg.VPush()],
+         sg.Push(),
          sg.Text("", font=(FONT, confirmation_txt_size), key="teams_added", text_color='green'),
-         sg.Push()
+         sg.Push(),
+         [sg.VPush()],
          ],
-        [sg.Push(),
+        [[sg.VPush()],
+         sg.Push(),
          sg.Text("", font=(FONT, confirmation_txt_size), key="teams_removed", text_color='red'),
-         sg.Push()
+         sg.Push(),
+         [sg.VPush()],
          ],
         [sg.Push(),
          sg.Button("Save", font=(FONT, button_size)), sg.Button("Back", font=(FONT, button_size)),
@@ -146,17 +160,38 @@ def create_team_selection_layout(window_width, window_height, league):
     return layout
 
 
-def create_settings_layout(window_width, window_height):
-    title_size = max(12, window_width // 20)
-    top_label_size = max(12, window_width // 40)
-    bottom_label_size = max(12, window_width // 60)
-    button_size = max(12, window_width // 40)
-    text_size = max(12, window_width // 80)
-    message_size = max(12, window_width // 800)
-    text_input_size = max(4, window_width // 800)
-    checkbox_width = max(20, window_width // 85)
-    checkbox_height = max(2, window_height // 60)
-    checkbox_size = max(12, window_width // 80)
+def create_settings_layout(window_width):
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    max_size = 100
+    title_size = min(max_size, max(60, int(65 * scale)))
+    checkbox_width = min(max_size, max(10, int(20 * scale)))
+    checkbox_height = min(max_size, max(2, int(2 * scale)))
+    message_size = min(max_size, max(6, int(12 * scale)))
+    button_size = min(max_size, max(38, int(40 * scale)))
+    text_input_size = min(max_size, max(2, int(4 * scale)))
+    top_label_size = min(max_size, max(22, int(28 * scale)))
+    bottom_label_size = min(max_size, max(22, int(26 * scale)))
+
+    checkbox_size = min(max_size, max(10, int(16 * scale)))
+    general_checkbox_width = min(max_size, max(14, int(18 * scale)))
+    text_size = min(max_size, max(12, int(16 * scale)))
+
+    # title_size = max(12, window_width // 40)
+    # top_label_size = max(12, window_width // 50)
+    # bottom_label_size = max(12, window_width // 60)
+    # button_size = max(12, window_width // 50)
+    # text_size = max(12, window_width // 90)
+    # message_size = max(12, window_width // 120)
+    # text_input_size = max(4, window_width // 800)
+    # checkbox_width = max(10, window_width // 130)
+    # general_checkbox_width = max(10, window_width // 150)
+    # checkbox_height = max(2, window_height // 60)
+    # checkbox_size = max(12, window_width // 80)
     settings = read_settings_from_file()
     root = tk.Tk()
     font_options = sorted(root.tk.call("font", "families"))
@@ -168,6 +203,7 @@ def create_settings_layout(window_width, window_height):
 
     # Filter the available fonts to include only those that are in the "popular_fonts" list
     font_options = [font for font in popular_fonts if font in font_options]
+    print(font_options)
     root.destroy()
 
     # Split into rows and columns
@@ -244,38 +280,37 @@ def create_settings_layout(window_width, window_height):
                                     font=(FONT, message_size, "italic")),
                             sg.Push(),
                         ],
-                    ],
+                    ]
                 ),
-                sg.Push(),
+                sg.Push()
             ],
             [sg.Text("What General Things to Display:", font=(FONT, bottom_label_size)),],
-            [sg.Push(),
+            [
                 sg.Checkbox("Display Records", key="display_records",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_records", False)),
                 sg.Checkbox("Display Venue", key="display_venue",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_venue", False)),
                 sg.Checkbox("Display Broadcast", key="display_network",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_network", False)),
                 sg.Checkbox("Display Odds", key="display_odds",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_odds", False)),
                 sg.Checkbox("Display Series Info", key="display_series",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_series", False)),
                 sg.Checkbox("Display Date Ended", key="display_date_ended",
-                            size=(checkbox_width, checkbox_height),
+                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_date_ended", False)),
-             sg.Push(),
-             ],
+            ],
             # Row containing "Change Font" label
             [sg.Text("Change Font:", font=(FONT, bottom_label_size)),
              sg.Text("", font=(FONT, message_size), key="font_message", text_color='red'),
@@ -403,11 +438,14 @@ def create_settings_layout(window_width, window_height):
         [sg.Push(), sg.Text("Settings", font=(FONT, title_size, "underline")), sg.Push()],
         [general_setting_layout],
         [specific_settings_layout],
-        [sg.Push(),
+        [[sg.VPush()],
+         sg.Push(),
          sg.Text("", font=(FONT, button_size), key="confirmation_message", text_color='Green'),
-         sg.Push()
+         sg.Push(),
+         [sg.VPush()],
          ],
-        [sg.Push(),
+        [[sg.VPush()],
+         sg.Push(),
          sg.Button("Save", font=(FONT, button_size)),
          sg.Button("Back", font=(FONT, button_size)),
          sg.Push(),
@@ -585,20 +623,19 @@ def main():
     window = sg.Window("", layout, resizable=True,
                        size=(window_width, window_height), return_keyboard_events=True).Finalize()
 
-    if platform.system() == 'Darwin':
-        window.TKroot.attributes('-fullscreen', True)
-    else:
-        window.Maximize()
-
     current_window = "main"
     while True:
+        if platform.system() == 'Darwin':
+            window.TKroot.attributes('-fullscreen', True)
+        else:
+            window.Maximize()
         event, values = window.read()
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             break
 
         elif "Add" in event:
             league = event.split(" ")[1]
-            new_layout = create_team_selection_layout(window_width, window_height, league)
+            new_layout = create_team_selection_layout(window_width, league)
             window.hide()
             new_window = sg.Window("", new_layout, resizable=True, finalize=True, size=(window_width, window_height))
             window.close()
@@ -606,7 +643,7 @@ def main():
             current_window = "team_selection"
 
         elif event == "Settings":
-            new_layout = create_settings_layout(window_width, window_height)
+            new_layout = create_settings_layout(window_width)
             window.hide()
             new_window = sg.Window("", new_layout, resizable=True, finalize=True, size=(window_width, window_height))
             window.close()
@@ -638,9 +675,12 @@ def main():
             display_timer_live = values['display_playing']
 
             font_selected = [key for key in values if key.startswith("font_") and values[key]]
+            no_fonts_available = False
+            if not any(key.startswith("font_") for key in values):
+                no_fonts_available = True
 
-            if (live_data_delay.isdigit() and fetch_timer.isdigit()
-                and display_timer.isdigit() and display_timer_live.isdigit() and len(font_selected) == 1):
+            if (live_data_delay.isdigit() and fetch_timer.isdigit() and display_timer.isdigit()
+                and display_timer_live.isdigit() and (len(font_selected) == 1 or no_fonts_available)):
 
                 font_selected = font_selected[0].replace('"', '').replace('font_', '') if font_selected else FONT
                 update_settings(int(live_data_delay), int(fetch_timer), int(display_timer),
@@ -665,8 +705,8 @@ def main():
                 window["display_not_playing_message"].update(value="Please Enter Digits Only")
             if not display_timer_live.isdigit():
                 window["display_playing_message"].update(value="Please Enter Digits Only")
-            if len(font_selected) > 1:
-                window["font_message"].update(value="Please Only Select One Font")
+            if len(font_selected) != 1:
+                window["font_message"].update(value="Please Select One Font")
 
             window["confirmation_message"].update(value="")
 

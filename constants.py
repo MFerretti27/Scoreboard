@@ -9,7 +9,7 @@ teams = [
 ]
 
 
-FONT = "Arial"
+FONT = "Helvetica"
 
 # Text Sizes
 SCORE_TXT_SIZE = 150
