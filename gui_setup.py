@@ -5,7 +5,9 @@ from constants import *
 from get_team_logos import get_random_logo
 import math
 import constants
+import main_screen
 import time
+import platform
 
 
 def gui_setup() -> sg.Window:
@@ -102,7 +104,12 @@ def gui_setup() -> sg.Window:
 
     # Create the window
     window = sg.Window("Scoreboard", layout, no_titlebar=False, resizable=True, return_keyboard_events=True).Finalize()
-    window.Maximize()
+    
+    # Maximize does not work on MacOS, so we use attributes to set fullscreen
+    if platform.system() == 'Darwin':
+        window.TKroot.attributes('-fullscreen', True)
+    else:
+        window.Maximize()
     window.TKroot.config(cursor="none")  # Remove cursor from screen
 
     return window
@@ -140,7 +147,8 @@ def check_events(window: sg.Window, events) -> None:
     '''Check for events in the window'''
     if events[0] == sg.WIN_CLOSED or 'Escape' in events[0]:
         window.close()
-        exit()
+        main_screen.main()
+
     elif ('Up' in events[0]):
         constants.no_spoiler_mode = True
     elif ('Down' in events[0]):

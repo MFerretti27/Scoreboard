@@ -72,6 +72,8 @@ display_venue = True
 display_network = True
 display_series = True
 display_odds = True
+display_date_ended = True
 
+# Options when running
 no_spoiler_mode = False
 stay_on_team = False
