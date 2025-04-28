@@ -205,7 +205,7 @@ def list_backups(max_backups=5) -> list:
     return available_backups
 
 
-def restore_backup(version) -> None:
+def restore_backup(version) -> tuple:
     """Restore the backup made for a specific version.
 
     :param project_folder: Path to the project folder
@@ -224,7 +224,7 @@ def restore_backup(version) -> None:
 
     try:
         # --- REMOVE current files (but skip venv, .git, etc) ---
-        print("⚙️ Removing current project files...")
+        print("Removing current project files...")
         for item in os.listdir(project_folder):
             if item in ['venv', '.git', '.vscode', 'backup_files', '__pycache__']:
                 continue
@@ -244,10 +244,10 @@ def restore_backup(version) -> None:
             else:
                 shutil.copy2(src, dst)
 
-        print(f"Successfully restored project to version {version}!")
+        return f"Successfully restored project to version {version}", True
 
     except Exception as e:
-        print(f"Error during restore: {e}")
+        return f"Error during restore: {e}", False
 
 
 def check_for_update() -> tuple:
