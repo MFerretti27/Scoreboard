@@ -1,4 +1,4 @@
-'''Change Sizes of all Text, logos sizing here for GUI'''
+'''Constants used to tell what to display'''
 
 teams = [
     ["Detroit Lions"],
@@ -27,6 +27,7 @@ TOP_TXT_SIZE = 80
 # Delay in getting live data
 LIVE_DATA_DELAY = 0
 
+# Timers for getting and displaying data
 FETCH_DATA_NOT_PLAYING_TIMER = 180
 FETCH_DATA_PLAYING_TIMER = 0
 

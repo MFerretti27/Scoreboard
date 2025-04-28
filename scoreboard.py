@@ -4,25 +4,13 @@ import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
-from get_team_logos import get_team_logos, resize_images_from_folder
+from get_team_logos import resize_images_from_folder
 from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode
 from currently_playing import team_currently_playing
 from get_data.get_espn_data import get_data
+from main import set_screen
 from display_clock import clock
-from get_team_league import get_team_league
 import constants
-
-
-# Get Team league and sport name, needed for various functions later in script
-def append_team_array(teams) -> None:
-    """Get the team league and sport name from the team list.
-
-    :param teams: List of teams
-    """
-    for i in range(len(teams)):
-        league, sports_name = get_team_league(teams[i][0])  # Get the team league and sport name
-        teams[i].append(league)  # Add the league to the teams list
-        teams[i].append(sports_name)  # Add the sport name to the teams lists
 
 
 ##################################
@@ -71,8 +59,7 @@ def main():
     fetch_timer = 180 * 1000  # how often the display should update in seconds
     teams = constants.teams
 
-    # append_team_array(teams)  # Get the team league and sport name
-    # get_team_logos(teams)
+    set_screen()  # Set the screen to display on
     window = gui_setup()  # Must run after get_team_logos, function uses the logos downloaded
     resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])  # Resize images to fit on screen
     team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)  # Get data for the first time

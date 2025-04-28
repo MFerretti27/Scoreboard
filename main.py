@@ -59,6 +59,19 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
     subprocess.call([python_executable, program_script])
 
 
+def set_screen() -> None:
+    """Sets the screen for the program to run on. """
+    # Check if you are currently in Virtual Environment, if not exit
+    if sys.prefix != sys.base_prefix:
+        print("\tYou are currently in a virtual environment.")
+        if os.environ.get('DISPLAY', '') == '':
+            print('no display found. Using :0.0')
+            os.environ.__setitem__('DISPLAY', ':0.0')
+    else:
+        print("Please go into virtual Environment by running main.py")
+        exit()
+
+
 def main():
     venv_dir = './venv'  # Virtual environment directory
     requirements_file = 'requirements.txt'  # Path to requirements file

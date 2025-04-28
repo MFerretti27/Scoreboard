@@ -6,11 +6,13 @@ import scoreboard
 from get_team_league import MLB, NHL, NBA, NFL
 from get_team_logos import get_team_logos
 from get_team_league import append_team_array
+from main import set_screen
 import constants
 
 filename = "constants.py"
 FONT = "Helvetica"
 
+# List of setting keys to be updated
 setting_keys = [
     "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
     "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
@@ -32,7 +34,8 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string):
+    def write(self, string) -> None:
+        """Override the write method to redirect output to the window."""
         try:
             if self.window is not None and not self.window.was_closed():
                 current_value = self.window["terminal_output"].get()
@@ -42,15 +45,13 @@ class RedirectText(io.StringIO):
         except Exception as e:
             print(e)
 
-    def flush(self):
-        pass  # Optionally, handle flushing if needed
-
-    def restore_stdout(self):
-        sys.stdout = self.original_stdout  # Restore the original stdout
+    def restore_stdout(self) -> None:
+        """Restore the original stdout."""
+        sys.stdout = self.original_stdout
 
 
-def create_main_layout(window_width, window_height):
-    # sg.theme("LightBlue6")
+def create_main_layout(window_width):
+    sg.theme("LightBlue6")
     text_size = max(12, window_width // 20)
     button_size = max(12, window_width // 40)
     layout = [
@@ -579,9 +580,10 @@ def read_settings_from_file():
 
 def main():
     global FONT
+    set_screen()
     window_width = sg.Window.get_screen_size()[0]
     window_height = sg.Window.get_screen_size()[1]
-    layout = create_main_layout(window_width, window_height)
+    layout = create_main_layout(window_width)
     window = sg.Window("", layout, resizable=True,
                        size=(window_width, window_height), return_keyboard_events=True).Finalize()
 
@@ -610,7 +612,7 @@ def main():
 
         elif event == "Back":
             window.hide()
-            new_window = sg.Window("", create_main_layout(window_width, window_height),
+            new_window = sg.Window("", create_main_layout(window_width),
                                    resizable=True, finalize=True,
                                    size=(window_width, window_height)).Finalize()
             window.close()
