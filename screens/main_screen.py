@@ -7,11 +7,15 @@ from get_team_league import MLB, NHL, NBA, NFL
 from get_team_logos import get_team_logos
 from get_team_league import append_team_array
 from main import set_screen
+from update import check_for_update, update_program, list_backups, restore_backup
 import settings
 import platform
 
 filename = "settings.py"
 FONT = "Helvetica"
+
+# List of previous versions for the restore button
+pervious_versions = []
 
 # List of setting keys to be updated
 setting_keys = [
@@ -60,10 +64,24 @@ def create_main_layout(window_width):
     layout = [
         [sg.Push(), sg.Text("Major League Scoreboard", font=(FONT, text_size)), sg.Push()],
         [sg.Push(),
-         sg.Button("Restore from Version", font=(FONT, update_button_size)),
-         sg.Button("Check for Update", font=(FONT, update_button_size)),
-         sg.Push()],
-        [sg.Push(), sg.Text("", font=(FONT, message_size)), sg.Push()],
+         sg.Button("Restore from Version", font=(FONT, update_button_size), key="restore_button"),
+         sg.Button("Check for Update", font=(FONT, update_button_size), key="update_button"),
+         sg.Push()
+         ],
+        [
+            sg.Push(),
+            sg.Column(
+                [
+                    [sg.Combo(pervious_versions, key="versions", visible=False,
+                              font=(FONT, update_button_size), size=(20, 1))]
+                ],
+                element_justification="center",
+                justification="center",
+                expand_x=True
+            ),
+            sg.Push()
+        ],
+        [sg.Push(), sg.Text("", font=(FONT, message_size), key="update_message"), sg.Push()],
         [sg.VPush()],
         [
             sg.Push(),
@@ -613,6 +631,7 @@ def read_settings_from_file():
 def main():
     global FONT
     set_screen()
+    update = False
     window_width = sg.Window.get_screen_size()[0]
     window_height = sg.Window.get_screen_size()[1]
     layout = create_main_layout(window_width)
@@ -626,6 +645,7 @@ def main():
         else:
             window.Maximize()
         event, values = window.read()
+
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
             exit()
@@ -663,6 +683,41 @@ def main():
             teams_added, teams_removed = update_teams(selected_teams, league)
             window["teams_added"].update(value=teams_added)
             window["teams_removed"].update(value=teams_removed)
+
+        elif event == "update_button":
+            message, successful, latest = check_for_update()
+            if successful and update is False:
+                window["update_button"].update(text="Update", button_color=('white', 'green'))
+                if latest:
+                    window["update_message"].update(value=message, text_color='green')
+                else:
+                    window["update_message"].update(value=message + " Press Again to Update")
+                    update = True
+            elif successful and update is True:
+                message, successful = update_program()
+                if successful:
+                    window["update_button"].update(text="Update", button_color=('white', 'green'))
+                    window["update_message"].update(value=message, text_color='green')
+                    update = False
+            else:
+                window["update_message"].update(value=message, text_color='red')
+
+        elif event == "restore_button":
+            pervious_versions = list_backups()
+            if not pervious_versions:
+                window["update_message"].update(value="No Previous Versions Found", text_color='red')
+                continue
+            window["versions"].update(values=pervious_versions, visible=True)
+            window["restore_button"].update(text="Press to Restore", button_color=('white', 'green'))
+            window["update_message"].update(value="Select Version to Restore", text_color='black')
+            window.refresh()
+            selected_version = values.get("versions")
+            if selected_version:
+                message, successful = restore_backup(selected_version)
+                if successful:
+                    window["update_message"].update(value=message, text_color='green')
+                else:
+                    window["update_message"].update(value=message, text_color='red')
 
         elif event == "Save" and current_window == "settings":
 
