@@ -33,10 +33,9 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_data(team: str) -> list:
+def get_data(team: str) -> tuple:
     '''Retrieve Data from ESPN API
 
-    :param URL: URL link to ESPN to get API data
     :param team: Index of teams array to get data for
 
     :return team_info: List of Boolean values representing if team is has data to display
@@ -115,7 +114,7 @@ def get_data(team: str) -> list:
                 folder_path = os.getcwd() + '/images/Networks/'
                 file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
                 for file in file_names:
-                    if broadcast.upper() in file:
+                    if broadcast.upper() in file and broadcast != "":
                         team_info["under_score_image"] = (f"{os.getcwd()}/images/Networks/{file}")
                         break
 
