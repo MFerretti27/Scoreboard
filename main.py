@@ -72,6 +72,18 @@ def set_screen() -> None:
         exit()
 
 
+def remove_ds_files() -> None:
+    """Removes all .DS_Store files from the current directory and its subdirectories"""
+    if platform.system() == 'Darwin':
+        print("Removing .DS_Store files...")
+        # Walk through the directory and remove .DS_Store files
+        for root, _, files in os.walk('.'):
+            for file in files:
+                if file == '.DS_Store':
+                    print(f"Removing DS file: {os.path.join(root, file)}")
+                    os.remove(os.path.join(root, file))
+
+
 def main():
     venv_dir = './venv'  # Virtual environment directory
     requirements_file = 'requirements.txt'  # Path to requirements file
@@ -79,6 +91,7 @@ def main():
 
     create_virtualenv(venv_dir)
     install_requirements(venv_dir, requirements_file)
+    remove_ds_files()
     run_program_in_venv(venv_dir, program_script)
 
 
