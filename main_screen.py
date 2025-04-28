@@ -181,17 +181,6 @@ def create_settings_layout(window_width):
     general_checkbox_width = min(max_size, max(14, int(18 * scale)))
     text_size = min(max_size, max(12, int(16 * scale)))
 
-    # title_size = max(12, window_width // 40)
-    # top_label_size = max(12, window_width // 50)
-    # bottom_label_size = max(12, window_width // 60)
-    # button_size = max(12, window_width // 50)
-    # text_size = max(12, window_width // 90)
-    # message_size = max(12, window_width // 120)
-    # text_input_size = max(4, window_width // 800)
-    # checkbox_width = max(10, window_width // 130)
-    # general_checkbox_width = max(10, window_width // 150)
-    # checkbox_height = max(2, window_height // 60)
-    # checkbox_size = max(12, window_width // 80)
     settings = read_settings_from_file()
     root = tk.Tk()
     font_options = sorted(root.tk.call("font", "families"))
@@ -631,13 +620,15 @@ def main():
             window.Maximize()
         event, values = window.read()
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
-            break
+            window.close()
+            exit()
 
         elif "Add" in event:
             league = event.split(" ")[1]
             new_layout = create_team_selection_layout(window_width, league)
             window.hide()
-            new_window = sg.Window("", new_layout, resizable=True, finalize=True, size=(window_width, window_height))
+            new_window = sg.Window("", new_layout, resizable=True, finalize=True,
+                                   return_keyboard_events=True, size=(window_width, window_height))
             window.close()
             window = new_window
             current_window = "team_selection"
@@ -645,7 +636,8 @@ def main():
         elif event == "Settings":
             new_layout = create_settings_layout(window_width)
             window.hide()
-            new_window = sg.Window("", new_layout, resizable=True, finalize=True, size=(window_width, window_height))
+            new_window = sg.Window("", new_layout, resizable=True, finalize=True,
+                                   return_keyboard_events=True, size=(window_width, window_height))
             window.close()
             window = new_window
             current_window = "settings"
@@ -653,7 +645,7 @@ def main():
         elif event == "Back":
             window.hide()
             new_window = sg.Window("", create_main_layout(window_width),
-                                   resizable=True, finalize=True,
+                                   resizable=True, finalize=True, return_keyboard_events=True,
                                    size=(window_width, window_height)).Finalize()
             window.close()
             window = new_window
@@ -724,8 +716,6 @@ def main():
             window.close()
             scoreboard.main()
             exit()
-
-    window.close()
 
 
 if __name__ == "__main__":
