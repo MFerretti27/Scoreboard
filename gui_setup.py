@@ -143,7 +143,7 @@ def reset_window_elements(window: sg.Window) -> None:
     window["hyphen"].update(value='-', font=(FONT, HYPHEN_SIZE), text_color='white')
 
 
-def check_events(window: sg.Window, events) -> None:
+def check_events(window: sg.Window, events, currently_playing=False) -> None:
     '''Check for events in the window'''
     if events[0] == sg.WIN_CLOSED or 'Escape' in events[0]:
         window.close()
@@ -153,25 +153,28 @@ def check_events(window: sg.Window, events) -> None:
         settings.no_spoiler_mode = True
     elif ('Down' in events[0]):
         settings.no_spoiler_mode = False
-    elif 'Caps_Lock' in events[0]:
-        settings.stay_on_team = True
-        window["bottom_info"].update(value="Staying on Team")
-        window.refresh()
-        time.sleep(5)
-    elif 'Shift_L' in events[0] or 'Shift_R' in events[0]:
-        settings.stay_on_team = False
-        window["bottom_info"].update(value="Rotating Teams")
-        window.refresh()
-        time.sleep(5)
+
+    if currently_playing:
+        if 'Caps_Lock' in events[0]:
+            settings.stay_on_team = True
+            window["bottom_info"].update(value="Staying on Team")
+            window.refresh()
+            time.sleep(5)
+        elif 'Shift_L' in events[0] or 'Shift_R' in events[0]:
+            settings.stay_on_team = False
+            window["bottom_info"].update(value="Rotating Teams")
+            window.refresh()
+            time.sleep(5)
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool) -> sg.Window:
     if currently_playing:
         window["top_info"].update(value="Game Currently Playing")
     else:
-        window["top_info"].update(value="Will Not Display Future Games")
+        window["top_info"].update(value="Will Not Display Game Info")
     window['bottom_info'].update(value="No Spoiler Mode On")
     window["under_score_image"].update(filename='')
-    window["above_score_txt"].update(value='')
+    if "@" not in window["above_score_txt"]: # Only remove if text doesn't contain team names
+        window["above_score_txt"].update(value='')
     window["home_score"].update(value='N/A', text_color='white')
     window["away_score"].update(value='N/A', text_color='white')
     window['home_timeouts'].update(value='')

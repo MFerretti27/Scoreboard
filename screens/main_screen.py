@@ -10,6 +10,7 @@ from main import set_screen
 from update import check_for_update, update_program, list_backups, restore_backup
 import settings
 import platform
+from instructions import help_text
 
 filename = "settings.py"
 FONT = "Helvetica"
@@ -628,6 +629,29 @@ def read_settings_from_file():
     return settings
 
 
+def create_instructions_layout(window_height, window_width):
+    common_base_widths = [1366, 1920, 1440, 1280]
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+    max_size = 100
+    title_size = min(max_size, max(60, int(65 * scale)))
+    text_size = min(max_size, max(20, int(35 * scale)))
+    button_size = min(max_size, max(48, int(50 * scale)))
+    instructions_size = min(max_size, max(15, int(18 * scale)))
+    layout = [
+        [sg.Text('Scoreboard Help & Instructions', font=(FONT, title_size), justification='center', expand_x=True)],
+        [sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
+                      no_scrollbar=False, font=('Courier', text_size))],
+        [
+            [sg.VPush()],
+            sg.Push(),
+            sg.Button('Back', font=(FONT, button_size)),
+            sg.Push(),
+        ],
+    ]
+    return layout
+
+
 def main():
     global FONT
     set_screen()
@@ -687,10 +711,10 @@ def main():
         elif event == "update_button":
             message, successful, latest = check_for_update()
             if successful and update is False:
-                window["update_button"].update(text="Update", button_color=('white', 'green'))
                 if latest:
                     window["update_message"].update(value=message, text_color='green')
                 else:
+                    window["update_button"].update(text="Update", button_color=('white', 'green'))
                     window["update_message"].update(value=message + " Press Again to Update")
                     update = True
             elif successful and update is True:
@@ -778,6 +802,15 @@ def main():
             window.close()
             not_playing_screen.main()
             exit()
+
+        elif "Documentation" in event:
+            current_window = "Documentation"
+            window.hide()
+            new_window = sg.Window("Documentation", create_instructions_layout(window_height, window_width),
+                                   resizable=True, finalize=True, return_keyboard_events=True,
+                                   size=(window_width, window_height))
+            window.close()
+            window = new_window
 
 
 if __name__ == "__main__":

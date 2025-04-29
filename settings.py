@@ -34,6 +34,8 @@ FETCH_DATA_PLAYING_TIMER = 0
 DISPLAY_NOT_PLAYING_TIMER = 25
 DISPLAY_PLAYING_TIMER = 25
 
+# HOW_LONG_TO_DISPLAY_TEAM = 3
+# prioritize_playing_team = True
 ###################################
 # Settings telling what to display
 ###################################

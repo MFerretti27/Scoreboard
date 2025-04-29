@@ -139,11 +139,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 time.sleep(5)
             should_scroll = False
 
-        check_events(window, event)
+        check_events(window, event, currently_playing=True)
         if settings.stay_on_team and sum(teams_currently_playing) == 1:
             settings.stay_on_team = False
 
     print("\nNo Team Currently Playing\n")
-    # Reset font and color to ensure everything is back to normal
-    reset_window_elements(window)
+    reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
+    settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info
