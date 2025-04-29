@@ -32,7 +32,8 @@ setting_keys = [
     "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
     "display_nfl_timeouts", "display_nfl_redzone",
 
-    "display_records", "display_venue", "display_network", "display_series", "display_odds", "display_date_ended"
+    "display_records", "display_venue", "display_network", "display_series", "display_odds",
+    "display_date_ended", "prioritize_playing_team", "always_get_logos"
 ]
 
 
@@ -206,7 +207,7 @@ def create_settings_layout(window_width):
     bottom_label_size = min(max_size, max(22, int(26 * scale)))
 
     checkbox_size = min(max_size, max(10, int(16 * scale)))
-    general_checkbox_width = min(max_size, max(14, int(18 * scale)))
+    general_checkbox_width = min(max_size, max(14, int(25 * scale)))
     text_size = min(max_size, max(12, int(16 * scale)))
 
     settings = read_settings_from_file()
@@ -236,11 +237,12 @@ def create_settings_layout(window_width):
                          sg.Input(key='live_delay', enable_events=True, size=(text_input_size, 1),
                                   font=('Arial', text_size),
                                   default_text=str(settings.get("LIVE_DATA_DELAY", 0))),
+                         sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="Live_data_message", text_color='red',
                                  expand_x=True)],
                         [
                             sg.Push(),
-                            sg.Text("Delay in seconds to display live data",
+                            sg.Text("Delay to display live data",
                                     font=(FONT, message_size, "italic")),
                             sg.Push(),
                         ],
@@ -252,6 +254,7 @@ def create_settings_layout(window_width):
                          sg.Input(key='display_playing', enable_events=True, size=(text_input_size, 1),
                                   font=('Arial', text_size),
                                   default_text=str(settings.get("DISPLAY_PLAYING_TIMER", 0))),
+                         sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="display_playing_message", text_color='red',
                                  expand_x=True)],
                         [
@@ -272,6 +275,7 @@ def create_settings_layout(window_width):
                          sg.Input(key='fetch_not_playing', enable_events=True, size=(text_input_size, 1),
                                   font=('Arial', text_size),
                                   default_text=str(settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
+                         sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="fetch_not_playing_message", text_color='red',
                                  expand_x=True)],
                         [
@@ -288,6 +292,7 @@ def create_settings_layout(window_width):
                          sg.Input(key='display_not_playing', enable_events=True, size=(text_input_size, 1),
                                   font=('Arial', text_size),
                                   default_text=str(settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
+                         sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="display_not_playing_message", text_color='red',
                                  expand_x=True)],
                         [
@@ -300,7 +305,7 @@ def create_settings_layout(window_width):
                 ),
                 sg.Push()
             ],
-            [sg.Text("What General Things to Display:", font=(FONT, bottom_label_size)),],
+            [sg.Text("", font=(FONT, bottom_label_size)),],
             [
                 sg.Checkbox("Display Records", key="display_records",
                             size=(general_checkbox_width, checkbox_height),
@@ -322,10 +327,20 @@ def create_settings_layout(window_width):
                             size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_series", False)),
+            ],
+            [
                 sg.Checkbox("Display Date Ended", key="display_date_ended",
                             size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
                             default=settings.get("display_date_ended", False)),
+                sg.Checkbox("Always Get Logos when starting", key="always_get_logos",
+                            size=(general_checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("always_get_logos", False)),
+                sg.Checkbox("Prioritize Playing team(s)", key="prioritize_playing_team",
+                            size=(general_checkbox_width, checkbox_height),
+                            font=(FONT, text_size),
+                            default=settings.get("prioritize_playing_team", False)),
             ],
             # Row containing "Change Font" label
             [sg.Text("Change Font:", font=(FONT, bottom_label_size)),
@@ -591,7 +606,7 @@ def read_settings_from_file():
         "display_nfl_timeouts", "display_nfl_redzone",
 
         "display_records", "display_venue", "display_network", "display_series", "display_odds",
-        "display_date_ended"
+        "display_date_ended", "prioritize_playing_team", "always_get_logos"
     ]
 
     with open(filename, "r") as file:
@@ -651,6 +666,10 @@ def create_instructions_layout(window_height, window_width):
         ],
     ]
     return layout
+
+
+def positive_num(s: str) -> bool:
+    return s.isdigit() and int(s) >= 0
 
 
 def main():
@@ -762,8 +781,8 @@ def main():
             if not any(key.startswith("font_") for key in values):
                 no_fonts_available = True
 
-            if (live_data_delay.isdigit() and fetch_timer.isdigit() and display_timer.isdigit()
-                and display_timer_live.isdigit() and (len(font_selected) == 1 or no_fonts_available)):
+            if (positive_num(live_data_delay) and positive_num(fetch_timer) and positive_num(display_timer)
+                and positive_num(display_timer_live) and (len(font_selected) == 1 or no_fonts_available)):
 
                 font_selected = font_selected[0].replace('"', '').replace('font_', '') if font_selected else FONT
                 update_settings(int(live_data_delay), int(fetch_timer), int(display_timer),
@@ -777,17 +796,18 @@ def main():
                 window["Live_data_message"].update(value="")
                 window["fetch_not_playing_message"].update(value="")
                 window["display_playing_message"].update(value="")
+                window["display_not_playing_message"].update(value="")
                 window["font_message"].update(value="")
                 continue
 
-            if not live_data_delay.isdigit():
-                window["Live_data_message"].update(value="Please Enter Digits Only")
-            if not fetch_timer.isdigit():
-                window["fetch_not_playing_message"].update(value="Please Enter Digits Only")
-            if not display_timer.isdigit():
-                window["display_not_playing_message"].update(value="Please Enter Digits Only")
-            if not display_timer_live.isdigit():
-                window["display_playing_message"].update(value="Please Enter Digits Only")
+            if not positive_num(live_data_delay):
+                window["Live_data_message"].update(value="Please Enter Positive Digits Only")
+            if not positive_num(fetch_timer):
+                window["fetch_not_playing_message"].update(value="Please Enter Positive Digits Only")
+            if not positive_num(display_timer):
+                window["display_not_playing_message"].update(value="Please Enter Positive Digits Only")
+            if not positive_num(display_timer_live):
+                window["display_playing_message"].update(value="Please Enter Positive Digits Only")
             if len(font_selected) != 1:
                 window["font_message"].update(value="Please Select One Font")
 
