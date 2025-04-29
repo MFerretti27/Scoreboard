@@ -34,8 +34,8 @@ FETCH_DATA_PLAYING_TIMER = 0
 DISPLAY_NOT_PLAYING_TIMER = 25
 DISPLAY_PLAYING_TIMER = 25
 
-# HOW_LONG_TO_DISPLAY_TEAM = 3
-# prioritize_playing_team = True
+HOW_LONG_TO_DISPLAY_TEAM = 7
+
 ###################################
 # Settings telling what to display
 ###################################
@@ -76,7 +76,8 @@ display_series = True
 display_odds = True
 display_date_ended = True
 always_get_logos = False
+prioritize_playing_team = True
 
-# Options when running
+# Variables to to keep track of key presses
 no_spoiler_mode = False
 stay_on_team = False

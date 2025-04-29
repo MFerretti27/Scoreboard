@@ -54,9 +54,9 @@ def main():
     display_index = 0
     should_scroll = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
-    display_timer = 25 * 1000  # how often the display should update in seconds
+    display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for Switching Display
-    fetch_timer = 180 * 1000  # how often the display should update in seconds
+    fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     teams = settings.teams
 
     set_screen()  # Set the screen to display on
@@ -81,8 +81,9 @@ def main():
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
-                        saved_data[teams[fetch_index][0]] = info
-                        info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
+                        saved_data[teams[fetch_index][0]] = [info, datetime.now()]
+                        if settings.display_date_ended:
+                            info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
                     elif teams[fetch_index][0] in saved_data and data is True:
@@ -93,7 +94,7 @@ def main():
                         current_date = datetime.now()
                         date_difference = current_date - saved_data[teams[fetch_index][0]][1]
                         # Check if 3 days have passed after data is no longer available
-                        if date_difference <= timedelta(days=3):
+                        if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
                             print(f"It will display, time its been: {date_difference}")
                             team_info.append(saved_data[teams[fetch_index][0]])
                             teams_with_data.append(True)
@@ -147,8 +148,6 @@ def main():
                         text = text[1:] + text[0]
                         window["bottom_info"].update(value=text)
                     time.sleep(5)
-            else:
-                event = window.read(timeout=5000)
 
             check_events(window, event)  # Check for events
 

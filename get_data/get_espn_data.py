@@ -1,6 +1,6 @@
 '''Grab Data for ESPN API'''
 
-import requests  # pip install requests
+import requests  # type: ignore
 import gc
 import os
 import settings
@@ -305,7 +305,7 @@ def get_data(team: str) -> tuple:
                     team_info = saved_info  # Try clause might modify dictionary
 
             # If got here with no top info to display, try displaying series info
-            if team_info['top_info'] == "" and not currently_playing and settings.display_series:
+            if team_info['top_info'] == "" and "FINAL" in team_info['bottom_info'] and settings.display_series:
                 team_info['top_info'] = get_series(team_league, team_name)
 
             break  # Found team in sports events and got data, no need to continue looking

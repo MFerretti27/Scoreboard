@@ -1,11 +1,11 @@
 '''Module to display live information when team is currently playing.'''
-from settings import *
-import settings
-import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
+from settings import *  # Data only needed in this function
+import settings  # Data needed be changed globally
+import FreeSimpleGUI as sg  # type: ignore
 from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # pip3 install adafruit-circuitpython-ticks
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 
 
 def team_currently_playing(window: sg.Window, teams: list) -> list:
@@ -25,7 +25,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
     should_scroll = False
 
     display_clock = ticks_ms()  # Start timer for switching display
-    display_timer = 25 * 1000  # How often the display should update in seconds
+    display_timer = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
 
     event = window.read(timeout=5000)
 
@@ -110,10 +110,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
         # Display Team Information
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
-            if teams_with_data[display_index] and teams_currently_playing[display_index]:
+            if teams_with_data[display_index] and (teams_currently_playing[display_index] or
+                                                   not settings.prioritize_playing_team):
                 first_time = False
                 # Find next team to display (skip teams not playing)
-                if not settings.stay_on_team:  # If space pressed, stay on current team playing
+                if not settings.stay_on_team:  # If shift pressed, stay on current team playing
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:

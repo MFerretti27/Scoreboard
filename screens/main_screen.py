@@ -1,5 +1,7 @@
 import FreeSimpleGUI as sg  # type: ignore
 import sys
+import os
+import time
 import io
 import tkinter as tk
 from screens import not_playing_screen
@@ -93,7 +95,7 @@ def create_main_layout(window_width):
             sg.Push(),
         ],
         [
-            sg.Button("Documentation", font=(FONT, button_size), expand_x=True),
+            sg.Button("Manual", font=(FONT, button_size), expand_x=True),
             sg.Button("Settings", font=(FONT, button_size), expand_x=True),
         ],
         [sg.Button("Start", font=(FONT, button_size), expand_x=True)],
@@ -211,14 +213,13 @@ def create_settings_layout(window_width):
     root = tk.Tk()
     font_options = sorted(root.tk.call("font", "families"))
     popular_fonts = [
-        'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana',
-        'Tahoma', 'Comic Sans MS', 'Georgia', 'Lucida Console',
-        'Calibri', 'Trebuchet MS', 'Palatino', 'Century Gothic', 'Consolas'
+        'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Optima',
+        'Gill Sans', 'Comic Sans MS', 'Georgia', 'Lucida Console',
+        'Calibri', 'Trebuchet MS', 'Century Gothic', 'Consolas'
     ]
 
     # Filter the available fonts to include only those that are in the "popular_fonts" list
     font_options = [font for font in popular_fonts if font in font_options]
-    print(font_options)
     root.destroy()
 
     # Split into rows and columns
@@ -635,11 +636,11 @@ def create_instructions_layout(window_height, window_width):
     scale = window_width / base_width
     max_size = 100
     title_size = min(max_size, max(60, int(65 * scale)))
-    text_size = min(max_size, max(20, int(35 * scale)))
+    text_size = min(max_size, max(20, int(25 * scale)))
     button_size = min(max_size, max(48, int(50 * scale)))
-    instructions_size = min(max_size, max(15, int(18 * scale)))
+    instructions_size = min(max_size, max(25, int(25 * scale)))
     layout = [
-        [sg.Text('Scoreboard Help & Instructions', font=(FONT, title_size), justification='center', expand_x=True)],
+        [sg.Text('Manual', font=(FONT, title_size), justification='center', expand_x=True)],
         [sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
                       no_scrollbar=False, font=('Courier', text_size))],
         [
@@ -723,6 +724,10 @@ def main():
                     window["update_button"].update(text="Update", button_color=('white', 'green'))
                     window["update_message"].update(value=message, text_color='green')
                     update = False
+
+                    time.sleep(5)
+                    python = sys.executable  # Path to current python.exe
+                    os.execl(python, python, *sys.argv)  # Relaunch same script with same arguments
             else:
                 window["update_message"].update(value=message, text_color='red')
 
@@ -803,7 +808,7 @@ def main():
             not_playing_screen.main()
             exit()
 
-        elif "Documentation" in event:
+        elif "Manual" in event:
             current_window = "Documentation"
             window.hide()
             new_window = sg.Window("Documentation", create_instructions_layout(window_height, window_width),

@@ -175,8 +175,8 @@ def set_spoiler_mode(window: sg.Window, currently_playing: bool) -> sg.Window:
     window["under_score_image"].update(filename='')
     if "@" not in window["above_score_txt"]: # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value='')
-    window["home_score"].update(value='N/A', text_color='white')
-    window["away_score"].update(value='N/A', text_color='white')
+    window["home_score"].update(value='0', text_color='white')
+    window["away_score"].update(value='0', text_color='white')
     window['home_timeouts'].update(value='')
     window['away_timeouts'].update(value='')
     window['home_record'].update(value='')

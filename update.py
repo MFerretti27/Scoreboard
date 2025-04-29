@@ -269,6 +269,6 @@ def update_program() -> tuple:
     """Update the program to the latest version."""
     try:
         update_all_files()
-        return "Update completed successfully, Please restart the program to apply changes.", True
+        return "Update complete. Restarting application....", True
     except Exception as e:
         return f"Error during update: {e}", False
