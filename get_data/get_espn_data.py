@@ -218,7 +218,7 @@ def get_data(team: str) -> tuple:
                             f"FG: {home_field_goal_made}/{home_field_goal_attempt} 3PT: {home_3pt_made}/{home_3pt_attempt}"
 
                         team_info['top_info'] = away_stats + "\t\t " + home_stats
-                if settings.display_nba_clock:
+                if not settings.display_nba_clock:
                     team_info["bottom_info"] = ""
 
             ####################################################################

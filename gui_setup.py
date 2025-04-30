@@ -166,14 +166,15 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
             window.refresh()
             time.sleep(5)
 
-def set_spoiler_mode(window: sg.Window, currently_playing: bool) -> sg.Window:
+def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
     if currently_playing:
         window["top_info"].update(value="Game Currently Playing")
     else:
         window["top_info"].update(value="Will Not Display Game Info")
     window['bottom_info'].update(value="No Spoiler Mode On")
     window["under_score_image"].update(filename='')
-    if "@" not in window["above_score_txt"]: # Only remove if text doesn't contain team names
+    print(window["above_score_txt"])
+    if "@" not in team_info["above_score_txt"]: # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value='')
     window["home_score"].update(value='0', text_color='white')
     window["away_score"].update(value='0', text_color='white')
