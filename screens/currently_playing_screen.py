@@ -80,10 +80,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     elif key == "away_timeouts":
                         window['away_timeouts'].update(value=value, font=(FONT, TIMEOUT_SIZE - 10), text_color='yellow')
 
-                    if team_info[display_index]['home_bonus'] and key == "home_score":
-                        window[key].update(value=value, text_color='orange')
-                    if team_info[display_index]['away_bonus'] and key == "away_score":
-                        window[key].update(value=value, text_color='orange')
+                    if settings.display_nba_bonus:
+                        if team_info[display_index]['home_bonus'] and key == "home_score":
+                            window[key].update(value=value, text_color='orange')
+                        if team_info[display_index]['away_bonus'] and key == "away_score":
+                            window[key].update(value=value, text_color='orange')
 
                 # MLB Specific display size for bottom info
                 if "MLB" in sport_league.upper():
@@ -95,7 +96,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         if "Networks" in team_info[display_index]['under_score_image']:
                             value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value)
-                    elif key == 'above_score_txt':
+                    elif key == 'above_score_txt' and settings.display_inning:
                         window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
@@ -104,7 +105,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
                 if settings.no_spoiler_mode:
-                    set_spoiler_mode(window, True, team_info)
+                    set_spoiler_mode(window, True, team_info[display_index])
 
             event = window.read(timeout=5000)
 

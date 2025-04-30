@@ -114,7 +114,8 @@ def get_data(team: str) -> tuple:
                 folder_path = os.getcwd() + '/images/Networks/'
                 file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
                 for file in file_names:
-                    if broadcast.upper() in file and broadcast != "":
+                    file_no_png = file.replace(".png", "")
+                    if broadcast.upper() in file_no_png and broadcast != "":
                         team_info["under_score_image"] = (f"{os.getcwd()}/images/Networks/{file}")
                         break
 

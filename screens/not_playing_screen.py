@@ -123,7 +123,7 @@ def main():
                             window[key].update(value=value, text_color='white')
 
                     if settings.no_spoiler_mode:
-                        set_spoiler_mode(window, currently_playing=False, team_info=team_info)
+                        set_spoiler_mode(window, currently_playing=False, team_info=team_info[display_index])
                     event = window.read(timeout=500)
 
                     # Find next team to display (skip teams with no data)
