@@ -1,14 +1,17 @@
 '''Module to Create and modify scoreboard GUI using FreeSimpleGUI'''
 
-import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
+import FreeSimpleGUI as sg  # type: ignore
 from settings import *
 from get_team_logos import get_random_logo
 import math
 import settings
-import screens.main_screen as main_screen
 import time
 import platform
+from get_team_league import append_team_array
 from main import set_screen
+import subprocess
+import sys
+import gc
 
 
 def gui_setup() -> sg.Window:
@@ -16,6 +19,7 @@ def gui_setup() -> sg.Window:
 
     sg.theme("black")
     set_screen()  # Set the screen to display on
+    append_team_array(settings.teams)  # Get the team league and sport name
     files = get_random_logo()
 
     window_width = sg.Window.get_screen_size()[0]
@@ -149,7 +153,10 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
     '''Check for events in the window'''
     if events[0] == sg.WIN_CLOSED or 'Escape' in events[0]:
         window.close()
-        main_screen.main()
+        gc.collect()  # Clean up memory
+        time.sleep(0.5)  # Give OS time to destroy the window
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+        sys.exit()
 
     elif ('Up' in events[0]):
         settings.no_spoiler_mode = True

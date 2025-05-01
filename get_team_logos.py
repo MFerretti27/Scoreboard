@@ -1,11 +1,12 @@
 '''Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen'''
 
 import os
-from PIL import Image  # pip install pillow
-import requests  # pip install requests
+from PIL import Image  # type: ignore
+import requests  # type: ignore
 import random
 import settings
-import FreeSimpleGUI as sg  # pip install FreeSimpleGUI
+import FreeSimpleGUI as sg  # type: ignore
+import shutil
 
 
 def new_league_added() -> bool:
@@ -137,14 +138,18 @@ def get_team_logos(window, teams: list) -> None:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
-    if not os.path.exists('images/sport_logos') or settings.always_get_logos:
+    if not os.path.exists('images/sport_logos'):
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
-        # TODO: Handle deleting folder and re-downloading images to not continue resizing same images
         # Resize local images to fit on screen
         resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
 
     elif new_league_added():
+        download_team_logos(window, teams)  # Will only get new league team logos
+
+    elif settings.always_get_logos:
+        shutil.rmtree('images/sport_logos')  # Dont want to continually resize images multiple times
+        os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
 
 

@@ -11,7 +11,9 @@ from gui_setup import reset_window_elements
 from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from settings import *
-import screens.main_screen as main_screen
+import gc
+import sys
+import subprocess
 
 
 def clock(window: sg.Window, message: str) -> list:
@@ -54,7 +56,10 @@ def clock(window: sg.Window, message: str) -> list:
         event = window.read(timeout=5000)
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
             window.close()
-            main_screen.main()
+            gc.collect()  # Clean up memory
+            time.sleep(0.5)  # Give OS time to destroy the window
+            subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+            sys.exit()
 
         # Fetch to see if any teams have data to return to main loop
         try:

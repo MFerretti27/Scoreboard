@@ -4,10 +4,11 @@ import os
 import time
 import io
 import tkinter as tk
-from screens import not_playing_screen
+import subprocess
+import gc
+from get_team_league import append_team_array
 from get_team_league import MLB, NHL, NBA, NFL
 from get_team_logos import get_team_logos
-from get_team_league import append_team_array
 from main import set_screen
 from update import check_for_update, update_program, list_backups, restore_backup
 import settings
@@ -678,6 +679,7 @@ def positive_num(s: str) -> bool:
 
 def main():
     global FONT
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     set_screen()
     update = False
     window_width = sg.Window.get_screen_size()[0]
@@ -829,7 +831,10 @@ def main():
             window["terminal_output"].update(value="Starting scoreboard...")
             window.refresh()
             window.close()
-            not_playing_screen.main()
+            gc.collect()  # Clean up memory
+            time.sleep(0.5)  # Give OS time to destroy the window
+            subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", *sys.argv[1:]])
+            sys.exit()
             exit()
 
         elif "Manual" in event:
