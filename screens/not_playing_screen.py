@@ -4,11 +4,9 @@ import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
-from get_team_logos import resize_images_from_folder
 from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode
 from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
-from main import set_screen
 from screens.clock_screen import clock
 import settings
 
@@ -18,15 +16,15 @@ import settings
 #    Get Data for First Time     #
 #                                #
 ##################################
-def get_first_time_data(window, teams, team_info, teams_with_data) -> tuple:
-    # try:
-    for fetch_index in range(len(teams)):
-        print(f"\nFetching data for {teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(teams[fetch_index])
-        team_info.append(info)
-        teams_with_data.append(data)
-        if currently_playing:
-            team_info = team_currently_playing(window, teams)
+# def get_first_time_data(window, teams, team_info, teams_with_data) -> tuple:
+#     # try:
+#     for fetch_index in range(len(teams)):
+#         print(f"\nFetching data for {teams[fetch_index][0]}")
+#         info, data, currently_playing = get_data(teams[fetch_index])
+#         team_info.append(info)
+#         teams_with_data.append(data)
+#         if currently_playing:
+#             team_info = team_currently_playing(window, teams)
     # except Exception as error:
     #     print(f"Error: {error}")
     #     if is_connected():
@@ -39,7 +37,7 @@ def get_first_time_data(window, teams, team_info, teams_with_data) -> tuple:
     #     display_timer.reset(), fetch_timer.reset()  # Reset timers
 
     # event = window.read(timeout=5000)
-    return team_info, teams_with_data
+    # return team_info, teams_with_data
 
 
 ##################################
@@ -58,17 +56,18 @@ def main():
     fetch_clock = ticks_ms()  # Start Timer for Switching Display
     fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     teams = settings.teams
+    display_first_time = True
+    fetch_first_time = True
 
-    set_screen()  # Set the screen to display on
     window = gui_setup()  # Must run after get_team_logos, function uses the logos downloaded
-    resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])  # Resize images to fit on screen
     # Get data for the first times
-    team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)
+    # team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)
 
     while True:
         try:
             # Fetch Data
-            if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
+            if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
+                fetch_first_time = False
                 teams_with_data.clear()
                 team_info.clear()
                 for fetch_index in range(len(teams)):
@@ -87,7 +86,7 @@ def main():
                         print("Saving Data to display longer that its available")
 
                     elif teams[fetch_index][0] in saved_data and data is True:
-                        info['bottom_info'] = saved_data[teams[fetch_index][0]]['bottom_info']
+                        info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
 
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")
@@ -109,8 +108,9 @@ def main():
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if data fetched
 
             # Display Team Information
-            if ticks_diff(ticks_ms(), display_clock) >= display_timer:
+            if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
                 if teams_with_data[display_index]:
+                    display_first_time = False
                     print(f"\nUpdating Display for {teams[display_index][0]}")
                     reset_window_elements(window)
 
@@ -124,7 +124,7 @@ def main():
 
                     if settings.no_spoiler_mode:
                         set_spoiler_mode(window, currently_playing=False, team_info=team_info[display_index])
-                    event = window.read(timeout=500)
+                    event = window.read(timeout=2000)
 
                     # Find next team to display (skip teams with no data)
                     original_index = display_index
@@ -136,8 +136,22 @@ def main():
                             print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                             break
 
-                display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
+                    display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
+                else:
+                    print(f"Team doesn't have data {teams[display_index][0]}")
                 display_index = (display_index + 1) % len(teams)
+
+            event = window.read(timeout=1)
+            check_events(window, event)  # Check for button presses
+            if settings.no_spoiler_mode:
+                set_spoiler_mode(window, currently_playing=False, team_info=team_info[display_index])
+            elif "Down" in event[0]:
+                settings.no_spoiler_mode = False
+                fetch_first_time = True
+                display_first_time = True
+                window["top_info"].update(value="")
+                window["bottom_info"].update(value="Exiting No Spoiler Mode")
+                event = window.read(timeout=1)
 
             # Scroll bottom info if text is too long
             if should_scroll:
@@ -148,8 +162,6 @@ def main():
                         text = text[1:] + text[0]
                         window["bottom_info"].update(value=text)
                     time.sleep(5)
-
-            check_events(window, event)  # Check for events
 
             if True not in teams_with_data:  # No data to display
                 print("\nNo Teams with Data Displaying Clock\n")
@@ -164,11 +176,13 @@ def main():
                         get_data(teams[display_index])
                         break  # If data is fetched successfully, break out of loop
                     except Exception:
-                        print("Could not get data for team, trying again")
+                        print("Could not get data, trying again...")
+                        window["top_info"].update(value="Could not get data, trying again...", text_color="red")
+                        event = window.read(timeout=1)
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
                 if time_till_clock >= 12:  # 6 minutes without data, display clock
-                    message = f'Failed to Get Info From ESPN, Error:{error}'
+                    message = 'Failed to Get Data, trying again every 3 minutes'
                     teams_with_data = clock(window, message)
                 # Reset timers
                 while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
@@ -178,6 +192,8 @@ def main():
 
             while not is_connected():
                 print("Internet connection is down, trying to reconnect...")
+                window["top_info"].update(value="Internet connection is down, trying to reconnect...", text_color="red")
+                event = window.read(timeout=1)
                 reconnect()
                 time.sleep(20)  # Check every 20 seconds
 

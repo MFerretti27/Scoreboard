@@ -8,12 +8,14 @@ import settings
 import screens.main_screen as main_screen
 import time
 import platform
+from main import set_screen
 
 
 def gui_setup() -> sg.Window:
     '''Create General User Interface'''
 
     sg.theme("black")
+    set_screen()  # Set the screen to display on
     files = get_random_logo()
 
     window_width = sg.Window.get_screen_size()[0]

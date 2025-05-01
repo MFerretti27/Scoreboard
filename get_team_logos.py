@@ -140,6 +140,9 @@ def get_team_logos(window, teams: list) -> None:
     if not os.path.exists('images/sport_logos') or settings.always_get_logos:
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
+        # TODO: Handle deleting folder and re-downloading images to not continue resizing same images
+        # Resize local images to fit on screen
+        resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
 
     elif new_league_added():
         download_team_logos(window, teams)

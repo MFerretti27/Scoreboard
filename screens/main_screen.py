@@ -234,9 +234,10 @@ def create_settings_layout(window_width):
                 sg.Column(
                     [
                         [sg.Text("Live Data Delay:", font=(FONT, top_label_size)),
-                         sg.Input(key='live_delay', enable_events=True, size=(text_input_size, 1),
-                                  font=('Arial', text_size),
-                                  default_text=str(settings.get("LIVE_DATA_DELAY", 0))),
+                         sg.Spin([str(i) for i in range(1000)], key='live_delay', enable_events=True,
+                                 size=(text_input_size, 1),
+                                 font=('Arial', text_size),
+                                 initial_value=str(settings.get("LIVE_DATA_DELAY", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="Live_data_message", text_color='red',
                                  expand_x=True)],
@@ -251,9 +252,10 @@ def create_settings_layout(window_width):
                 sg.Column(
                     [
                         [sg.Text("Display Timer (LIVE):", font=(FONT, top_label_size)),
-                         sg.Input(key='display_playing', enable_events=True, size=(text_input_size, 1),
-                                  font=('Arial', text_size),
-                                  default_text=str(settings.get("DISPLAY_PLAYING_TIMER", 0))),
+                         sg.Spin([str(i) for i in range(1000)], key='display_playing', enable_events=True,
+                                 size=(text_input_size, 1),
+                                 font=('Arial', text_size),
+                                 initial_value=str(settings.get("DISPLAY_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="display_playing_message", text_color='red',
                                  expand_x=True)],
@@ -272,9 +274,10 @@ def create_settings_layout(window_width):
                 sg.Column(
                     [
                         [sg.Text("Fetch Timer:", font=(FONT, top_label_size)),
-                         sg.Input(key='fetch_not_playing', enable_events=True, size=(text_input_size, 1),
-                                  font=('Arial', text_size),
-                                  default_text=str(settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
+                         sg.Spin([str(i) for i in range(1000)], key='fetch_not_playing', enable_events=True,
+                                 size=(text_input_size, 1),
+                                 font=('Arial', text_size),
+                                 initial_value=str(settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="fetch_not_playing_message", text_color='red',
                                  expand_x=True)],
@@ -289,9 +292,10 @@ def create_settings_layout(window_width):
                 sg.Column(
                     [
                         [sg.Text("Display Timer:", font=(FONT, top_label_size)),
-                         sg.Input(key='display_not_playing', enable_events=True, size=(text_input_size, 1),
-                                  font=('Arial', text_size),
-                                  default_text=str(settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
+                         sg.Spin([str(i) for i in range(1000)], key='display_not_playing', enable_events=True,
+                                 size=(text_input_size, 1),
+                                 font=('Arial', text_size),
+                                 initial_value=str(settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
                          sg.Text("", font=(FONT, message_size), key="display_not_playing_message", text_color='red',
                                  expand_x=True)],
