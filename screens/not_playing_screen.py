@@ -85,7 +85,7 @@ def main():
                             info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
-                    elif teams[fetch_index][0] in saved_data and data is True:
+                    elif teams[fetch_index][0] in saved_data and data is True and data is True and "FINAL":
                         info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
 
                     elif teams[fetch_index][0] in saved_data and data is False:
