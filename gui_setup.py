@@ -164,12 +164,14 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         settings.no_spoiler_mode = False
 
     if currently_playing:
-        if 'Caps_Lock' in events[0]:
+        if 'Caps_Lock' in events[0] and not settings.stay_on_team:
+            print("Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
-        elif 'Shift_L' in events[0] or 'Shift_R' in events[0]:
+        elif ('Shift_L' in events[0] or 'Shift_R' in events[0]) and settings.stay_on_team:
+            print("Rotating teamS")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()

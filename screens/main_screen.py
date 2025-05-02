@@ -699,6 +699,7 @@ def main():
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
             exit()
+            sys.exit()
 
         elif "Add" in event:
             league = event.split(" ")[1]
