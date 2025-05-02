@@ -56,16 +56,42 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
 
     # Run the program
     print(f"Running program {program_script} inside virtual environment...")
-    subprocess.call([python_executable, program_script])
+    subprocess.call([python_executable, "-m", program_script])
+
+
+def set_screen() -> None:
+    """Sets the screen for the program to run on. """
+    # Check if you are currently in Virtual Environment, if not exit
+    if sys.prefix != sys.base_prefix:
+        print("\tYou are currently in a virtual environment.")
+        if os.environ.get('DISPLAY', '') == '':
+            print('no display found. Using :0.0')
+            os.environ.__setitem__('DISPLAY', ':0.0')
+    else:
+        print("Please go into virtual Environment by running main.py")
+        exit()
+
+
+def remove_ds_files() -> None:
+    """Removes all .DS_Store files from the current directory and its subdirectories"""
+    if platform.system() == 'Darwin':
+        print("Removing .DS_Store files...")
+        # Walk through the directory and remove .DS_Store files
+        for root, _, files in os.walk('.'):
+            for file in files:
+                if file == '.DS_Store':
+                    print(f"Removing DS file: {os.path.join(root, file)}")
+                    os.remove(os.path.join(root, file))
 
 
 def main():
     venv_dir = './venv'  # Virtual environment directory
     requirements_file = 'requirements.txt'  # Path to requirements file
-    program_script = 'scoreboard.py'  # Name of main file to run
+    program_script = 'screens.main_screen'  # Name of main file to run
 
     create_virtualenv(venv_dir)
     install_requirements(venv_dir, requirements_file)
+    remove_ds_files()
     run_program_in_venv(venv_dir, program_script)
 
 

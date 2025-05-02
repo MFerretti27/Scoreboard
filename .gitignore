@@ -4,6 +4,10 @@
 
 sport_logos/
 
+# Don't upload the venv folder
 venv/
 
+# Don't upload the bytecode files
+*/__pycache__/*
 __pycache__/*
+
