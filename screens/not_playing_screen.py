@@ -13,35 +13,6 @@ import settings
 
 ##################################
 #                                #
-#    Get Data for First Time     #
-#                                #
-##################################
-# def get_first_time_data(window, teams, team_info, teams_with_data) -> tuple:
-#     # try:
-#     for fetch_index in range(len(teams)):
-#         print(f"\nFetching data for {teams[fetch_index][0]}")
-#         info, data, currently_playing = get_data(teams[fetch_index])
-#         team_info.append(info)
-#         teams_with_data.append(data)
-#         if currently_playing:
-#             team_info = team_currently_playing(window, teams)
-    # except Exception as error:
-    #     print(f"Error: {error}")
-    #     if is_connected():
-    #         message = f'Failed to Get Info From ESPN, Error:{error}'
-    #     elif not is_connected():
-    #         print("\nNo Internet connection Displaying Clock\n")
-    #         message = "No Internet Connection"
-    #     display_timer.pause(), fetch_timer.pause()  # Pause timers
-    #     teams_with_data = clock(window, message)
-    #     display_timer.reset(), fetch_timer.reset()  # Reset timers
-
-    # event = window.read(timeout=5000)
-    # return team_info, teams_with_data
-
-
-##################################
-#                                #
 #          Event Loop            #
 #                                #
 ##################################
@@ -59,9 +30,7 @@ def main():
     display_first_time = True
     fetch_first_time = True
 
-    window = gui_setup()  # Must run after get_team_logos, function uses the logos downloaded
-    # Get data for the first times
-    # team_info, teams_with_data = get_first_time_data(window, teams, team_info, teams_with_data)
+    window = gui_setup()  # Create window to display teams
 
     while True:
         try:
@@ -154,7 +123,7 @@ def main():
                 event = window.read(timeout=1)
 
             # Scroll bottom info if text is too long
-            if should_scroll:
+            if should_scroll and not settings.no_spoiler_mode:
                 text = team_info[original_index]['bottom_info'] + "         "
                 for _ in range(2):
                     for _ in range(len(text)):

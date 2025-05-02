@@ -131,7 +131,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if not settings.stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
-        if should_scroll:
+        if should_scroll and not settings.no_spoiler_mode:
             text = team_info[display_index]['bottom_info'] + "         "
             for _ in range(2):
                 for _ in range(len(text)):
