@@ -45,6 +45,7 @@ def main():
 
                     # If Game in Play call function to display data differently
                     if currently_playing:
+                        print(f"{teams[fetch_index][0]} Currently Playing")
                         team_info = team_currently_playing(window, teams)
 
                     # Save data for to display longer than data is available (minimum 3 days)
@@ -144,9 +145,10 @@ def main():
                     try:
                         get_data(teams[display_index])
                         break  # If data is fetched successfully, break out of loop
-                    except Exception:
+                    except Exception as error:
                         print("Could not get data, trying again...")
                         window["top_info"].update(value="Could not get data, trying again...", text_color="red")
+                        window["bottom_info"].update(value=error, text_color="red")
                         event = window.read(timeout=1)
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
@@ -158,6 +160,8 @@ def main():
                     display_clock = ticks_add(display_clock, display_timer)
                 while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                     fetch_clock = ticks_add(fetch_clock, fetch_timer)
+            else:
+                print("Internet connection is active")
 
             while not is_connected():
                 print("Internet connection is down, trying to reconnect...")
@@ -177,7 +181,7 @@ def main():
                         fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
                 time_till_clock = time_till_clock + 1
-            print("Internet connection is active")
+            window.refresh()
 
 
 if __name__ == "__main__":

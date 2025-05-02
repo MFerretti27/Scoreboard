@@ -6,9 +6,9 @@ import io
 import tkinter as tk
 import subprocess
 import gc
-from get_team_league import append_team_array
-from get_team_league import MLB, NHL, NBA, NFL
-from get_team_logos import get_team_logos
+from get_data.get_team_league import append_team_array
+from get_data.get_team_league import MLB, NHL, NBA, NFL
+from get_data.get_team_logos import get_team_logos
 from main import set_screen
 from update import check_for_update, update_program, list_backups, restore_backup
 import settings
@@ -699,6 +699,7 @@ def main():
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
             exit()
+            sys.exit()
 
         elif "Add" in event:
             league = event.split(" ")[1]

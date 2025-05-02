@@ -5,7 +5,7 @@
 import datetime
 import time
 import FreeSimpleGUI as sg  # type: ignore
-from get_team_logos import get_random_logo
+from get_data.get_team_logos import get_random_logo
 from get_data.get_espn_data import get_data
 from gui_setup import reset_window_elements
 from internet_connection import is_connected, reconnect

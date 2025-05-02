@@ -62,15 +62,15 @@ def get_data(team: str) -> tuple:
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data from ESPN API: {e}")
         if "MLB" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_mlb_data(team_name, team_info)
+            team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
         elif "NBA" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nba_data(team_info, team_name)
+            team_info, team_has_data, currently_playing = get_all_nba_data(team_info)
         elif "NHL" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nhl_data(team_info, team_name)
+            team_info, team_has_data, currently_playing = get_all_nhl_data(team_info)
         elif "NFL" in team_league.upper():
             raise Exception("Could Not Get NFL data")
         else:
-            raise Exception("Could Not Get ESPN data")
+            raise Exception(f"Could Not Get {team_name} data")
         return team_info, team_has_data, currently_playing
 
     for event in response_as_json["events"]:
