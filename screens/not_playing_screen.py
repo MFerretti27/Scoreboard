@@ -4,7 +4,7 @@ import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
-from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode
+from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode, resize_text
 from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from screens.clock_screen import clock
@@ -24,12 +24,13 @@ def main():
     should_scroll = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
     display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
-    fetch_clock = ticks_ms()  # Start Timer for Switching Display
-    fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
+    fetch_clock = ticks_ms()  # Start Timer for fetching data
+    fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
     teams = settings.teams
     display_first_time = True
     fetch_first_time = True
 
+    # resize_text()
     window = gui_setup()  # Create window to display teams
 
     while True:
@@ -47,6 +48,11 @@ def main():
                     if currently_playing:
                         print(f"{teams[fetch_index][0]} Currently Playing")
                         team_info = team_currently_playing(window, teams)
+                        # Reset timers
+                        while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
+                            display_clock = ticks_add(display_clock, display_timer)
+                        while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
+                            fetch_clock = ticks_add(fetch_clock, fetch_timer)
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -55,8 +61,9 @@ def main():
                             info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
-                    elif teams[fetch_index][0] in saved_data and data is True and data is True and "FINAL":
-                        info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
+                    elif teams[fetch_index][0] in saved_data and data is True:
+                        if "FINAL" in info["bottom_info"]:
+                            info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
 
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")

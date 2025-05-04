@@ -6,6 +6,7 @@ from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
 import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
+import copy
 
 
 def team_currently_playing(window: sg.Window, teams: list) -> list:
@@ -19,26 +20,60 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
     teams_currently_playing = []
     first_time = True
+    delay_over = False
     team_info = []
     teams_with_data = []
+    saved_data = []
+    delay_info = []
     display_index = 0
     should_scroll = False
+    currently_displaying = {}
 
     display_clock = ticks_ms()  # Start timer for switching display
     display_timer = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
-
-    event = window.read(timeout=5000)
+    fetch_clock = ticks_ms()  # Start timer for fetching
+    fetch_timer = 2 * 1000  # How often to fetch data in seconds
+    delay_clock = ticks_ms()  # Start timer how long to start displaying information
+    delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
 
     while True in teams_currently_playing or first_time:
-        teams_with_data.clear()
-        team_info.clear()
-        teams_currently_playing.clear()
-        for fetch_index in range(len(teams)):
-            print(f"\nFetching data for {teams[fetch_index][0]}")
-            info, data, currently_playing = get_data(teams[fetch_index])
-            team_info.append(info)
-            teams_with_data.append(data)
-            teams_currently_playing.append(currently_playing)
+        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
+            teams_with_data.clear()
+            team_info.clear()
+            teams_currently_playing.clear()
+            for fetch_index in range(len(teams)):
+                print(f"\nFetching data for {teams[fetch_index][0]}")
+                info, data, currently_playing = get_data(teams[fetch_index])
+                teams_with_data.append(data)
+                teams_currently_playing.append(currently_playing)
+
+                # If delay dont keep updating as to not display latest data
+                if not settings.LIVE_DATA_DELAY > 0:
+                    team_info.append(info)
+                elif first_time:  # if delay last_info wont be populated first time, so do this once
+                    team_info.append(info)
+                else:
+                    delay_info.append(info)
+
+            if settings.LIVE_DATA_DELAY > 0:
+                last_info = copy.deepcopy(delay_info)
+                delay_info.clear()
+
+            # if there is a delay save data for after delay
+            if settings.LIVE_DATA_DELAY > 0 and not first_time:
+                saved_data.append(copy.deepcopy(last_info))  # Save last_info
+
+                # Wait for delay to be over to start displaying data
+                if ticks_diff(ticks_ms(), delay_clock) >= delay_timer:
+                    delay_over = True
+                    delay_clock = ticks_add(delay_clock, delay_timer)  # Reset Timer
+
+                if delay_over:  # If delay over start displaying everything got before delay, in order
+                    team_info = saved_data.pop(0)  # get the first thing saved and remove it
+                else:
+                    team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
+
+            fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 
         if teams_with_data[display_index] and teams_currently_playing[display_index]:
             print(f"\n{teams[display_index][0]} is currently playing, updating display")
@@ -107,9 +142,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 if settings.no_spoiler_mode:
                     set_spoiler_mode(window, True, team_info[display_index])
 
+                currently_displaying = team_info[display_index]
+
             event = window.read(timeout=5000)
 
-        # Display Team Information
+        # Find Next team to display
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
             if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                    not settings.prioritize_playing_team):
@@ -127,7 +164,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 else:
                     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
-            display_clock = ticks_add(display_clock, display_timer)
+            display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
             if not settings.stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
@@ -141,9 +178,18 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 time.sleep(5)
             should_scroll = False
 
-        check_events(window, event, currently_playing=True)
-        if settings.stay_on_team and sum(teams_currently_playing) == 1:
-            settings.stay_on_team = False
+        if not first_time:
+            check_events(window, event, currently_playing=True)
+            if settings.stay_on_team and sum(teams_currently_playing) == 1:
+                window["top_info"].update(value="No longer set to \"staying on team\"")
+                window["bottom_info"].update(value="Only one team playing")
+                window.read(timeout=2000)
+                time.sleep(5)
+                settings.stay_on_team = False
+
+            # If button was pressed but team is already set to change, change it back
+            if settings.stay_on_team and currently_displaying != team_info[display_index]:
+                display_index = original_index
 
     print("\nNo Team Currently Playing\n")
     reset_window_elements(window)  # Reset font and color to ensure everything is back to normal

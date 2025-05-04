@@ -194,3 +194,41 @@ def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict
     window['away_record'].update(value='')
 
     return window
+
+
+def resize_text():
+    window_width = sg.Window.get_screen_size()[0]
+    # window_height = sg.Window.get_screen_size()[1]
+
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    print(scale)
+
+    max_size = 200
+    settings.SCORE_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(60, int(90 * scale)))
+    settings.RECORD_TXT_SIZE = min(max_size, max(60, int(96 * scale)))
+    settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(204 * scale)))
+    settings.HYPHEN_SIZE = min(max_size, max(60, int(84 * scale)))
+    settings.TIMEOUT_SIZE = min(max_size, max(24, int(34 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(50, int(56 * scale)))
+    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(80 * scale)))
+    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(76 * scale)))
+    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(30, int(30 * scale)))
+    settings.TOP_TXT_SIZE = min(max_size, max(60, int(80 * scale)))
+
+    print(f"score txt size:{settings.SCORE_TXT_SIZE}")
+    print(f"info txt size:{settings.INFO_TXT_SIZE}")
+    print(f"record txt size:{settings.RECORD_TXT_SIZE}")
+    print(f"clock txt size:{settings.CLOCK_TXT_SIZE}")
+    print(f"hyphen txt size:{settings.HYPHEN_SIZE}")
+    print(f"timeout txt size:{settings.TIMEOUT_SIZE}")
+    print(f"nba top txt size:{settings.NBA_TOP_INFO_SIZE}")
+    print(f"mlb bottom txt size:{settings.MLB_BOTTOM_INFO_SIZE}")
+    print(f"playing txt size:{settings.PLAYING_TOP_INFO_SIZE}")
+    print(f"not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
+    print(f"top txt size:{settings.TOP_TXT_SIZE}")

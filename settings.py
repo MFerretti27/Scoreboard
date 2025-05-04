@@ -1,5 +1,9 @@
 '''Settings used to tell what to display'''
 
+#####################################
+# Settings for what teams to display
+#####################################
+
 teams = [
     ["Detroit Lions"],
     ["Detroit Tigers"],
@@ -9,9 +13,11 @@ teams = [
 ]
 
 
-FONT = "Helvetica"
+###############################
+# Settings for displaying Text
+###############################
 
-# Text Sizes
+FONT = "Helvetica"
 SCORE_TXT_SIZE = 150
 INFO_TXT_SIZE = 90
 RECORD_TXT_SIZE = 96
@@ -24,10 +30,14 @@ PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 
+
+#########################################
+# Timers for getting and displaying data
+#########################################
+
 # Delay in getting live data
 LIVE_DATA_DELAY = 0
 
-# Timers for getting and displaying data
 FETCH_DATA_NOT_PLAYING_TIMER = 180
 FETCH_DATA_PLAYING_TIMER = 0
 
@@ -78,6 +88,8 @@ display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
 
+############################################
 # Variables to to keep track of key presses
+############################################
 no_spoiler_mode = False
 stay_on_team = False
