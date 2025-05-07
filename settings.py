@@ -79,7 +79,7 @@ display_nfl_down = True
 display_nfl_possession = True
 
 # General
-display_records = False
+display_records = True
 display_venue = True
 display_network = True
 display_series = True

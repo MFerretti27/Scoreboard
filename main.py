@@ -63,7 +63,7 @@ def set_screen() -> None:
     """Sets the screen for the program to run on. """
     # Check if you are currently in Virtual Environment, if not exit
     if sys.prefix != sys.base_prefix:
-        print("\tYou are currently in a virtual environment.")
+        print("\nYou are currently in a virtual environment. Setting Screen\n")
         if os.environ.get('DISPLAY', '') == '':
             print('no display found. Using :0.0')
             os.environ.__setitem__('DISPLAY', ':0.0')
