@@ -48,19 +48,19 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 teams_currently_playing.append(currently_playing)
 
                 # If delay dont keep updating as to not display latest data
-                if not settings.LIVE_DATA_DELAY > 0:
+                if not settings.delay:
                     team_info.append(info)
                 elif first_time:  # if delay last_info wont be populated first time, so do this once
                     team_info.append(info)
                 else:
                     delay_info.append(info)
 
-            if settings.LIVE_DATA_DELAY > 0:
+            if settings.delay > 0:
                 last_info = copy.deepcopy(delay_info)
                 delay_info.clear()
 
             # if there is a delay save data for after delay
-            if settings.LIVE_DATA_DELAY > 0 and not first_time:
+            if settings.delay and not first_time:
                 saved_data.append(copy.deepcopy(last_info))  # Save last_info
 
                 # Wait for delay to be over to start displaying data
@@ -69,7 +69,15 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     delay_clock = ticks_add(delay_clock, delay_timer)  # Reset Timer
 
                 if delay_over:  # If delay over start displaying everything got before delay, in order
-                    team_info = saved_data.pop(0)  # get the first thing saved and remove it
+                    team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
+
+                    # Ensure currently_play is true until delay catches up
+                    index = 0
+                    for teams in team_info:
+                        if "bottom_info" in teams.keys():
+                            if "FINAL" not in teams["bottom_info"]:
+                                currently_playing[index] = True
+                                index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
 

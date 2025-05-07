@@ -137,16 +137,16 @@ def will_text_fit_on_screen(text: str) -> bool:
 
 def reset_window_elements(window: sg.Window) -> None:
     '''Reset window elements to default values'''
-    window['top_info'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window['bottom_info'].update(value='', font=(FONT, INFO_TXT_SIZE), text_color='white')
-    window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-    window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-    window['home_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
-    window['away_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
-    window['home_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['away_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window["hyphen"].update(value='-', font=(FONT, HYPHEN_SIZE), text_color='white')
+    window['top_info'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
+    window['bottom_info'].update(value='', font=(FONT, settings.INFO_TXT_SIZE), text_color='white')
+    window['home_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['away_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['home_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['away_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['home_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['away_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['above_score_txt'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
+    window["hyphen"].update(value='-', font=(FONT, settings.HYPHEN_SIZE), text_color='white')
 
 
 def check_events(window: sg.Window, events, currently_playing=False) -> None:
@@ -165,17 +165,30 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
 
     if currently_playing:
         if 'Caps_Lock' in events[0] and not settings.stay_on_team:
-            print("Staying on team")
+            print("Caps Lock key pressed, Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
         elif ('Shift_L' in events[0] or 'Shift_R' in events[0]) and settings.stay_on_team:
-            print("Rotating teamS")
+            print("shift key pressed, Rotating teams")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
+        elif 'Left' in events[0]:
+            print("left key pressed, delay off")
+            settings.delay = False
+            window["bottom_info"].update(value="Turning delay OFF")
+            window.refresh()
+            time.sleep(5)
+        elif 'Right' in events[0]:
+            print("Right key pressed, delay on")
+            settings.delay = True
+            window["bottom_info"].update(value="Turning delay ON")
+            window.refresh()
+            time.sleep(5)
+
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
     if currently_playing:
@@ -207,6 +220,7 @@ def resize_text():
     scale = window_width / base_width
 
     print(scale)
+    print(base_width)
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(60, int(150 * scale)))

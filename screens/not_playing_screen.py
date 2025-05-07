@@ -9,6 +9,7 @@ from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from screens.clock_screen import clock
 import settings
+import traceback
 
 
 ##################################
@@ -30,7 +31,7 @@ def main():
     display_first_time = True
     fetch_first_time = True
 
-    # resize_text()
+    resize_text()
     window = gui_setup()  # Create window to display teams
 
     while True:
@@ -53,6 +54,7 @@ def main():
                             display_clock = ticks_add(display_clock, display_timer)
                         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+                        fetch_first_time = True
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -146,6 +148,7 @@ def main():
 
         except Exception as error:
             print(f"Error: {error}")
+            traceback.print_exc()  # Prints the full traceback
             time_till_clock = 0
             if is_connected():
                 while time_till_clock < 12:

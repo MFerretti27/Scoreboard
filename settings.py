@@ -79,7 +79,7 @@ display_nfl_down = True
 display_nfl_possession = True
 
 # General
-display_records = True
+display_records = False
 display_venue = True
 display_network = True
 display_series = True
@@ -93,3 +93,4 @@ prioritize_playing_team = True
 ############################################
 no_spoiler_mode = False
 stay_on_team = False
+delay = False
