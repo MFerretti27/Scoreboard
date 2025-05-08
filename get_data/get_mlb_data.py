@@ -144,7 +144,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         try:
             pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
             if pitch.get("isPitch", True) and settings.display_last_pitch:
-                team_info['top_info'] += pitch["details"]["type"]["description"] + "  "
+                team_info['top_info'] += pitch["details"]["type"]["description"].replace('Four-Seam', '') + "  "
 
             play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
             if play and settings.display_play_description:

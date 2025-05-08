@@ -55,7 +55,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 else:
                     delay_info.append(info)
 
-            if settings.delay > 0:
+            if settings.delay:
                 last_info = copy.deepcopy(delay_info)
                 delay_info.clear()
 
@@ -73,13 +73,25 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
                     # Ensure currently_play is true until delay catches up
                     index = 0
-                    for teams in team_info:
-                        if "bottom_info" in teams.keys():
-                            if "FINAL" not in teams["bottom_info"]:
+                    for team_info_temp in team_info:
+                        if "bottom_info" in team_info_temp.keys() and teams_with_data[index]:
+                            if "FINAL" not in team_info_temp["bottom_info"]:
                                 teams_currently_playing[index] = True
-                                index += 1
+                        index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
+                    index = 0
+                    for team_info_temp in team_info:
+                        if teams_with_data[index] and teams_currently_playing[index]:
+                            team_info[index]['top_info'] = ""
+                            team_info[index]['bottom_info'] = ""
+                            team_info[index]['home_timeouts'] = ""
+                            team_info[index]['away_timeouts'] = ""
+                            team_info[index]['home_score'] = "0"
+                            team_info[index]['away_score'] = "0"
+                            team_info[index]['above_score_txt'] = ""
+                            team_info[index]['under_score_image'] = ""
+                        index += 1
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 

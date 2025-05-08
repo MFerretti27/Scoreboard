@@ -862,8 +862,6 @@ def main():
                 window["confirmation_message"].update(value="")
 
         elif event == "Start" or ("Return" in event and current_window == "main"):
-            if settings.LIVE_DATA_DELAY > 0:
-                settings.delay = True
             redirect = RedirectText(window)  # Create an instance of RedirectText
             sys.stdout = redirect  # Redirect print statements to the window
             window["terminal_output"].update(visible=True)

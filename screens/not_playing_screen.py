@@ -31,6 +31,9 @@ def main():
     display_first_time = True
     fetch_first_time = True
 
+    if settings.LIVE_DATA_DELAY > 0:
+        settings.delay = True
+
     resize_text()
     window = gui_setup()  # Create window to display teams
 
@@ -74,7 +77,7 @@ def main():
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
                             print(f"It will display, time its been: {date_difference}")
-                            team_info.append(saved_data[teams[fetch_index][0]])
+                            team_info.append(saved_data[teams[fetch_index][0]][0])
                             teams_with_data.append(True)
                             continue
                         # If greater than 3 days remove
