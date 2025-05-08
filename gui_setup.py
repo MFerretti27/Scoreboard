@@ -193,7 +193,7 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         elif 'Right' in events[0] and not settings.delay:
             print("Right key pressed, delay on")
             settings.delay = True
-            window["bottom_info"].update(value="Turning delay ON")
+            window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
             window.refresh()
             time.sleep(5)
 
@@ -227,7 +227,7 @@ def resize_text():
     base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
     scale = window_width / base_width
 
-    print(f"Closest screen size: {base_width}, mutiplier: {scale}\n")
+    print(f"Closest screen size: {base_width}, multiplier: {scale}\n")
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(60, int(113 * scale)))
