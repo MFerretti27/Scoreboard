@@ -12,6 +12,8 @@ from main import set_screen
 import subprocess
 import sys
 import gc
+import tkinter as tk
+from tkinter import font as tkFont
 
 
 def gui_setup() -> sg.Window:
@@ -124,13 +126,19 @@ def gui_setup() -> sg.Window:
 def will_text_fit_on_screen(text: str) -> bool:
     '''Check if text will fit on screen'''
     screen_width = sg.Window.get_screen_size()[0]  # Get screen width
-    char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
+
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    font = tkFont.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
+    width = font.measure(text)
+    root.destroy()
+    # char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
 
     # Calculate text width
-    text_width = len(text) * char_width
+    # text_width = len(text) * char_width
 
-    if text_width >= screen_width:
-        print(f"Bottom Text will scroll, text size: {text_width}, screen size: {screen_width}")
+    if width >= screen_width:
+        print(f"Bottom Text will scroll, text size: {width}, screen size: {screen_width}")
         return True
     else:
         return False
@@ -176,13 +184,13 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
-        elif 'Left' in events[0]:
+        elif 'Left' in events[0] and settings.delay:
             print("left key pressed, delay off")
             settings.delay = False
             window["bottom_info"].update(value="Turning delay OFF")
             window.refresh()
             time.sleep(5)
-        elif 'Right' in events[0]:
+        elif 'Right' in events[0] and not settings.delay:
             print("Right key pressed, delay on")
             settings.delay = True
             window["bottom_info"].update(value="Turning delay ON")

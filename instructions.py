@@ -6,8 +6,8 @@ Controls
 Escape - Return to main menu.
 Up Arrow - Stay on the currently displayed team (only if multiple teams are playing).
 Down Arrow - Resume rotating between multiple teams.
-Left Arrow - Turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.
-Right Arrow - Turn off live data delay, this will shown live game info as soon as its available.
+Right Arrow - Turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.
+Left Arrow - Turn off live data delay, this will shown live game info as soon as its available.
 Caps Lock - Enter "No Spoiler Mode," hiding scores, records, and game details.
 Shift - Exit "No Spoiler Mode," showing scores, records, and game details.
 

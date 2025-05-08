@@ -76,7 +76,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     for teams in team_info:
                         if "bottom_info" in teams.keys():
                             if "FINAL" not in teams["bottom_info"]:
-                                currently_playing[index] = True
+                                teams_currently_playing[index] = True
                                 index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
