@@ -83,15 +83,30 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     index = 0
                     for team_info_temp in team_info:
                         if teams_with_data[index] and teams_currently_playing[index]:
-                            team_info[index]['top_info'] = ""
-                            team_info[index]['bottom_info'] = ""
+                            team_info[index]['top_info'] = "Game Started"
+                            team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
                             team_info[index]['home_timeouts'] = ""
                             team_info[index]['away_timeouts'] = ""
                             team_info[index]['home_score'] = "0"
                             team_info[index]['away_score'] = "0"
-                            team_info[index]['above_score_txt'] = ""
+                            if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
+                                team_info[index]['above_score_txt'] = ""
                             team_info[index]['under_score_image'] = ""
                         index += 1
+            if settings.delay and first_time:
+                index = 0
+                for team_info_temp in team_info:
+                    if teams_with_data[index] and teams_currently_playing[index]:
+                        team_info[index]['top_info'] = "Game Started"
+                        team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+                        team_info[index]['home_timeouts'] = ""
+                        team_info[index]['away_timeouts'] = ""
+                        team_info[index]['home_score'] = "0"
+                        team_info[index]['away_score'] = "0"
+                        if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
+                            team_info[index]['above_score_txt'] = ""
+                        team_info[index]['under_score_image'] = ""
+                    index += 1
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 
@@ -168,8 +183,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
         # Find Next team to display
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
-            if teams_with_data[display_index] and (teams_currently_playing[display_index] or
-                                                   not settings.prioritize_playing_team):
+            if teams_with_data[display_index] and teams_currently_playing[display_index]:
                 first_time = False
                 # Find next team to display (skip teams not playing)
                 if not settings.stay_on_team:  # If shift pressed, stay on current team playing

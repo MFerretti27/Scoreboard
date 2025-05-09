@@ -58,6 +58,10 @@ def main():
                         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                             fetch_clock = ticks_add(fetch_clock, fetch_timer)
                         fetch_first_time = True
+                        try:
+                            del saved_data[teams[fetch_index][0]]
+                        except KeyError:
+                            print("\nData has not been saved")
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -80,7 +84,7 @@ def main():
                             team_info.append(saved_data[teams[fetch_index][0]][0])
                             teams_with_data.append(True)
                             continue
-                        # If greater than 3 days remove
+                        # If greater than days remove
                         else:
                             del saved_data[teams[fetch_index][0]]
 
@@ -120,7 +124,7 @@ def main():
 
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
                 else:
-                    print(f"Team doesn't have data {teams[display_index][0]}")
+                    print(f"\nTeam doesn't have data {teams[display_index][0]}")
                 display_index = (display_index + 1) % len(teams)
 
             event = window.read(timeout=1)
