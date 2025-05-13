@@ -4,7 +4,8 @@ import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
-from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode, resize_text
+from gui_setup import (gui_setup, will_text_fit_on_screen, reset_window_elements,
+                       check_events, set_spoiler_mode, resize_text)
 from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from screens.clock_screen import clock
@@ -58,10 +59,8 @@ def main():
                         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                             fetch_clock = ticks_add(fetch_clock, fetch_timer)
                         fetch_first_time = True
-                        try:
+                        if teams[fetch_index][0] in saved_data:
                             del saved_data[teams[fetch_index][0]]
-                        except KeyError:
-                            print("\nData has not been saved")
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:

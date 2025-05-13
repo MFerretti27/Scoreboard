@@ -14,6 +14,7 @@ from update import check_for_update, update_program, list_backups, restore_backu
 import settings
 import platform
 from instructions import help_text
+import ast
 
 filename = "settings.py"
 FONT = "Helvetica"
@@ -88,6 +89,11 @@ def create_main_layout(window_width):
         ],
         [sg.Push(), sg.Text("", font=(FONT, message_size), key="update_message"), sg.Push()],
         [sg.VPush()],
+        [
+            sg.Push(),
+            sg.Button("Set Team Order", font=(FONT, button_size)),
+            sg.Push(),
+        ],
         [
             sg.Push(),
             sg.Button("Add MLB team", font=(FONT, button_size)),
@@ -506,6 +512,57 @@ def create_settings_layout(window_width):
     return layout
 
 
+def create_order_teams_layout(window_width):
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    max_size = 100
+    title_size = min(max_size, max(60, int(65 * scale)))
+    button_size = min(max_size, max(38, int(40 * scale)))
+    list_box_size_height = min(max_size, max(10, int(15 * scale)))
+    list_box_size_width = min(max_size, max(18, int(40 * scale)))
+    list_box_txt_size = min(max_size, max(18, int(24 * scale)))
+    message_size = min(max_size, max(6, int(22 * scale)))
+    move_button_size = min(max_size, max(38, int(20 * scale)))
+
+    teams = load_teams_order()
+    team_names = [team[0] for team in teams]
+
+    layout = [
+        [sg.Push(), sg.Text("Reorder Teams", font=(FONT, title_size, "underline")), sg.Push()],
+        [sg.Push(),
+         sg.Text("The order here will be the order teams are displayed in", font=(FONT, message_size)),
+         sg.Push()],
+        [sg.Push(),
+         sg.Listbox(team_names, size=(list_box_size_width, list_box_size_height),
+                    font=(FONT, list_box_txt_size),
+                    key='TEAM_ORDER', enable_events=True,
+                    ),
+         sg.Push(),
+         [sg.VPush()],
+         ],
+        [sg.Push(),
+         sg.Button('Move Up', font=(FONT, move_button_size), pad=(10, button_size)),
+         sg.Button('Move Down', font=(FONT, move_button_size), pad=(10, button_size)),
+         sg.Push(),
+         ],
+        [sg.Push(),
+         sg.Text("", font=(FONT, button_size), key="order_message", text_color='Green'),
+         sg.Push()
+         ],
+        [[sg.VPush()],
+         sg.Push(),
+         sg.Button("Save", font=(FONT, button_size)),
+         sg.Button("Back", font=(FONT, button_size)),
+         sg.Push(),
+         ],
+    ]
+    return layout
+
+
 def update_teams(selected_teams, league):
     available_checkbox_teams = {
         "MLB": MLB,
@@ -700,6 +757,62 @@ def positive_num(s: str) -> bool:
     return s.isdigit() and int(s) >= 0
 
 
+def load_teams_order():
+    with open(filename, 'r') as f:
+        tree = ast.parse(f.read(), filename=filename)
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            if node.targets[0].id == 'teams':
+                return ast.literal_eval(ast.unparse(node.value))
+    return []
+
+
+def save_teams_order(new_ordered_teams):
+    """Replaces the existing teams array with a newly ordered array."""
+    
+    # Flatten the list of teams in case it's a list of lists
+    flattened_teams = [team[0] for team in new_ordered_teams] if isinstance(new_ordered_teams[0], list) else new_ordered_teams
+
+    # Create the string representation of the teams array to insert into the file
+    teams_string = "teams = [\n"
+    for team in flattened_teams:
+        teams_string += f"    ['{team}'],\n"
+    teams_string += "]\n"
+
+    # Read the file and find the teams section to update
+    with open(filename, "r") as file:
+        contents = file.readlines()
+
+    start_index, end_index = None, None
+    bracket_balance = 0
+    found_teams = False
+
+    for i, line in enumerate(contents):
+        if not found_teams:
+            if line.strip().startswith("teams = ["):
+                start_index = i
+                bracket_balance += line.count("[") - line.count("]")
+                found_teams = True
+        else:
+            bracket_balance += line.count("[") - line.count("]")
+            if bracket_balance == 0:
+                end_index = i
+                break
+
+    # If teams block is found, replace it with the new reordered list
+    if start_index is not None and end_index is not None:
+        contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
+
+        # Write the updated contents back to the file
+        with open(filename, "w") as file:
+            file.writelines(contents)
+
+        teams_reordered = f"Teams Reordered: {', '.join(flattened_teams)}"
+        return teams_reordered
+    else:
+        return "Teams block not found in the file."
+
+
 def main():
     global FONT
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -712,12 +825,20 @@ def main():
                        size=(window_width, window_height), return_keyboard_events=True).Finalize()
 
     current_window = "main"
+    teams = load_teams_order()
+    team_names = [team[0] for team in teams]
     while True:
         if platform.system() == 'Darwin':
             window.TKroot.attributes('-fullscreen', True)
         else:
             window.Maximize()
+
         event, values = window.read()
+
+        if current_window == "order_teams":
+            selected = values['TEAM_ORDER']
+            if selected:
+                index = team_names.index(selected[0])
 
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
@@ -742,6 +863,15 @@ def main():
             window.close()
             window = new_window
             current_window = "settings"
+
+        elif event == "Set Team Order":
+            new_layout = create_order_teams_layout(window_width)
+            window.hide()
+            new_window = sg.Window("", new_layout, resizable=True, finalize=True,
+                                   return_keyboard_events=True, size=(window_width, window_height))
+            window.close()
+            window = new_window
+            current_window = "order_teams"
 
         elif event == "Back":
             window.hide()
@@ -887,6 +1017,19 @@ def main():
                                    size=(window_width, window_height))
             window.close()
             window = new_window
+
+        if event == 'Move Up' and index > 0:
+            team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
+            window['TEAM_ORDER'].update(team_names, set_to_index=index - 1)
+
+        elif event == 'Move Down' and index < len(team_names) - 1:
+            team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
+            window['TEAM_ORDER'].update(team_names, set_to_index=index + 1)
+
+        elif event == 'Save' and current_window == "order_teams":
+            new_teams = [[name] for name in team_names]
+            save_teams_order(new_teams)
+            window["order_message"].update(value="Order Saved Successfully!")
 
 
 if __name__ == "__main__":

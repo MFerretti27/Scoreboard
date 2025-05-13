@@ -184,18 +184,19 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
-        elif 'Left' in events[0] and settings.delay:
-            print("left key pressed, delay off")
-            settings.delay = False
-            window["bottom_info"].update(value="Turning delay OFF")
-            window.refresh()
-            time.sleep(5)
-        elif 'Right' in events[0] and not settings.delay:
-            print("Right key pressed, delay on")
-            settings.delay = True
-            window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
-            window.refresh()
-            time.sleep(5)
+
+    if 'Left' in events[0] and settings.delay:
+        print("left key pressed, delay off")
+        settings.delay = False
+        window["bottom_info"].update(value="Turning delay OFF")
+        window.refresh()
+        time.sleep(5)
+    elif 'Right' in events[0] and not settings.delay:
+        print("Right key pressed, delay on")
+        settings.delay = True
+        window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
+        window.refresh()
+        time.sleep(5)
 
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
