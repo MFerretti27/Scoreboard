@@ -4,11 +4,13 @@ import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
-from gui_setup import gui_setup, will_text_fit_on_screen, reset_window_elements, check_events, set_spoiler_mode, resize_text
+from gui_setup import (gui_setup, will_text_fit_on_screen, reset_window_elements,
+                       check_events, set_spoiler_mode, resize_text)
 from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from screens.clock_screen import clock
 import settings
+import traceback
 
 
 ##################################
@@ -30,7 +32,10 @@ def main():
     display_first_time = True
     fetch_first_time = True
 
-    # resize_text()
+    if settings.LIVE_DATA_DELAY > 0:
+        settings.delay = True
+
+    resize_text()
     window = gui_setup()  # Create window to display teams
 
     while True:
@@ -53,6 +58,9 @@ def main():
                             display_clock = ticks_add(display_clock, display_timer)
                         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                             fetch_clock = ticks_add(fetch_clock, fetch_timer)
+                        fetch_first_time = True
+                        if teams[fetch_index][0] in saved_data:
+                            del saved_data[teams[fetch_index][0]]
 
                     # Save data for to display longer than data is available (minimum 3 days)
                     if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
@@ -72,10 +80,10 @@ def main():
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
                             print(f"It will display, time its been: {date_difference}")
-                            team_info.append(saved_data[teams[fetch_index][0]])
+                            team_info.append(saved_data[teams[fetch_index][0]][0])
                             teams_with_data.append(True)
                             continue
-                        # If greater than 3 days remove
+                        # If greater than days remove
                         else:
                             del saved_data[teams[fetch_index][0]]
 
@@ -115,7 +123,7 @@ def main():
 
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
                 else:
-                    print(f"Team doesn't have data {teams[display_index][0]}")
+                    print(f"\nTeam doesn't have data {teams[display_index][0]}")
                 display_index = (display_index + 1) % len(teams)
 
             event = window.read(timeout=1)
@@ -146,6 +154,7 @@ def main():
 
         except Exception as error:
             print(f"Error: {error}")
+            traceback.print_exc()  # Prints the full traceback
             time_till_clock = 0
             if is_connected():
                 while time_till_clock < 12:

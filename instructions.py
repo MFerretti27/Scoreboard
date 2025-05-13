@@ -6,6 +6,8 @@ Controls
 Escape - Return to main menu.
 Up Arrow - Stay on the currently displayed team (only if multiple teams are playing).
 Down Arrow - Resume rotating between multiple teams.
+Right Arrow - Turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.
+Left Arrow - Turn off live data delay, this will shown live game info as soon as its available.
 Caps Lock - Enter "No Spoiler Mode," hiding scores, records, and game details.
 Shift - Exit "No Spoiler Mode," showing scores, records, and game details.
 
@@ -24,10 +26,10 @@ How Data is Displayed
 How Data is Collected
 ------------------------
 - Primary source: ESPN API.
-- Backup APIs: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
-- If ESPN fails:
+- Secondary Source: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
+- If only primary source fails:
     - Tries backup APIs based on the sport.
-- If backups fail:
+- If only secondary sources fail:
     - Displays basic info from ESPN.
     - Some details (pitch count, bonus status, shots on goal, etc) might be missing.
 - If all data fetching fails:

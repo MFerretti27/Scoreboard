@@ -14,6 +14,7 @@ from update import check_for_update, update_program, list_backups, restore_backu
 import settings
 import platform
 from instructions import help_text
+import ast
 
 filename = "settings.py"
 FONT = "Helvetica"
@@ -88,6 +89,11 @@ def create_main_layout(window_width):
         ],
         [sg.Push(), sg.Text("", font=(FONT, message_size), key="update_message"), sg.Push()],
         [sg.VPush()],
+        [
+            sg.Push(),
+            sg.Button("Set Team Order", font=(FONT, button_size)),
+            sg.Push(),
+        ],
         [
             sg.Push(),
             sg.Button("Add MLB team", font=(FONT, button_size)),
@@ -208,7 +214,6 @@ def create_settings_layout(window_width):
     bottom_label_size = min(max_size, max(22, int(26 * scale)))
 
     checkbox_size = min(max_size, max(10, int(16 * scale)))
-    general_checkbox_width = min(max_size, max(14, int(25 * scale)))
     text_size = min(max_size, max(12, int(16 * scale)))
 
     settings = read_settings_from_file()
@@ -240,11 +245,10 @@ def create_settings_layout(window_width):
                                  font=('Arial', text_size),
                                  initial_value=str(settings.get("LIVE_DATA_DELAY", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
-                         sg.Text("", font=(FONT, message_size), key="Live_data_message", text_color='red',
-                                 expand_x=True)],
+                         ],
                         [
                             sg.Push(),
-                            sg.Text("Delay to display live data",
+                            sg.Text("Delay to display live data", key="Live_data_message",
                                     font=(FONT, message_size, "italic")),
                             sg.Push(),
                         ],
@@ -258,11 +262,11 @@ def create_settings_layout(window_width):
                                  font=('Arial', text_size),
                                  initial_value=str(settings.get("DISPLAY_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
-                         sg.Text("", font=(FONT, message_size), key="display_playing_message", text_color='red',
-                                 expand_x=True)],
+                         ],
                         [
                             sg.Push(),
                             sg.Text("How often to Display each team when teams are playing",
+                                    key="display_playing_message",
                                     font=(FONT, message_size, "italic")),
                             sg.Push(),
                         ],
@@ -280,11 +284,11 @@ def create_settings_layout(window_width):
                                  font=('Arial', text_size),
                                  initial_value=str(settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
-                         sg.Text("", font=(FONT, message_size), key="fetch_not_playing_message", text_color='red',
-                                 expand_x=True)],
+                         ],
                         [
                             sg.Push(),
                             sg.Text("How often to get data when no team is playing",
+                                    key="fetch_not_playing_message",
                                     font=(FONT, message_size, "italic")),
                             sg.Push()
                         ],
@@ -298,11 +302,29 @@ def create_settings_layout(window_width):
                                  font=('Arial', text_size),
                                  initial_value=str(settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
                          sg.Text("seconds", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
-                         sg.Text("", font=(FONT, message_size), key="display_not_playing_message", text_color='red',
-                                 expand_x=True)],
+                         ],
                         [
                             sg.Push(),
                             sg.Text("How often to Display each team when no team is playing",
+                                    key="display_not_playing_message",
+                                    font=(FONT, message_size, "italic")),
+                            sg.Push(),
+                        ],
+                    ],
+                ),
+                sg.Column(
+                    [
+                        [sg.Text("Display Time:", font=(FONT, top_label_size)),
+                         sg.Spin([str(i) for i in range(1000)], key='display_time', enable_events=True,
+                                 size=(text_input_size, 1),
+                                 font=('Arial', text_size),
+                                 initial_value=str(settings.get("HOW_LONG_TO_DISPLAY_TEAM", 0))),
+                         sg.Text("days", font=(FONT, message_size), expand_x=True, pad=(0, 0)),
+                         ],
+                        [
+                            sg.Push(),
+                            sg.Text("How long to display team info when finished",
+                                    key="display_time_message",
                                     font=(FONT, message_size, "italic")),
                             sg.Push(),
                         ],
@@ -313,38 +335,38 @@ def create_settings_layout(window_width):
             [sg.Text("", font=(FONT, bottom_label_size)),],
             [
                 sg.Checkbox("Display Records", key="display_records",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_records", False)),
                 sg.Checkbox("Display Venue", key="display_venue",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_venue", False)),
                 sg.Checkbox("Display Broadcast", key="display_network",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_network", False)),
                 sg.Checkbox("Display Odds", key="display_odds",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_odds", False)),
                 sg.Checkbox("Display Series Info", key="display_series",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_series", False)),
             ],
             [
                 sg.Checkbox("Display Date Ended", key="display_date_ended",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("display_date_ended", False)),
                 sg.Checkbox("Always Get Logos when starting", key="always_get_logos",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("always_get_logos", False)),
                 sg.Checkbox("Prioritize Playing team(s)", key="prioritize_playing_team",
-                            size=(general_checkbox_width, checkbox_height),
                             font=(FONT, text_size),
+                            expand_x=True,
                             default=settings.get("prioritize_playing_team", False)),
             ],
             # Row containing "Change Font" label
@@ -490,6 +512,57 @@ def create_settings_layout(window_width):
     return layout
 
 
+def create_order_teams_layout(window_width):
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    max_size = 100
+    title_size = min(max_size, max(60, int(65 * scale)))
+    button_size = min(max_size, max(38, int(40 * scale)))
+    list_box_size_height = min(max_size, max(10, int(15 * scale)))
+    list_box_size_width = min(max_size, max(18, int(40 * scale)))
+    list_box_txt_size = min(max_size, max(18, int(24 * scale)))
+    message_size = min(max_size, max(6, int(22 * scale)))
+    move_button_size = min(max_size, max(38, int(20 * scale)))
+
+    teams = load_teams_order()
+    team_names = [team[0] for team in teams]
+
+    layout = [
+        [sg.Push(), sg.Text("Reorder Teams", font=(FONT, title_size, "underline")), sg.Push()],
+        [sg.Push(),
+         sg.Text("The order here will be the order teams are displayed in", font=(FONT, message_size)),
+         sg.Push()],
+        [sg.Push(),
+         sg.Listbox(team_names, size=(list_box_size_width, list_box_size_height),
+                    font=(FONT, list_box_txt_size),
+                    key='TEAM_ORDER', enable_events=True,
+                    ),
+         sg.Push(),
+         [sg.VPush()],
+         ],
+        [sg.Push(),
+         sg.Button('Move Up', font=(FONT, move_button_size), pad=(10, button_size)),
+         sg.Button('Move Down', font=(FONT, move_button_size), pad=(10, button_size)),
+         sg.Push(),
+         ],
+        [sg.Push(),
+         sg.Text("", font=(FONT, button_size), key="order_message", text_color='Green'),
+         sg.Push()
+         ],
+        [[sg.VPush()],
+         sg.Push(),
+         sg.Button("Save", font=(FONT, button_size)),
+         sg.Button("Back", font=(FONT, button_size)),
+         sg.Push(),
+         ],
+    ]
+    return layout
+
+
 def update_teams(selected_teams, league):
     available_checkbox_teams = {
         "MLB": MLB,
@@ -566,8 +639,8 @@ def read_teams_from_file():
     return teams
 
 
-def update_settings(live_data_delay, fetch_timer, display_timer, display_timer_live,
-                    font_selected, selected_items):
+def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
+                    display_timer_live, font_selected, selected_items):
     with open(filename, "r") as file:
         contents = file.readlines()
 
@@ -584,6 +657,8 @@ def update_settings(live_data_delay, fetch_timer, display_timer, display_timer_l
             contents[i] = f'DISPLAY_NOT_PLAYING_TIMER = {display_timer}\n'
         if line.strip().startswith("DISPLAY_PLAYING_TIMER ="):
             contents[i] = f'DISPLAY_PLAYING_TIMER = {display_timer_live}\n'
+        if line.strip().startswith("HOW_LONG_TO_DISPLAY_TEAM ="):
+            contents[i] = f'HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n'
 
     for key, selected in zip(setting_keys, selected_items):
         for i, line in enumerate(contents):
@@ -598,7 +673,7 @@ def read_settings_from_file():
     settings = {}
     keys_to_find = [
         "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
-        "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER",
+        "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM",
 
         "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
         "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
@@ -641,6 +716,11 @@ def read_settings_from_file():
                         settings[key] = int(value)
                     except ValueError:
                         settings[key] = 0
+                elif key == "HOW_LONG_TO_DISPLAY_TEAM":
+                    try:
+                        settings[key] = int(value)
+                    except ValueError:
+                        settings[key] = 0
                 elif key == "FONT":
                     settings[key] = value.strip('"').strip("'")
                 elif value.lower() == "true":
@@ -658,9 +738,9 @@ def create_instructions_layout(window_height, window_width):
     title_size = min(max_size, max(60, int(65 * scale)))
     text_size = min(max_size, max(20, int(25 * scale)))
     button_size = min(max_size, max(48, int(50 * scale)))
-    instructions_size = min(max_size, max(25, int(25 * scale)))
+    instructions_size = min(max_size, max(25, int(20 * scale)))
     layout = [
-        [sg.Text('Manual', font=(FONT, title_size), justification='center', expand_x=True)],
+        [sg.Text('Manual', font=(FONT, title_size, "underline"), justification='center', expand_x=True)],
         [sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
                       no_scrollbar=False, font=('Courier', text_size))],
         [
@@ -677,6 +757,62 @@ def positive_num(s: str) -> bool:
     return s.isdigit() and int(s) >= 0
 
 
+def load_teams_order():
+    with open(filename, 'r') as f:
+        tree = ast.parse(f.read(), filename=filename)
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            if node.targets[0].id == 'teams':
+                return ast.literal_eval(ast.unparse(node.value))
+    return []
+
+
+def save_teams_order(new_ordered_teams):
+    """Replaces the existing teams array with a newly ordered array."""
+    
+    # Flatten the list of teams in case it's a list of lists
+    flattened_teams = [team[0] for team in new_ordered_teams] if isinstance(new_ordered_teams[0], list) else new_ordered_teams
+
+    # Create the string representation of the teams array to insert into the file
+    teams_string = "teams = [\n"
+    for team in flattened_teams:
+        teams_string += f"    ['{team}'],\n"
+    teams_string += "]\n"
+
+    # Read the file and find the teams section to update
+    with open(filename, "r") as file:
+        contents = file.readlines()
+
+    start_index, end_index = None, None
+    bracket_balance = 0
+    found_teams = False
+
+    for i, line in enumerate(contents):
+        if not found_teams:
+            if line.strip().startswith("teams = ["):
+                start_index = i
+                bracket_balance += line.count("[") - line.count("]")
+                found_teams = True
+        else:
+            bracket_balance += line.count("[") - line.count("]")
+            if bracket_balance == 0:
+                end_index = i
+                break
+
+    # If teams block is found, replace it with the new reordered list
+    if start_index is not None and end_index is not None:
+        contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
+
+        # Write the updated contents back to the file
+        with open(filename, "w") as file:
+            file.writelines(contents)
+
+        teams_reordered = f"Teams Reordered: {', '.join(flattened_teams)}"
+        return teams_reordered
+    else:
+        return "Teams block not found in the file."
+
+
 def main():
     global FONT
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -689,12 +825,20 @@ def main():
                        size=(window_width, window_height), return_keyboard_events=True).Finalize()
 
     current_window = "main"
+    teams = load_teams_order()
+    team_names = [team[0] for team in teams]
     while True:
         if platform.system() == 'Darwin':
             window.TKroot.attributes('-fullscreen', True)
         else:
             window.Maximize()
+
         event, values = window.read()
+
+        if current_window == "order_teams":
+            selected = values['TEAM_ORDER']
+            if selected:
+                index = team_names.index(selected[0])
 
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
@@ -719,6 +863,15 @@ def main():
             window.close()
             window = new_window
             current_window = "settings"
+
+        elif event == "Set Team Order":
+            new_layout = create_order_teams_layout(window_width)
+            window.hide()
+            new_window = sg.Window("", new_layout, resizable=True, finalize=True,
+                                   return_keyboard_events=True, size=(window_width, window_height))
+            window.close()
+            window = new_window
+            current_window = "order_teams"
 
         elif event == "Back":
             window.hide()
@@ -782,6 +935,7 @@ def main():
             fetch_timer = values['fetch_not_playing']
             display_timer = values['display_not_playing']
             display_timer_live = values['display_playing']
+            display_time = values['display_time']
 
             font_selected = [key for key in values if key.startswith("font_") and values[key]]
             no_fonts_available = False
@@ -789,36 +943,53 @@ def main():
                 no_fonts_available = True
 
             if (positive_num(live_data_delay) and positive_num(fetch_timer) and positive_num(display_timer)
-                and positive_num(display_timer_live) and (len(font_selected) == 1 or no_fonts_available)):
+                and positive_num(display_time) and positive_num(display_timer_live) and
+                (len(font_selected) == 1 or no_fonts_available)):
 
-                font_selected = font_selected[0].replace('"', '').replace('font_', '') if font_selected else FONT
-                update_settings(int(live_data_delay), int(fetch_timer), int(display_timer),
-                                int(display_timer_live), font_selected, selected_items)
+                new_font = font_selected[0].replace('"', '').replace('font_', '') if font_selected else FONT
+                update_settings(int(live_data_delay), int(fetch_timer), int(display_timer), int(display_time),
+                                int(display_timer_live), new_font, selected_items)
 
-                FONT = font_selected
+                FONT = new_font
                 window.refresh()
-                window["Live_data_message"].update(value="")
-                window["font_message"].update(value="")
-                window["confirmation_message"].update(value="Settings saved successfully!")
-                window["Live_data_message"].update(value="")
-                window["fetch_not_playing_message"].update(value="")
-                window["display_playing_message"].update(value="")
-                window["display_not_playing_message"].update(value="")
-                window["font_message"].update(value="")
-                continue
+                correct = True
+            else:
+                correct = False
 
             if not positive_num(live_data_delay):
-                window["Live_data_message"].update(value="Please Enter Positive Digits Only")
+                window["Live_data_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+            else:
+                window["Live_data_message"].update(value="Delay to display live data", text_color="black")
             if not positive_num(fetch_timer):
-                window["fetch_not_playing_message"].update(value="Please Enter Positive Digits Only")
+                window["fetch_not_playing_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+            else:
+                window["fetch_not_playing_message"].update(value="How often to get data when no team is playing",
+                                                           text_color="black")
             if not positive_num(display_timer):
-                window["display_not_playing_message"].update(value="Please Enter Positive Digits Only")
+                window["display_not_playing_message"].update(value="Please Enter Positive Digits Only",
+                                                             text_color="red")
+            else:
+                window["display_not_playing_message"].update(value="How often to Display each team when no team is playing",
+                                                             text_color="black")
             if not positive_num(display_timer_live):
-                window["display_playing_message"].update(value="Please Enter Positive Digits Only")
+                window["display_playing_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+            else:
+                window["display_playing_message"].update(value="How often to Display each team when teams are playing",
+                                                         text_color="black")
+            if not positive_num(display_time):
+                window["display_time_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+            else:
+                window["display_time_message"].update(value="How long to display team info when finished",
+                                                      text_color="black")
             if len(font_selected) != 1:
                 window["font_message"].update(value="Please Select One Font")
+            else:
+                window["font_message"].update(value="")
 
-            window["confirmation_message"].update(value="")
+            if correct:
+                window["confirmation_message"].update(value="Settings saved successfully!")
+            else:
+                window["confirmation_message"].update(value="")
 
         elif event == "Start" or ("Return" in event and current_window == "main"):
             redirect = RedirectText(window)  # Create an instance of RedirectText
@@ -846,6 +1017,19 @@ def main():
                                    size=(window_width, window_height))
             window.close()
             window = new_window
+
+        if event == 'Move Up' and index > 0:
+            team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
+            window['TEAM_ORDER'].update(team_names, set_to_index=index - 1)
+
+        elif event == 'Move Down' and index < len(team_names) - 1:
+            team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
+            window['TEAM_ORDER'].update(team_names, set_to_index=index + 1)
+
+        elif event == 'Save' and current_window == "order_teams":
+            new_teams = [[name] for name in team_names]
+            save_teams_order(new_teams)
+            window["order_message"].update(value="Order Saved Successfully!")
 
 
 if __name__ == "__main__":

@@ -93,3 +93,4 @@ prioritize_playing_team = True
 ############################################
 no_spoiler_mode = False
 stay_on_team = False
+delay = False

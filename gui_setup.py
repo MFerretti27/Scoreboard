@@ -12,6 +12,8 @@ from main import set_screen
 import subprocess
 import sys
 import gc
+import tkinter as tk
+from tkinter import font as tkFont
 
 
 def gui_setup() -> sg.Window:
@@ -124,29 +126,35 @@ def gui_setup() -> sg.Window:
 def will_text_fit_on_screen(text: str) -> bool:
     '''Check if text will fit on screen'''
     screen_width = sg.Window.get_screen_size()[0]  # Get screen width
-    char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
+
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    font = tkFont.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
+    width = font.measure(text)
+    root.destroy()
+    # char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
 
     # Calculate text width
-    text_width = len(text) * char_width
+    # text_width = len(text) * char_width
 
-    if text_width >= screen_width:
-        print(f"Bottom Text will scroll, text size: {text_width}, screen size: {screen_width}")
+    if width >= screen_width:
+        print(f"Bottom Text will scroll, text size: {width}, screen size: {screen_width}")
         return True
     else:
         return False
 
 def reset_window_elements(window: sg.Window) -> None:
     '''Reset window elements to default values'''
-    window['top_info'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window['bottom_info'].update(value='', font=(FONT, INFO_TXT_SIZE), text_color='white')
-    window['home_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-    window['away_timeouts'].update(value='', font=(FONT, TIMEOUT_SIZE), text_color='white')
-    window['home_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
-    window['away_record'].update(value='', font=(FONT, RECORD_TXT_SIZE), text_color='white')
-    window['home_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['away_score'].update(value='', font=(FONT, SCORE_TXT_SIZE), text_color='white')
-    window['above_score_txt'].update(value='', font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window["hyphen"].update(value='-', font=(FONT, HYPHEN_SIZE), text_color='white')
+    window['top_info'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
+    window['bottom_info'].update(value='', font=(FONT, settings.INFO_TXT_SIZE), text_color='white')
+    window['home_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['away_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['home_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['away_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['home_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['away_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['above_score_txt'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
+    window["hyphen"].update(value='-', font=(FONT, settings.HYPHEN_SIZE), text_color='white')
 
 
 def check_events(window: sg.Window, events, currently_playing=False) -> None:
@@ -165,17 +173,31 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
 
     if currently_playing:
         if 'Caps_Lock' in events[0] and not settings.stay_on_team:
-            print("Staying on team")
+            print("Caps Lock key pressed, Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
         elif ('Shift_L' in events[0] or 'Shift_R' in events[0]) and settings.stay_on_team:
-            print("Rotating teamS")
+            print("shift key pressed, Rotating teams")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
+
+    if 'Left' in events[0] and settings.delay:
+        print("left key pressed, delay off")
+        settings.delay = False
+        window["bottom_info"].update(value="Turning delay OFF")
+        window.refresh()
+        time.sleep(5)
+    elif 'Right' in events[0] and not settings.delay:
+        print("Right key pressed, delay on")
+        settings.delay = True
+        window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
+        window.refresh()
+        time.sleep(5)
+
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
     if currently_playing:
@@ -206,22 +228,22 @@ def resize_text():
     base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
     scale = window_width / base_width
 
-    print(scale)
+    print(f"Closest screen size: {base_width}, multiplier: {scale}\n")
 
     max_size = 200
-    settings.SCORE_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
-    settings.INFO_TXT_SIZE = min(max_size, max(60, int(90 * scale)))
-    settings.RECORD_TXT_SIZE = min(max_size, max(60, int(96 * scale)))
-    settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(204 * scale)))
-    settings.HYPHEN_SIZE = min(max_size, max(60, int(84 * scale)))
-    settings.TIMEOUT_SIZE = min(max_size, max(24, int(34 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(50, int(56 * scale)))
-    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(80 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(76 * scale)))
-    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(30, int(30 * scale)))
-    settings.TOP_TXT_SIZE = min(max_size, max(60, int(80 * scale)))
+    settings.SCORE_TXT_SIZE = min(max_size, max(60, int(113 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(60, int(68 * scale)))
+    settings.RECORD_TXT_SIZE = min(max_size, max(60, int(72 * scale)))
+    settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
+    settings.HYPHEN_SIZE = min(max_size, max(60, int(63 * scale)))
+    settings.TIMEOUT_SIZE = min(max_size, max(10, int(26 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(50, int(42 * scale)))
+    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
+    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
+    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
+    settings.TOP_TXT_SIZE = min(max_size, max(40, int(60 * scale)))
 
-    print(f"score txt size:{settings.SCORE_TXT_SIZE}")
+    print(f"\nscore txt size:{settings.SCORE_TXT_SIZE}")
     print(f"info txt size:{settings.INFO_TXT_SIZE}")
     print(f"record txt size:{settings.RECORD_TXT_SIZE}")
     print(f"clock txt size:{settings.CLOCK_TXT_SIZE}")
@@ -231,4 +253,4 @@ def resize_text():
     print(f"mlb bottom txt size:{settings.MLB_BOTTOM_INFO_SIZE}")
     print(f"playing txt size:{settings.PLAYING_TOP_INFO_SIZE}")
     print(f"not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
-    print(f"top txt size:{settings.TOP_TXT_SIZE}")
+    print(f"top txt size:{settings.TOP_TXT_SIZE}\n")

@@ -7,7 +7,7 @@ import re
 LOCAL_VERSION_FILE = "version.txt"
 
 # GitHub base URL (raw)
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/MFerretti27/Scoreboard/refs/heads/Complete-Overhaul/"
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/MFerretti27/Scoreboard/refs/heads/main/"
 
 # Path to version file on GitHub
 GITHUB_VERSION_URL = GITHUB_BASE_URL + "version.txt"

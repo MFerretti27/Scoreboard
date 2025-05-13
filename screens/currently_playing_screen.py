@@ -48,19 +48,19 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 teams_currently_playing.append(currently_playing)
 
                 # If delay dont keep updating as to not display latest data
-                if not settings.LIVE_DATA_DELAY > 0:
+                if not settings.delay:
                     team_info.append(info)
                 elif first_time:  # if delay last_info wont be populated first time, so do this once
                     team_info.append(info)
                 else:
                     delay_info.append(info)
 
-            if settings.LIVE_DATA_DELAY > 0:
+            if settings.delay:
                 last_info = copy.deepcopy(delay_info)
                 delay_info.clear()
 
             # if there is a delay save data for after delay
-            if settings.LIVE_DATA_DELAY > 0 and not first_time:
+            if settings.delay and not first_time:
                 saved_data.append(copy.deepcopy(last_info))  # Save last_info
 
                 # Wait for delay to be over to start displaying data
@@ -69,13 +69,49 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     delay_clock = ticks_add(delay_clock, delay_timer)  # Reset Timer
 
                 if delay_over:  # If delay over start displaying everything got before delay, in order
-                    team_info = saved_data.pop(0)  # get the first thing saved and remove it
+                    team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
+
+                    # Ensure currently_play is true until delay catches up
+                    index = 0
+                    for team_info_temp in team_info:
+                        if "bottom_info" in team_info_temp.keys() and teams_with_data[index]:
+                            if "FINAL" not in team_info_temp["bottom_info"]:
+                                teams_currently_playing[index] = True
+                        index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
+                    index = 0
+                    for team_info_temp in team_info:
+                        if teams_with_data[index] and teams_currently_playing[index]:
+                            team_info[index]['top_info'] = "Game Started"
+                            team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+                            team_info[index]['home_timeouts'] = ""
+                            team_info[index]['away_timeouts'] = ""
+                            team_info[index]['home_score'] = "0"
+                            team_info[index]['away_score'] = "0"
+                            if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
+                                team_info[index]['above_score_txt'] = ""
+                            team_info[index]['under_score_image'] = ""
+                        index += 1
+            if settings.delay and first_time:
+                index = 0
+                for team_info_temp in team_info:
+                    if teams_with_data[index] and teams_currently_playing[index]:
+                        team_info[index]['top_info'] = "Game Started"
+                        team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+                        team_info[index]['home_timeouts'] = ""
+                        team_info[index]['away_timeouts'] = ""
+                        team_info[index]['home_score'] = "0"
+                        team_info[index]['away_score'] = "0"
+                        if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
+                            team_info[index]['above_score_txt'] = ""
+                        team_info[index]['under_score_image'] = ""
+                    index += 1
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 
-        if teams_with_data[display_index] and teams_currently_playing[display_index]:
+        if teams_with_data[display_index] and (teams_currently_playing[display_index] or
+                                               not settings.prioritize_playing_team):
             print(f"\n{teams[display_index][0]} is currently playing, updating display")
             sport_league = teams[display_index][1]
 
@@ -91,7 +127,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                     window[key].update(value=value)
 
                 # Football specific display information
-                if "NFL" in sport_league.upper():
+                if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "home_timeouts":
                         window['home_timeouts'].update(value=value, text_color='yellow')
                     elif key == "away_timeouts":
@@ -107,7 +143,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
 
                 # NBA Specific display size for top info
-                if "NBA" in sport_league.upper():
+                if "NBA" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
                         window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
                     elif key == "home_timeouts":
@@ -122,7 +158,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                             window[key].update(value=value, text_color='orange')
 
                 # MLB Specific display size for bottom info
-                if "MLB" in sport_league.upper():
+                if "MLB" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
                         window['top_info'].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
                     if key == 'bottom_info':
@@ -135,7 +171,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
-                if "NHL" in sport_league.upper():
+                if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == 'top_info':
                         window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
 
@@ -148,11 +184,12 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
         # Find Next team to display
         if ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time:
-            if teams_with_data[display_index] and (teams_currently_playing[display_index] or
-                                                   not settings.prioritize_playing_team):
+            if teams_currently_playing[display_index] or (teams_with_data[display_index] and
+                                                          not settings.prioritize_playing_team):
                 first_time = False
                 # Find next team to display (skip teams not playing)
-                if not settings.stay_on_team:  # If shift pressed, stay on current team playing
+                # If shift pressed, stay on current team playing
+                if not settings.stay_on_team and settings.prioritize_playing_team:
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:
@@ -161,6 +198,15 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
                             print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                             break
+                elif not settings.stay_on_team and not settings.prioritize_playing_team:
+                    original_index = display_index
+                    for x in range(len(teams) * 2):
+                        if teams_with_data[(original_index + x) % len(teams)] is False:
+                            display_index = (display_index + 1) % len(teams)
+                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                        elif teams_with_data[(original_index + x) % len(teams)] is True and x != 0:
+                            print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                            break
                 else:
                     print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
@@ -168,7 +214,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             if not settings.stay_on_team:
                 display_index = (display_index + 1) % len(teams)
 
-        if should_scroll and not settings.no_spoiler_mode:
+        if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
             text = team_info[display_index]['bottom_info'] + "         "
             for _ in range(2):
                 for _ in range(len(text)):
@@ -179,6 +225,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
             should_scroll = False
 
         if not first_time:
+            temp_delay = settings.delay  # store to see if changed
             check_events(window, event, currently_playing=True)
             if settings.stay_on_team and sum(teams_currently_playing) == 1:
                 window["top_info"].update(value="No longer set to \"staying on team\"")
@@ -186,6 +233,11 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 window.read(timeout=2000)
                 time.sleep(5)
                 settings.stay_on_team = False
+
+            if temp_delay is not settings.delay:
+                delay_clock = ticks_ms()
+                delay_timer = settings.LIVE_DATA_DELAY * 1000
+                delay_over = False
 
             # If button was pressed but team is already set to change, change it back
             if settings.stay_on_team and currently_displaying != team_info[display_index]:
