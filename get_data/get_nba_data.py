@@ -5,6 +5,8 @@ import settings
 
 home_team_bonus = False
 away_team_bonus = False
+home_timeouts_saved = 0
+away_timeouts_saved = 0
 
 
 def get_all_nba_data(team_name: str):
@@ -57,7 +59,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
     :return team_info: Dictionary where data is stored to display
     """
-    global home_team_bonus, away_team_bonus
+    global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
     games = scoreboard.ScoreBoard()
     data = games.get_dict()
@@ -93,8 +95,11 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
                 if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
-                    home_timeouts = home_timeouts + 1
-                    away_timeouts = away_timeouts + 1
+                    home_timeouts = home_timeouts_saved
+                    away_timeouts = away_timeouts_saved
+                else:
+                    home_timeouts_saved = home_timeouts
+                    away_timeouts_saved = away_timeouts
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",

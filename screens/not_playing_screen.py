@@ -21,7 +21,7 @@ import traceback
 def main():
     team_info = []
     teams_with_data = []
-    saved_data = {}
+    saved_data = settings.saved_data
     display_index = 0
     should_scroll = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
@@ -33,9 +33,9 @@ def main():
     fetch_first_time = True
 
     if settings.LIVE_DATA_DELAY > 0:
-        settings.delay = True
+        settings.delay = True  # Automatically set to true if user entered delay more than 0
 
-    resize_text()
+    resize_text()  # Resize text to fit screen size
     window = gui_setup()  # Create window to display teams
 
     while True:
@@ -59,6 +59,7 @@ def main():
                         while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                             fetch_clock = ticks_add(fetch_clock, fetch_timer)
                         fetch_first_time = True
+                        # Remove team from saved data as too not overwrite new data from game with old data
                         if teams[fetch_index][0] in saved_data:
                             del saved_data[teams[fetch_index][0]]
 
@@ -69,6 +70,7 @@ def main():
                             info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
+                    # If team is already saved dont overwrite it with new date
                     elif teams[fetch_index][0] in saved_data and data is True:
                         if "FINAL" in info["bottom_info"]:
                             info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
@@ -83,7 +85,7 @@ def main():
                             team_info.append(saved_data[teams[fetch_index][0]][0])
                             teams_with_data.append(True)
                             continue
-                        # If greater than days remove
+                        # If greater than days allowed remove
                         else:
                             del saved_data[teams[fetch_index][0]]
 
@@ -164,8 +166,9 @@ def main():
                     except Exception as error:
                         print("Could not get data, trying again...")
                         window["top_info"].update(value="Could not get data, trying again...", text_color="red")
-                        window["bottom_info"].update(value=error, text_color="red")
-                        event = window.read(timeout=1)
+                        window["bottom_info"].update(value=f"Error: {error}",
+                                                     font=(settings.NOT_PLAYING_TOP_INFO_SIZE), text_color="red")
+                        event = window.read(timeout=2000)
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
                 if time_till_clock >= 12:  # 6 minutes without data, display clock

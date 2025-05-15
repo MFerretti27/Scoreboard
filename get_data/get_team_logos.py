@@ -81,7 +81,7 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
 
 def download_team_logos(window, teams: list) -> None:
-    ''' Create a base directory to store the logos if it doesn't exist
+    '''Create a base directory to store the logos if it doesn't exist
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display

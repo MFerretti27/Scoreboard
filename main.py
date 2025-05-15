@@ -6,11 +6,7 @@ import venv
 
 
 def create_virtualenv(venv_dir: str) -> None:
-    """Creates a virtual environment in the specified directory
-
-    :param venv_dir: Path to the virtual environment directory
-    """
-
+    """Creates a virtual environment in the specified directory"""
     if not os.path.exists(venv_dir):
         print(f"Creating virtual environment in {venv_dir}...")
         venv.create(venv_dir, with_pip=True)
@@ -19,35 +15,26 @@ def create_virtualenv(venv_dir: str) -> None:
 
 
 def install_requirements(venv_dir: str, requirements_file: str) -> None:
-    """Installs dependencies from a requirements.txt file
+    """Installs dependencies from a requirements.txt file"""
+    if not os.path.exists(requirements_file):
+        print("No requirements file found. Script cannot run.")
+        sys.exit(1)
 
-    :param venv_dir: Path to the virtual environment directory
-    :param requirements_file: requirements file name
-    """
+    print(f"Installing dependencies from {requirements_file}...")
 
-    if os.path.exists(requirements_file):
-        print(f"Installing dependencies from {requirements_file}...")
+    pip_executable = os.path.join(venv_dir, 'Scripts', 'pip.exe') \
+        if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'pip')
 
-        # Based on OS determine the path to the to activate the virtual environment
-        pip_executable = os.path.join(venv_dir, 'Scripts', 'pip') \
-            if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'pip')
+    if not os.path.exists(pip_executable):
+        print(f"Error: pip executable not found at {pip_executable}")
+        sys.exit(1)
 
-        # Install dependencies
-        subprocess.call([pip_executable, 'install', '-r', requirements_file])
-    else:
-        print("No requirements file found script cannot run")
-        exit()
+    subprocess.check_call([pip_executable, 'install', '-r', requirements_file])
 
 
 def run_program_in_venv(venv_dir: str, program_script: str) -> None:
-    """Runs a Python program inside the virtual environment
-
-    :param venv_dir: Path to the virtual environment directory
-    :param program_script: Name of the Python program to run
-    """
-
-    # Based on OS determine the path to the to activate the virtual environment
-    python_executable = os.path.join(venv_dir, 'Scripts', 'python') \
+    """Runs a Python program inside the virtual environment"""
+    python_executable = os.path.join(venv_dir, 'Scripts', 'python.exe') \
         if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'python')
 
     if not os.path.exists(python_executable):
@@ -60,34 +47,34 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
 
 
 def set_screen() -> None:
-    """Sets the screen for the program to run on. """
-    # Check if you are currently in Virtual Environment, if not exit
-    if sys.prefix != sys.base_prefix:
-        print("\nYou are currently in a virtual environment. Setting Screen\n")
+    """Sets the screen for the program to run on."""
+    if sys.prefix == sys.base_prefix:
+        print("Please activate the virtual environment before running.")
+        sys.exit(1)
+
+    if platform.system() != 'Windows':
         if os.environ.get('DISPLAY', '') == '':
-            print('no display found. Using :0.0')
-            os.environ.__setitem__('DISPLAY', ':0.0')
-    else:
-        print("Please go into virtual Environment by running main.py")
-        exit()
+            print('No display found. Using :0.0')
+            os.environ['DISPLAY'] = ':0.0'
 
 
 def remove_ds_files() -> None:
-    """Removes all .DS_Store files from the current directory and its subdirectories"""
+    """Removes all .DS_Store files (only needed on macOS)"""
     if platform.system() == 'Darwin':
         print("Removing .DS_Store files...")
         # Walk through the directory and remove .DS_Store files
         for root, _, files in os.walk('.'):
             for file in files:
                 if file == '.DS_Store':
-                    print(f"Removing DS file: {os.path.join(root, file)}")
-                    os.remove(os.path.join(root, file))
+                    path = os.path.join(root, file)
+                    print(f"Removing: {path}")
+                    os.remove(path)
 
 
 def main():
-    venv_dir = './venv'  # Virtual environment directory
-    requirements_file = 'requirements.txt'  # Path to requirements file
-    program_script = 'screens.main_screen'  # Name of main file to run
+    venv_dir = './venv'
+    requirements_file = 'requirements.txt'
+    program_script = 'screens.main_screen'
 
     create_virtualenv(venv_dir)
     install_requirements(venv_dir, requirements_file)

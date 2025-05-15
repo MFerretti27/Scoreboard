@@ -1,15 +1,16 @@
-'''Settings used to tell what to display'''
+'''Settings used to tell what to display and variable used in multiple files.'''
 
 #####################################
 # Settings for what teams to display
 #####################################
 
 teams = [
-    ["Detroit Lions"],
-    ["Detroit Tigers"],
-    ["Pittsburgh Steelers"],
-    ["Detroit Red Wings"],
-    ["Detroit Pistons"]
+    ['Detroit Lions'],
+    ['Pittsburgh Steelers'],
+    ['Detroit Tigers'],
+    ['Detroit Red Wings'],
+    ['Detroit Pistons'],
+    ['Golden State Warriors'],
 ]
 
 
@@ -94,3 +95,8 @@ prioritize_playing_team = True
 no_spoiler_mode = False
 stay_on_team = False
 delay = False
+
+###########################################################
+# Variables used in multiple files (avoid circular import)
+###########################################################
+saved_data = {}

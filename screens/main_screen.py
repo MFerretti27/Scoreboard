@@ -769,7 +769,7 @@ def load_teams_order():
 
 def save_teams_order(new_ordered_teams):
     """Replaces the existing teams array with a newly ordered array."""
-    
+
     # Flatten the list of teams in case it's a list of lists
     flattened_teams = [team[0] for team in new_ordered_teams] if isinstance(new_ordered_teams[0], list) else new_ordered_teams
 
@@ -872,6 +872,8 @@ def main():
             window.close()
             window = new_window
             current_window = "order_teams"
+            teams = load_teams_order()
+            team_names = [team[0] for team in teams]
 
         elif event == "Back":
             window.hide()
@@ -887,6 +889,8 @@ def main():
             teams_added, teams_removed = update_teams(selected_teams, league)
             window["teams_added"].update(value=teams_added)
             window["teams_removed"].update(value=teams_removed)
+            teams = load_teams_order()
+            team_names = [team[0] for team in teams]
 
         elif event == "update_button":
             message, successful, latest = check_for_update()

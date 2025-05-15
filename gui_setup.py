@@ -132,10 +132,6 @@ def will_text_fit_on_screen(text: str) -> bool:
     font = tkFont.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
     width = font.measure(text)
     root.destroy()
-    # char_width = INFO_TXT_SIZE * 0.6  # Approximate multiplier for Calibri font
-
-    # Calculate text width
-    # text_width = len(text) * char_width
 
     if width >= screen_width:
         print(f"Bottom Text will scroll, text size: {width}, screen size: {screen_width}")
@@ -218,7 +214,8 @@ def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict
     return window
 
 
-def resize_text():
+def resize_text() -> None:
+    '''Resize text to fit screen size.'''
     window_width = sg.Window.get_screen_size()[0]
     # window_height = sg.Window.get_screen_size()[1]
 

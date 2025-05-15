@@ -124,6 +124,8 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         inning_state = live["liveData"]["linescore"].get("inningState", "Top")
         inning_number = live["liveData"]["linescore"].get("currentInningOrdinal", 0)
         team_info['above_score_txt'] = inning_state + " " + str(inning_number)
+    else:
+        team_info['bottom_info'] = ""
 
     # Get pitcher and batter for bottom info
     if settings.display_pitcher_batter:
