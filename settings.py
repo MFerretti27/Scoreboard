@@ -5,12 +5,11 @@
 #####################################
 
 teams = [
-    ['Detroit Lions'],
-    ['Pittsburgh Steelers'],
-    ['Detroit Tigers'],
-    ['Detroit Red Wings'],
-    ['Detroit Pistons'],
-    ['Golden State Warriors'],
+    ["Detroit Lions"],
+    ["Detroit Tigers"],
+    ["Pittsburgh Steelers"],
+    ["Detroit Red Wings"],
+    ["Detroit Pistons"]
 ]
 
 
