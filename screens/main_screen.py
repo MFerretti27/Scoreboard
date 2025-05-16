@@ -665,6 +665,12 @@ def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {str(selected)}\n"
 
+    # Must do this to change settings as module wont get reloaded until scoreboard screen starts
+    if key == "always_get_logos" and selected is True:
+        settings.always_get_logos = True
+    else:
+        settings.always_get_logos = False
+
     with open(filename, "w") as file:
         file.writelines(contents)
 
