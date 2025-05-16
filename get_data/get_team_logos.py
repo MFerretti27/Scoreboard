@@ -138,16 +138,18 @@ def get_team_logos(window, teams: list) -> None:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     '''
+    already_downloaded = True
     if not os.path.exists('images/sport_logos'):
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
         resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
+        already_downloaded = False
 
     elif new_league_added():
         download_team_logos(window, teams)  # Will only get new league team logos
 
-    elif settings.always_get_logos:
+    if settings.always_get_logos and already_downloaded:
         shutil.rmtree('images/sport_logos')  # Dont want to continually resize images multiple times
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)

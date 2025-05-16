@@ -85,7 +85,7 @@ display_network = True
 display_series = True
 display_odds = True
 display_date_ended = True
-always_get_logos = False
+always_get_logos = True
 prioritize_playing_team = True
 
 ############################################
