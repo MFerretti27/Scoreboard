@@ -10,7 +10,7 @@ from get_data.get_espn_data import get_data
 from gui_setup import reset_window_elements
 from internet_connection import is_connected, reconnect
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
-from settings import *
+import settings
 import gc
 import sys
 import subprocess
@@ -45,13 +45,13 @@ def clock(window: sg.Window, message: str) -> list:
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
 
         date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
-        window["hyphen"].update(value=':', font=(FONT, SCORE_TXT_SIZE))
-        window["home_score"].update(value=minute, font=(FONT, CLOCK_TXT_SIZE))
-        window["away_score"].update(value=hour, font=(FONT, CLOCK_TXT_SIZE))
+        window["hyphen"].update(value=':', font=(settings.FONT, settings.SCORE_TXT_SIZE))
+        window["home_score"].update(value=minute, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
+        window["away_score"].update(value=hour, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
         window["away_logo"].update(filename=f"images/sport_logos/{files[0][0]}/{files[0][1]}.png")
         window["home_logo"].update(filename=f"images/sport_logos/{files[1][0]}/{files[1][1]}.png")
-        window["bottom_info"].update(value=date, font=(FONT, SCORE_TXT_SIZE))
-        window["top_info"].update(value=message, font=(FONT, TIMEOUT_SIZE))
+        window["bottom_info"].update(value=date, font=(settings.FONT, settings.RECORD_TXT_SIZE))
+        window["top_info"].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
 
         event = window.read(timeout=5000)
         if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
@@ -65,11 +65,10 @@ def clock(window: sg.Window, message: str) -> list:
         try:
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
                 teams_with_data.clear()
-                for fetch_index in range(len(teams)):
-                    print(f"\nFetching data for {teams[fetch_index][0]}")
-                    data = get_data(teams[fetch_index])
+                for fetch_index in range(len(settings.teams)):
+                    print(f"\nFetching data for {settings.teams[fetch_index][0]}")
+                    data = get_data(settings.teams[fetch_index])
                     teams_with_data.append(data[1])
-                    print(teams_with_data)
                     message = "No Data For Any Teams"
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if display updated
