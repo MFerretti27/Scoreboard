@@ -985,7 +985,7 @@ def main():
             else:
                 window["display_time_message"].update(value="How long to display team info when finished",
                                                       text_color="black")
-            if len(font_selected) != 1:
+            if len(font_selected) != 1 and not no_fonts_available:
                 window["font_message"].update(value="Please Select One Font")
             else:
                 window["font_message"].update(value="")
