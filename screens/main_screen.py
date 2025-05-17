@@ -222,7 +222,10 @@ def create_settings_layout(window_width):
     popular_fonts = [
         'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Optima',
         'Gill Sans', 'Comic Sans MS', 'Georgia', 'Lucida Console',
-        'Calibri', 'Trebuchet MS', 'Century Gothic', 'Consolas'
+        'Calibri', 'Trebuchet MS', 'Century Gothic', 'Consolas',
+        'Arial', 'QuickSand', 'Z003', 'FreeMono' ,'P052',
+        'Droid Sans Fallback', 'C509', 'URW Bookman',
+        'Noto Mono', 'PibotoLt'
     ]
 
     # Filter the available fonts to include only those that are in the "popular_fonts" list
@@ -840,6 +843,11 @@ def main():
             window.Maximize()
 
         event, values = window.read()
+
+        if current_window == "settings":
+            widget = window["font_message"].Widget  # underlying Tkinter Label
+            current_font = widget.cget("font")
+            print(f"Current font: {current_font}")
 
         if current_window == "order_teams":
             selected = values['TEAM_ORDER']
