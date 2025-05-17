@@ -6,8 +6,10 @@ Controls
 Escape - Return to main menu.
 Caps Lock - Stay on the currently displayed team (only if multiple teams are playing).
 Shift - Resume rotating between multiple teams.
-Right Arrow - Turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.
-Left Arrow - Turn off live data delay, this will shown live game info as soon as its available.
+Right Arrow - Turn on live data delay, this will put a delay on live data shown.
+              The amount of delay is set in settings.
+Left Arrow - Turn off live data delay, this will shown live game info as
+             soon as its available.
 Up Arrow - Enter "No Spoiler Mode," hiding scores, records, and game details.
 Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.
 
@@ -19,8 +21,9 @@ How Data is Displayed
 - Prioritizes displaying teams currently playing (Unless changed in settings):
     - One team playing: display only that team.
     - Multiple teams playing: rotate between them.
-- Up Arrow stops rotating between team, Down Arrow resumes rotation.
-- Caps Lock hides game info in "No Spoiler Mode."
+        - Pressing Up Arrow on keyboard stops rotating between team, pressing
+          Down Arrow resumes rotation.
+- Pressing Caps Lock hides game info in "No Spoiler Mode."
 
 
 How Data is Collected
@@ -34,6 +37,9 @@ How Data is Collected
     - Some details (pitch count, bonus status, shots on goal, etc) might be missing.
 - If all data fetching fails:
     - Shows a clock until connection/data is restored.
+- Logos are gotten when first running for the first time
+    - If you need to re-download logos such as if a team has updated their logo you
+      can re-download logos by selecting ""Always Get Logos when Starting" in settings.
 
 
 Clock Screen
