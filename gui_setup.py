@@ -35,7 +35,13 @@ def gui_setup() -> sg.Window:
     print(f"\n\nWindow Width: {math.ceil(window_width)}, Window Height: {math.ceil(window_height)}")
     print(f"Column Width: {math.ceil(column_width)}, Column Height: {math.ceil(column_height)}")
     print(f"Info Height: {math.ceil(info_height)}")
-    print(f"Space Between Score: {math.ceil(space_between_score)}\n\n")
+    print(f"Space Between Score: {math.ceil(space_between_score)}")
+
+    common_base_widths = [1366, 1920, 1440, 1280]
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+    signature_size = min(15, max(8, int(8 * scale)))
+    print(f"{signature_size}\n\n")
 
     home_logo_layout = [
         [sg.Push()],
@@ -104,10 +110,11 @@ def gui_setup() -> sg.Window:
             [sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(column_width, column_height * (1/5)))]
         ], element_justification='center', pad=((0, 0), (0, 0))),
     ],
+        [sg.VPush()],
         [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height * (6/7)))],
         [sg.Frame("", bottom_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
         [sg.Frame("",
-                  [[sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(FONT, 10))]],
+                  [[sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(settings.FONT, signature_size), key="signature")]],
                   element_justification='bottom', border_width=0, size=(window_width, info_height * (1/7)))],
     ]
 
