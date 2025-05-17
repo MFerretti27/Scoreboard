@@ -55,29 +55,28 @@ def gui_setup() -> sg.Window:
 
     away_record_layout = [
         [sg.Push()],
-        [sg.Text("AWAY", font=(FONT, RECORD_TXT_SIZE), key='away_record', pad=((0, 0), (0, 0)))],
+        [sg.Text("AWAY", font=(settings.FONT, settings.RECORD_TXT_SIZE), key='away_record', pad=((0, 0), (0, 0)))],
         [sg.Push()],
     ]
     home_record_layout = [
         [sg.VPush()],
         [sg.Push()],
-        [sg.Text("HOME", font=(FONT, RECORD_TXT_SIZE), key='home_record', pad=((0, 0), (0, 0)))],
+        [sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key='home_record', pad=((0, 0), (0, 0)))],
         [sg.Push()],
     ]
 
     above_score_layout = [
         [sg.VPush()],
-        [sg.Push()],
-        [sg.Text("", font=(FONT, TOP_TXT_SIZE), key='above_score_txt', pad=((0, 0), (space_between_score, 0)))],
-        [sg.Push()],
+        [sg.Push(), sg.Text("", font=(settings.FONT, settings.TOP_TXT_SIZE), key='above_score_txt', pad=((0, 0), (space_between_score, 0))), sg.Push()],
+        [sg.VPush()],
     ]
 
     score_layout = [
-        [sg.Text("Sco", font=(FONT, SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (space_between_score, 0))),
-         sg.Text("-", font=(FONT, HYPHEN_SIZE), key='hyphen', pad=((0, 0), (space_between_score, 0))),
-         sg.Text("re", font=(FONT, SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (space_between_score , 0)))],
-        [sg.Text("", font=(FONT, TIMEOUT_SIZE), key='away_timeouts', pad=((0, 50), (0 , 25))),
-         sg.Text("", font=(FONT, TIMEOUT_SIZE), key='home_timeouts', pad=((50, 0), (0 , 25)))],
+        [sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE), key='away_score', pad=((0, 0), (space_between_score, 0))),
+         sg.Text("-", font=(settings.FONT, settings.HYPHEN_SIZE), key='hyphen', pad=((0, 0), (space_between_score, 0))),
+         sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE), key='home_score', pad=((0, 0), (space_between_score , 0)))],
+        [sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE), key='away_timeouts', pad=((0, 50), (0 , 25))),
+         sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE), key='home_timeouts', pad=((50, 0), (0 , 25)))],
     ]
 
     below_score_image = [
@@ -86,8 +85,8 @@ def gui_setup() -> sg.Window:
         [sg.VPush()],
     ]
 
-    top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("", font=(FONT, NOT_PLAYING_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
-    bottom_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Fetching Data...", font=(FONT, INFO_TXT_SIZE), auto_size_text=True, size=(None, None), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()]]
+    top_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("", font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), key='top_info'), sg.Push()]]
+    bottom_info_layout = [[sg.VPush()], [sg.Push(), sg.Text("Fetching Data...", font=(settings.FONT, settings.INFO_TXT_SIZE), key='bottom_info'), sg.Push()],[sg.VPush()],[sg.Push()]]
 
     layout = [
     [
@@ -105,9 +104,11 @@ def gui_setup() -> sg.Window:
             [sg.Frame("", home_record_layout, element_justification='center', border_width=0, size=(column_width, column_height * (1/5)))]
         ], element_justification='center', pad=((0, 0), (0, 0))),
     ],
-        [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
+        [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height * (6/7)))],
         [sg.Frame("", bottom_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
-        [sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(FONT, 10), key='personal')]
+        [sg.Frame("",
+                  [[sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(FONT, 10))]],
+                  element_justification='bottom', border_width=0, size=(window_width, info_height * (1/7)))],
     ]
 
     # Create the window
@@ -234,7 +235,7 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(60, int(63 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(10, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(50, int(42 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))

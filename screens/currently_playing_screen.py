@@ -1,5 +1,4 @@
 '''Module to display live information when team is currently playing.'''
-from settings import *  # Data only needed in this function
 import settings  # Data needed be changed globally
 import FreeSimpleGUI as sg  # type: ignore
 from get_data.get_espn_data import get_data
@@ -128,28 +127,34 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
 
                 # Football specific display information
                 if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
+                    if key == "top_info":
+                        window['top_info'].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     if key == "home_timeouts":
                         window['home_timeouts'].update(value=value, text_color='yellow')
                     elif key == "away_timeouts":
                         window['away_timeouts'].update(value=value, text_color='yellow')
 
                     if team_info[display_index]['home_possession'] and key == 'home_score':
-                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"))
                     elif team_info[display_index]['away_possession'] and key == 'away_score':
-                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"))
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"))
                     if team_info[display_index]['home_redzone'] and key == 'home_score':
-                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
+                                           text_color='red')
                     elif team_info[display_index]['away_redzone'] and key == 'away_score':
-                        window[key].update(value=value, font=(FONT, SCORE_TXT_SIZE, "underline"), text_color='red')
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
+                                           text_color='red')
 
                 # NBA Specific display size for top info
                 if "NBA" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
-                        window['top_info'].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+                        window['top_info'].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
                     elif key == "home_timeouts":
-                        window['home_timeouts'].update(value=value, font=(FONT, TIMEOUT_SIZE - 10), text_color='yellow')
+                        window['home_timeouts'].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+                                                       text_color='yellow')
                     elif key == "away_timeouts":
-                        window['away_timeouts'].update(value=value, font=(FONT, TIMEOUT_SIZE - 10), text_color='yellow')
+                        window['away_timeouts'].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+                                                       text_color='yellow')
 
                     if settings.display_nba_bonus:
                         if team_info[display_index]['home_bonus'] and key == "home_score":
@@ -160,20 +165,20 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 # MLB Specific display size for bottom info
                 if "MLB" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
-                        window['top_info'].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
+                        window['top_info'].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     if key == 'bottom_info':
-                        window[key].update(value=value, font=(FONT, MLB_BOTTOM_INFO_SIZE))
+                        window[key].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     elif key == 'under_score_image':
                         if "Networks" in team_info[display_index]['under_score_image']:
                             value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value)
                     elif key == 'above_score_txt' and settings.display_inning:
-                        window[key].update(value=value, font=(FONT, TOP_TXT_SIZE))
+                        window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
                 if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == 'top_info':
-                        window[key].update(value=value, font=(FONT, NBA_TOP_INFO_SIZE))
+                        window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
 
                 if settings.no_spoiler_mode:
                     set_spoiler_mode(window, True, team_info[display_index])
