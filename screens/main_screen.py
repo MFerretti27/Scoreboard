@@ -844,11 +844,6 @@ def main():
 
         event, values = window.read()
 
-        if current_window == "settings":
-            widget = window["font_message"].Widget  # underlying Tkinter Label
-            current_font = widget.cget("font")
-            print(f"Current font: {current_font}")
-
         if current_window == "order_teams":
             selected = values['TEAM_ORDER']
             if selected:
