@@ -27,13 +27,19 @@ def get_all_mlb_data(team_name: str) -> dict:
     :param team_name: The team name to get information for
     """
     team_info = {}
-
+    has_data = False
     currently_playing = False
+
     today = datetime.now().strftime("%Y-%m-%d")
     three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
-    data = statsapi.schedule(
-        team=get_mlb_team_id(team=team_name), include_series_status=True, start_date=today, end_date=three_days_later
-    )
+    try:
+        data = statsapi.schedule(
+            team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later
+        )
+    except Exception:
+        return team_info, has_data, currently_playing
+
+    has_data = True
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     team_info['under_score_image'] = ''
 
@@ -91,7 +97,7 @@ def get_all_mlb_data(team_name: str) -> dict:
         team_info["top_info"] = get_current_series_mlb(team_name)
         team_info["bottom_info"] = "FINAL"
 
-    return team_info, True, currently_playing
+    return team_info, has_data, currently_playing
 
 
 def append_mlb_data(team_info: dict, team_name: str) -> dict:
