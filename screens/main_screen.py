@@ -223,9 +223,8 @@ def create_settings_layout(window_width):
         'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Optima',
         'Gill Sans', 'Comic Sans MS', 'Georgia', 'Lucida Console',
         'Calibri', 'Trebuchet MS', 'Century Gothic', 'Consolas',
-        'Arial', 'QuickSand', 'Z003', 'FreeMono', 'P052',
-        'Droid Sans Fallback', 'C509', 'URW Bookman',
-        'Noto Mono', 'PibotoLt'
+        'QuickSand', 'Z003', 'FreeMono', 'P052', 'Droid Sans Fallback',
+        'C509', 'URW Bookman', 'Noto Mono', 'PibotoLt'
     ]
 
     # Filter the available fonts to include only those that are in the "popular_fonts" list
