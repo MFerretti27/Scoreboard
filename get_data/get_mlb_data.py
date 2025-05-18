@@ -36,11 +36,11 @@ def get_all_mlb_data(team_name: str) -> dict:
         data = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later
         )
+        live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     except Exception:
         return team_info, has_data, currently_playing
 
     has_data = True
-    live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     team_info['under_score_image'] = ''
 
     team_info["home_score"] = "0"

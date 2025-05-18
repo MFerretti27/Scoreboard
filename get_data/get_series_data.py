@@ -1,9 +1,11 @@
 '''Get series information'''
-import statsapi
+import statsapi  # type: ignore import warning
 from datetime import datetime, timedelta
 import requests
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
-from nba_api.live.nba.endpoints import scoreboard
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore import warning
+
+mlb_series = ""
 
 
 def get_series(team_league: str, team_name: str) -> dict:
@@ -20,6 +22,7 @@ def get_series(team_league: str, team_name: str) -> dict:
 
 def get_current_series_mlb(team_name) -> str:
     """Try to get the series information for baseball team."""
+    global mlb_series
     series_summary = ""
     try:
         team_id = get_mlb_team_id(team_name)
@@ -31,8 +34,9 @@ def get_current_series_mlb(team_name) -> str:
 
         game = schedule[0]  # Take the first game today
         series_summary = game.get("series_status", "")
+        mlb_series = series_summary
         if series_summary is None:
-            series_summary = ""
+            series_summary = mlb_series
         return series_summary
     except Exception:
         return series_summary
