@@ -29,6 +29,7 @@ MLB_BOTTOM_INFO_SIZE = 80
 PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
+SIGNATURE_SIZE = 8
 
 
 #########################################

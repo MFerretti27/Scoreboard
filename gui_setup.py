@@ -1,6 +1,6 @@
 '''Module to Create and modify scoreboard GUI using FreeSimpleGUI'''
 
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as sg  # type: ignore import warning
 from settings import *
 from get_data.get_team_logos import get_random_logo
 import math
@@ -36,12 +36,6 @@ def gui_setup() -> sg.Window:
     print(f"Column Width: {math.ceil(column_width)}, Column Height: {math.ceil(column_height)}")
     print(f"Info Height: {math.ceil(info_height)}")
     print(f"Space Between Score: {math.ceil(space_between_score)}")
-
-    common_base_widths = [1366, 1920, 1440, 1280]
-    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
-    scale = window_width / base_width
-    signature_size = min(15, max(8, int(8 * scale)))
-    print(f"{signature_size}\n\n")
 
     home_logo_layout = [
         [sg.Push()],
@@ -114,7 +108,7 @@ def gui_setup() -> sg.Window:
         [sg.Frame("", top_info_layout, element_justification='center', border_width=0, size=(window_width, info_height * (6/7)))],
         [sg.Frame("", bottom_info_layout, element_justification='center', border_width=0, size=(window_width, info_height))],
         [sg.Frame("",
-                  [[sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(settings.FONT, signature_size), key="signature")]],
+                  [[sg.Push(), sg.Text("Created by: Matthew Ferretti", font=(settings.FONT, settings.SIGNATURE_SIZE), key="signature")]],
                   element_justification='bottom', border_width=0, size=(window_width, info_height * (1/7)))],
     ]
 
@@ -247,15 +241,17 @@ def resize_text() -> None:
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(40, int(60 * scale)))
+    settings.SIGNATURE_SIZE = min(15, max(8, int(8 * scale)))
 
-    print(f"\nscore txt size:{settings.SCORE_TXT_SIZE}")
-    print(f"info txt size:{settings.INFO_TXT_SIZE}")
-    print(f"record txt size:{settings.RECORD_TXT_SIZE}")
-    print(f"clock txt size:{settings.CLOCK_TXT_SIZE}")
-    print(f"hyphen txt size:{settings.HYPHEN_SIZE}")
-    print(f"timeout txt size:{settings.TIMEOUT_SIZE}")
-    print(f"nba top txt size:{settings.NBA_TOP_INFO_SIZE}")
-    print(f"mlb bottom txt size:{settings.MLB_BOTTOM_INFO_SIZE}")
-    print(f"playing txt size:{settings.PLAYING_TOP_INFO_SIZE}")
-    print(f"not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
-    print(f"top txt size:{settings.TOP_TXT_SIZE}\n")
+    print(f"\nScore txt size:{settings.SCORE_TXT_SIZE}")
+    print(f"Info txt size:{settings.INFO_TXT_SIZE}")
+    print(f"Record txt size:{settings.RECORD_TXT_SIZE}")
+    print(f"Clock txt size:{settings.CLOCK_TXT_SIZE}")
+    print(f"Hyphen txt size:{settings.HYPHEN_SIZE}")
+    print(f"Timeout txt size:{settings.TIMEOUT_SIZE}")
+    print(f"NBA top txt size:{settings.NBA_TOP_INFO_SIZE}")
+    print(f"MLB bottom txt size:{settings.MLB_BOTTOM_INFO_SIZE}")
+    print(f"Playing txt size:{settings.PLAYING_TOP_INFO_SIZE}")
+    print(f"Not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
+    print(f"Top txt size:{settings.TOP_TXT_SIZE}")
+    print(f"Signature txt size:{settings.SIGNATURE_SIZE}\n")
