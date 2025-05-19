@@ -1,4 +1,4 @@
-'''Get series information'''
+"""Get series information."""
 import statsapi  # type: ignore import warning
 from datetime import datetime, timedelta
 import requests
@@ -8,8 +8,14 @@ from nba_api.live.nba.endpoints import scoreboard  # type: ignore import warning
 mlb_series = ""
 
 
-def get_series(team_league: str, team_name: str) -> dict:
-    '''Try to get series information based of Team.'''
+def get_series(team_league: str, team_name: str) -> str:
+    """Try to get series information based of Team.
+
+    :param team_league: league to get series information for
+    :param team_name: name of team to get series information for
+
+    :return series_summary: str telling series information
+    """
     if "MLB" in team_league.upper():
         return (get_current_series_mlb(team_name))
     elif "NHL" in team_league.upper():
@@ -21,7 +27,12 @@ def get_series(team_league: str, team_name: str) -> dict:
 
 
 def get_current_series_mlb(team_name) -> str:
-    """Try to get the series information for baseball team."""
+    """Try to get the series information for baseball team.
+
+    :param team_name: name of team to get series information for
+
+    :return series_summary: str telling series information
+    """
     global mlb_series
     series_summary = ""
     try:
@@ -35,7 +46,7 @@ def get_current_series_mlb(team_name) -> str:
         game = schedule[0]  # Take the first game today
         series_summary = game.get("series_status", "")
         mlb_series = series_summary
-        if series_summary is None:
+        if series_summary == "" or series_summary is None:
             series_summary = mlb_series
         return series_summary
     except Exception:
@@ -43,7 +54,12 @@ def get_current_series_mlb(team_name) -> str:
 
 
 def get_current_series_nhl(team_name) -> str:
-    """Try to get the series information for hockey team."""
+    """Try to get the series information for hockey team.
+
+    :param team_name: name of team to get series information for
+
+    :return series_summary: str telling series information
+    """
     series_summary = ""
     try:
         id = get_nhl_game_id(team_name)
@@ -73,7 +89,12 @@ def get_current_series_nhl(team_name) -> str:
 
 
 def get_current_series_nba(team_name) -> str:
-    """Try to get the series information for basketball team."""
+    """Try to get the series information for basketball team.
+
+    :param team_name: name of team to get series information for
+
+    :return series_summary: str telling series information
+    """
     series_summary = ""
     # Today's Score Board
     games = scoreboard.ScoreBoard()

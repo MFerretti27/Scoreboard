@@ -1,16 +1,16 @@
-'''Get the id of team for API calls'''
-import statsapi
-from nhlpy.nhl_client import NHLClient
+"""Get the id of team for API calls."""
+import statsapi  # type: ignore import warning
+from nhlpy.nhl_client import NHLClient  # type: ignore import warning
 import requests
 
 
 def get_mlb_team_id(team: str) -> int:
-    '''Get MLB Team ID from team name
+    """Get MLB Team ID from team name.
 
     :param team: Name of MLB team to get ID for
 
-    :return: Team ID
-    '''
+    :return: integer representing Team ID
+    """
     teams = statsapi.get('teams', {'sportIds': 1})['teams']
     id_list = {t["clubName"]: t["id"] for t in teams}
     for key, value in id_list.items():
@@ -21,12 +21,12 @@ def get_mlb_team_id(team: str) -> int:
 
 
 def get_nhl_game_id(team_name: str) -> int:
-    '''Get NHL Team ID from team name
+    """Get NHL Team ID from team name
 
     :param team: Name of NHL team to get ID for
 
-    :return: Team ID
-    '''
+    :return: integer representing Team ID
+    """
     client = NHLClient(verbose=True)
     client.teams.teams_info()  # returns id + abbreviation + name of all teams
     resp = requests.get("https://api.nhle.com/stats/rest/en/team")

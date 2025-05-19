@@ -1,22 +1,20 @@
-'''Get MLB from MLB specific API'''
-import statsapi
+"""Get MLB from MLB specific API."""
+import statsapi   # type: ignore import warning
 import os
 from datetime import datetime, timezone, timedelta
 import requests
-import time
 from .get_series_data import get_current_series_mlb
 from .get_team_id import get_mlb_team_id
 import settings
 
 
+# What things to get from MLBStats API
 API_FIELDS = (
     "gameData,game,datetime,dateTime,officialDate,status,detailedState,abstractGameState,teams,home,away,"
     + "teamName,record,wins,losses,fullName,liveData,plays,currentPlay,result,playEvents,isPitch,runs,"
     + "details,type,code,description,linescore,outs,balls,strikes,inningState,currentInningOrdinal,defense,"
     + "offense,batter,inHole,onDeck,first,second,third,pitcher,wins,hits,errors,pitching,currentInning"
 )
-
-last_inning = 0
 
 
 def get_all_mlb_data(team_name: str) -> dict:
@@ -25,11 +23,14 @@ def get_all_mlb_data(team_name: str) -> dict:
     Call this if ESPN fails to get MLB data as backup.
 
     :param team_name: The team name to get information for
+
+    :return team_info: dictionary containing team information to display
     """
     team_info = {}
     has_data = False
     currently_playing = False
 
+    # Try to get first game from now for the next 3 days
     today = datetime.now().strftime("%Y-%m-%d")
     three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
     try:
@@ -38,11 +39,13 @@ def get_all_mlb_data(team_name: str) -> dict:
         )
         live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
     except Exception:
-        return team_info, has_data, currently_playing
+        return team_info, has_data, currently_playing  # Could not find game
 
     has_data = True
+    # Cannot Get network so dont display anything, and if game is currently playing it will updated with base images
     team_info['under_score_image'] = ''
 
+    # Set Score to 0, will be updated if team is currently playing
     team_info["home_score"] = "0"
     team_info["away_score"] = "0"
 
@@ -53,7 +56,7 @@ def get_all_mlb_data(team_name: str) -> dict:
     local_time = utc_time.astimezone()
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
 
-    # Get venue
+    # Get venue and set bottom info to display game time and venue
     if settings.display_venue:
         try:
             game_id = data[0]["game_id"]
@@ -63,7 +66,7 @@ def get_all_mlb_data(team_name: str) -> dict:
             venue = live_feed['gameData']['venue']['name']
             team_info["bottom_info"] = f"{game_time} @ {venue}"
         except Exception:
-            team_info["bottom_info"] = time
+            team_info["bottom_info"] = game_time
 
     # Get Home and Away team logos
     home_team = live["gameData"]["teams"]["home"]["teamName"]
@@ -106,9 +109,8 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
-    :return team_info: Dictionary where data is stored to display
+    :return team_info: dictionary containing team information to display
     """
-    global last_inning
     data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True)
     live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
 
@@ -116,7 +118,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     team_info["home_score"] = str(live["liveData"]["linescore"]["teams"]["home"]["runs"])
     team_info["away_score"] = str(live["liveData"]["linescore"]["teams"]["away"]["runs"])
 
-    # Get game stats to display under score
+    # Get hits and error to display under score
     if settings.display_hits_errors:
         home_hits = live["liveData"]["linescore"]["teams"]["home"].get("hits", 0)
         away_hits = live["liveData"]["linescore"]["teams"]["away"].get("hits", 0)
@@ -166,23 +168,23 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
             outs = live["liveData"]["linescore"].get("outs", 0)
             team_info['top_info'] += (f"{balls}-{strikes}, {outs} Outs")
     else:
+        # If it is the Middle or End of inning show who is leading off batting
         if settings.display_pitcher_batter:
             team_info['bottom_info'] = (f"DueUp: {due_up}")
         team_info['top_info'] = ""
 
     if settings.display_bases:
-        bases = {"first": False,
-                 "second": False,
-                 "third": False}
+        bases = {"first": False, "second": False, "third": False}  # Dictionary to store info of occupied bases
 
         for key, _ in bases.items():
             try:
                 # Dont need to store name of whose on just has to ensure call is successful
                 _ = live["liveData"]["linescore"]["offense"][key]["fullName"]
-                bases[key] = True
+                bases[key] = True  # If call is successful someone is on that base
             except KeyError:
-                bases[key] = False
+                bases[key] = False  # If call fails no one is on that base
 
+        # Get which image to display based on what base is occupied
         base_conditions = {
             (True, False, False): "on_first.png",
             (False, True, False): "on_second.png",
@@ -194,7 +196,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
             (False, False, False): "empty_bases.png"
         }
 
-        # Display runners on base
+        # Get image location for representing runners on base
         base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
         team_info['under_score_image'] = f"images/baseball_base_images/{base_image}"
 

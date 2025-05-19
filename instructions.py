@@ -1,6 +1,6 @@
 
 
-help_text = '''
+help_text = """
 Controls
 ---------
 Escape - Return to main menu.
@@ -53,4 +53,4 @@ Clock Screen
     - Internet connection is restored.
     - One of selected teams has data to display.
 - A message on clock screen will appear telling why clock is displaying.
-'''
+"""

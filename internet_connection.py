@@ -1,4 +1,4 @@
-'''Functions to Check Internet Connection and try to Reconnect'''
+"""Functions to Check Internet Connection and try to Reconnect."""
 
 import platform
 import subprocess
@@ -18,7 +18,7 @@ def is_connected() -> bool:
 
 
 def reconnect() -> None:
-    """Attempt to reconnect internet"""
+    """Attempt to reconnect internet based on OS by turning interface off and on."""
     try:
         if platform.system() == 'Windows':
             subprocess.run(["netsh", "interface", "set", "interface", "Wi-fi", "disable"], check=True)

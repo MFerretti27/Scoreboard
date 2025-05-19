@@ -6,7 +6,10 @@ import venv
 
 
 def create_virtualenv(venv_dir: str) -> None:
-    """Creates a virtual environment in the specified directory"""
+    """Creates a virtual environment in the specified directory.
+
+    :param venv_dir: virtual environment directory name
+    """
     if not os.path.exists(venv_dir):
         print(f"Creating virtual environment in {venv_dir}...")
         venv.create(venv_dir, with_pip=True)
@@ -15,7 +18,11 @@ def create_virtualenv(venv_dir: str) -> None:
 
 
 def install_requirements(venv_dir: str, requirements_file: str) -> None:
-    """Installs dependencies from a requirements.txt file"""
+    """Installs dependencies from a requirements.txt file.
+
+    :param venv_dir: virtual environment directory name
+    :param requirements_file: file name to install requirements from
+    """
     if not os.path.exists(requirements_file):
         print("No requirements file found. Script cannot run.")
         sys.exit(1)
@@ -33,7 +40,11 @@ def install_requirements(venv_dir: str, requirements_file: str) -> None:
 
 
 def run_program_in_venv(venv_dir: str, program_script: str) -> None:
-    """Runs a Python program inside the virtual environment"""
+    """Runs a Python program inside the virtual environment.
+
+    :param venv_dir: virtual environment directory name
+    :param program_script: python module to execute in subprocess
+    """
     python_executable = os.path.join(venv_dir, 'Scripts', 'python.exe') \
         if platform.system() == 'Windows' else os.path.join(venv_dir, 'bin', 'python')
 
@@ -59,7 +70,7 @@ def set_screen() -> None:
 
 
 def remove_ds_files() -> None:
-    """Removes all .DS_Store files (only needed on macOS)"""
+    """Removes all .DS_Store files (only needed on macOS)."""
     if platform.system() == 'Darwin':
         print("Removing .DS_Store files...")
         # Walk through the directory and remove .DS_Store files

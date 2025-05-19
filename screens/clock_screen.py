@@ -1,15 +1,15 @@
-'''Display a Clock When Internet Connection Goes Out, When Grabbing Data from ESPN API Fails,
-   Or When There is No Team Data to Display
-'''
+"""Display a Clock When Internet Connection Goes Out, When Grabbing Data from ESPN API Fails,
+   Or When There is No Team Data to Display.
+"""
 
 import datetime
 import time
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as sg  # type: ignore import warning
 from get_data.get_team_logos import get_random_logo
 from get_data.get_espn_data import get_data
 from gui_setup import reset_window_elements
 from internet_connection import is_connected, reconnect
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
 import settings
 import gc
 import sys
@@ -17,13 +17,13 @@ import subprocess
 
 
 def clock(window: sg.Window, message: str) -> list:
-    '''If no team has any data then display clock
+    """If no team has any data then display clock.
 
     :param window: Window Element that controls GUI
     :param message: Message to display why script is showing clock
 
     :return team_info: List of Boolean values representing if team is has data to display
-    '''
+    """
 
     fetch_clock = ticks_ms()  # Start timer for switching display
     fetch_timer = 180 * 1000  # How often the display should update in seconds
@@ -35,11 +35,14 @@ def clock(window: sg.Window, message: str) -> list:
     reset_window_elements(window)
 
     while True not in teams_with_data:
+
+        # Every minute randomly select one of the users team logos to display
         if ticks_diff(ticks_ms(), fetch_picture) >= fetch_picture_timer or first_time:
             first_time = False
             files = get_random_logo()
             fetch_picture = ticks_add(fetch_picture, fetch_picture_timer)  # Reset Timer if picture updated
 
+        # Get the current time and display it
         current_time = datetime.datetime.now()
         hour = current_time.hour if current_time.hour < 13 else current_time.hour - 12
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
@@ -61,7 +64,7 @@ def clock(window: sg.Window, message: str) -> list:
             subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
             sys.exit()
 
-        # Fetch to see if any teams have data to return to main loop
+        # Fetch to see if any teams have data and return to main loop displaying team info
         try:
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
                 teams_with_data.clear()
@@ -71,7 +74,9 @@ def clock(window: sg.Window, message: str) -> list:
                     teams_with_data.append(data[1])
                     message = "No Data For Any Teams"
 
-                fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if display updated
+                fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if fetch attempted
+
+        # If fetched failed find out why and display message
         except Exception as error:
             print(f"Failed to Get Data, Error: {error}")
             if is_connected():
@@ -82,6 +87,6 @@ def clock(window: sg.Window, message: str) -> list:
                 reconnect()
                 time.sleep(20)  # Wait 20 seconds for connection
 
-    # Reset Text Font Size
+    # Reset Text Font Size before returning to main loop
     reset_window_elements(window)
     return teams_with_data

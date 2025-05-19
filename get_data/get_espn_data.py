@@ -1,6 +1,6 @@
-'''Grab Data for ESPN API'''
+"""Grab Data for ESPN API."""
 
-import requests  # type: ignore
+import requests  # type: ignore import warning
 import gc
 import os
 import settings
@@ -14,13 +14,13 @@ should_skip = False
 
 
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
-    '''Check if the two teams are playing each other
+    """Check if the two teams are playing each other
 
     :param home_team: Name of home team
     :param away_team: Name of away team
 
     :return: Boolean value representing if the two teams are playing each other
-    '''
+    """
     global should_skip
     for x in settings.teams:
         for y in settings.teams:
@@ -42,12 +42,12 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
 
 
 def get_data(team: str) -> tuple:
-    '''Retrieve Data from ESPN API
+    """Retrieve Data from ESPN API.
 
     :param team: Index of teams array to get data for
 
     :return team_info: List of Boolean values representing if team is has data to display
-    '''
+    """
     team_has_data = False
     currently_playing = False
 
@@ -75,16 +75,16 @@ def get_data(team: str) -> tuple:
 
                 competition = response_as_json["events"][index]["competitions"][0]
 
-                # Check if game is in the next month, if not its to far out to display
+                # Check if game is within the next month, if not then its too far out to display
                 date = competition["date"]
                 target_date = datetime.strptime(date, "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
                 now = datetime.now(timezone.utc)  # Current UTC date
-                one_month_later = now + timedelta(days=30)  # Define the range: from now to 30 days later
+                one_month_later = now + timedelta(days=30)  # Set range to be a month
                 if now <= target_date >= one_month_later:
                     print("Game is more than a month away skipping")
                     return team_info, False, False
 
-                # Data returned
+                # Get Score
                 team_info['home_score'] = (competition["competitors"][0]["score"])
                 team_info['away_score'] = (competition["competitors"][1]["score"])
 
@@ -305,7 +305,7 @@ def get_data(team: str) -> tuple:
                                 (False, False, False): "empty_bases.png"
                             }
 
-                            # Display runners on base
+                            # Get image location for representing runners on base
                             team_info['under_score_image'] = (
                                 f"images/baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
                             )
@@ -321,7 +321,7 @@ def get_data(team: str) -> tuple:
                         print("Could not get info from NHL API")
                         team_info = saved_info  # Try clause might modify dictionary
 
-                # If got here with no top info to display, try displaying series info
+                # If game is over try displaying series information if available
                 if team_info['top_info'] == "" and "FINAL" in team_info['bottom_info'] and settings.display_series:
                     team_info['top_info'] = get_series(team_league, team_name)
 
@@ -333,6 +333,7 @@ def get_data(team: str) -> tuple:
         gc.collect()
         return team_info, team_has_data, currently_playing
 
+    # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
         print(f"Error fetching data from ESPN API: {e}")
         if "MLB" in team_league.upper():

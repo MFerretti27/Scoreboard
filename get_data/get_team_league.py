@@ -1,9 +1,9 @@
-'''This function uses the RapidFuzz library to find the best match for the team name.
+"""This function uses the RapidFuzz library to find the best match for the team name.
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
-'''
+"""
 
-from rapidfuzz import process, fuzz
+from rapidfuzz import process, fuzz  # type: ignore import warning
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
@@ -52,15 +52,16 @@ ALL_TEAMS = {
 
 
 def get_team_league(team__name: str) -> tuple:
-    '''Get the league and sport name for a given team name.
+    """Get the league and sport name for a given team name.
 
     :param team__name: The name of the team to search for.
 
     :return: A tuple containing the league and sport name.
-    '''
+    """
     team__name_capitalized = team__name.strip().upper()
     best_match = ("", 0, "Unknown")
 
+    # Find what array team name is in to determine league
     for league, teams in ALL_TEAMS.items():
         upper_teams = [team.upper() for team in teams]
         _, score, index = process.extractOne(team__name_capitalized, upper_teams, scorer=fuzz.WRatio)
@@ -79,7 +80,7 @@ def get_team_league(team__name: str) -> tuple:
         matched_team = (best_match[2], "basketball")
 
     if best_match[1] >= 70:
-        return matched_team
+        return matched_team  # return tuple of league and sport name
     else:
         raise ValueError(f"Team '{team__name}' not found in any league.")
 

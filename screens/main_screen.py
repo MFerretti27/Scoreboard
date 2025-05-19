@@ -1,4 +1,4 @@
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as sg  # type: ignore import warning
 import sys
 import os
 import time
@@ -40,7 +40,7 @@ setting_keys = [
 
 
 class RedirectText(io.StringIO):
-    '''Redirect print statements'''
+    """Redirect print statements."""
     def __init__(self, window):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
@@ -62,7 +62,7 @@ class RedirectText(io.StringIO):
 
 
 def create_main_layout(window_width):
-    sg.theme("LightBlue6")
+    sg.theme("LightBlue6")  # Set theme for main screen
     text_size = max(12, window_width // 20)
     button_size = max(12, window_width // 40)
     update_button_size = max(12, window_width // 80)
@@ -779,7 +779,8 @@ def save_teams_order(new_ordered_teams):
     """Replaces the existing teams array with a newly ordered array."""
 
     # Flatten the list of teams in case it's a list of lists
-    flattened_teams = [team[0] for team in new_ordered_teams] if isinstance(new_ordered_teams[0], list) else new_ordered_teams
+    flattened_teams = [team[0] for team in new_ordered_teams] \
+        if isinstance(new_ordered_teams[0], list) else new_ordered_teams
 
     # Create the string representation of the teams array to insert into the file
     teams_string = "teams = [\n"
@@ -981,7 +982,8 @@ def main():
                 window["display_not_playing_message"].update(value="Please Enter Positive Digits Only",
                                                              text_color="red")
             else:
-                window["display_not_playing_message"].update(value="How often to Display each team when no team is playing",
+                window["display_not_playing_message"].update(value="How often to Display each team when" +
+                                                             "no team is playing",
                                                              text_color="black")
             if not positive_num(display_timer_live):
                 window["display_playing_message"].update(value="Please Enter Positive Digits Only", text_color="red")

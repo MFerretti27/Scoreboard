@@ -1,5 +1,5 @@
-'''Get NBA from NBA specific API'''
-from nba_api.live.nba.endpoints import scoreboard
+"""Get NBA from NBA specific API."""
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore import warning
 import os
 import settings
 
@@ -9,7 +9,15 @@ home_timeouts_saved = 0
 away_timeouts_saved = 0
 
 
-def get_all_nba_data(team_name: str):
+def get_all_nba_data(team_name: str) -> dict:
+    """Get all information for NBA team.
+
+    Call this if ESPN fails to get MLB data as backup.
+
+    :param team_name: The team name to get information for
+
+    :return team_info: dictionary containing team information to display
+    """
     currently_playing = False
     has_data = False
     team_info = {}
@@ -23,6 +31,7 @@ def get_all_nba_data(team_name: str):
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
             has_data = True
 
+            # Cant get network image so display nothing
             team_info["under_score_image"] = ""
 
             # Get Bottom Info
@@ -57,7 +66,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
-    :return team_info: Dictionary where data is stored to display
+    :return team_info: dictionary containing team information to display
     """
     global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
@@ -67,6 +76,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
         if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
                 game["awayTeam"]["teamName"].upper() in team_name.upper():
 
+            # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
                 if game["homeTeam"]["inBonus"] == "1":
                     team_info['home_bonus'] = True
@@ -94,6 +104,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 home_timeouts = game["homeTeam"]["timeoutsRemaining"]
                 away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
+                # When "inBonus" is None timeouts have wrong data store them to display last known good value
                 if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
                     home_timeouts = home_timeouts_saved
                     away_timeouts = away_timeouts_saved
@@ -114,6 +125,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
                 team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
 
-            break  # Found team and got data needed
+            break  # Found team and got data needed, dont continue loop
 
     return team_info

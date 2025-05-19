@@ -1,21 +1,21 @@
-'''Module to display live information when team is currently playing.'''
-import settings  # Data needed be changed globally
-import FreeSimpleGUI as sg  # type: ignore
+"""Module to display live information when team is currently playing."""
+import settings
+import FreeSimpleGUI as sg  # type: ignore import warning
 from get_data.get_espn_data import get_data
 from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
 import copy
 
 
 def team_currently_playing(window: sg.Window, teams: list) -> list:
-    '''Display only games that are playing
+    """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
     :param teams: Array of teams to search data for
 
     :return team_info: List of information for teams following
-    '''
+    """
 
     teams_currently_playing = []
     first_time = True

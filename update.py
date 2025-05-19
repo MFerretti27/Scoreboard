@@ -1,4 +1,4 @@
-import requests  # type: ignore
+import requests  # type: ignore import warning
 import os
 import shutil
 import re
@@ -14,7 +14,7 @@ GITHUB_VERSION_URL = GITHUB_BASE_URL + "version.txt"
 
 
 # Automatically populate the list of files to update
-def get_files_to_update(directory, extensions=[".py"]) -> list:
+def get_files_to_update(directory: str, extensions=[".py"]) -> list:
     """Scans the directory and returns a list of files with the specified extensions.
 
     :param directory: Directory to scan
@@ -79,7 +79,7 @@ def get_remote_version() -> str:
         return None
 
 
-def is_newer(local, remote) -> bool:
+def is_newer(local: str, remote: str) -> bool:
     """Compare two version strings.
 
     :param local: Local version string
@@ -165,7 +165,7 @@ def update_all_files() -> None:
     # Backup old file
     backup_entire_repo(os.getcwd(), get_local_version())
     for file in FILES_TO_UPDATE:
-        download_file(file)
+        download_file(file)  # Get new files
 
 
 def list_backups(max_backups=5) -> list:
@@ -173,7 +173,7 @@ def list_backups(max_backups=5) -> list:
 
     :param max_backups: Maximum number of backups to keep
 
-    Returns a list of version strings.
+    :return: A list of versions that are found.
     """
     parent_folder = os.path.dirname(os.getcwd())
     project_name = os.path.basename(os.getcwd())
@@ -205,11 +205,11 @@ def list_backups(max_backups=5) -> list:
     return available_backups
 
 
-def restore_backup(version) -> tuple:
-    """Restore the backup made for a specific version.
+def restore_backup(version: str) -> tuple:
+    """Restore the backup form a specific version.
 
     :param project_folder: Path to the project folder
-    :param version: Version string to restore (e.g., "1.2.3")
+    :param version: Version string to restore
     """
     project_folder = os.getcwd()
     parent_folder = os.path.dirname(project_folder)
@@ -223,7 +223,7 @@ def restore_backup(version) -> tuple:
         return
 
     try:
-        # --- REMOVE current files (but skip venv, .git, etc) ---
+        # Remove current files (but skip venv, .git, etc)
         print("Removing current project files...")
         for item in os.listdir(project_folder):
             if item in ['venv', '.git', '.vscode', 'backup_files', '__pycache__']:
@@ -234,7 +234,7 @@ def restore_backup(version) -> tuple:
             else:
                 os.remove(item_path)
 
-        # --- COPY files from backup ---
+        # Copy files from backup into current directory
         print("Restoring backup files...")
         for item in os.listdir(backup_folder_path):
             src = os.path.join(backup_folder_path, item)
@@ -253,7 +253,8 @@ def restore_backup(version) -> tuple:
 def check_for_update() -> tuple:
     """Check if an update is available.
 
-    Returns a message indicating whether an update is available.
+    :return: tuple[str, bool, bool] containing messages indicating whether an update is available, if
+    call was successful, and if there is a newer version
     """
     remote_version = get_remote_version()
     if not remote_version:

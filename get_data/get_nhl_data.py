@@ -1,4 +1,4 @@
-'''Get NHL from NHL specific API'''
+"""Get NHL from NHL specific API."""
 import requests
 from datetime import datetime, timezone
 import os
@@ -14,25 +14,26 @@ def get_all_nhl_data(team_name: str) -> dict:
 
     :param team_name: The team name to get information for
 
-    :return team_info: Dictionary storing all data to display
+    :return team_info: dictionary containing team information to display
     """
     team_info = {}
     currently_playing = False
     has_data = False
     try:
         id = get_nhl_game_id(team_name)
+        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
+        live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore")
     except Exception:
-        return team_info, has_data, currently_playing
+        return team_info, has_data, currently_playing  # Could not find any game to display
 
-    resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
-    live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore")
     live = live_data.json()
     res = resp.json()
     has_data = True
 
+    # Set scores to 0, will get updated later once game starts
     team_info["home_score"] = "0"
     team_info["away_score"] = "0"
-    team_info["under_score_image"] = ""
+    team_info["under_score_image"] = ""  # Cannot get network image so set to nothing
 
     # Get team names
     away_team_name = live["awayTeam"]["commonName"]["default"]
@@ -65,7 +66,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{away_team}")
     team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{home_team}")
 
-    # Get bottom_info
+    # Get game time and venue
     iso_string = res["seasonSeries"][2]["startTimeUTC"]
     utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%SZ")
     utc_time = utc_time.replace(tzinfo=timezone.utc)
@@ -83,6 +84,7 @@ def get_all_nhl_data(team_name: str) -> dict:
         currently_playing = True
         team_info = append_nhl_data(team_info, team_name)
 
+    # Check if game is over
     elif "FINAL" in res["seasonSeries"][2]["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = "FINAL"
@@ -98,19 +100,19 @@ def append_nhl_data(team_info: dict, team_name: str) -> dict:
     :param team_info: Dictionary where data is stored to display
     :param team_name: The team name to get information for
 
-    :return team_info: Dictionary where data is stored to display
+    :return team_info: dictionary containing team information to display
     """
     id = get_nhl_game_id(team_name)
     resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
     res = resp.json()
 
-    # Get top info
+    # Get shots on goal of each team
     if settings.display_nhl_sog:
         away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
         home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
         team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
 
-    # get bottom info
+    # Get clock and period to display
     if settings.display_nhl_clock:
         clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
         period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])

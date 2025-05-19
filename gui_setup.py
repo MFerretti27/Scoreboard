@@ -1,4 +1,4 @@
-'''Module to Create and modify scoreboard GUI using FreeSimpleGUI'''
+"""Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 
 import FreeSimpleGUI as sg  # type: ignore import warning
 from settings import *
@@ -17,7 +17,7 @@ from tkinter import font as tkFont
 
 
 def gui_setup() -> sg.Window:
-    '''Create General User Interface'''
+    """Create General User Interface."""
 
     sg.theme("black")
     set_screen()  # Set the screen to display on
@@ -126,7 +126,12 @@ def gui_setup() -> sg.Window:
 
 
 def will_text_fit_on_screen(text: str) -> bool:
-    '''Check if text will fit on screen'''
+    """Check if text will fit on screen.
+    
+    :param text: str to compare to width of screen
+
+    :return bool: boolean value representing if string will fit on screen
+    """
     screen_width = sg.Window.get_screen_size()[0]  # Get screen width
 
     root = tk.Tk()
@@ -142,7 +147,10 @@ def will_text_fit_on_screen(text: str) -> bool:
         return False
 
 def reset_window_elements(window: sg.Window) -> None:
-    '''Reset window elements to default values'''
+    """Reset window elements to default values.
+    
+    :param window: element that can be updated for displaying information
+    """
     window['top_info'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
     window['bottom_info'].update(value='', font=(FONT, settings.INFO_TXT_SIZE), text_color='white')
     window['home_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
@@ -156,7 +164,12 @@ def reset_window_elements(window: sg.Window) -> None:
 
 
 def check_events(window: sg.Window, events, currently_playing=False) -> None:
-    '''Check for events in the window'''
+    """Check for specific key presses.
+    
+    :param window: element that can be updated for displaying information
+    :param events: key presses that were recorded
+    :param currently_playing: current state of scoreboard allowing for more or less key presses
+    """
     if events[0] == sg.WIN_CLOSED or 'Escape' in events[0]:
         window.close()
         gc.collect()  # Clean up memory
@@ -198,6 +211,14 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
 
 
 def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
+    """Set screen to spoiler mode, hiding all data that can spoil game.
+
+    :param window: element that can be updated for displaying information
+    :param currently_playing: boolean value to tell what message to display
+    :param team_info: team data that shows if certain elements should be changed so as to not spoil anything
+
+    :return window: element updates for window to change
+    """
     if currently_playing:
         window["top_info"].update(value="Game Currently Playing")
     else:
@@ -217,7 +238,7 @@ def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict
 
 
 def resize_text() -> None:
-    '''Resize text to fit screen size.'''
+    """Resize text to fit screen size."""
     window_width = sg.Window.get_screen_size()[0]
     # window_height = sg.Window.get_screen_size()[1]
 

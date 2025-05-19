@@ -1,4 +1,4 @@
-'''Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen'''
+"""Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen."""
 
 import os
 from PIL import Image  # type: ignore
@@ -10,10 +10,10 @@ import shutil
 
 
 def new_league_added() -> bool:
-    '''Check if new league has been added to teams array.
+    """Check if new league has been added to teams array.
 
     :return: True if new league added, False otherwise
-    '''
+    """
 
     folder_path = 'images/sport_logos'
     folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
@@ -26,20 +26,20 @@ def new_league_added() -> bool:
 
 
 def resize_image(image_path: str, directory: str, file_name: str) -> None:
-    '''Resize image to fit better on Monitor
+    """Resize image to fit better on Monitor.
 
     :param image_path: Path of where image was downloaded
     :param directory: Folder were new resized image should be put
     :param file_name: Name to use as file name
-    '''
+    """
     window_width = sg.Window.get_screen_size()[0] * .9
     window_height = sg.Window.get_screen_size()[1] * .9
 
-    if "sport_logos" in image_path:
+    if "sport_logos" in image_path:  # If team logo it should fit into these specifications
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (4 / 5)
-    else:
+    else:  # If network logo of base images it should fit into these specifications
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (5 / 16)
@@ -71,21 +71,21 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     print(f"Resizing {file_name} logo to {new_width}x{new_height} from {width}x{height}")
 
-    if ".png" in file_name:
+    if ".png" in file_name:  # Remove .png if in filename as it will be saved with .png below
         file_name = file_name.replace(".png", "")
 
-    # Resize the image
+    # Resize and save the new image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
     new_path_png = os.path.join(directory, f"{file_name}.png")
     img_resized.save(new_path_png)
 
 
 def download_team_logos(window, teams: list) -> None:
-    '''Create a base directory to store the logos if it doesn't exist
+    """Use ESPN API to download team logos for all leagues that user selects for their teams.
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
-    '''
+    """
     # Loop through each league to get the teams
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
@@ -133,33 +133,34 @@ def download_team_logos(window, teams: list) -> None:
 
 
 def get_team_logos(window, teams: list) -> None:
-    '''Determine if logos need to be downloaded
+    """Determine if logos need to be downloaded
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
-    '''
+    """
     already_downloaded = True
     if not os.path.exists('images/sport_logos'):
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
         resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
-        already_downloaded = False
+        already_downloaded = False  # If hit this is the first time getting images and resizing
 
+    # If user selects new team in a league they haven't selected before download all logos in that league
     elif new_league_added():
         download_team_logos(window, teams)  # Will only get new league team logos
 
     if settings.always_get_logos and already_downloaded:
-        shutil.rmtree('images/sport_logos')  # Dont want to continually resize images multiple times
+        shutil.rmtree('images/sport_logos')  # Dont want to continually resize images multiple times, so remove
         os.makedirs('images/sport_logos', exist_ok=True)
         download_team_logos(window, teams)
 
 
 def get_random_logo() -> dict:
-    '''Get 2 random teams from teams array, if only one team then it will return the only team there
+    """Get 2 random teams from teams array, if only one team then it will return the only team there.
 
-    :return logos: Dictionary with team logos
-    '''
+    :return logos: Dictionary with league name and team name for file location
+    """
     logos = {}
     if len(settings.teams) >= 2:
         random_indexes = random.sample(range(len(settings.teams)), 2)
@@ -176,7 +177,10 @@ def get_random_logo() -> dict:
 
 
 def resize_images_from_folder(image_folder_path: list) -> None:
-    '''Resize all images in the folder.'''
+    """Resize all images in the folder.
+
+    :param image_folder_path: folder to look through to find png images
+    """
 
     for folder in image_folder_path:
         folder_path = os.getcwd() + folder

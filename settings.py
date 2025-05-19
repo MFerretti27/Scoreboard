@@ -1,4 +1,4 @@
-'''Settings used to tell what to display and variable used in multiple files.'''
+"""Settings used to tell what to display and variable used in multiple files."""
 
 #####################################
 # Settings for what teams to display

@@ -1,7 +1,7 @@
-'''Script to Display a Scoreboard for your Favorite Teams'''
+"""Script to Display a Scoreboard for your Favorite Teams"""
 
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
 from datetime import datetime, timedelta
 from internet_connection import is_connected, reconnect
 from gui_setup import (gui_setup, will_text_fit_on_screen, reset_window_elements,
@@ -15,7 +15,7 @@ import traceback
 
 ##################################
 #                                #
-#          Event Loop            #
+#        Main Event Loop         #
 #                                #
 ##################################
 def main():
@@ -138,7 +138,7 @@ def main():
                 display_first_time = True
                 window["top_info"].update(value="")
                 window["bottom_info"].update(value="Exiting No Spoiler Mode")
-                event = window.read(timeout=1)
+                event = window.read(timeout=1000)
 
             # Scroll bottom info if text is too long
             if should_scroll and not settings.no_spoiler_mode:
