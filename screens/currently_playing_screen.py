@@ -181,7 +181,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                         window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
 
                 if settings.no_spoiler_mode:
-                    set_spoiler_mode(window, True, team_info[display_index])
+                    set_spoiler_mode(window, team_info[display_index])
 
                 currently_displaying = team_info[display_index]
 

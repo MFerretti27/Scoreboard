@@ -177,10 +177,16 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
         sys.exit()
 
-    elif ('Up' in events[0]):
+    elif 'Up' in events[0] and not settings.no_spoiler_mode:
         settings.no_spoiler_mode = True
-    elif ('Down' in events[0]):
+        # Setting window elements will be handled in other functions to continue making sure no spoilers are displayed
+
+    elif 'Down' in events[0] and settings.no_spoiler_mode:
         settings.no_spoiler_mode = False
+        window["top_info"].update(value="")
+        window["bottom_info"].update(value="Exiting No Spoiler Mode")
+        window.refresh()
+        time.sleep(2)
 
     if currently_playing:
         if 'Caps_Lock' in events[0] and not settings.stay_on_team:
@@ -210,7 +216,7 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         time.sleep(5)
 
 
-def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict) -> sg.Window:
+def set_spoiler_mode(window: sg.Window, team_info: dict) -> sg.Window:
     """Set screen to spoiler mode, hiding all data that can spoil game.
 
     :param window: element that can be updated for displaying information
@@ -219,11 +225,9 @@ def set_spoiler_mode(window: sg.Window, currently_playing: bool, team_info: dict
 
     :return window: element updates for window to change
     """
-    if currently_playing:
-        window["top_info"].update(value="Game Currently Playing")
-    else:
-        window["top_info"].update(value="Will Not Display Game Info")
-    window['bottom_info'].update(value="No Spoiler Mode On")
+
+    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
+    window['bottom_info'].update(value="No Spoiler Mode On", font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
     window["under_score_image"].update(filename='')
     if "@" not in team_info["above_score_txt"]: # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value='')

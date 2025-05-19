@@ -110,7 +110,7 @@ def main():
                             window[key].update(value=value, text_color='white')
 
                     if settings.no_spoiler_mode:
-                        set_spoiler_mode(window, currently_playing=False, team_info=team_info[display_index])
+                        set_spoiler_mode(window, team_info=team_info[display_index])
                     event = window.read(timeout=2000)
 
                     # Find next team to display (skip teams with no data)
@@ -129,16 +129,14 @@ def main():
                 display_index = (display_index + 1) % len(teams)
 
             event = window.read(timeout=1)
+            temp_spoiler_mode = settings.no_spoiler_mode  # store to see if button is pressed
             check_events(window, event)  # Check for button presses
             if settings.no_spoiler_mode:
-                set_spoiler_mode(window, currently_playing=False, team_info=team_info[display_index])
-            elif "Down" in event[0]:
-                settings.no_spoiler_mode = False
+                set_spoiler_mode(window, team_info=team_info[display_index])
+            if temp_spoiler_mode is not settings.no_spoiler_mode:  # If turned off get new data instantly
+                print("No spoiler mode changed, refreshing data")
                 fetch_first_time = True
                 display_first_time = True
-                window["top_info"].update(value="")
-                window["bottom_info"].update(value="Exiting No Spoiler Mode")
-                event = window.read(timeout=1000)
 
             # Scroll bottom info if text is too long
             if should_scroll and not settings.no_spoiler_mode:
