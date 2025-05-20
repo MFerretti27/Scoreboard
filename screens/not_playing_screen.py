@@ -165,7 +165,7 @@ def main():
                         print("Could not get data, trying again...")
                         window["top_info"].update(value="Could not get data, trying again...", text_color="red")
                         window["bottom_info"].update(value=f"Error: {error}",
-                                                     font=(settings.NOT_PLAYING_TOP_INFO_SIZE), text_color="red")
+                                                     font=(settings.NBA_TOP_INFO_SIZE), text_color="red")
                         event = window.read(timeout=2000)
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
@@ -182,7 +182,8 @@ def main():
 
             while not is_connected():
                 print("Internet connection is down, trying to reconnect...")
-                window["top_info"].update(value="Internet connection is down, trying to reconnect...", text_color="red")
+                window["top_info"].update(value="Internet connection is down, trying to reconnect...",
+                                          font=(settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=1)
                 reconnect()
                 time.sleep(20)  # Check every 20 seconds
