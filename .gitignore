@@ -1,13 +1,15 @@
-*.DS*
+# Ignore macOS metadata
+*.DS_Store
 
-.vscode
+# Ignore VS Code settings
+.vscode/
 
+# Ignore sport logos directory
 sport_logos/
 
-# Don't upload the venv folder
+# Ignore virtual environments
 venv/
 
-# Don't upload the bytecode files
-*/__pycache__/*
-__pycache__/*
-
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
