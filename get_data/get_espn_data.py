@@ -339,9 +339,9 @@ def get_data(team: list[str]) -> tuple:
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
         elif "NBA" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nba_data(team_info)
+            team_info, team_has_data, currently_playing = get_all_nba_data(team_name)
         elif "NHL" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nhl_data(team_info)
+            team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
         elif "NFL" in team_league.upper():
             raise Exception(f"Could Not Get {team_name} data")
         else:

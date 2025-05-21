@@ -201,7 +201,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
 
 
 def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
-                    display_timer_live: int, font_selected: str, selected_items: list):
+                    display_timer_live: int, font_selected: str, selected_items: list) -> None:
     with open(filename, "r") as file:
         contents = file.readlines()
 
@@ -294,7 +294,7 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string) -> int:
+    def write(self, string: str):
         """Override the write method to redirect output to the window."""
         try:
             if self.window is not None and not self.window.was_closed():

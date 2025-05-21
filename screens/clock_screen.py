@@ -29,7 +29,7 @@ def clock(window: sg.Window, message: str) -> list:
     fetch_timer = 180 * 1000  # How often the display should update in seconds
     fetch_picture = ticks_ms()  # Start timer for switching picture
     fetch_picture_timer = 60 * 1000  # How often the picture should update in seconds
-    teams_with_data = []
+    teams_with_data: list[bool] = []
     first_time = True
 
     reset_window_elements(window)

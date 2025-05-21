@@ -16,7 +16,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info = {}
+    team_info: dict[str, str] = {}
     currently_playing = False
     has_data = False
     try:

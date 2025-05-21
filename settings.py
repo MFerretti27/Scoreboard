@@ -99,4 +99,4 @@ delay = False
 ###########################################################
 # Variables used in multiple files (avoid circular import)
 ###########################################################
-saved_data = {}
+saved_data: dict[str, str] = {}
