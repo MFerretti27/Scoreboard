@@ -256,10 +256,11 @@ def check_for_update() -> tuple:
     call was successful, and if there is a newer version
     """
     remote_version = get_remote_version()
-    if not remote_version:
+    local_version = get_local_version()
+    if not remote_version or not local_version:
         return "Could not Get Update", False, False
 
-    if is_newer(get_local_version(), get_remote_version()):
+    if is_newer(local_version, remote_version):
         return (f"Update available: {remote_version} (current: {get_local_version()})"), True, False
     else:
         return "You are running the latest version", True, True

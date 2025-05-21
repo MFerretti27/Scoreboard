@@ -46,12 +46,12 @@ def read_teams_from_file() -> list:
     return teams
 
 
-def read_settings_from_file() -> dict:
+def read_settings_from_file() -> dict[str, int | bool | str]:
     """Read constants in settings.py to see what values are.
 
     :return: dictionary of values
     """
-    settings = {}
+    settings: dict[str, int | bool | str] = {}
     keys_to_find = [
         "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
         "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM",
@@ -121,7 +121,7 @@ def positive_num(input: str) -> bool:
     return input.isdigit() and int(input) >= 0
 
 
-def load_teams_order() -> list:
+def load_teams_order() -> list[str]:
     """Read teams list in settings.py getting order of teams in list.
 
     :return: list of teams in order in settings.py list
@@ -130,7 +130,8 @@ def load_teams_order() -> list:
         tree = ast.parse(f.read(), filename=filename)
     for node in tree.body:
         if isinstance(node, ast.Assign):
-            if node.targets[0].id == 'teams':
+            target = node.targets[0]
+            if isinstance(target, ast.Name) and target.id == 'teams':
                 return ast.literal_eval(ast.unparse(node.value))
     return []
 
