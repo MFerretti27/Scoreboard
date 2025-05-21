@@ -2,7 +2,8 @@
 import settings
 import FreeSimpleGUI as sg  # type: ignore import warning
 from get_data.get_espn_data import get_data
-from gui_setup import will_text_fit_on_screen, set_spoiler_mode, reset_window_elements, check_events
+from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, set_spoiler_mode,
+                                                 reset_window_elements, check_events)
 import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
 import copy

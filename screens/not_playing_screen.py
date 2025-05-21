@@ -3,14 +3,17 @@
 import time
 from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
 from datetime import datetime, timedelta
-from internet_connection import is_connected, reconnect
-from gui_setup import (gui_setup, will_text_fit_on_screen, reset_window_elements,
-                       check_events, set_spoiler_mode, resize_text)
+from helper_functions.internet_connection import is_connected, reconnect
+from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, reset_window_elements,
+                                                 check_events, set_spoiler_mode, resize_text)
 from screens.currently_playing_screen import team_currently_playing
 from get_data.get_espn_data import get_data
 from screens.clock_screen import clock
 import settings
 import traceback
+import platform
+import FreeSimpleGUI as sg  # type: ignore import warning
+from gui_layouts.scoreboard_layout import create_scoreboard_layout
 
 
 ##################################
@@ -36,7 +39,17 @@ def main():
         settings.delay = True  # Automatically set to true if user entered delay more than 0
 
     resize_text()  # Resize text to fit screen size
-    window = gui_setup()  # Create window to display teams
+
+    # Create the window
+    window = sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
+                       resizable=True, return_keyboard_events=True).Finalize()
+
+    # Maximize does not work on MacOS, so we use attributes to set fullscreen
+    if platform.system() == 'Darwin':
+        window.TKroot.attributes('-fullscreen', True)
+    else:
+        window.Maximize()
+    window.TKroot.config(cursor="none")  # Remove cursor from screen
 
     while True:
         try:
