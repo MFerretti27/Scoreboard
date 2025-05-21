@@ -135,7 +135,7 @@ def load_teams_order() -> list:
     return []
 
 
-def update_teams(selected_teams, league) -> list:
+def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     """update settings.py teams list to contain team names user wants to display.
 
     :param selected_teams: teams selected by user to display
@@ -150,6 +150,8 @@ def update_teams(selected_teams, league) -> list:
         "NFL": NFL
     }.get(league, [])
 
+    teams_added = ""
+    teams_removed = ""
     existing_teams = read_teams_from_file()
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = sorted(set(untouched_teams + selected_teams))
@@ -188,8 +190,6 @@ def update_teams(selected_teams, league) -> list:
         removed_teams = \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 
-        teams_added = ""
-        teams_removed = ""
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
         if removed_teams:
@@ -197,11 +197,11 @@ def update_teams(selected_teams, league) -> list:
         if not added_teams and not removed_teams:
             teams_added += "No changes made."
 
-        return teams_added, teams_removed
+    return teams_added, teams_removed
 
 
-def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
-                    display_timer_live, font_selected, selected_items):
+def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
+                    display_timer_live: int, font_selected: str, selected_items: list):
     with open(filename, "r") as file:
         contents = file.readlines()
 
@@ -236,7 +236,7 @@ def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
         file.writelines(contents)
 
 
-def save_teams_order(new_ordered_teams) -> str:
+def save_teams_order(new_ordered_teams: list) -> str:
     """Replaces the existing teams array with a newly ordered array.
 
     :param new_ordered_teams: teams in settings array to reorder
@@ -294,7 +294,7 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string) -> None:
+    def write(self, string) -> int:
         """Override the write method to redirect output to the window."""
         try:
             if self.window is not None and not self.window.was_closed():

@@ -42,7 +42,7 @@ def get_files_to_update(directory: str, extensions=[".py"]) -> list:
 FILES_TO_UPDATE = get_files_to_update(os.getcwd(), extensions=[".py", ".txt", ".json"])
 
 
-def get_local_version() -> str:
+def get_local_version() -> str | None:
     """Read the local version from version.txt.
 
     :return: Local version string or None if an error occurs

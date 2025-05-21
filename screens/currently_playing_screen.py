@@ -9,11 +9,11 @@ from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 import copy
 
 
-def team_currently_playing(window: sg.Window, teams: list) -> list:
+def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
-    :param teams: Array of teams to search data for
+    :param teams: List containing lists of teams to display data for
 
     :return team_info: List of information for teams following
     """

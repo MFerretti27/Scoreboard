@@ -169,9 +169,8 @@ def get_random_logo() -> dict:
         logos[1] = [settings.teams[random_indexes[1]][1].upper(), settings.teams[random_indexes[1]][0].upper()]
     # If only one team in teams array then only return the one file location for logo
     else:
-        random_indexes = 0
-        logos[0] = [settings.teams[random_indexes[0]][1].upper(), settings.teams[random_indexes[0]][0].upper()]
-        logos[1] = [settings.teams[random_indexes[0]][1].upper(), settings.teams[random_indexes[0]][0].upper()]
+        logos[0] = [settings.teams[[0][0]][1].upper(), settings.teams[[0][0]][0].upper()]
+        logos[1] = [settings.teams[[0][0]][1].upper(), settings.teams[[0][0]][0].upper()]
 
     return logos
 

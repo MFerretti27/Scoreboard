@@ -41,7 +41,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_data(team: str) -> tuple:
+def get_data(team: list[str]) -> tuple:
     """Retrieve Data from ESPN API.
 
     :param team: Index of teams array to get data for
@@ -273,7 +273,7 @@ def get_data(team: str) -> tuple:
                                 team_info['bottom_info'] += (f"AB: {batter}")
 
                         # Get Hits and Errors
-                        if settings.hits_errors:
+                        if settings.display_hits_errors:
                             home_hits = (competition["competitors"][0]["hits"])
                             away_hits = (competition["competitors"][1]["hits"])
                             home_errors = (competition["competitors"][0]["errors"])

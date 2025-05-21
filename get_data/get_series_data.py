@@ -87,6 +87,7 @@ def get_current_series_nhl(team_name) -> str:
         return series_summary
     except Exception:
         series_summary
+        return series_summary
 
 
 def get_current_series_nba(team_name) -> str:

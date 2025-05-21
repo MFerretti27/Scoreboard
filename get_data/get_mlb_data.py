@@ -17,7 +17,7 @@ API_FIELDS = (
 )
 
 
-def get_all_mlb_data(team_name: str) -> dict:
+def get_all_mlb_data(team_name: dict[str, str]) -> tuple[dict[str, str], bool, bool]:
     """Get all information for MLB team.
 
     Call this if ESPN fails to get MLB data as backup.
