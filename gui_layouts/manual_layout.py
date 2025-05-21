@@ -1,3 +1,28 @@
+import FreeSimpleGUI as sg  # type: ignore import warning
+import settings
+
+
+def create_instructions_layout(window_width: int) -> list:
+    common_base_widths = [1366, 1920, 1440, 1280]
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+    max_size = 100
+    title_size = min(max_size, max(60, int(65 * scale)))
+    text_size = min(max_size, max(20, int(25 * scale)))
+    button_size = min(max_size, max(48, int(50 * scale)))
+    instructions_size = min(max_size, max(25, int(20 * scale)))
+    layout = [
+        [sg.Text('Manual', font=(settings.FONT, title_size, "underline"), justification='center', expand_x=True)],
+        [sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
+                      no_scrollbar=False, font=('Courier', text_size))],
+        [
+            [sg.VPush()],
+            sg.Push(),
+            sg.Button('Back', font=(settings.FONT, button_size)),
+            sg.Push(),
+        ],
+    ]
+    return layout
 
 
 help_text = """
@@ -8,7 +33,7 @@ Caps Lock - Stay on the currently displayed team (only if multiple teams are pla
 Shift - Resume rotating between multiple teams.
 Right Arrow - Turn on live data delay, this will put a delay on live data shown.
               The amount of delay is set in settings.
-Left Arrow - Turn off live data delay, this will shown live game info as
+Left Arrow - Turn off live data delay, this will show live game info as
              soon as its available.
 Up Arrow - Enter "No Spoiler Mode," hiding scores, records, and game details.
 Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.

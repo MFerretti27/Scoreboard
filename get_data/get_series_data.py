@@ -45,9 +45,10 @@ def get_current_series_mlb(team_name) -> str:
 
         game = schedule[0]  # Take the first game today
         series_summary = game.get("series_status", "")
-        mlb_series = series_summary
         if series_summary == "" or series_summary is None:
             series_summary = mlb_series
+
+        mlb_series = series_summary
         return series_summary
     except Exception:
         return series_summary

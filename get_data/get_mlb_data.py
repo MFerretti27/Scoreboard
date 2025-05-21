@@ -137,11 +137,11 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
 
     # Get pitcher and batter for bottom info
     if settings.display_pitcher_batter:
-        batter = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
-        batter = ' '.join(batter.split()[1:])  # Remove First Name
+        batter_full_name = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
+        batter = ' '.join(batter_full_name.split()[1:])  # Remove First Name
         pitcher = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
         pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
-        due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
+        # due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 
         team_info['bottom_info'] = ''
         if pitcher != '':
@@ -170,7 +170,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     else:
         # If it is the Middle or End of inning show who is leading off batting
         if settings.display_pitcher_batter:
-            team_info['bottom_info'] = (f"DueUp: {due_up}")
+            team_info['bottom_info'] = (f"DueUp: {batter_full_name}")
         team_info['top_info'] = ""
 
     if settings.display_bases:
