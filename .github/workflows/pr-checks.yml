@@ -86,6 +86,7 @@ jobs:
           args: >
             -Dsonar.projectKey=MFerretti27_Scoreboard
             -Dsonar.organization=mferretti27
+            -Dsonar.coverage.exclusions=**
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
