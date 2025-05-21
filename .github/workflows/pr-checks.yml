@@ -122,8 +122,8 @@ jobs:
     steps:
       - name: Run Gitleaks
         uses: zricethezav/gitleaks-action@v2.3.3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dependency-audit:
     name: 🛡️ pip-audit for Vulnerabilities
