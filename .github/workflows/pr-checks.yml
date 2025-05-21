@@ -33,4 +33,4 @@ jobs:
         with:
           check_filenames: true
           skip: .git,venv,__pycache__,*.svg
-          ignore_words_list: "teh,func,ign"
+          ignore_words_list: "teh,func,ign,nd"

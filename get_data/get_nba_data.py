@@ -31,7 +31,7 @@ def get_all_nba_data(team_name: str) -> dict:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
             has_data = True
 
-            # Cant get network image so display nothing
+            # Can't get network image so display nothing
             team_info["under_score_image"] = ""
 
             # Get Bottom Info

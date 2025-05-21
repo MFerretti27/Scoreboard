@@ -47,7 +47,7 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
 
-                # If delay dont keep updating as to not display latest data
+                # If delay don't keep updating as to not display latest data
                 if not settings.delay:
                     team_info.append(info)
                 elif first_time:  # if delay last_info wont be populated first time, so do this once
