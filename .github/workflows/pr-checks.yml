@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-spellcheck:
+  pr-check:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,9 +28,19 @@ jobs:
       - name: Run flake8 (linting)
         run: flake8 .
 
-      - name: Spell check with codespell
+      - name: Run spell checking
         uses: codespell-project/actions-codespell@v2
         with:
           check_filenames: true
           skip: .git,venv,__pycache__,*.svg
-          ignore_words_list: "teh,func,ign,nd"
+          ignore_words_list: "teh,func,ign"
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=MFerretti27_Scoreboard
+            -Dsonar.organization=mferretti27
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
