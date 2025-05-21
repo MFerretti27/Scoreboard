@@ -1,9 +1,9 @@
 """Get series information."""
-import statsapi  # type: ignore import warning
+import statsapi  # type: ignore
 from datetime import datetime, timedelta
 import requests
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore import warning
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 
 mlb_series = ""
 
@@ -87,6 +87,7 @@ def get_current_series_nhl(team_name) -> str:
         return series_summary
     except Exception:
         series_summary
+        return series_summary
 
 
 def get_current_series_nba(team_name) -> str:

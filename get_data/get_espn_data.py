@@ -1,6 +1,6 @@
 """Grab Data for ESPN API."""
 
-import requests  # type: ignore import warning
+import requests  # type: ignore
 import gc
 import os
 import settings
@@ -41,7 +41,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_data(team: str) -> tuple:
+def get_data(team: list[str]) -> tuple:
     """Retrieve Data from ESPN API.
 
     :param team: Index of teams array to get data for
@@ -273,7 +273,7 @@ def get_data(team: str) -> tuple:
                                 team_info['bottom_info'] += (f"AB: {batter}")
 
                         # Get Hits and Errors
-                        if settings.hits_errors:
+                        if settings.display_hits_errors:
                             home_hits = (competition["competitors"][0]["hits"])
                             away_hits = (competition["competitors"][1]["hits"])
                             home_errors = (competition["competitors"][0]["errors"])
@@ -339,9 +339,9 @@ def get_data(team: str) -> tuple:
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
         elif "NBA" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nba_data(team_info)
+            team_info, team_has_data, currently_playing = get_all_nba_data(team_name)
         elif "NHL" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nhl_data(team_info)
+            team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
         elif "NFL" in team_league.upper():
             raise Exception(f"Could Not Get {team_name} data")
         else:

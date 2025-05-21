@@ -1,6 +1,6 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 from settings import *
 import settings
 import time

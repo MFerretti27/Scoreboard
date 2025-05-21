@@ -1,28 +1,28 @@
 """Module to display live information when team is currently playing."""
 import settings
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 from get_data.get_espn_data import get_data
 from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, set_spoiler_mode,
                                                  reset_window_elements, check_events)
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 import copy
 
 
-def team_currently_playing(window: sg.Window, teams: list) -> list:
+def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
-    :param teams: Array of teams to search data for
+    :param teams: List containing lists of teams to display data for
 
     :return team_info: List of information for teams following
     """
 
-    teams_currently_playing = []
+    teams_currently_playing: list[bool] = []
     first_time = True
     delay_over = False
-    team_info = []
-    teams_with_data = []
+    team_info: list[dict[str, str]] = []
+    teams_with_data: list[bool] = []
     saved_data = []
     delay_info = []
     display_index = 0
@@ -47,10 +47,10 @@ def team_currently_playing(window: sg.Window, teams: list) -> list:
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
 
-                # If delay dont keep updating as to not display latest data
+                # If delay don't keep updating as to not display latest data
                 if not settings.delay:
                     team_info.append(info)
-                elif first_time:  # if delay last_info wont be populated first time, so do this once
+                elif first_time:  # if delay last_info won't be populated first time, so do this once
                     team_info.append(info)
                 else:
                     delay_info.append(info)

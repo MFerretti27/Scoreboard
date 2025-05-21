@@ -1,6 +1,6 @@
 """Get the id of team for API calls."""
-import statsapi  # type: ignore import warning
-from nhlpy.nhl_client import NHLClient  # type: ignore import warning
+import statsapi  # type: ignore
+from nhlpy.nhl_client import NHLClient  # type: ignore
 import requests
 
 

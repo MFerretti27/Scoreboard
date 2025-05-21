@@ -1,4 +1,4 @@
-import requests  # type: ignore import warning
+import requests  # type: ignore
 import os
 import shutil
 import re
@@ -42,7 +42,7 @@ def get_files_to_update(directory: str, extensions=[".py"]) -> list:
 FILES_TO_UPDATE = get_files_to_update(os.getcwd(), extensions=[".py", ".txt", ".json"])
 
 
-def get_local_version() -> str:
+def get_local_version() -> str | None:
     """Read the local version from version.txt.
 
     :return: Local version string or None if an error occurs
@@ -58,7 +58,7 @@ def get_local_version() -> str:
         return None
 
 
-def get_remote_version() -> str:
+def get_remote_version() -> str | None:
     """Fetch the remote version from GitHub.
 
     :return: Remote version string or None if an error occurs
@@ -219,8 +219,7 @@ def restore_backup(version: str) -> tuple:
     print(f"Attempting to restore from: {backup_folder_path}")
 
     if not os.path.exists(backup_folder_path):
-        print(f"Backup folder for version {version} not found!")
-        return
+        return f"Backup folder for version {version} not found!", False
 
     try:
         # Remove current files (but skip venv, .git, etc)
@@ -257,10 +256,11 @@ def check_for_update() -> tuple:
     call was successful, and if there is a newer version
     """
     remote_version = get_remote_version()
-    if not remote_version:
+    local_version = get_local_version()
+    if not remote_version or not local_version:
         return "Could not Get Update", False, False
 
-    if is_newer(get_local_version(), get_remote_version()):
+    if is_newer(local_version, remote_version):
         return (f"Update available: {remote_version} (current: {get_local_version()})"), True, False
     else:
         return "You are running the latest version", True, True

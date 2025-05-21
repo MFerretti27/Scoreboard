@@ -4,12 +4,12 @@
 
 import datetime
 import time
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 from get_data.get_team_logos import get_random_logo
 from get_data.get_espn_data import get_data
 from helper_functions.scoreboard_helpers import reset_window_elements
 from helper_functions.internet_connection import is_connected, reconnect
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 import settings
 import gc
 import sys
@@ -29,7 +29,7 @@ def clock(window: sg.Window, message: str) -> list:
     fetch_timer = 180 * 1000  # How often the display should update in seconds
     fetch_picture = ticks_ms()  # Start timer for switching picture
     fetch_picture_timer = 60 * 1000  # How often the picture should update in seconds
-    teams_with_data = []
+    teams_with_data: list[bool] = []
     first_time = True
 
     reset_window_elements(window)

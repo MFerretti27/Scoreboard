@@ -1,5 +1,5 @@
 """GUI Layout screen for setting team display order in main menu."""
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 from helper_functions.main_menu_helpers import load_teams_order
 import settings
 

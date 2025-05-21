@@ -1,7 +1,7 @@
 """Script to Display a Scoreboard for your Favorite Teams"""
 
 import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore import warning
+from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 from datetime import datetime, timedelta
 from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, reset_window_elements,
@@ -12,7 +12,7 @@ from screens.clock_screen import clock
 import settings
 import traceback
 import platform
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 from gui_layouts.scoreboard_layout import create_scoreboard_layout
 
 

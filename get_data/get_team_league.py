@@ -3,7 +3,7 @@ It compares the input team name with a list of known team names in various leagu
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
 
-from rapidfuzz import process, fuzz  # type: ignore import warning
+from rapidfuzz import process, fuzz  # type: ignore
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
@@ -59,7 +59,7 @@ def get_team_league(team__name: str) -> tuple:
     :return: A tuple containing the league and sport name.
     """
     team__name_capitalized = team__name.strip().upper()
-    best_match = ("", 0, "Unknown")
+    best_match = ("", 0.0, "Unknown")
 
     # Find what array team name is in to determine league
     for league, teams in ALL_TEAMS.items():

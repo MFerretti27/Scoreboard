@@ -1,5 +1,5 @@
 """Get MLB from MLB specific API."""
-import statsapi   # type: ignore import warning
+import statsapi   # type: ignore
 import os
 from datetime import datetime, timezone, timedelta
 import requests
@@ -17,7 +17,7 @@ API_FIELDS = (
 )
 
 
-def get_all_mlb_data(team_name: str) -> dict:
+def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     """Get all information for MLB team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -26,7 +26,7 @@ def get_all_mlb_data(team_name: str) -> dict:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info = {}
+    team_info: dict[str, str] = {}
     has_data = False
     currently_playing = False
 

@@ -46,12 +46,12 @@ def read_teams_from_file() -> list:
     return teams
 
 
-def read_settings_from_file() -> dict:
+def read_settings_from_file() -> dict[str, int | bool | str]:
     """Read constants in settings.py to see what values are.
 
     :return: dictionary of values
     """
-    settings = {}
+    settings: dict[str, int | bool | str] = {}
     keys_to_find = [
         "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
         "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM",
@@ -121,7 +121,7 @@ def positive_num(input: str) -> bool:
     return input.isdigit() and int(input) >= 0
 
 
-def load_teams_order() -> list:
+def load_teams_order() -> list[str]:
     """Read teams list in settings.py getting order of teams in list.
 
     :return: list of teams in order in settings.py list
@@ -130,12 +130,13 @@ def load_teams_order() -> list:
         tree = ast.parse(f.read(), filename=filename)
     for node in tree.body:
         if isinstance(node, ast.Assign):
-            if node.targets[0].id == 'teams':
+            target = node.targets[0]
+            if isinstance(target, ast.Name) and target.id == 'teams':
                 return ast.literal_eval(ast.unparse(node.value))
     return []
 
 
-def update_teams(selected_teams, league) -> list:
+def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     """update settings.py teams list to contain team names user wants to display.
 
     :param selected_teams: teams selected by user to display
@@ -150,6 +151,8 @@ def update_teams(selected_teams, league) -> list:
         "NFL": NFL
     }.get(league, [])
 
+    teams_added = ""
+    teams_removed = ""
     existing_teams = read_teams_from_file()
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = sorted(set(untouched_teams + selected_teams))
@@ -188,8 +191,6 @@ def update_teams(selected_teams, league) -> list:
         removed_teams = \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 
-        teams_added = ""
-        teams_removed = ""
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
         if removed_teams:
@@ -197,11 +198,11 @@ def update_teams(selected_teams, league) -> list:
         if not added_teams and not removed_teams:
             teams_added += "No changes made."
 
-        return teams_added, teams_removed
+    return teams_added, teams_removed
 
 
-def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
-                    display_timer_live, font_selected, selected_items):
+def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
+                    display_timer_live: int, font_selected: str, selected_items: list) -> None:
     with open(filename, "r") as file:
         contents = file.readlines()
 
@@ -226,7 +227,7 @@ def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {str(selected)}\n"
 
-    # Must do this to change settings as module wont get reloaded until scoreboard screen starts
+    # Must do this to change settings as module won't get reloaded until scoreboard screen starts
     if key == "always_get_logos" and selected is True:
         settings.always_get_logos = True
     else:
@@ -236,7 +237,7 @@ def update_settings(live_data_delay, fetch_timer, display_timer, display_time,
         file.writelines(contents)
 
 
-def save_teams_order(new_ordered_teams) -> str:
+def save_teams_order(new_ordered_teams: list) -> str:
     """Replaces the existing teams array with a newly ordered array.
 
     :param new_ordered_teams: teams in settings array to reorder
@@ -294,7 +295,7 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string) -> None:
+    def write(self, string: str):
         """Override the write method to redirect output to the window."""
         try:
             if self.window is not None and not self.window.was_closed():

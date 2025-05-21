@@ -35,12 +35,12 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 - If the script fails to get data from ESPN API, or none of your specified teams have any data, or if internet connection goes out the script will display a clock. The clock will include the date and the message telling why the clock is being displayed. For example, message could say "No teams have any data" in which none of the specified teams have upcoming games and haven’t had a game in the last 3 days or it could also say "No internet connection" or if any error occurs like being unable to connection to ESPN the message will have the error message. The clock will also randomly select logos of your teams and display them updating every minute. It will display a clock until one of your specified teams have data again or internet connection is restored (script will try getting data and reconnecting to internet every 3 minutes) <br /> <br />
 - To quit running pressed escape on the keyboard<br />
 
-## Requirments
+## Requirements
 - Python needs to be installed and in your PATH (install [HERE](https://www.python.org/downloads/))<br />
 - pip (usually installed with python) needs to be installed <br />
 - All other environment are in requirements.txt file and will be installed when you run the main.py file, full list below<br />
 
-Unique Libraries Script needs to be installed to work (these will be installed in virtual enviroment when running main.py):<br />
+Unique Libraries Script needs to be installed to work (these will be installed in virtual environment when running main.py):<br />
   - adafruit-circuitpython-ticks -- Used to keep track of when to fetch data and switch displaying teams <br />
   - FreeSimpleGUI -- Used to install Python GUI library  <br />
   - pillow -- Used to resize logo images without losing quality <br />

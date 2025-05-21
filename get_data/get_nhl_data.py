@@ -7,7 +7,7 @@ from .get_team_id import get_nhl_game_id
 import settings
 
 
-def get_all_nhl_data(team_name: str) -> dict:
+def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     """Get all information for NHL team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -16,7 +16,7 @@ def get_all_nhl_data(team_name: str) -> dict:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info = {}
+    team_info: dict[str, str] = {}
     currently_playing = False
     has_data = False
     try:
@@ -94,7 +94,7 @@ def get_all_nhl_data(team_name: str) -> dict:
     return team_info, has_data, currently_playing
 
 
-def append_nhl_data(team_info: dict, team_name: str) -> dict:
+def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
     """Get information for NHL team if playing.
 
     :param team_info: Dictionary where data is stored to display

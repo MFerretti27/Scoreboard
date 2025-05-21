@@ -1,5 +1,5 @@
 """Get NBA from NBA specific API."""
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore import warning
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 import os
 import settings
 
@@ -9,7 +9,7 @@ home_timeouts_saved = 0
 away_timeouts_saved = 0
 
 
-def get_all_nba_data(team_name: str) -> dict:
+def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     """Get all information for NBA team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -31,7 +31,7 @@ def get_all_nba_data(team_name: str) -> dict:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
             has_data = True
 
-            # Cant get network image so display nothing
+            # Can't get network image so display nothing
             team_info["under_score_image"] = ""
 
             # Get Bottom Info
