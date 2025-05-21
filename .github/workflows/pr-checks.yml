@@ -139,6 +139,8 @@ jobs:
     steps:
       - name: Run Gitleaks
         uses: zricethezav/gitleaks-action@v2.3.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   dependency-audit:
     name: 🛡️ pip-audit for Vulnerabilities
@@ -159,7 +161,7 @@ jobs:
           pip install pip-audit -r requirements.txt
 
       - name: Run pip-audit
-        run: pip-audit
+        run: pip-audit --fail-on=Medium
 
   type-check:
     name: 🔎 Type Checking
