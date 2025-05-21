@@ -89,3 +89,27 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pr-description-check:
+      name: 📝 PR Description Required
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Check PR description
+          uses: actions/github-script@v7
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            script: |
+              const pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+              });
+
+              const body = pr.data.body || "";
+
+              if (body.trim().length < 20) {
+                core.setFailed("❌ PR description is required and must be at least 20 characters long.");
+              } else {
+                console.log("✅ PR description is present.");
+              }
