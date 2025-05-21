@@ -1,11 +1,12 @@
-name: Python PR Check
+name: Python PR Checks
 
 on:
   pull_request:
     branches: [ main ]
 
 jobs:
-  pr-check:
+  syntax-check:
+    name: ✅ Syntax Check
     runs-on: ubuntu-latest
 
     steps:
@@ -25,17 +26,61 @@ jobs:
       - name: Check for syntax errors
         run: python -m compileall .
 
-      - name: Run flake8 (linting)
+  lint-check:
+    name: 🧹 flake8 Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt flake8
+
+      - name: Run flake8
         run: flake8 .
 
-      - name: Run spell checking
+  spell-check:
+    name: 🔤 Spell Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run codespell
         uses: codespell-project/actions-codespell@v2
         with:
           check_filenames: true
           skip: .git,venv,__pycache__,*.svg
           ignore_words_list: "teh,func,ign,nd"
 
-      - name: SonarCloud Scan
+  sonarcloud:
+    name: 📊 SonarCloud Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
