@@ -3,10 +3,6 @@ import FreeSimpleGUI as sg  # type: ignore
 import settings
 
 
-# List of previous versions for the restore button
-pervious_versions = []
-
-
 def create_main_layout(window_width: int) -> list:
     sg.theme("LightBlue6")  # Set theme for main screen
     text_size = max(12, window_width // 20)
@@ -24,7 +20,7 @@ def create_main_layout(window_width: int) -> list:
             sg.Push(),
             sg.Column(
                 [
-                    [sg.Combo(pervious_versions, key="versions", visible=False,
+                    [sg.Combo([], key="versions", visible=False,
                               font=(settings.FONT, update_button_size), size=(20, 1))]
                 ],
                 element_justification="center",

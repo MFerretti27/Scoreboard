@@ -9,7 +9,7 @@ home_timeouts_saved = 0
 away_timeouts_saved = 0
 
 
-def get_all_nba_data(team_name: dict[str, str]) -> tuple[dict[str, str], bool, bool]:
+def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     """Get all information for NBA team.
 
     Call this if ESPN fails to get MLB data as backup.

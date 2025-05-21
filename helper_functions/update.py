@@ -58,7 +58,7 @@ def get_local_version() -> str | None:
         return None
 
 
-def get_remote_version() -> str:
+def get_remote_version() -> str | None:
     """Fetch the remote version from GitHub.
 
     :return: Remote version string or None if an error occurs
@@ -219,8 +219,7 @@ def restore_backup(version: str) -> tuple:
     print(f"Attempting to restore from: {backup_folder_path}")
 
     if not os.path.exists(backup_folder_path):
-        print(f"Backup folder for version {version} not found!")
-        return
+        return f"Backup folder for version {version} not found!", False
 
     try:
         # Remove current files (but skip venv, .git, etc)

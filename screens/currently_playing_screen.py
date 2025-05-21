@@ -18,11 +18,11 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     :return team_info: List of information for teams following
     """
 
-    teams_currently_playing = []
+    teams_currently_playing: list[bool] = []
     first_time = True
     delay_over = False
-    team_info = []
-    teams_with_data = []
+    team_info: list[dict[str, str]] = []
+    teams_with_data: list[bool] = []
     saved_data = []
     delay_info = []
     display_index = 0

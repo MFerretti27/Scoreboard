@@ -7,7 +7,7 @@ from .get_team_id import get_nhl_game_id
 import settings
 
 
-def get_all_nhl_data(team_name: dict[str, str]) -> tuple[dict[str, str], bool, bool]:
+def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     """Get all information for NHL team.
 
     Call this if ESPN fails to get MLB data as backup.

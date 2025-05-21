@@ -49,8 +49,8 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     # Calculate new size based on screen size
     width, height = img.size
-    new_width = width
-    new_height = height
+    new_width = float(width)
+    new_height = float(height)
 
     iteration = 1
     if width > column_width or height > column_height:
