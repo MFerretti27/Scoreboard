@@ -1,5 +1,5 @@
 """Get MLB from MLB specific API."""
-import statsapi   # type: ignore import warning
+import statsapi   # type: ignore
 import os
 from datetime import datetime, timezone, timedelta
 import requests

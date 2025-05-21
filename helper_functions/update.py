@@ -1,4 +1,4 @@
-import requests  # type: ignore import warning
+import requests  # type: ignore
 import os
 import shutil
 import re

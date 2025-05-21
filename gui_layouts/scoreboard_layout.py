@@ -1,4 +1,4 @@
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 import settings
 import math
 from get_data.get_team_logos import get_random_logo

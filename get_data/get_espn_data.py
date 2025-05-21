@@ -1,6 +1,6 @@
 """Grab Data for ESPN API."""
 
-import requests  # type: ignore import warning
+import requests  # type: ignore
 import gc
 import os
 import settings

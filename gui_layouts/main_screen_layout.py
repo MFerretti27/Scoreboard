@@ -1,5 +1,5 @@
 
-import FreeSimpleGUI as sg  # type: ignore import warning
+import FreeSimpleGUI as sg  # type: ignore
 import settings
 
 
