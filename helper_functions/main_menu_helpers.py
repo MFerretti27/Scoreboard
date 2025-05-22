@@ -1,9 +1,10 @@
 """Helper functions used in main menu."""
 import ast
-from get_data.get_team_league import MLB, NHL, NBA, NFL
-import settings
-import sys
 import io
+import sys
+
+import settings
+from get_data.get_team_league import MLB, NBA, NFL, NHL
 
 filename = "settings.py"
 
@@ -77,27 +78,8 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
         for key in keys_to_find:
             if line.strip().startswith(f"{key} ="):
                 value = line.strip().split("=")[-1].strip()
-                if key == "LIVE_DATA_DELAY":
-                    try:
-                        settings[key] = int(value)
-                    except ValueError:
-                        settings[key] = 0
-                elif key == "FETCH_DATA_NOT_PLAYING_TIMER":
-                    try:
-                        settings[key] = int(value)
-                    except ValueError:
-                        settings[key] = 0
-                elif key == "DISPLAY_NOT_PLAYING_TIMER":
-                    try:
-                        settings[key] = int(value)
-                    except ValueError:
-                        settings[key] = 0
-                elif key == "DISPLAY_PLAYING_TIMER":
-                    try:
-                        settings[key] = int(value)
-                    except ValueError:
-                        settings[key] = 0
-                elif key == "HOW_LONG_TO_DISPLAY_TEAM":
+                if (key in ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
+                            "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM"]):
                     try:
                         settings[key] = int(value)
                     except ValueError:
@@ -222,7 +204,7 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
         if line.strip().startswith("HOW_LONG_TO_DISPLAY_TEAM ="):
             contents[i] = f'HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n'
 
-    for key, selected in zip(setting_keys, selected_items):
+    for key, selected in zip(setting_keys, selected_items, strict=False):
         for i, line in enumerate(contents):
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {str(selected)}\n"

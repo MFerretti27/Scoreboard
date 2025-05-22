@@ -1,8 +1,10 @@
 """GUI Layout for changing scoreboard settings in main menu."""
-import FreeSimpleGUI as sg  # type: ignore
 import tkinter as tk
-from helper_functions.main_menu_helpers import read_settings_from_file
+
+import FreeSimpleGUI as sg  # type: ignore
+
 import settings
+from helper_functions.main_menu_helpers import read_settings_from_file
 
 
 def create_settings_layout(window_width: int) -> list:

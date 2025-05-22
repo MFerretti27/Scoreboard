@@ -1,7 +1,7 @@
 """Get the id of team for API calls."""
+import requests
 import statsapi  # type: ignore
 from nhlpy.nhl_client import NHLClient  # type: ignore
-import requests
 
 
 def get_mlb_team_id(team: str) -> int:

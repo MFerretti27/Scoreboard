@@ -1,7 +1,8 @@
 """GUI Layout screen for setting team display order in main menu."""
 import FreeSimpleGUI as sg  # type: ignore
-from helper_functions.main_menu_helpers import load_teams_order
+
 import settings
+from helper_functions.main_menu_helpers import load_teams_order
 
 
 def create_order_teams_layout(window_width: int) -> list:

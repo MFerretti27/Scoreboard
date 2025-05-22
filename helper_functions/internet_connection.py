@@ -1,8 +1,8 @@
 """Functions to Check Internet Connection and try to Reconnect."""
 
+import os
 import platform
 import subprocess
-import os
 import time
 
 

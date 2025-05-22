@@ -1,14 +1,17 @@
 """Grab Data for ESPN API."""
 
-import requests  # type: ignore
 import gc
 import os
-import settings
-from .get_mlb_data import get_all_mlb_data, append_mlb_data
-from .get_nhl_data import append_nhl_data, get_all_nhl_data
-from .get_nba_data import append_nba_data, get_all_nba_data
-from .get_series_data import get_series
 from datetime import datetime, timedelta, timezone
+
+import requests  # type: ignore
+
+import settings
+
+from .get_mlb_data import append_mlb_data, get_all_mlb_data
+from .get_nba_data import append_nba_data, get_all_nba_data
+from .get_nhl_data import append_nhl_data, get_all_nhl_data
+from .get_series_data import get_series
 
 should_skip = False
 
@@ -30,9 +33,9 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
                     should_skip = not should_skip
 
                     # Remove team skipped from saved data so old game does not display
-                    if home_team in settings.saved_data.keys():
+                    if home_team in settings.saved_data:
                         del settings.saved_data[home_team]
-                    if away_team in settings.saved_data.keys():
+                    if away_team in settings.saved_data:
                         del settings.saved_data[away_team]
                     return True
 
@@ -145,12 +148,12 @@ def get_data(team: list[str]) -> tuple:
                         team_info['bottom_info'] = str(team_info['bottom_info'])
 
                     if settings.display_odds:
-                        overUnder = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
+                        over_under = competition.get('odds', [{}])[0].get('overUnder', 'N/A')
                         spread = competition.get('odds', [{}])[0].get('details', 'N/A')
                         if "NHL" in team_league.upper() or "MLB" in team_league.upper():
-                            team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {overUnder}"
+                            team_info['top_info'] = f"MoneyLine: {spread} \t OverUnder: {over_under}"
                         else:
-                            team_info['top_info'] = f"Spread: {spread} \t OverUnder: {overUnder}"
+                            team_info['top_info'] = f"Spread: {spread} \t OverUnder: {over_under}"
 
                 # Remove Timezone Characters in info
                 team_info['bottom_info'] = team_info['bottom_info'].replace('EDT', '').replace('EST', '')
@@ -187,12 +190,11 @@ def get_data(team: list[str]) -> tuple:
                             'away_possession': possession == away_team_id,
                         })
 
-                    if settings.display_nfl_timeouts:
-                        if home_timeouts is not None and away_timeouts is not None:
-                            timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
+                    if settings.display_nfl_timeouts and home_timeouts is not None and away_timeouts is not None:
+                        timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
 
-                            team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
-                            team_info['home_timeouts'] += timeout_map.get(home_timeouts, "")
+                        team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
+                        team_info['home_timeouts'] += timeout_map.get(home_timeouts, "")
 
                     # Swap top and bottom info for NFL (I think it looks better displayed this way)
                     temp = str(team_info['bottom_info'])
@@ -291,9 +293,9 @@ def get_data(team: list[str]) -> tuple:
 
                         if settings.display_bases:
                             # Get runners position
-                            onFirst = (competition["situation"]["onFirst"])
-                            onSecond = (competition["situation"]["onSecond"])
-                            onThird = (competition["situation"]["onThird"])
+                            on_first = (competition["situation"]["onFirst"])
+                            on_second = (competition["situation"]["onSecond"])
+                            on_third = (competition["situation"]["onThird"])
                             base_conditions = {
                                 (True, False, False): "on_first.png",
                                 (False, True, False): "on_second.png",
@@ -307,7 +309,7 @@ def get_data(team: list[str]) -> tuple:
 
                             # Get image location for representing runners on base
                             team_info['under_score_image'] = (
-                                f"images/baseball_base_images/{base_conditions[(onFirst, onSecond, onThird)]}"
+                                f"images/baseball_base_images/{base_conditions[(on_first, on_second, on_third)]}"
                             )
 
                 ####################################################################
@@ -343,7 +345,7 @@ def get_data(team: list[str]) -> tuple:
         elif "NHL" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
         elif "NFL" in team_league.upper():
-            raise Exception(f"Could Not Get {team_name} data")
+            raise Exception(f"Could Not Get {team_name} data") from e
         else:
-            raise Exception(f"Could Not Get {team_name} data")
+            raise Exception(f"Could Not Get {team_name} data") from e
         return team_info, team_has_data, currently_playing

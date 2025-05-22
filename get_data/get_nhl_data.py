@@ -1,10 +1,13 @@
 """Get NHL from NHL specific API."""
-import requests
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
+
+import requests
+
+import settings
+
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
-import settings
 
 
 def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:

@@ -1,8 +1,10 @@
-import FreeSimpleGUI as sg  # type: ignore
-import settings
 import math
-from get_data.get_team_logos import get_random_logo
+
+import FreeSimpleGUI as sg  # type: ignore
+
+import settings
 from get_data.get_team_league import append_team_array
+from get_data.get_team_logos import get_random_logo
 from main import set_screen
 
 

@@ -1,14 +1,15 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 
-import FreeSimpleGUI as sg  # type: ignore
-from settings import *
-import settings
-import time
+import gc
 import subprocess
 import sys
-import gc
+import time
 import tkinter as tk
 from tkinter import font as tkFont
+
+import FreeSimpleGUI as sg  # type: ignore
+
+import settings
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -38,16 +39,17 @@ def reset_window_elements(window: sg.Window) -> None:
 
     :param window: element that can be updated for displaying information
     """
-    window['top_info'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window['bottom_info'].update(value='', font=(FONT, settings.INFO_TXT_SIZE), text_color='white')
-    window['home_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
-    window['away_timeouts'].update(value='', font=(FONT, settings.TIMEOUT_SIZE), text_color='white')
-    window['home_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
-    window['away_record'].update(value='', font=(FONT, settings.RECORD_TXT_SIZE), text_color='white')
-    window['home_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
-    window['away_score'].update(value='', font=(FONT, settings.SCORE_TXT_SIZE), text_color='white')
-    window['above_score_txt'].update(value='', font=(FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
-    window["hyphen"].update(value='-', font=(FONT, settings.HYPHEN_SIZE), text_color='white')
+    window['top_info'].update(value='', font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color='white')
+    window['bottom_info'].update(value='', font=(settings.FONT, settings.INFO_TXT_SIZE), text_color='white')
+    window['home_timeouts'].update(value='', font=(settings.FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['away_timeouts'].update(value='', font=(settings.FONT, settings.TIMEOUT_SIZE), text_color='white')
+    window['home_record'].update(value='', font=(settings.FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['away_record'].update(value='', font=(settings.FONT, settings.RECORD_TXT_SIZE), text_color='white')
+    window['home_score'].update(value='', font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['away_score'].update(value='', font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color='white')
+    window['above_score_txt'].update(value='', font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+                                     text_color='white')
+    window["hyphen"].update(value='-', font=(settings.FONT, settings.HYPHEN_SIZE), text_color='white')
 
 
 def check_events(window: sg.Window, events, currently_playing=False) -> None:

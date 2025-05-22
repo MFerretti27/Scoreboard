@@ -1,12 +1,14 @@
 """Get MLB from MLB specific API."""
-import statsapi   # type: ignore
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 import requests
-from .get_series_data import get_current_series_mlb
-from .get_team_id import get_mlb_team_id
+import statsapi  # type: ignore
+
 import settings
 
+from .get_series_data import get_current_series_mlb
+from .get_team_id import get_mlb_team_id
 
 # What things to get from MLBStats API
 API_FIELDS = (

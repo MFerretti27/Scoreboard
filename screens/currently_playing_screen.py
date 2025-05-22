@@ -1,12 +1,18 @@
 """Module to display live information when team is currently playing."""
-import settings
-import FreeSimpleGUI as sg  # type: ignore
-from get_data.get_espn_data import get_data
-from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, set_spoiler_mode,
-                                                 reset_window_elements, check_events)
-import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
 import copy
+import time
+
+import FreeSimpleGUI as sg  # type: ignore
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+
+import settings
+from get_data.get_espn_data import get_data
+from helper_functions.scoreboard_helpers import (
+    check_events,
+    reset_window_elements,
+    set_spoiler_mode,
+    will_text_fit_on_screen,
+)
 
 
 def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
@@ -48,9 +54,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 teams_currently_playing.append(currently_playing)
 
                 # If delay don't keep updating as to not display latest data
-                if not settings.delay:
-                    team_info.append(info)
-                elif first_time:  # if delay last_info won't be populated first time, so do this once
+                if not settings.delay or first_time:
                     team_info.append(info)
                 else:
                     delay_info.append(info)
@@ -74,14 +78,14 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     # Ensure currently_play is true until delay catches up
                     index = 0
                     for team_info_temp in team_info:
-                        if "bottom_info" in team_info_temp.keys() and teams_with_data[index]:
-                            if "FINAL" not in team_info_temp["bottom_info"]:
-                                teams_currently_playing[index] = True
+                        if ("bottom_info" in team_info_temp and teams_with_data[index] and
+                            "FINAL" not in team_info_temp["bottom_info"]):
+                            teams_currently_playing[index] = True
                         index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
                     index = 0
-                    for team_info_temp in team_info:
+                    for _ in team_info:
                         if teams_with_data[index] and teams_currently_playing[index]:
                             team_info[index]['top_info'] = "Game Started"
                             team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
@@ -95,7 +99,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                         index += 1
             if settings.delay and first_time:
                 index = 0
-                for team_info_temp in team_info:
+                for _ in team_info:
                     if teams_with_data[index] and teams_currently_playing[index]:
                         team_info[index]['top_info'] = "Game Started"
                         team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
@@ -170,16 +174,13 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     if key == 'bottom_info':
                         window[key].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     elif key == 'under_score_image':
-                        if "Networks" in team_info[display_index]['under_score_image']:
-                            value = "baseball_base_images/empty_bases.png"
                         window[key].update(filename=value)
                     elif key == 'above_score_txt' and settings.display_inning:
                         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
-                if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
-                    if key == 'top_info':
-                        window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                if "NHL" in sport_league.upper() and teams_currently_playing[display_index] and key == 'top_info':
+                    window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
 
                 if settings.no_spoiler_mode:
                     set_spoiler_mode(window, team_info[display_index])
