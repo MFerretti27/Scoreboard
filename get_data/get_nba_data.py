@@ -72,7 +72,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     """
     global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
 
-    def handle_bonus(team: dict, key: str, backup: bool) -> bool:
+    def handle_bonus(team: dict, backup: bool) -> bool:
         if team["inBonus"] == "1":
             return True
         if team["inBonus"] == "0":
@@ -91,8 +91,8 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
         away = game["awayTeam"]
         if team_name.upper() in (home["teamName"].upper(), away["teamName"].upper()):
             if settings.display_nba_bonus:
-                home_bonus = handle_bonus(home, "home_bonus", home_team_bonus)
-                away_bonus = handle_bonus(away, "away_bonus", away_team_bonus)
+                home_bonus = handle_bonus(home, home_team_bonus)
+                away_bonus = handle_bonus(away, away_team_bonus)
 
                 team_info["home_bonus"] = home_bonus
                 team_info["away_bonus"] = away_bonus
