@@ -23,9 +23,9 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     currently_playing = False
     has_data = False
     try:
-        id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
-        live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/boxscore")
+        team_id = get_nhl_game_id(team_name)
+        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
+        live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
     except Exception:
         return team_info, has_data, currently_playing  # Could not find any game to display
 
