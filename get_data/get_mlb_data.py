@@ -143,7 +143,6 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         batter = ' '.join(batter_full_name.split()[1:])  # Remove First Name
         pitcher = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
         pitcher = ' '.join(pitcher.split()[1:])  # Remove First Name
-        # due_up = live["liveData"]["linescore"]["offense"]["onDeck"]["fullName"]
 
         team_info['bottom_info'] = ''
         if pitcher != '':

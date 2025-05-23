@@ -17,30 +17,31 @@ should_skip = False
 
 
 def check_playing_each_other(home_team: str, away_team: str) -> bool:
-    """Check if the two teams are playing each other
+    """Check if the two teams are playing each other.
 
     :param home_team: Name of home team
     :param away_team: Name of away team
-
-    :return: Boolean value representing if the two teams are playing each other
+    :return: Boolean indicating whether to skip displaying the matchup (already shown once)
     """
     global should_skip
-    for x in settings.teams:
-        for y in settings.teams:
-            if home_team.upper() in [y[0].upper(), x[0].upper()] and away_team.upper() in [x[0].upper(), y[0].upper()]:
-                if should_skip:  # Only skip one team, the one further down teams list
-                    print(f"{home_team} is playing {away_team}, skipping to not display twice")
-                    should_skip = not should_skip
 
-                    # Remove team skipped from saved data so old game does not display
-                    if home_team in settings.saved_data:
-                        del settings.saved_data[home_team]
-                    if away_team in settings.saved_data:
-                        del settings.saved_data[away_team]
-                    return True
+    # Create a set of uppercase team names for faster lookups
+    team_names = {team[0].upper() for team in settings.teams}
 
-                should_skip = not should_skip
-                return False  # Found teams playing each other, but should not skip first instance
+    if home_team.upper() in team_names and away_team.upper() in team_names:
+        if should_skip:
+            print(f"{home_team} is playing {away_team}, skipping to not display twice")
+            should_skip = False
+
+            # Remove the skipped team data to prevent stale display
+            settings.saved_data.pop(home_team, None)
+            settings.saved_data.pop(away_team, None)
+
+            return True
+
+        should_skip = True
+        return False
+
     return False
 
 
@@ -345,7 +346,7 @@ def get_data(team: list[str]) -> tuple:
         elif "NHL" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
         elif "NFL" in team_league.upper():
-            raise Exception(f"Could Not Get {team_name} data") from e
+            raise RuntimeError(f"Could Not Get {team_name} data") from e
         else:
-            raise Exception(f"Could Not Get {team_name} data") from e
+            raise RuntimeError(f"Could Not Get {team_name} data") from e
         return team_info, team_has_data, currently_playing

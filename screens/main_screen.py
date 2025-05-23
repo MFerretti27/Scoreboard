@@ -148,6 +148,7 @@ def main():
             display_timer = values['display_not_playing']
             display_timer_live = values['display_playing']
             display_time = values['display_time']
+            input_error_message = "Please Enter Positive Digits Only"
 
             font_selected = [key for key in values if key.startswith("font_") and values[key]]
             no_fonts_available = False
@@ -168,28 +169,26 @@ def main():
                 correct = False
 
             if not positive_num(live_data_delay):
-                window["Live_data_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+                window["Live_data_message"].update(value=input_error_message, text_color="red")
             else:
                 window["Live_data_message"].update(value="Delay to display live data", text_color="black")
             if not positive_num(fetch_timer):
-                window["fetch_not_playing_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+                window["fetch_not_playing_message"].update(value=input_error_message, text_color="red")
             else:
                 window["fetch_not_playing_message"].update(value="How often to get data when no team is playing",
                                                            text_color="black")
             if not positive_num(display_timer):
-                window["display_not_playing_message"].update(value="Please Enter Positive Digits Only",
-                                                             text_color="red")
+                window["display_not_playing_message"].update(value=input_error_message, text_color="red")
             else:
                 window["display_not_playing_message"].update(value="How often to Display each team when" +
-                                                             " no team is playing",
-                                                             text_color="black")
+                                                             " no team is playing", text_color="black")
             if not positive_num(display_timer_live):
-                window["display_playing_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+                window["display_playing_message"].update(value=input_error_message, text_color="red")
             else:
                 window["display_playing_message"].update(value="How often to Display each team when teams are playing",
                                                          text_color="black")
             if not positive_num(display_time):
-                window["display_time_message"].update(value="Please Enter Positive Digits Only", text_color="red")
+                window["display_time_message"].update(value=input_error_message, text_color="red")
             else:
                 window["display_time_message"].update(value="How long to display team info when finished",
                                                       text_color="black")

@@ -105,8 +105,8 @@ def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
 
     :return team_info: dictionary containing team information to display
     """
-    id = get_nhl_game_id(team_name)
-    resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{id}/right-rail")
+    team_id = get_nhl_game_id(team_name)
+    resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
     res = resp.json()
 
     # Get shots on goal of each team
