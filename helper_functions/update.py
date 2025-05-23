@@ -1,7 +1,8 @@
-import requests  # type: ignore
 import os
-import shutil
 import re
+import shutil
+
+import requests  # type: ignore
 
 # Path to local version.txt
 LOCAL_VERSION_FILE = "version.txt"
@@ -14,7 +15,7 @@ GITHUB_VERSION_URL = GITHUB_BASE_URL + "version.txt"
 
 
 # Automatically populate the list of files to update
-def get_files_to_update(directory: str, extensions=[".py"]) -> list:
+def get_files_to_update(directory: str, extensions=None) -> list:
     """Scans the directory and returns a list of files with the specified extensions.
 
     :param directory: Directory to scan
@@ -22,6 +23,9 @@ def get_files_to_update(directory: str, extensions=[".py"]) -> list:
 
     :return: List of files to update
     """
+    if extensions is None:
+        extensions = [".py"]
+
     files_to_update = []
     for root, _, files in os.walk(directory):
         if "venv" in root.split(os.sep) or ".vscode" in root.split(os.sep) or ".git" in root.split(os.sep) or\

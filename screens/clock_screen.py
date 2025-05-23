@@ -3,17 +3,19 @@
 """
 
 import datetime
-import time
-import FreeSimpleGUI as sg  # type: ignore
-from get_data.get_team_logos import get_random_logo
-from get_data.get_espn_data import get_data
-from helper_functions.scoreboard_helpers import reset_window_elements
-from helper_functions.internet_connection import is_connected, reconnect
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
-import settings
 import gc
-import sys
 import subprocess
+import sys
+import time
+
+import FreeSimpleGUI as sg  # type: ignore
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+
+import settings
+from get_data.get_espn_data import get_data
+from get_data.get_team_logos import get_random_logo
+from helper_functions.internet_connection import is_connected, reconnect
+from helper_functions.scoreboard_helpers import reset_window_elements
 
 
 def clock(window: sg.Window, message: str) -> list:

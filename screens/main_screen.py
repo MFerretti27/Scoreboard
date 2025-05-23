@@ -1,21 +1,27 @@
-import FreeSimpleGUI as sg  # type: ignore
-import sys
-import os
-import time
-import subprocess
 import gc
+import os
+import platform
+import subprocess
+import sys
+import time
+
+import FreeSimpleGUI as sg  # type: ignore
+
+import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_team_logos
+from gui_layouts import main_screen_layout, manual_layout, reorder_teams_layout, settings_layout, team_selection_layout
+from helper_functions.main_menu_helpers import (
+    RedirectText,
+    load_teams_order,
+    positive_num,
+    save_teams_order,
+    setting_keys,
+    update_settings,
+    update_teams,
+)
+from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
-from helper_functions.update import check_for_update, update_program, list_backups, restore_backup
-import settings
-import platform
-from helper_functions.main_menu_helpers import (positive_num, load_teams_order,
-                                                update_teams, save_teams_order,
-                                                update_settings, setting_keys, RedirectText)
-from gui_layouts import (main_screen_layout, settings_layout,
-                         manual_layout, team_selection_layout,
-                         reorder_teams_layout)
 
 
 def main():
@@ -45,7 +51,6 @@ def main():
 
         if event in (sg.WIN_CLOSED, "Exit") or 'Escape' in event:
             window.close()
-            exit()
             sys.exit()
 
         elif "Add" in event:
@@ -214,7 +219,6 @@ def main():
             time.sleep(0.5)  # Give OS time to destroy the window
             subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", *sys.argv[1:]])
             sys.exit()
-            exit()
 
         elif "Manual" in event:
             current_window = "Documentation"

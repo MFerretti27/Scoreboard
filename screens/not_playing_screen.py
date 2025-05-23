@@ -1,19 +1,26 @@
 """Script to Display a Scoreboard for your Favorite Teams"""
 
-import time
-from adafruit_ticks import ticks_ms, ticks_add, ticks_diff  # type: ignore
-from datetime import datetime, timedelta
-from helper_functions.internet_connection import is_connected, reconnect
-from helper_functions.scoreboard_helpers import (will_text_fit_on_screen, reset_window_elements,
-                                                 check_events, set_spoiler_mode, resize_text)
-from screens.currently_playing_screen import team_currently_playing
-from get_data.get_espn_data import get_data
-from screens.clock_screen import clock
-import settings
-import traceback
 import platform
+import time
+import traceback
+from datetime import datetime, timedelta
+
 import FreeSimpleGUI as sg  # type: ignore
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+
+import settings
+from get_data.get_espn_data import get_data
 from gui_layouts.scoreboard_layout import create_scoreboard_layout
+from helper_functions.internet_connection import is_connected, reconnect
+from helper_functions.scoreboard_helpers import (
+    check_events,
+    reset_window_elements,
+    resize_text,
+    set_spoiler_mode,
+    will_text_fit_on_screen,
+)
+from screens.clock_screen import clock
+from screens.currently_playing_screen import team_currently_playing
 
 
 ##################################

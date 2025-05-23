@@ -1,12 +1,14 @@
 """Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen."""
 
 import os
-from PIL import Image  # type: ignore
-import requests  # type: ignore
 import random
-import settings
-import FreeSimpleGUI as sg  # type: ignore
 import shutil
+
+import FreeSimpleGUI as sg  # type: ignore
+import requests  # type: ignore
+from PIL import Image  # type: ignore
+
+import settings
 
 
 def new_league_added() -> bool:

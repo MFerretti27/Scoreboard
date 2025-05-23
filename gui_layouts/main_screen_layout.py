@@ -1,5 +1,6 @@
 
 import FreeSimpleGUI as sg  # type: ignore
+
 import settings
 
 

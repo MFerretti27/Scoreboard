@@ -3,7 +3,7 @@ It compares the input team name with a list of known team names in various leagu
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
 
-from rapidfuzz import process, fuzz  # type: ignore
+from rapidfuzz import fuzz, process  # type: ignore
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",

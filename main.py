@@ -1,7 +1,7 @@
 import os
+import platform
 import subprocess
 import sys
-import platform
 import venv
 
 
@@ -63,10 +63,9 @@ def set_screen() -> None:
         print("Please activate the virtual environment before running.")
         sys.exit(1)
 
-    if platform.system() != 'Windows':
-        if os.environ.get('DISPLAY', '') == '':
-            print('No display found. Using :0.0')
-            os.environ['DISPLAY'] = ':0.0'
+    if platform.system() != 'Windows' and os.environ.get('DISPLAY', '') == '':
+        print('No display found. Using :0.0')
+        os.environ['DISPLAY'] = ':0.0'
 
 
 def remove_ds_files() -> None:

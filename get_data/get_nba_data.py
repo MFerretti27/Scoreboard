@@ -1,6 +1,8 @@
 """Get NBA from NBA specific API."""
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 import os
+
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore
+
 import settings
 
 home_team_bonus = False

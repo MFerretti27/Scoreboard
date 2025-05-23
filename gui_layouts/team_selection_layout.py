@@ -1,7 +1,8 @@
 """GUI Layout for selecting teams in main menu."""
 import FreeSimpleGUI as sg  # type: ignore
-from get_data.get_team_league import MLB, NHL, NBA, NFL
+
 import settings
+from get_data.get_team_league import MLB, NBA, NFL, NHL
 from helper_functions.main_menu_helpers import read_teams_from_file
 
 

@@ -1,7 +1,7 @@
 """Get the id of team for API calls."""
+import requests
 import statsapi  # type: ignore
 from nhlpy.nhl_client import NHLClient  # type: ignore
-import requests
 
 
 def get_mlb_team_id(team: str) -> int:
@@ -35,6 +35,6 @@ def get_nhl_game_id(team_name: str) -> int:
         if teams["fullName"].upper() in team_name.upper():
             abbr = teams["triCode"]
 
-    id = client.schedule.get_schedule_by_team_by_week(team_abbr=abbr)[0]["id"]
+    team_id = client.schedule.get_schedule_by_team_by_week(team_abbr=abbr)[0]["id"]
 
-    return id
+    return team_id
