@@ -57,7 +57,7 @@ def get_data(team: list[str]) -> tuple:
     currently_playing: bool = False
 
     index: int = 0
-    team_info: dict[str, str | bool] = {}
+    team_info = {}
     team_name: str = team[0]
     team_league: str = team[1].lower()
     team_sport: str = team[2].lower()
