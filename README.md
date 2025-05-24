@@ -9,7 +9,7 @@
     - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
 
 # Screen Shots
-Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code.
+Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code.<br />
 <img width="200" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
 <img width="200" alt="Screenshot 2025-05-23 at 9 38 58 PM" src="https://github.com/user-attachments/assets/875b2eae-882a-46ee-a761-61c07fc6f752" />
 <img width="200" alt="Screenshot 2025-05-23 at 9 39 07 PM" src="https://github.com/user-attachments/assets/ace14a8b-e4df-4ca2-a3c0-13b2d4a5a0c0" />
