@@ -53,15 +53,15 @@ def get_data(team: list[str]) -> tuple:
 
     :return team_info: List of Boolean values representing if team is has data to display
     """
-    team_has_data = False
-    currently_playing = False
+    team_has_data: bool = False
+    currently_playing: bool = False
 
-    index = 0
-    team_info = {}
-    team_name = team[0]
-    team_league = team[1].lower()
-    team_sport = team[2].lower()
-    url = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
+    index: int = 0
+    team_info: dict[str, str | bool] = {}
+    team_name: str = team[0]
+    team_league: str = team[1].lower()
+    team_sport: str = team[2].lower()
+    url: str = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
 
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
