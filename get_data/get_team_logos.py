@@ -10,6 +10,8 @@ from PIL import Image  # type: ignore
 
 import settings
 
+logo_folder_path = "images/sport_logos"
+
 
 def new_league_added() -> bool:
     """Check if new league has been added to teams array.
@@ -17,8 +19,8 @@ def new_league_added() -> bool:
     :return: True if new league added, False otherwise
     """
 
-    folder_path = 'images/sport_logos'
-    folder_names = [name for name in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, name))]
+    folder_names = ([name for name in os.listdir(logo_folder_path)
+                     if os.path.isdir(os.path.join(logo_folder_path, name))])
 
     for league_name in settings.teams:
         if league_name[1].upper() not in folder_names:
@@ -95,7 +97,7 @@ def download_team_logos(window, teams: list) -> None:
         if not os.path.exists(f"images/sport_logos/{sport_league.upper()}"):
 
             # Create a directory for the current sport if it doesn't exist
-            sport_dir = os.path.join('images/sport_logos', sport_league.upper())
+            sport_dir = os.path.join(logo_folder_path, sport_league.upper())
             if not os.path.exists(sport_dir):
                 os.makedirs(sport_dir)
 
@@ -141,8 +143,8 @@ def get_team_logos(window, teams: list) -> None:
     :param TEAM_LOGO_SIZE: Size of team logos to display
     """
     already_downloaded = True
-    if not os.path.exists('images/sport_logos'):
-        os.makedirs('images/sport_logos', exist_ok=True)
+    if not os.path.exists(logo_folder_path):
+        os.makedirs(logo_folder_path, exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
         resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
@@ -153,8 +155,8 @@ def get_team_logos(window, teams: list) -> None:
         download_team_logos(window, teams)  # Will only get new league team logos
 
     if settings.always_get_logos and already_downloaded:
-        shutil.rmtree('images/sport_logos')  # Dont want to continually resize images multiple times, so remove
-        os.makedirs('images/sport_logos', exist_ok=True)
+        shutil.rmtree(logo_folder_path)  # Dont want to continually resize images multiple times, so remove
+        os.makedirs(logo_folder_path, exist_ok=True)
         download_team_logos(window, teams)
 
 

@@ -133,7 +133,6 @@ def set_spoiler_mode(window: sg.Window, team_info: dict) -> sg.Window:
 def resize_text() -> None:
     """Resize text to fit screen size."""
     window_width = sg.Window.get_screen_size()[0]
-    # window_height = sg.Window.get_screen_size()[1]
 
     # Common base screen widths
     common_base_widths = [1366, 1920, 1440, 1280]
