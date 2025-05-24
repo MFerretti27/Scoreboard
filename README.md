@@ -66,7 +66,7 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	Update scoreboard.
         - Pressing Update bottom will see if there is an update, if there is click it again to update.
     -	Restore to previous version.
-        - If update went wrong or critical issues arise in newest version you can restore to a pervious software version you were on before.
+        - If update went wrong or critical issues arise in newest version you can restore to a previous software version you were on before.
     -	Add teams from MLB, NBA, NHL, and NFL to be follow and display.
     -	Set the order of teams to be displayed.
     -	Change what is displayed (should be self-explanatory on settings screen).
@@ -122,7 +122,7 @@ Other libraries Used (should already be on system without having to be installed
   - copy -- Used for copying full dictionaries and their contents for storing information to display later
   - traceback -- Used to print full traceback on error for debugging help
   - ast -- Used to assign elements in list a number for setting order
-  - io -- Used to display terminal information on gui, this shows whats going on while waiting for logos to be downloaded
+  - io -- Used to display terminal information on gui, this shows what's going on while waiting for logos to be downloaded
 
 ## Hardware Recommended
 - Raspberry PI (3b+ and up, the better the CPU the less lag displaying images)
