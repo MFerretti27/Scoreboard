@@ -9,7 +9,7 @@
     - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
 
 # Screen Shots
-Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code.
+Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code.<br />
 <img width="200" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
 <img width="200" alt="Screenshot 2025-05-23 at 9 38 58 PM" src="https://github.com/user-attachments/assets/875b2eae-882a-46ee-a761-61c07fc6f752" />
 <img width="200" alt="Screenshot 2025-05-23 at 9 39 07 PM" src="https://github.com/user-attachments/assets/ace14a8b-e4df-4ca2-a3c0-13b2d4a5a0c0" />
@@ -29,7 +29,7 @@ Screen when games are over:<br />
 <br />
 
 ## Controls
-Pressing keys on the keyboard while script is runnign will trigger diffrent actions.
+Pressing keys on the keyboard while script is running will trigger diffrent actions.
 
 Escape - Return to main menu.<br />
 Caps Lock - Stay on the current displayed team (only if multiple teams are playing).<br />
@@ -42,7 +42,9 @@ Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.<
 ## How to Run
 Using Python run the main.py file e.g. ```python main.py``` <br />
 - This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries should already be on your machine, full list of all libraries listed in Requirements section)<br /><br />
-- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates of code, change display or of teams, and change overall settings. The settings allow you to change what elements on the socreboard are displayed, what font text is in, how long to display each team for, adding a delay in displaying live data to not be too fast.
+- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates of code, change display or of teams, and change overall settings. The settings allow you to change what elements on the socreboard are displayed such as what font text is used, how long to display each team for, adding a delay in displaying live data to not be too fast.
+- Press the start button on main menu to start displaying teams selected.
+- Press Escape to return to main menu or press escape while at main menu to quit.
 
 
 ## How Data is Collected
@@ -55,8 +57,9 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -   Some details (last pitch thrown, bonus status, shots on goal, etc) might be missing but most data will still be displayed.
 -	If all data fetching fails:
     -	Shows a clock until connection/data is restored.
-    -	Logos are gotten when first running for the first time.
+-	Logos are gotten when first running for the first time.
     -	If you need to re-download logos such as if a team has updated their logo, you can re-download logos by selecting ""Always Get Logos when Starting" in settings.
+-	Any Game information that is more than a month away will not display.
 
 ## Main Screen
 -	The main screen allows you to:
@@ -70,9 +73,10 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	Change functionality of scoreboard.
         - You can set a delay for live data so that if watching on TV the scoreboard doesn’t update before TV has.
         - How often each team is displayed on screen for.
-        - This can be done individually for when currently playing and when no team is playing
+            - This can be done individually for when currently playing and when no team is playing.
         - How often the scoreboard should update new information.
-        - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV)
+            - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV)
+        - How long team information should be displayed when game is over. 
 
 ## Clock Screen
 -	Displays a clock:
