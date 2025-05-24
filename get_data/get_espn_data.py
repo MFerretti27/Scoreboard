@@ -4,6 +4,7 @@ import copy
 import gc
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import requests  # type: ignore
 
@@ -57,7 +58,7 @@ def get_data(team: list[str]) -> tuple:
     currently_playing: bool = False
 
     index: int = 0
-    team_info = {}
+    team_info: dict[str, Any] = {}
     team_name: str = team[0]
     team_league: str = team[1].lower()
     team_sport: str = team[2].lower()
