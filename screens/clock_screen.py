@@ -4,6 +4,7 @@
 
 import datetime
 import gc
+import json
 import subprocess
 import sys
 import time
@@ -63,7 +64,8 @@ def clock(window: sg.Window, message: str) -> list:
             window.close()
             gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
-            subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+            saved_data = json.dumps(settings.saved_data)
+            subprocess.Popen([sys.executable, "-m", "screens.main_screen", saved_data])
             sys.exit()
 
         # Fetch to see if any teams have data and return to main loop displaying team info

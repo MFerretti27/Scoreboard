@@ -1,6 +1,7 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 
 import gc
+import json
 import subprocess
 import sys
 import time
@@ -63,7 +64,8 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         window.close()
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
-        subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+        saved_data = json.dumps(settings.saved_data)
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", saved_data])
         sys.exit()
 
     elif 'Up' in events[0] and not settings.no_spoiler_mode:

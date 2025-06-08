@@ -1,6 +1,9 @@
 """Script to Display a Scoreboard for your Favorite Teams"""
 
+import copy
+import json
 import platform
+import sys
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -28,9 +31,15 @@ from screens.currently_playing_screen import team_currently_playing
 #        Main Event Loop         #
 #                                #
 ##################################
-def main():
+def main(data_saved: dict) -> None:
+    """Main function to run the scoreboard application.
+
+    :param saved_data: Dictionary containing saved data for teams
+    """
+    # Initialize variables
     team_info = []
     teams_with_data = []
+    settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
     saved_data = settings.saved_data
     display_index = 0
     should_scroll = False
@@ -228,4 +237,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        try:
+            saved_data = json.loads(sys.argv[1])
+        except json.JSONDecodeError as e:
+            print("Invalid JSON argument:", e)
+            saved_data = {}
+    else:
+        print("No argument passed. Using default data.")
+        saved_data = {}
+    main(saved_data)

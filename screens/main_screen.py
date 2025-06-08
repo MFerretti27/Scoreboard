@@ -1,4 +1,5 @@
 import gc
+import json
 import os
 import platform
 import subprocess
@@ -24,7 +25,7 @@ from helper_functions.update import check_for_update, list_backups, restore_back
 from main import set_screen
 
 
-def main():
+def main(saved_data: dict) -> None:
     set_screen()
     update = False
     window_width = sg.Window.get_screen_size()[0]
@@ -216,7 +217,8 @@ def main():
             window.close()
             gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
-            subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", *sys.argv[1:]])
+            json_saved_data = json.dumps(saved_data)
+            subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", json_saved_data])
             sys.exit()
 
         elif "Manual" in event:
@@ -244,4 +246,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        try:
+            saved_data = json.loads(sys.argv[1])
+        except json.JSONDecodeError as e:
+            print("Invalid JSON argument:", e)
+            saved_data = {}
+    else:
+        print("No argument passed. Using default data.")
+        saved_data = {}
+    main(saved_data)
