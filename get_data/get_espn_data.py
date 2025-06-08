@@ -1,8 +1,10 @@
 """Grab Data for ESPN API."""
 
+import copy
 import gc
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import requests  # type: ignore
 
@@ -52,15 +54,15 @@ def get_data(team: list[str]) -> tuple:
 
     :return team_info: List of Boolean values representing if team is has data to display
     """
-    team_has_data = False
-    currently_playing = False
+    team_has_data: bool = False
+    currently_playing: bool = False
 
-    index = 0
-    team_info = {}
-    team_name = team[0]
-    team_league = team[1].lower()
-    team_sport = team[2].lower()
-    url = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
+    index: int = 0
+    team_info: dict[str, Any] = {}
+    team_name: str = team[0]
+    team_league: str = team[1].lower()
+    team_sport: str = team[2].lower()
+    url: str = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
 
     # Need to set these to empty string to avoid displaying old info, other texts always get updated below
     # these may not get updated and therefore display old info
@@ -206,32 +208,36 @@ def get_data(team: list[str]) -> tuple:
                 # If looking at NBA team, get NBA specific data if currently playing
                 ####################################################################
                 if "NBA" in team_league.upper() and currently_playing:
-                    saved_info = team_info
+                    if settings.display_nba_shooting:
+                        home_field_goal_attempt = (competition["competitors"][0]["statistics"][3]["displayValue"])
+                        home_field_goal_made = (competition["competitors"][0]["statistics"][4]["displayValue"])
+
+                        home_3pt_attempt = (competition["competitors"][0]["statistics"][11]["displayValue"])
+                        home_3pt_made = (competition["competitors"][0]["statistics"][12]["displayValue"])
+
+                        away_field_goal_attempt = (competition["competitors"][1]["statistics"][3]["displayValue"])
+                        away_field_goal_made = (competition["competitors"][1]["statistics"][4]["displayValue"])
+
+                        away_3pt_attempt = (competition["competitors"][1]["statistics"][11]["displayValue"])
+                        away_3pt_made = (competition["competitors"][1]["statistics"][12]["displayValue"])
+
+                        away_stats = \
+                            (f"FG: {away_field_goal_made}/{away_field_goal_attempt} " +
+                                f"3PT: {away_3pt_made}/{away_3pt_attempt}")
+                        home_stats = \
+                            (f"FG: {home_field_goal_made}/{home_field_goal_attempt} " +
+                                f"3PT: {home_3pt_made}/{home_3pt_attempt}")
+
+                        team_info['top_info'] = away_stats + "\t\t " + home_stats
+                    # If currently playing, must have bonus information, set here in case api call fails
+                    team_info['away_bonus'] = False
+                    team_info['home_bonus'] = False
+                    saved_info = copy.deepcopy(team_info)
                     try:
                         team_info = append_nba_data(team_info, team_name)
-                    finally:
-                        if settings.display_nba_shooting:
-                            team_info = saved_info
-                            home_field_goal_attempt = (competition["competitors"][0]["statistics"][3]["displayValue"])
-                            home_field_goal_made = (competition["competitors"][0]["statistics"][4]["displayValue"])
+                    except Exception:
+                        team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
 
-                            home_3pt_attempt = (competition["competitors"][0]["statistics"][11]["displayValue"])
-                            home_3pt_made = (competition["competitors"][0]["statistics"][12]["displayValue"])
-
-                            away_field_goal_attempt = (competition["competitors"][1]["statistics"][3]["displayValue"])
-                            away_field_goal_made = (competition["competitors"][1]["statistics"][4]["displayValue"])
-
-                            away_3pt_attempt = (competition["competitors"][1]["statistics"][11]["displayValue"])
-                            away_3pt_made = (competition["competitors"][1]["statistics"][12]["displayValue"])
-
-                            away_stats = \
-                                (f"FG: {away_field_goal_made}/{away_field_goal_attempt} " +
-                                 f"3PT: {away_3pt_made}/{away_3pt_attempt}")
-                            home_stats = \
-                                (f"FG: {home_field_goal_made}/{home_field_goal_attempt} " +
-                                 f"3PT: {home_3pt_made}/{home_3pt_attempt}")
-
-                            team_info['top_info'] = away_stats + "\t\t " + home_stats
                     if not settings.display_nba_clock:
                         team_info["bottom_info"] = ""
 
@@ -239,7 +245,7 @@ def get_data(team: list[str]) -> tuple:
                 # If looking at MLB team, get MLB specific data if currently playing
                 ####################################################################
                 if "MLB" in team_league.upper() and currently_playing:
-                    saved_info = team_info
+                    saved_info = copy.deepcopy(team_info)
                     # Get info from specific MLB API, has more data and updates faster
                     try:
                         team_info = append_mlb_data(team_info, team_name)
@@ -247,7 +253,7 @@ def get_data(team: list[str]) -> tuple:
                     # If call to API fails get MLB specific info just from ESPN
                     except Exception:
                         print("Failed to get data from MLB API")
-                        team_info = saved_info  # Try clause might modify dictionary
+                        team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
                         team_info['bottom_info'] = team_info['bottom_info'].replace('Bot', 'Bottom')
                         team_info['bottom_info'] = team_info['bottom_info'].replace('Mid', 'Middle')
 
@@ -317,12 +323,12 @@ def get_data(team: list[str]) -> tuple:
                 # If looking at NHL team, get NHL specific data if currently playing
                 ####################################################################
                 if "NHL" in team_league.upper() and currently_playing:
-                    saved_info = team_info
+                    saved_info = copy.deepcopy(team_info)
                     try:
                         team_info = append_nhl_data(team_info, team_name)
                     except Exception:
                         print("Could not get info from NHL API")
-                        team_info = saved_info  # Try clause might modify dictionary
+                        team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
 
                 # If game is over try displaying series information if available
                 if team_info['top_info'] == "" and "FINAL" in team_info['bottom_info'] and settings.display_series:
