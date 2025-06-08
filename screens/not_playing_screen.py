@@ -178,14 +178,17 @@ def main():
             time_till_clock = 0
             if is_connected():
                 while time_till_clock < 12:
+                    event = window.read(timeout=5)
+                    check_events(window, event)  # Check for button presses
                     try:
-                        get_data(teams[display_index])
-                        break  # If data is fetched successfully, break out of loop
+                        for fetch_index in range(len(teams)):
+                            get_data(teams[fetch_index])
+                        break  # If all data is fetched successfully, break out of loop
                     except Exception as error:
                         print("Could not get data, trying again...")
                         window["top_info"].update(value="Could not get data, trying again...", text_color="red")
                         window["bottom_info"].update(value=f"Error: {error}",
-                                                     font=(settings.NBA_TOP_INFO_SIZE), text_color="red")
+                                                     font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                         event = window.read(timeout=2000)
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
@@ -201,10 +204,12 @@ def main():
                 print("Internet connection is active")
 
             while not is_connected():
+                event = window.read(timeout=5)
+                check_events(window, event)  # Check for button presses
                 print("Internet connection is down, trying to reconnect...")
                 window["top_info"].update(value="Internet connection is down, trying to reconnect...",
-                                          font=(settings.NBA_TOP_INFO_SIZE), text_color="red")
-                event = window.read(timeout=1)
+                                          font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
+                event = window.read(timeout=2000)
                 reconnect()
                 time.sleep(20)  # Check every 20 seconds
 

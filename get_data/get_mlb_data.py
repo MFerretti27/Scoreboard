@@ -47,9 +47,9 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     # Cannot Get network so dont display anything, and if game is currently playing it will updated with base images
     team_info['under_score_image'] = ''
 
-    # Set Score to 0, will be updated if team is currently playing
-    team_info["home_score"] = "0"
-    team_info["away_score"] = "0"
+    # Get Score
+    team_info["home_score"] = live["liveData"]["linescore"]["teams"]["home"].get("runs", 0)
+    team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
 
     # Get date and put in local time
     iso_string = live["gameData"]["datetime"]["dateTime"]
@@ -81,6 +81,12 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             home_team = file
         if away_team.upper() in file:
             away_team = file
+
+    # If team is D-backs change to "ARIZONA DIAMONDBACKS", there is no file called D-backs
+    if home_team == "D-backs":
+        home_team = "ARIZONA DIAMONDBACKS.png"
+    elif away_team == "D-backs":
+        away_team = "ARIZONA DIAMONDBACKS.png"
 
     team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/MLB/{away_team}")
     team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/MLB/{home_team}")
