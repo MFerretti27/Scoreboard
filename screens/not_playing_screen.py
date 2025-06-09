@@ -37,10 +37,10 @@ def main(data_saved: dict) -> None:
     :param saved_data: Dictionary containing saved data for teams
     """
     # Initialize variables
-    team_info: list[bool] = []
+    team_info: list[dict] = []
     teams_with_data: list[bool] = []
     settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
-    saved_data: dict[list, datetime | str] = settings.saved_data
+    saved_data: list = settings.saved_data
     display_index: int = 0
     should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
