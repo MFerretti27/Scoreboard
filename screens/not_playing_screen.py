@@ -41,6 +41,7 @@ def main(data_saved: dict) -> None:
     teams_with_data = []
     settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
     saved_data = settings.saved_data
+    print("Saved Data:", saved_data)
     display_index = 0
     should_scroll = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
@@ -107,7 +108,9 @@ def main(data_saved: dict) -> None:
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")
                         current_date = datetime.now()
-                        date_difference = current_date - saved_data[teams[fetch_index][0]][1]
+                        saved_str = saved_data[teams[fetch_index][0]][1]
+                        saved_datetime = datetime.fromisoformat(saved_str)
+                        date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
                             print(f"It will display, time its been: {date_difference}")
@@ -129,6 +132,10 @@ def main(data_saved: dict) -> None:
                     display_first_time = False
                     print(f"\nUpdating Display for {teams[display_index][0]}")
                     reset_window_elements(window)
+
+                    if ("@" not in team_info[display_index]['above_score_txt'] and
+                        team_info[display_index]['above_score_txt'] != ""):
+                        window["above_score_txt"].update(font=(settings.FONT, settings.TOP_TXT_SIZE, "underline")),
 
                     should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
