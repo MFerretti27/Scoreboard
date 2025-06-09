@@ -108,8 +108,12 @@ def main(data_saved: dict) -> None:
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")
                         current_date = datetime.now()
-                        saved_str = saved_data[teams[fetch_index][0]][1]
-                        saved_datetime = datetime.fromisoformat(saved_str)
+                        saved_date = saved_data[teams[fetch_index][0]][1]
+                        if isinstance(saved_date, str):  # check if saved_date is a string, happens if went to main menu
+                            saved_datetime = datetime.fromisoformat(saved_date)  # convert string to datetime
+                        else:
+                            saved_datetime = saved_date  # already a datetime
+                        saved_datetime = datetime.fromisoformat(saved_date)
                         date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
