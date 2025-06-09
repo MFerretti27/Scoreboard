@@ -7,7 +7,6 @@ import sys
 import time
 import traceback
 from datetime import datetime, timedelta
-from typing import Any
 
 import FreeSimpleGUI as sg  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
@@ -41,7 +40,7 @@ def main(data_saved: dict) -> None:
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
     settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
-    saved_data: dict[list, Any] = settings.saved_data
+    saved_data: dict[str, datetime | str] = settings.saved_data
     display_index: int = 0
     should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
