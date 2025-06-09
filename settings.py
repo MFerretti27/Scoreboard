@@ -1,5 +1,4 @@
 """Settings used to tell what to display and variable used in multiple files."""
-from datetime import datetime
 from typing import Any
 
 #####################################
@@ -101,4 +100,4 @@ delay = False
 ###########################################################
 # Variables used in multiple files (avoid circular import)
 ###########################################################
-saved_data: dict[dict[str, Any], datetime | str] = {}
+saved_data: Any = {}
