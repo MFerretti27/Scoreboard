@@ -37,20 +37,19 @@ def main(data_saved: dict) -> None:
     :param saved_data: Dictionary containing saved data for teams
     """
     # Initialize variables
-    team_info = []
-    teams_with_data = []
+    team_info: list[bool] = []
+    teams_with_data: list[bool] = []
     settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
-    saved_data = settings.saved_data
-    print("Saved Data:", saved_data)
-    display_index = 0
-    should_scroll = False
+    saved_data: dict[list, datetime | str] = settings.saved_data
+    display_index: int = 0
+    should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
     display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for fetching data
     fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
-    teams = settings.teams
-    display_first_time = True
-    fetch_first_time = True
+    teams: list[list[str]] = settings.teams
+    display_first_time: bool = True
+    fetch_first_time: bool = True
 
     if settings.LIVE_DATA_DELAY > 0:
         settings.delay = True  # Automatically set to true if user entered delay more than 0
