@@ -1,4 +1,5 @@
 """Settings used to tell what to display and variable used in multiple files."""
+from typing import Any
 
 #####################################
 # Settings for what teams to display
@@ -99,4 +100,4 @@ delay = False
 ###########################################################
 # Variables used in multiple files (avoid circular import)
 ###########################################################
-saved_data: dict[str, str] = {}
+saved_data: Any = {}

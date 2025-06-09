@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import font as tkFont
 
 import FreeSimpleGUI as sg  # type: ignore
+import orjson  # type: ignore
 
 import settings
 
@@ -63,7 +64,8 @@ def check_events(window: sg.Window, events, currently_playing=False) -> None:
         window.close()
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
-        subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+        json_saved_data = orjson.dumps(settings.saved_data)
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
         sys.exit()
 
     elif 'Up' in events[0] and not settings.no_spoiler_mode:

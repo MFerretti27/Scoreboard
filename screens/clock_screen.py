@@ -9,6 +9,7 @@ import sys
 import time
 
 import FreeSimpleGUI as sg  # type: ignore
+import orjson  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
 
 import settings
@@ -63,7 +64,8 @@ def clock(window: sg.Window, message: str) -> list:
             window.close()
             gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
-            subprocess.Popen([sys.executable, "-m", "screens.main_screen", *sys.argv[1:]])
+            json_saved_data = orjson.dumps(settings.saved_data)
+            subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
             sys.exit()
 
         # Fetch to see if any teams have data and return to main loop displaying team info

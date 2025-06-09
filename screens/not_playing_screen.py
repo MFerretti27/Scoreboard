@@ -1,9 +1,13 @@
 """Script to Display a Scoreboard for your Favorite Teams"""
 
+import copy
+import json
 import platform
+import sys
 import time
 import traceback
 from datetime import datetime, timedelta
+from typing import Any
 
 import FreeSimpleGUI as sg  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
@@ -28,19 +32,25 @@ from screens.currently_playing_screen import team_currently_playing
 #        Main Event Loop         #
 #                                #
 ##################################
-def main():
-    team_info = []
-    teams_with_data = []
-    saved_data = settings.saved_data
-    display_index = 0
-    should_scroll = False
+def main(data_saved: dict) -> None:
+    """Main function to run the scoreboard application.
+
+    :param saved_data: Dictionary containing saved data for teams
+    """
+    # Initialize variables
+    team_info: list[dict] = []
+    teams_with_data: list[bool] = []
+    settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
+    saved_data: Any = settings.saved_data
+    display_index: int = 0
+    should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
-    display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
+    display_timer: int = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for fetching data
-    fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
-    teams = settings.teams
-    display_first_time = True
-    fetch_first_time = True
+    fetch_timer: int = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
+    teams: list[list[str]] = settings.teams
+    display_first_time: bool = True
+    fetch_first_time: bool = True
 
     if settings.LIVE_DATA_DELAY > 0:
         settings.delay = True  # Automatically set to true if user entered delay more than 0
@@ -98,7 +108,13 @@ def main():
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")
                         current_date = datetime.now()
-                        date_difference = current_date - saved_data[teams[fetch_index][0]][1]
+                        saved_date = saved_data[teams[fetch_index][0]][1]
+                        if isinstance(saved_date, str):  # check if saved_date is a string, happens if went to main menu
+                            saved_datetime = datetime.fromisoformat(saved_date)  # convert string to datetime
+                        else:
+                            saved_datetime = saved_date  # already a datetime
+                        saved_datetime = datetime.fromisoformat(saved_date)
+                        date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
                             print(f"It will display, time its been: {date_difference}")
@@ -120,6 +136,10 @@ def main():
                     display_first_time = False
                     print(f"\nUpdating Display for {teams[display_index][0]}")
                     reset_window_elements(window)
+
+                    if ("@" not in team_info[display_index]['above_score_txt'] and
+                        team_info[display_index]['above_score_txt'] != ""):
+                        window["above_score_txt"].update(font=(settings.FONT, settings.TOP_TXT_SIZE, "underline")),
 
                     should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
 
@@ -228,4 +248,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        try:
+            saved_data = json.loads(sys.argv[1])
+        except json.JSONDecodeError as e:
+            print("Invalid JSON argument:", e)
+            saved_data = {}
+    else:
+        print("No argument passed. Using default data.")
+        saved_data = {}
+    main(saved_data)
