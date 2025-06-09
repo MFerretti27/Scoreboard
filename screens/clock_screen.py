@@ -9,7 +9,7 @@ import sys
 import time
 
 import FreeSimpleGUI as sg  # type: ignore
-import orjson
+import orjson  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
 
 import settings
