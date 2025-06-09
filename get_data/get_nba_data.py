@@ -4,6 +4,7 @@ import os
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 
 import settings
+from get_data.get_game_type import get_game_type
 
 home_team_bonus = False
 away_team_bonus = False
@@ -56,8 +57,12 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{away_team}")
             team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{home_team}")
 
-            team_info["home_score"] = "0"
-            team_info["away_score"] = "0"
+            team_info["home_score"] = game["homeTeam"]["score"]
+            team_info["away_score"] = game["awayTeam"]["score"]
+
+            if get_game_type("NBA", team_name) != "":
+                # If game type is not empty, then its the Finals, display it
+                team_info["under_score_image"] = get_game_type("NBA", team_name)
 
     return team_info, has_data, currently_playing
 

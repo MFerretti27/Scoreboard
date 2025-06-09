@@ -10,6 +10,7 @@ import requests  # type: ignore
 
 import settings
 
+from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
 from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
@@ -333,6 +334,11 @@ def get_data(team: list[str]) -> tuple:
                 # If game is over try displaying series information if available
                 if team_info['top_info'] == "" and "FINAL" in team_info['bottom_info'] and settings.display_series:
                     team_info['top_info'] = get_series(team_league, team_name)
+
+                # Check if game is a championship game, if so display its championship game
+                if get_game_type(team_league, team_name) != "":
+                    # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
+                    team_info["under_score_image"] = get_game_type(team_league, team_name)
 
                 break  # Found team in sports events and got data, no need to continue looking
             else:

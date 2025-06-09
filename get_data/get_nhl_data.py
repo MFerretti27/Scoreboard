@@ -6,6 +6,7 @@ import requests
 
 import settings
 
+from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
@@ -91,6 +92,11 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     elif "FINAL" in res["seasonSeries"][2]["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = "FINAL"
+
+    # Check if game is a championship game, if so display its championship game
+    if get_game_type("NHL", team_name) != "":
+        # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
+        team_info["under_score_image"] = get_game_type("NHL", team_name)
 
     resp.close()
     live_data.close()
