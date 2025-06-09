@@ -52,7 +52,8 @@ def get_current_series_mlb(team_name) -> str:
 
         mlb_series = series_summary
         return series_summary
-    except Exception:
+    except Exception as e:
+        print(f"Error getting MLB series information: {e}")
         return series_summary
 
 
@@ -87,7 +88,8 @@ def get_current_series_nhl(team_name) -> str:
             series_summary = f"Series Tied {away_series_wins} - {home_series_wins}"
 
         return series_summary
-    except Exception:
+    except Exception as e:
+        print(f"Error getting NHL series information: {e}")
         return series_summary
 
 
@@ -107,5 +109,6 @@ def get_current_series_nba(team_name) -> str:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
                 series_summary = game["seriesText"]
         return series_summary
-    except Exception:
+    except Exception as e:
+        print(f"Error getting NBA series information: {e}")
         return series_summary
