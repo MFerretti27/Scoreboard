@@ -2,6 +2,7 @@
 
 import copy
 import json
+import logging
 import platform
 import sys
 import time
@@ -51,6 +52,8 @@ def main(data_saved: dict) -> None:
     teams: list[list[str]] = settings.teams
     display_first_time: bool = True
     fetch_first_time: bool = True
+
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
 
     if settings.LIVE_DATA_DELAY > 0:
         settings.delay = True  # Automatically set to true if user entered delay more than 0
