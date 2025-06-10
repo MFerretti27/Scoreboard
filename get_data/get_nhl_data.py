@@ -12,7 +12,7 @@ from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
 
-def get_all_nhl_data(team_name: str) -> tuple[Any, bool, bool]:
+def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NHL team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -21,7 +21,7 @@ def get_all_nhl_data(team_name: str) -> tuple[Any, bool, bool]:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info: Any = {}
+    team_info: dict[str, Any] = {}
     currently_playing: bool = False
     has_data: bool = False
     try:
