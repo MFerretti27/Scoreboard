@@ -104,7 +104,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     return team_info, has_data, currently_playing
 
 
-def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
+def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     """Get information for NHL team if playing.
 
     :param team_info: Dictionary where data is stored to display
