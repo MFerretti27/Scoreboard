@@ -13,12 +13,12 @@ was_championship_game = False
 
 
 def get_game_type(team_league: str, team_name: str) -> str:
-    """Get the game type from the command line arguments or settings file.
+    """Get the if game is championship or playoff.
 
     :param team_league: The league of the team (e.g., MLB, NHL, NBA, NFL)
     :param team_name: The name of the team
 
-    :return: Game type as a string
+    :return: Image path or empty string if not a championship/playoff game
     """
     if "MLB" in team_league.upper():
         return (get_mlb_game_type(team_name))
@@ -36,9 +36,9 @@ def get_nba_game_type() -> str:
     :return: Path for championship image or empty string if not a championship game
     """
     global was_championship_game
-    # Today's Score Board
+
     try:
-        games = scoreboard.ScoreBoard()
+        games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
         game_type = live["scoreboard"]["games"][0]["gameLabel"]
         was_championship_game = True if "NBA Finals" in game_type else False
@@ -126,7 +126,7 @@ def get_nhl_game_type(team_name: str) -> str:
         playoff_info = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/")
         playoff_info = playoff_info.json()
 
-        # Check if the team is in the championship series
+        # Check if the team is in the playoffs/championship
         current_round = playoff_info["currentRound"]
         path = ""
         if (away_team_abbr == your_team_abbr or home_team_abbr == your_team_abbr):
@@ -137,7 +137,7 @@ def get_nhl_game_type(team_name: str) -> str:
                 path = f"{os.getcwd()}/images/conference_championship_images/nhl_eastern_championship.png"
             elif current_round == 3 and conference == "Western":
                 path = f"{os.getcwd()}/images/conference_championship_images/nhl_western_championship.png"
-            else:
+            elif current_round == 2 or current_round == 1:
                 path = f"{os.getcwd()}/images/playoff_images/nfl_playoffs.png"
         return path
 

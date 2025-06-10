@@ -35,10 +35,15 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     res = resp.json()
     has_data = True
 
-    # Set scores to 0, will get updated later once game starts
-    team_info["home_score"] = "0"
-    team_info["away_score"] = "0"
-    team_info["under_score_image"] = ""  # Cannot get network image so set to nothing
+    # Get Scores, they are only available if game is playing or has finished
+    try:
+        team_info["home_score"] = res["linescore"]["totals"]["home"]
+        team_info["away_score"] = res["linescore"]["totals"]["away"]
+    except Exception:
+        team_info["home_score"] = "0"
+        team_info["away_score"] = "0"
+
+    team_info["under_score_image"] = ""  # Cannot get network image so ensure its set to nothing
 
     # Get team names
     away_team_name = live["awayTeam"]["commonName"]["default"]
@@ -90,7 +95,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info = append_nhl_data(team_info, team_name)
 
     # Check if game is over
-    elif "FINAL" in res["seasonSeries"][2]["gameState"]:
+    elif "FINAL" in res["seasonSeries"][2]["gameState"] or "OFF" in res["seasonSeries"][2]["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = "FINAL"
 
