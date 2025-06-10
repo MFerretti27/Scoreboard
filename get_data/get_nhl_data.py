@@ -20,9 +20,9 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info: dict[str, str] = {}
-    currently_playing = False
-    has_data = False
+    team_info: dict[str, str | bool] = {}
+    currently_playing: bool = False
+    has_data: bool = False
     try:
         team_id = get_nhl_game_id(team_name)
         resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
@@ -140,18 +140,19 @@ def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
     team_info["away_score"] = res["linescore"]["totals"]["away"]
 
     # Get if team is in power play
-    try:
-        # Dont need to store name of whose on just has to ensure call is successful
-        _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
-        team_info["away_power_play"] = True
-    except KeyError:
-        team_info["away_power_play"] = False
-    try:
-        # Dont need to store name of whose on just has to ensure call is successful
-        _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
-        team_info["home_power_play"] = True
-    except KeyError:
-        team_info["home_power_play"] = False
+    if settings.display_nhl_power_play:
+        try:
+            # Dont need to store name of whose on just has to ensure call is successful
+            _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
+            team_info["away_power_play"] = True
+        except KeyError:
+            team_info["away_power_play"] = False
+        try:
+            # Dont need to store name of whose on just has to ensure call is successful
+            _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
+            team_info["home_power_play"] = True
+        except KeyError:
+            team_info["home_power_play"] = False
 
     resp.close()
     return team_info
