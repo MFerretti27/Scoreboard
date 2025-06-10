@@ -95,7 +95,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("NHL", team_name) != "":
-        # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
+        # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
         team_info["under_score_image"] = get_game_type("NHL", team_name)
 
     resp.close()
