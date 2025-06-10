@@ -7,6 +7,7 @@ import statsapi  # type: ignore
 
 import settings
 
+from .get_game_type import get_game_type
 from .get_series_data import get_current_series_mlb
 from .get_team_id import get_mlb_team_id
 
@@ -107,6 +108,11 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     elif "Final" in live["gameData"]["status"]["detailedState"]:
         team_info["top_info"] = get_current_series_mlb(team_name)
         team_info["bottom_info"] = "FINAL"
+
+    # Check if game is a championship game, if so display its championship game
+    if get_game_type("MLB", team_name) != "":
+        # If str returned is not empty, then it world series/conference championship, so display championship png
+        team_info["under_score_image"] = get_game_type("MLB", team_name)
 
     return team_info, has_data, currently_playing
 
