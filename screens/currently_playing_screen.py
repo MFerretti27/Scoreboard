@@ -127,7 +127,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             for key, value in team_info[display_index].items():
                 if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
-                elif "possession" not in key and "redzone" not in key and "bonus" not in key:
+                elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
+                      "power_play" not in key):
                     window[key].update(value=value)
 
                 # Football specific display information
@@ -179,8 +180,15 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
-                if "NHL" in sport_league.upper() and teams_currently_playing[display_index] and key == 'top_info':
-                    window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
+                    if key == 'top_info':
+                        window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                    if team_info[display_index]["home_power_play"] and key == 'home_score':
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                                           text_color='blue')
+                    elif team_info[display_index]["away_power_play"] and key == 'away_score':
+                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                                           text_color='blue')
 
                 if settings.no_spoiler_mode:
                     set_spoiler_mode(window, team_info[display_index])

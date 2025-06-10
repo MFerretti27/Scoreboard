@@ -114,6 +114,8 @@ def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
     team_id = get_nhl_game_id(team_name)
     resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
     res = resp.json()
+    box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
+    box_score = box_score.json()
 
     # Get shots on goal of each team
     if settings.display_nhl_sog:
@@ -136,6 +138,20 @@ def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
     # Get score
     team_info["home_score"] = res["linescore"]["totals"]["home"]
     team_info["away_score"] = res["linescore"]["totals"]["away"]
+
+    # Get if team is in power play
+    try:
+        # Dont need to store name of whose on just has to ensure call is successful
+        _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
+        team_info["away_power_play"] = True
+    except KeyError:
+        team_info["away_power_play"] = False
+    try:
+        # Dont need to store name of whose on just has to ensure call is successful
+        _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
+        team_info["home_power_play"] = True
+    except KeyError:
+        team_info["home_power_play"] = False
 
     resp.close()
     return team_info
