@@ -10,10 +10,10 @@ from nhlpy.nhl_client import NHLClient  # type: ignore
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
 # NBA only has data for one day so store if it was a championship game to display for longer
-was_finals_game: list[bool: str] = [False, ""]
-was_western_championship_game: list[bool: str] = [False, ""]
-was_eastern_championship_game: list[bool: str] = [False, ""]
-was_playoff_game: list[bool: str] = [False, ""]
+was_finals_game: list[bool, str] = [False, ""]
+was_western_championship_game: list[bool, str] = [False, ""]
+was_eastern_championship_game: list[bool, str] = [False, ""]
+was_playoff_game: list[bool, str] = [False, ""]
 
 
 def get_game_type(team_league: str, team_name: str) -> str:
