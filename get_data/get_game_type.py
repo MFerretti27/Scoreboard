@@ -1,6 +1,6 @@
 import logging
-import os
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import requests
 import statsapi  # type: ignore
@@ -9,7 +9,11 @@ from nhlpy.nhl_client import NHLClient  # type: ignore
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
-was_championship_game = False
+# NBA only has data for one day so store if it was a championship game to display for longer
+was_finals_game: list[bool: str] = [False, ""]
+was_western_championship_game: list[bool: str] = [False, ""]
+was_eastern_championship_game: list[bool: str] = [False, ""]
+was_playoff_game: list[bool: str] = [False, ""]
 
 
 def get_game_type(team_league: str, team_name: str) -> str:
@@ -22,36 +26,39 @@ def get_game_type(team_league: str, team_name: str) -> str:
     """
     if "MLB" in team_league.upper():
         return (get_mlb_game_type(team_name))
-    elif "NHL" in team_league.upper():
+    if "NHL" in team_league.upper():
         return (get_nhl_game_type(team_name))
-    elif "NBA" in team_league.upper():
-        return (get_nba_game_type())
-    else:
-        return ""
+    if "NBA" in team_league.upper():
+        return (get_nba_game_type(team_name))
+
+    return ""
 
 
-def get_nba_game_type() -> str:
+def get_nba_game_type(team_name) -> str:
     """Check if NBA game is championship.
 
     :return: Path for championship image or empty string if not a championship game
     """
-    global was_championship_game
 
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
         game_type = live["scoreboard"]["games"][0]["gameLabel"]
-        was_championship_game = True if "NBA Finals" in game_type else False
+
+        # Store data for when scoreboard data is not available
+        was_finals_game[0] = "NBA Finals" in game_type
+        was_finals_game[1] = team_name if was_finals_game[0] else ""
+
     except Exception as e:
         print(f"Error getting NBA game type: {e}")
-        if was_championship_game:
-            return f"{os.getcwd()}/images/championship_images/nba_finals.png"
+        if was_finals_game[0] and was_finals_game[1] == team_name:
+            return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
         return ""
 
     if game_type == "NBA Finals":
-        return f"{os.getcwd()}/images/championship_images/nba_finals.png"
-    else:
-        return ""
+        return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+
+    return ""
 
 
 def get_mlb_game_type(team_name: str) -> str:
@@ -61,20 +68,20 @@ def get_mlb_game_type(team_name: str) -> str:
     """
     try:
         # Try to get first game from now for the next 3 days
-        today = datetime.now().strftime("%Y-%m-%d")
-        three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
+        three_days_later = (datetime.now(UTC) + timedelta(days=3)).strftime("%Y-%m-%d")
         games = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later
         )
         game_type = games.get("game_type")
         if game_type == "WS":
-            return f"{os.getcwd()}/images/championship_images/world_series.png"
-        elif game_type == "ALCS":
-            return f"{os.getcwd()}/images/conference_championship_images/alcs.png"
-        elif game_type == "NLCS":
-            return f"{os.getcwd()}/images/conference_championship_images/nlcs.png"
-        elif game_type == "P":
-            return f"{os.getcwd()}/images/playoff_images/mlb_postseason.png"
+            return f"{Path.cwd()}/images/championship_images/world_series.png"
+        if game_type == "ALCS":
+            return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
+        if game_type == "NLCS":
+            return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
+        if game_type == "P":
+            return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
         else:
             return ""
 
@@ -109,7 +116,7 @@ def get_nhl_game_type(team_name: str) -> str:
                 break
 
         # Get the current season year
-        now = datetime.now()
+        now = datetime.now(UTC)
         year = now.year
         month = now.month
 
@@ -129,16 +136,16 @@ def get_nhl_game_type(team_name: str) -> str:
         # Check if the team is in the playoffs/championship
         current_round = playoff_info["currentRound"]
         path = ""
-        if (away_team_abbr == your_team_abbr or home_team_abbr == your_team_abbr):
+        if (your_team_abbr in (away_team_abbr, home_team_abbr)):
 
             if current_round == 4:
-                path = f"{os.getcwd()}/images/championship_images/stanley_cup.png"
+                path = str(Path.cwd() / "images" / "championship_images" / "stanley_cup.png")
             elif current_round == 3 and conference == "Eastern":
-                path = f"{os.getcwd()}/images/conference_championship_images/nhl_eastern_championship.png"
+                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_eastern_championship.png")
             elif current_round == 3 and conference == "Western":
-                path = f"{os.getcwd()}/images/conference_championship_images/nhl_western_championship.png"
-            elif current_round == 2 or current_round == 1:
-                path = f"{os.getcwd()}/images/playoff_images/nfl_playoffs.png"
+                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_western_championship.png")
+            elif current_round in [2, 1]:
+                path = str(Path.cwd() / "images" / "playoff_images" / "nhl_playoffs.png")
         return path
 
     except Exception as e:
