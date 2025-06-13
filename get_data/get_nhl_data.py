@@ -139,6 +139,10 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
             period += "nd"
         elif period == "3":
             period += "rd"
+        elif period == "4":
+            period = "Overtime"
+        else:
+            period = "Shootout"
         team_info["bottom_info"] = f"{clean_clock} - {period}"
 
         if box_score["clock"]["inIntermission"]:
