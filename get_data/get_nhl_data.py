@@ -1,6 +1,6 @@
 """Get NHL from NHL specific API."""
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
@@ -39,7 +39,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     try:
         team_info["home_score"] = res["linescore"]["totals"]["home"]
         team_info["away_score"] = res["linescore"]["totals"]["away"]
-    except Exception:
+    except KeyError:
         team_info["home_score"] = "0"
         team_info["away_score"] = "0"
 
@@ -77,7 +77,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     # Get game time and venue
     iso_string = res["seasonSeries"][2]["startTimeUTC"]
     utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%SZ")
-    utc_time = utc_time.replace(tzinfo=timezone.utc)
+    utc_time = utc_time.replace(tzinfo=UTC)
     local_time = utc_time.astimezone()
 
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
@@ -129,15 +129,17 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
 
     # Get clock and period to display
     if settings.display_nhl_clock:
-        clock = str(box_score["periodDescriptor"]["number"])
-        period = str(box_score["clock"]["timeRemaining"])
+        clock = str(box_score["clock"]["timeRemaining"])
+        minutes, seconds = clock.split(":")
+        clean_clock = f"{int(minutes)}:{seconds}"
+        period = str(box_score["periodDescriptor"]["number"])
         if period == "1":
             period += "st"
         elif period == "2":
             period += "nd"
         elif period == "3":
             period += "rd"
-        team_info["bottom_info"] = f"{clock} - {period}"
+        team_info["bottom_info"] = f"{clean_clock} - {period}"
 
     # Get score
     team_info["home_score"] = res["linescore"]["totals"]["home"]
