@@ -92,9 +92,15 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info = append_nhl_data(team_info, team_name)
 
     # Check if game is over
-    elif "FINAL" in box_score["gameState"]:
+    elif "FINAL" in box_score["gameState"] or "OFF" in box_score["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
-        team_info["bottom_info"] = "FINAL"
+
+        if box_score["periodDescriptor"]["number"] == 4:
+            team_info["bottom_info"] = "FINAL/OT"
+        elif box_score["periodDescriptor"]["number"] > 4:
+            team_info["bottom_info"] = "FINAL/SO"
+        else:
+            team_info["bottom_info"] = "FINAL"
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("NHL", team_name) != "":
@@ -150,13 +156,13 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     # Get if team is in power play
     if settings.display_nhl_power_play:
         try:
-            # Dont need to store name of whose on just has to ensure call is successful
+            # Dont need to store info just has to ensure call is successful
             _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
             team_info["away_power_play"] = True
         except KeyError:
             team_info["away_power_play"] = False
         try:
-            # Dont need to store name of whose on just has to ensure call is successful
+            # Dont need to store info just has to ensure call is successful
             _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
             team_info["home_power_play"] = True
         except KeyError:
