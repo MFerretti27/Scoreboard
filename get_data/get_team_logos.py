@@ -147,7 +147,11 @@ def get_team_logos(window, teams: list) -> None:
         os.makedirs(logo_folder_path, exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
-        resize_images_from_folder(["/images/Networks/", "/images/baseball_base_images/"])
+        resize_images_from_folder(["/images/Networks/",
+                                   "/images/baseball_base_images/",
+                                   "/images/conference_championship_images/",
+                                   "/images/playoff_images/",
+                                   "/images/championship_images/"])
         already_downloaded = False  # If hit this is the first time getting images and resizing
 
     # If user selects new team in a league they haven't selected before download all logos in that league

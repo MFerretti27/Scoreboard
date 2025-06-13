@@ -28,7 +28,7 @@ def get_series(team_league: str, team_name: str) -> str:
         return ""
 
 
-def get_current_series_mlb(team_name) -> str:
+def get_current_series_mlb(team_name: str) -> str:
     """Try to get the series information for baseball team.
 
     :param team_name: name of team to get series information for
@@ -52,12 +52,12 @@ def get_current_series_mlb(team_name) -> str:
 
         mlb_series = series_summary
         return series_summary
-    except Exception as e:
+    except IndexError as e:
         print(f"Error getting MLB series information: {e}")
         return series_summary
 
 
-def get_current_series_nhl(team_name) -> str:
+def get_current_series_nhl(team_name: str) -> str:
     """Try to get the series information for hockey team.
 
     :param team_name: name of team to get series information for
@@ -85,7 +85,7 @@ def get_current_series_nhl(team_name) -> str:
         elif home_series_wins > away_series_wins:
             series_summary = f"{home_abbreviation} leads {home_series_wins}-{away_series_wins}"
         elif home_series_wins == away_series_wins:
-            series_summary = f"Series Tied {away_series_wins} - {home_series_wins}"
+            series_summary = f"Series Tied {away_series_wins}-{home_series_wins}"
 
         return series_summary
     except Exception as e:
@@ -93,7 +93,7 @@ def get_current_series_nhl(team_name) -> str:
         return series_summary
 
 
-def get_current_series_nba(team_name) -> str:
+def get_current_series_nba(team_name: str) -> str:
     """Try to get the series information for basketball team.
 
     :param team_name: name of team to get series information for

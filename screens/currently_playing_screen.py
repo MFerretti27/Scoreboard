@@ -23,7 +23,6 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
     :return team_info: List of information for teams following
     """
-
     teams_currently_playing: list[bool] = []
     first_time = True
     delay_over = False
@@ -87,29 +86,29 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     index = 0
                     for _ in team_info:
                         if teams_with_data[index] and teams_currently_playing[index]:
-                            team_info[index]['top_info'] = "Game Started"
-                            team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
-                            team_info[index]['home_timeouts'] = ""
-                            team_info[index]['away_timeouts'] = ""
-                            team_info[index]['home_score'] = "0"
-                            team_info[index]['away_score'] = "0"
+                            team_info[index]["top_info"] = "Game Started"
+                            team_info[index]["bottom_info"] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+                            team_info[index]["home_timeouts"] = ""
+                            team_info[index]["away_timeouts"] = ""
+                            team_info[index]["home_score"] = "0"
+                            team_info[index]["away_score"] = "0"
                             if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
-                                team_info[index]['above_score_txt'] = ""
-                            team_info[index]['under_score_image'] = ""
+                                team_info[index]["above_score_txt"] = ""
+                            team_info[index]["under_score_image"] = ""
                         index += 1
             if settings.delay and first_time:
                 index = 0
                 for _ in team_info:
                     if teams_with_data[index] and teams_currently_playing[index]:
-                        team_info[index]['top_info'] = "Game Started"
-                        team_info[index]['bottom_info'] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
-                        team_info[index]['home_timeouts'] = ""
-                        team_info[index]['away_timeouts'] = ""
-                        team_info[index]['home_score'] = "0"
-                        team_info[index]['away_score'] = "0"
+                        team_info[index]["top_info"] = "Game Started"
+                        team_info[index]["bottom_info"] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+                        team_info[index]["home_timeouts"] = ""
+                        team_info[index]["away_timeouts"] = ""
+                        team_info[index]["home_score"] = "0"
+                        team_info[index]["away_score"] = "0"
                         if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
-                            team_info[index]['above_score_txt'] = ""
-                        team_info[index]['under_score_image'] = ""
+                            team_info[index]["above_score_txt"] = ""
+                        team_info[index]["under_score_image"] = ""
                     index += 1
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
@@ -122,65 +121,81 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             # Reset text color, underline and timeouts, for new display
             reset_window_elements(window)
 
-            should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
+            should_scroll = will_text_fit_on_screen(team_info[display_index]["bottom_info"])
 
             for key, value in team_info[display_index].items():
                 if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
-                elif "possession" not in key and "redzone" not in key and "bonus" not in key:
+                elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
+                      "power_play" not in key):
                     window[key].update(value=value)
 
                 # Football specific display information
                 if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
-                        window['top_info'].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
+                        window["top_info"].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     if key == "home_timeouts":
-                        window['home_timeouts'].update(value=value, text_color='yellow')
+                        window["home_timeouts"].update(value=value, text_color="yellow")
                     elif key == "away_timeouts":
-                        window['away_timeouts'].update(value=value, text_color='yellow')
+                        window["away_timeouts"].update(value=value, text_color="yellow")
 
-                    if team_info[display_index]['home_possession'] and key == 'home_score':
-                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"))
-                    elif team_info[display_index]['away_possession'] and key == 'away_score':
-                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"))
-                    if team_info[display_index]['home_redzone'] and key == 'home_score':
-                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
-                                           text_color='red')
-                    elif team_info[display_index]['away_redzone'] and key == 'away_score':
-                        window[key].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
-                                           text_color='red')
+                    if team_info[display_index]["home_possession"] and key == "home_score":
+                        window["home_score"].update(value=value, font=(settings.FONT,
+                                                                       settings.SCORE_TXT_SIZE, "underline"))
+                    elif team_info[display_index]["away_possession"] and key == "away_score":
+                        window["away_score"].update(value=value, font=(settings.FONT,
+                                                                       settings.SCORE_TXT_SIZE, "underline"))
+                    if team_info[display_index]["home_redzone"] and key == "home_score":
+                        window["home_score"].update(value=value,
+                                                    font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
+                                                    text_color="red")
+                    elif team_info[display_index]["away_redzone"] and key == "away_score":
+                        window["away_score"].update(value=value,
+                                                    font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
+                                                    text_color="red")
 
                 # NBA Specific display size for top info
                 if "NBA" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
-                        window['top_info'].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                        window["top_info"].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
                     elif key == "home_timeouts":
-                        window['home_timeouts'].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
-                                                       text_color='yellow')
+                        window["home_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+                                                       text_color="yellow")
                     elif key == "away_timeouts":
-                        window['away_timeouts'].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
-                                                       text_color='yellow')
+                        window["away_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+                                                       text_color="yellow")
 
-                    if settings.display_nba_bonus:
-                        if team_info[display_index]['home_bonus'] and key == "home_score":
-                            window[key].update(value=value, text_color='orange')
-                        if team_info[display_index]['away_bonus'] and key == "away_score":
-                            window[key].update(value=value, text_color='orange')
+                    # Ensure bonus is in dictionary to not cause key error
+                    if "away_power_play" in key or "home_power_play" in team_info[display_index]:
+                        if team_info[display_index]["home_bonus"] and key == "home_score":
+                            window[key].update(value=value, text_color="orange")
+                        if team_info[display_index]["away_bonus"] and key == "away_score":
+                            window[key].update(value=value, text_color="orange")
 
                 # MLB Specific display size for bottom info
                 if "MLB" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
-                        window['top_info'].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
-                    if key == 'bottom_info':
+                        window["top_info"].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
+                    if key == "bottom_info":
                         window[key].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
-                    elif key == 'under_score_image':
+                    elif key == "under_score_image":
                         window[key].update(filename=value)
-                    elif key == 'above_score_txt' and settings.display_inning:
+                    elif key == "above_score_txt" and settings.display_inning:
                         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                 # NHL Specific display size for bottom info
-                if "NHL" in sport_league.upper() and teams_currently_playing[display_index] and key == 'top_info':
-                    window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
+                    if key == "top_info":
+                        window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+
+                    # Ensure power play is in dictionary to not cause key error
+                    if "away_power_play" in key or "home_power_play" in team_info[display_index]:
+                        if team_info[display_index]["home_power_play"] and key == "home_score":
+                            window["home_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                                                        text_color="blue")
+                        elif team_info[display_index]["away_power_play"] and key == "away_score":
+                            window["away_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                                                        text_color="blue")
 
                 if settings.no_spoiler_mode:
                     set_spoiler_mode(window, team_info[display_index])
@@ -222,7 +237,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 display_index = (display_index + 1) % len(teams)
 
         if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
-            text = team_info[display_index]['bottom_info'] + "         "
+            text = team_info[display_index]["bottom_info"] + "         "
             for _ in range(2):
                 for _ in range(len(text)):
                     event = window.read(timeout=100)
@@ -235,7 +250,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             temp_delay = settings.delay  # store to see if changed
             check_events(window, event, currently_playing=True)
             if settings.stay_on_team and sum(teams_currently_playing) == 1:
-                window["top_info"].update(value="No longer set to \"staying on team\"")
+                window["top_info"].update(value='No longer set to "staying on team"')
                 window["bottom_info"].update(value="Only one team playing")
                 window.read(timeout=2000)
                 time.sleep(5)

@@ -25,7 +25,8 @@ def will_text_fit_on_screen(text: str) -> bool:
     root = tk.Tk()
     root.withdraw()  # Hide the root window
     font = tkFont.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
-    width = font.measure(text)
+    width: float = float(font.measure(text))
+    width = width * 1.1  # Ensure text fits on screen by adding a buffer
     root.destroy()
 
     if width >= screen_width:

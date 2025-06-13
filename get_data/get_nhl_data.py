@@ -1,16 +1,18 @@
 """Get NHL from NHL specific API."""
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 import requests
 
 import settings
 
+from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
 
-def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
+def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NHL team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -19,28 +21,31 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
 
     :return team_info: dictionary containing team information to display
     """
-    team_info: dict[str, str] = {}
-    currently_playing = False
-    has_data = False
+    team_info: dict[str, Any] = {}
+    currently_playing: bool = False
+    has_data: bool = False
     try:
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
-        live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
+        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
     except Exception:
         return team_info, has_data, currently_playing  # Could not find any game to display
 
-    live = live_data.json()
-    res = resp.json()
+    box_score = box_score.json()
     has_data = True
 
-    # Set scores to 0, will get updated later once game starts
-    team_info["home_score"] = "0"
-    team_info["away_score"] = "0"
-    team_info["under_score_image"] = ""  # Cannot get network image so set to nothing
+    # Get Scores, they are only available if game is playing or has finished
+    try:
+        team_info["home_score"] = box_score["awayTeam"]["score"]
+        team_info["away_score"] = box_score["homeTeam"]["score"]
+    except KeyError:
+        team_info["home_score"] = "0"
+        team_info["away_score"] = "0"
+
+    team_info["under_score_image"] = ""  # Cannot get network image so ensure its set to nothing
 
     # Get team names
-    away_team_name = live["awayTeam"]["commonName"]["default"]
-    home_team_name = live["homeTeam"]["commonName"]["default"]
+    away_team_name = box_score["awayTeam"]["commonName"]["default"]
+    home_team_name = box_score["homeTeam"]["commonName"]["default"]
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Get team record
@@ -49,13 +54,11 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
         record = record_data.json()
         for team in record["standings"]:
             if home_team_name in team["teamName"]["default"]:
-                team_info["home_record"] = str(team["wins"]) + "-"
-                team_info["home_record"] += str(team["losses"])
+                team_info["home_record"] = str(team["wins"]) + "-" + str(team["losses"])
                 break
         for team in record["standings"]:
             if away_team_name in team["teamName"]["default"]:
-                team_info["away_record"] = str(team["wins"]) + "-"
-                team_info["away_record"] += str(team["losses"])
+                team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
                 break
 
     # Get team logos
@@ -70,34 +73,44 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{home_team}")
 
     # Get game time and venue
-    iso_string = res["seasonSeries"][2]["startTimeUTC"]
+    iso_string = box_score["startTimeUTC"]
     utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%SZ")
-    utc_time = utc_time.replace(tzinfo=timezone.utc)
+    utc_time = utc_time.replace(tzinfo=UTC)
     local_time = utc_time.astimezone()
 
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
     if settings.display_venue:
-        venue = live["venue"]["default"]
+        venue = box_score["venue"]["default"]
         team_info["bottom_info"] = f"{game_time} @ {venue}"
     else:
         team_info["bottom_info"] = f"{game_time}"
 
     # Check if game is playing
-    if "LIVE" in res["seasonSeries"][2]["gameState"]:
+    # CRIT is final minute of game, LIVE is game in progress
+    if "LIVE" in box_score["gameState"] or "CRIT" in box_score["gameState"]:
         currently_playing = True
         team_info = append_nhl_data(team_info, team_name)
 
     # Check if game is over
-    elif "FINAL" in res["seasonSeries"][2]["gameState"]:
+    elif "FINAL" in box_score["gameState"] or "OFF" in box_score["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
-        team_info["bottom_info"] = "FINAL"
 
-    resp.close()
-    live_data.close()
+        if box_score["periodDescriptor"]["number"] == 4:
+            team_info["bottom_info"] = "FINAL/OT"
+        elif box_score["periodDescriptor"]["number"] > 4:
+            team_info["bottom_info"] = "FINAL/SO"
+        else:
+            team_info["bottom_info"] = "FINAL"
+
+    # Check if game is a championship game, if so display its championship game
+    if get_game_type("NHL", team_name) != "":
+        # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
+        team_info["under_score_image"] = get_game_type("NHL", team_name)
+
     return team_info, has_data, currently_playing
 
 
-def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
+def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     """Get information for NHL team if playing.
 
     :param team_info: Dictionary where data is stored to display
@@ -106,30 +119,53 @@ def append_nhl_data(team_info: dict[str, str], team_name: str) -> dict:
     :return team_info: dictionary containing team information to display
     """
     team_id = get_nhl_game_id(team_name)
-    resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
-    res = resp.json()
+    box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
+    box_score = box_score.json()
 
     # Get shots on goal of each team
     if settings.display_nhl_sog:
-        away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
-        home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
+        away_shots_on_goal = box_score["awayTeam"]["sog"]
+        home_shots_on_goal = box_score["homeTeam"]["sog"]
         team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
 
     # Get clock and period to display
     if settings.display_nhl_clock:
-        clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
-        period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])
+        clock = str(box_score["clock"]["timeRemaining"])
+        minutes, seconds = clock.split(":")
+        clean_clock = f"{int(minutes)}:{seconds}"
+        period = str(box_score["periodDescriptor"]["number"])
         if period == "1":
             period += "st"
         elif period == "2":
             period += "nd"
         elif period == "3":
             period += "rd"
-        team_info["bottom_info"] = f"{clock} - {period}"
+        elif period == "4":
+            period = "Overtime"
+        else:
+            period = "Shootout"
+        team_info["bottom_info"] = f"{clean_clock} - {period}"
+
+        if box_score["clock"]["inIntermission"]:
+            team_info["bottom_info"] = f"End of {period}"
 
     # Get score
-    team_info["home_score"] = res["linescore"]["totals"]["home"]
-    team_info["away_score"] = res["linescore"]["totals"]["away"]
+    team_info["home_score"] = box_score["homeTeam"]["score"]
+    team_info["away_score"] = box_score["awayTeam"]["score"]
 
-    resp.close()
+    # Get if team is in power play
+    if settings.display_nhl_power_play:
+        try:
+            # Dont need to store info just has to ensure call is successful
+            _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
+            team_info["away_power_play"] = True
+        except KeyError:
+            team_info["away_power_play"] = False
+        try:
+            # Dont need to store info just has to ensure call is successful
+            _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
+            team_info["home_power_play"] = True
+        except KeyError:
+            team_info["home_power_play"] = False
+
     return team_info
