@@ -86,7 +86,8 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info["bottom_info"] = f"{game_time}"
 
     # Check if game is playing
-    if "LIVE" in box_score["gameState"]:
+    # CRIT is final minute of game, LIVE is game in progress
+    if "LIVE" in box_score["gameState"] or "CRIT" in box_score["gameState"]:
         currently_playing = True
         team_info = append_nhl_data(team_info, team_name)
 
