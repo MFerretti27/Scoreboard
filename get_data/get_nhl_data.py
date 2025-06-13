@@ -56,13 +56,11 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         record = record_data.json()
         for team in record["standings"]:
             if home_team_name in team["teamName"]["default"]:
-                team_info["home_record"] = str(team["wins"]) + "-"
-                team_info["home_record"] += str(team["losses"])
+                team_info["home_record"] = str(team["wins"]) + "-" + str(team["losses"])
                 break
         for team in record["standings"]:
             if away_team_name in team["teamName"]["default"]:
-                team_info["away_record"] = str(team["wins"]) + "-"
-                team_info["away_record"] += str(team["losses"])
+                team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
                 break
 
     # Get team logos
@@ -131,8 +129,8 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
 
     # Get clock and period to display
     if settings.display_nhl_clock:
-        clock = res["seasonSeries"][2]["clock"]["timeRemaining"]
-        period = str(res["seasonSeries"][2]["periodDescriptor"]["number"])
+        clock = str(box_score["periodDescriptor"]["number"])
+        period = str(box_score["clock"]["timeRemaining"])
         if period == "1":
             period += "st"
         elif period == "2":
