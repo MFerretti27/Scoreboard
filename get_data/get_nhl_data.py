@@ -26,19 +26,17 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     has_data: bool = False
     try:
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
-        live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
+        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
     except Exception:
         return team_info, has_data, currently_playing  # Could not find any game to display
 
-    live = live_data.json()
-    res = resp.json()
+    box_score = box_score.json()
     has_data = True
 
     # Get Scores, they are only available if game is playing or has finished
     try:
-        team_info["home_score"] = res["linescore"]["totals"]["home"]
-        team_info["away_score"] = res["linescore"]["totals"]["away"]
+        team_info["home_score"] = box_score["awayTeam"]["score"]
+        team_info["away_score"] = box_score["homeTeam"]["score"]
     except KeyError:
         team_info["home_score"] = "0"
         team_info["away_score"] = "0"
@@ -46,8 +44,8 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     team_info["under_score_image"] = ""  # Cannot get network image so ensure its set to nothing
 
     # Get team names
-    away_team_name = live["awayTeam"]["commonName"]["default"]
-    home_team_name = live["homeTeam"]["commonName"]["default"]
+    away_team_name = box_score["awayTeam"]["commonName"]["default"]
+    home_team_name = box_score["homeTeam"]["commonName"]["default"]
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Get team record
@@ -75,25 +73,25 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{home_team}")
 
     # Get game time and venue
-    iso_string = res["seasonSeries"][2]["startTimeUTC"]
+    iso_string = box_score["startTimeUTC"]
     utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%SZ")
     utc_time = utc_time.replace(tzinfo=UTC)
     local_time = utc_time.astimezone()
 
     game_time = local_time.strftime("%-m/%-d %-I:%M %p")
     if settings.display_venue:
-        venue = live["venue"]["default"]
+        venue = box_score["venue"]["default"]
         team_info["bottom_info"] = f"{game_time} @ {venue}"
     else:
         team_info["bottom_info"] = f"{game_time}"
 
     # Check if game is playing
-    if "LIVE" in res["seasonSeries"][2]["gameState"]:
+    if "LIVE" in box_score["gameState"]:
         currently_playing = True
         team_info = append_nhl_data(team_info, team_name)
 
     # Check if game is over
-    elif "FINAL" in res["seasonSeries"][2]["gameState"] or "OFF" in res["seasonSeries"][2]["gameState"]:
+    elif "FINAL" in box_score["gameState"]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = "FINAL"
 
@@ -102,8 +100,6 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
         team_info["under_score_image"] = get_game_type("NHL", team_name)
 
-    resp.close()
-    live_data.close()
     return team_info, has_data, currently_playing
 
 
@@ -116,15 +112,13 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     :return team_info: dictionary containing team information to display
     """
     team_id = get_nhl_game_id(team_name)
-    resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
-    res = resp.json()
     box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
     box_score = box_score.json()
 
     # Get shots on goal of each team
     if settings.display_nhl_sog:
-        away_shots_on_goal = res["teamGameStats"][0]["awayValue"]
-        home_shots_on_goal = res["teamGameStats"][0]["homeValue"]
+        away_shots_on_goal = box_score["awayTeam"]["sog"]
+        home_shots_on_goal = box_score["homeTeam"]["sog"]
         team_info["top_info"] = (f"Shots on Goal: {away_shots_on_goal} \t\t Shots on Goal: {home_shots_on_goal}")
 
     # Get clock and period to display
@@ -146,11 +140,11 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
         team_info["bottom_info"] = f"{clean_clock} - {period}"
 
         if box_score["clock"]["inIntermission"]:
-            team_info["bottom_info"] = f"End of {period} Period"
+            team_info["bottom_info"] = f"End of {period}"
 
     # Get score
-    team_info["home_score"] = res["linescore"]["totals"]["home"]
-    team_info["away_score"] = res["linescore"]["totals"]["away"]
+    team_info["home_score"] = box_score["homeTeam"]["score"]
+    team_info["away_score"] = box_score["awayTeam"]["score"]
 
     # Get if team is in power play
     if settings.display_nhl_power_play:
@@ -167,5 +161,4 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
         except KeyError:
             team_info["home_power_play"] = False
 
-    resp.close()
     return team_info
