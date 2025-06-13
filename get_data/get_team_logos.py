@@ -149,6 +149,8 @@ def get_team_logos(window, teams: list) -> None:
         # Resize local images to fit on screen
         resize_images_from_folder(["/images/Networks/",
                                    "/images/baseball_base_images/",
+                                   "/images/conference_championship_images/",
+                                   "/images/playoff_images/",
                                    "/images/championship_images/"])
         already_downloaded = False  # If hit this is the first time getting images and resizing
 
