@@ -141,6 +141,9 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
             period += "rd"
         team_info["bottom_info"] = f"{clean_clock} - {period}"
 
+        if box_score["clock"]["inIntermission"]:
+            team_info["bottom_info"] = f"End of {period} Period"
+
     # Get score
     team_info["home_score"] = res["linescore"]["totals"]["home"]
     team_info["away_score"] = res["linescore"]["totals"]["away"]
