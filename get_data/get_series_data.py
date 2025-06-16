@@ -1,5 +1,5 @@
 """Get series information."""
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import requests
 import statsapi  # type: ignore
@@ -20,12 +20,12 @@ def get_series(team_league: str, team_name: str) -> str:
     """
     if "MLB" in team_league.upper():
         return (get_current_series_mlb(team_name))
-    elif "NHL" in team_league.upper():
+    if "NHL" in team_league.upper():
         return (get_current_series_nhl(team_name))
-    elif "NBA" in team_league.upper():
+    if "NBA" in team_league.upper():
         return (get_current_series_nba(team_name))
-    else:
-        return ""
+
+    return ""
 
 
 def get_current_series_mlb(team_name: str) -> str:
@@ -41,8 +41,8 @@ def get_current_series_mlb(team_name: str) -> str:
         team_id = get_mlb_team_id(team_name)
 
         # Get today's games for that team
-        today = datetime.now().strftime("%Y-%m-%d")
-        three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
+        three_days_later = (datetime.now(UTC) + timedelta(days=3)).strftime("%Y-%m-%d")
         schedule = statsapi.schedule(team=team_id, start_date=today, end_date=three_days_later)
 
         game = schedule[0]  # Take the first game today
@@ -51,10 +51,12 @@ def get_current_series_mlb(team_name: str) -> str:
             series_summary = mlb_series
 
         mlb_series = series_summary
-        return series_summary
+
     except IndexError as e:
         print(f"Error getting MLB series information: {e}")
         return series_summary
+
+    return series_summary
 
 
 def get_current_series_nhl(team_name: str) -> str:
@@ -67,7 +69,7 @@ def get_current_series_nhl(team_name: str) -> str:
     series_summary = ""
     try:
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
+        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
         res = resp.json()
 
         away_series_wins = res["seasonSeriesWins"]["awayTeamWins"]
@@ -87,10 +89,11 @@ def get_current_series_nhl(team_name: str) -> str:
         elif home_series_wins == away_series_wins:
             series_summary = f"Series Tied {away_series_wins}-{home_series_wins}"
 
-        return series_summary
-    except Exception as e:
+    except KeyError as e:
         print(f"Error getting NHL series information: {e}")
         return series_summary
+
+    return series_summary
 
 
 def get_current_series_nba(team_name: str) -> str:
@@ -108,7 +111,9 @@ def get_current_series_nba(team_name: str) -> str:
         for game in live["scoreboard"]["games"]:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
                 series_summary = game["seriesText"]
-        return series_summary
-    except Exception as e:
+
+    except KeyError as e:
         print(f"Error getting NBA series information: {e}")
         return series_summary
+
+    return series_summary

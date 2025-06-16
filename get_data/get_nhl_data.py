@@ -1,9 +1,10 @@
 """Get NHL from NHL specific API."""
-import os
-from datetime import UTC, datetime
+from datetime import UTC
+from pathlib import Path
 from typing import Any
 
 import requests
+from dateutil.parser import isoparse  # type: ignore
 
 import settings
 
@@ -26,8 +27,9 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     has_data: bool = False
     try:
         team_id = get_nhl_game_id(team_name)
-        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
-    except Exception:
+        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching NHL data: {e}")
         return team_info, has_data, currently_playing  # Could not find any game to display
 
     box_score = box_score.json()
@@ -50,7 +52,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
 
     # Get team record
     if settings.display_records:
-        record_data = requests.get("https://api-web.nhle.com/v1/standings/now")
+        record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=5)
         record = record_data.json()
         for team in record["standings"]:
             if home_team_name in team["teamName"]["default"]:
@@ -62,19 +64,20 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                 break
 
     # Get team logos
-    folder_path = os.getcwd() + '/images/sport_logos/NHL/'
-    file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    folder_path = Path.cwd() / "images" / "sport_logos" / "NHL"
+    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
     for file in file_names:
-        if home_team_name.upper() in file:
-            home_team = file
-        if away_team_name.upper() in file:
-            away_team = file
-    team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{away_team}")
-    team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NHL/{home_team}")
+        filename = file.name.upper()
+        if home_team_name.upper() in filename:
+            home_team = filename
+        if away_team_name.upper() in filename:
+            away_team = filename
+    team_info["away_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / away_team)
+    team_info["home_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / home_team)
 
     # Get game time and venue
     iso_string = box_score["startTimeUTC"]
-    utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%SZ")
+    utc_time = isoparse(iso_string)
     utc_time = utc_time.replace(tzinfo=UTC)
     local_time = utc_time.astimezone()
 
@@ -119,7 +122,7 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     :return team_info: dictionary containing team information to display
     """
     team_id = get_nhl_game_id(team_name)
-    box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore")
+    box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
     box_score = box_score.json()
 
     # Get shots on goal of each team
@@ -142,7 +145,7 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
             period += "rd"
         elif period == "4":
             period = "Overtime"
-        else:
+        elif period > "4":
             period = "Shootout"
         team_info["bottom_info"] = f"{clean_clock} - {period}"
 

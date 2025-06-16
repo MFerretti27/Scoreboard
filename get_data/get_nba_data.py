@@ -1,5 +1,5 @@
 """Get NBA from NBA specific API."""
-import os
+from pathlib import Path
 
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 
@@ -46,16 +46,17 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team_info["above_score_txt"] = f"{away_team} @ {home_team}"
 
             # Get team logos
-            folder_path = os.getcwd() + '/images/sport_logos/NBA/'
-            file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+            folder_path = Path.cwd() / "images" / " sport_logos" / "NBA"
+            file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
             for file in file_names:
-                if home_team.upper() in file:
-                    home_team = file
-                if away_team.upper() in file:
-                    away_team = file
+                filename = file.name.upper()
+                if home_team.upper() in filename:
+                    home_team = filename
+                if away_team.upper() in filename:
+                    away_team = filename
 
-            team_info["away_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{away_team}")
-            team_info["home_logo"] = (f"{os.getcwd()}/images/sport_logos/NBA/{home_team}")
+            team_info["away_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / away_team))
+            team_info["home_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / home_team))
 
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]
@@ -80,32 +81,30 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     games = scoreboard.ScoreBoard()
     data = games.get_dict()
     for game in data["scoreboard"]["games"]:
-        if game["homeTeam"]["teamName"].upper() in team_name.upper() or \
-                game["awayTeam"]["teamName"].upper() in team_name.upper():
+        if team_name.upper() in (
+            game["homeTeam"]["teamName"].upper(),
+            game["awayTeam"]["teamName"].upper(),
+        ):
 
             # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
                 if game["homeTeam"]["inBonus"] == "1":
-                    team_info['home_bonus'] = True
+                    team_info["home_bonus"] = True
                     home_team_bonus = True
                 elif game["homeTeam"]["inBonus"] == "0":
-                    team_info['home_bonus'] = False
+                    team_info["home_bonus"] = False
                     home_team_bonus = False
                 elif game["homeTeam"]["inBonus"] is None:
-                    team_info['home_bonus'] = home_team_bonus
-                else:
-                    team_info['home_bonus'] = False
+                    team_info["home_bonus"] = home_team_bonus
 
                 if game["awayTeam"]["inBonus"] == "1":
-                    team_info['away_bonus'] = True
+                    team_info["away_bonus"] = True
                     away_team_bonus = True
                 elif game["awayTeam"]["inBonus"] == "0":
-                    team_info['away_bonus'] = False
+                    team_info["away_bonus"] = False
                     away_team_bonus = False
                 elif game["awayTeam"]["inBonus"] is None:
-                    team_info['away_bonus'] = away_team_bonus
-                else:
-                    team_info['away_bonus'] = False
+                    team_info["away_bonus"] = away_team_bonus
 
             if settings.display_nba_timeouts:
                 home_timeouts = game["homeTeam"]["timeoutsRemaining"]
@@ -127,10 +126,10 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                     3: "\u25CF  \u25CF  \u25CF",
                     2: "\u25CF  \u25CF",
                     1: "\u25CF",
-                    0: ""
+                    0: "",
                 }
-                team_info['away_timeouts'] = timeout_map.get(away_timeouts, "")
-                team_info['home_timeouts'] = timeout_map.get(home_timeouts, "")
+                team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
+                team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
             break  # Found team and got data needed, dont continue loop
 

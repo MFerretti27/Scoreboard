@@ -1,14 +1,18 @@
-"""Display a Clock When Internet Connection Goes Out, When Grabbing Data from ESPN API Fails,
-   Or When There is No Team Data to Display.
+"""Display a Clock.
+
+This screen should be displayed when:
+- When Internet Connection Goes Out
+- When Grabbing Data from ESPN API Fails
+- Or When There is No Team Data to Display
 """
 
-import datetime
 import gc
 import subprocess
 import sys
 import time
+from datetime import UTC, datetime
 
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore
 import orjson  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
 
@@ -19,7 +23,7 @@ from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.scoreboard_helpers import reset_window_elements
 
 
-def clock(window: sg.Window, message: str) -> list:
+def clock(window: Sg.Window, message: str) -> list:
     """If no team has any data then display clock.
 
     :param window: Window Element that controls GUI
@@ -27,7 +31,6 @@ def clock(window: sg.Window, message: str) -> list:
 
     :return team_info: List of Boolean values representing if team is has data to display
     """
-
     fetch_clock = ticks_ms()  # Start timer for switching display
     fetch_timer = 180 * 1000  # How often the display should update in seconds
     fetch_picture = ticks_ms()  # Start timer for switching picture
@@ -46,12 +49,12 @@ def clock(window: sg.Window, message: str) -> list:
             fetch_picture = ticks_add(fetch_picture, fetch_picture_timer)  # Reset Timer if picture updated
 
         # Get the current time and display it
-        current_time = datetime.datetime.now()
+        current_time = datetime.now(UTC)
         hour = current_time.hour if current_time.hour < 13 else current_time.hour - 12
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
 
-        date = str(current_time.month) + '/' + str(current_time.day) + '/' + str(current_time.year)
-        window["hyphen"].update(value=':', font=(settings.FONT, settings.SCORE_TXT_SIZE))
+        date = str(current_time.month) + "/" + str(current_time.day) + "/" + str(current_time.year)
+        window["hyphen"].update(value=":", font=(settings.FONT, settings.SCORE_TXT_SIZE))
         window["home_score"].update(value=minute, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
         window["away_score"].update(value=hour, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
         window["away_logo"].update(filename=f"images/sport_logos/{files[0][0]}/{files[0][1]}.png")
@@ -60,7 +63,7 @@ def clock(window: sg.Window, message: str) -> list:
         window["top_info"].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
 
         event = window.read(timeout=5000)
-        if event[0] == sg.WIN_CLOSED or 'Escape' in event[0]:
+        if event[0] == Sg.WIN_CLOSED or "Escape" in event[0]:
             window.close()
             gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
@@ -84,7 +87,7 @@ def clock(window: sg.Window, message: str) -> list:
         except Exception as error:
             print(f"Failed to Get Data, Error: {error}")
             if is_connected():
-                message = f'Failed to Get Info From ESPN, Error:{error}'
+                message = f"Failed to Get Info From ESPN, Error:{error}"
             if not is_connected():
                 print("Internet connection is down, trying to reconnect...")
                 message = "No Internet Connection"
