@@ -1,10 +1,14 @@
 """Get NBA from NBA specific API."""
+import re
 from pathlib import Path
 
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore
+from nba_api.live.nba.endpoints import playbyplay, scoreboard  # type: ignore
+from nba_api.stats.endpoints import teaminfocommon  # type: ignore
 
 import settings
 from get_data.get_game_type import get_game_type
+from get_data.get_series_data import get_series
+from get_data.get_team_id import get_nba_team_id
 
 home_team_bonus = False
 away_team_bonus = False
@@ -38,15 +42,26 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team_info["under_score_image"] = ""
 
             # Get Bottom Info
-            team_info["bottom_info"] = game["gameStatusText"]
+            team_info["bottom_info"] = game["gameStatusText"].rstrip()
 
             # Get above score text
             home_team = game["homeTeam"]["teamName"]
             away_team = game["awayTeam"]["teamName"]
             team_info["above_score_txt"] = f"{away_team} @ {home_team}"
 
+            # Get team records
+            home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team)).get_dict()
+            away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team)).get_dict()
+
+            team_info["home_record"] = (str(home_team_info["resultSets"][0]["rowSet"][0][9]) +
+                                        "-" + str(home_team_info["resultSets"][0]["rowSet"][0][10])
+                                        )
+            team_info["away_record"] = (str(away_team_info["resultSets"][0]["rowSet"][0][9]) +
+                                        "-" + str(away_team_info["resultSets"][0]["rowSet"][0][10])
+                                        )
+
             # Get team logos
-            folder_path = Path.cwd() / "images" / " sport_logos" / "NBA"
+            folder_path = Path.cwd() / "images" / "sport_logos" / "NBA"
             file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
             for file in file_names:
                 filename = file.name.upper()
@@ -61,9 +76,19 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]
 
+            # Check if game is over
+            if "Final" in game["gameStatusText"]:
+                team_info["bottom_info"] = game["gameStatusText"].rstrip().upper()
+                team_info["top_info"] = get_series("NBA", team_name)
+
             # Check if game is currently playing
-            if "am" not in game["gameStatusText"] or "pm" not in game["gameStatusText"]:
-                team_info = append_nba_data(team_info, team_name)
+            elif "am" not in game["gameStatusText"] or "pm" not in game["gameStatusText"]:
+                team_info = append_nba_data(team_info, team_name.split(" ")[-1])
+                currently_playing = True
+
+                # Re-structure clock and get play by play
+                team_info["top_info"] = restructure_clock(game)
+                team_info["bottom_info"] = get_play_by_play(game["gameId"])
 
             if get_game_type("NBA", team_name) != "":
                 # If game type is not empty, then its the Finals, display it
@@ -136,3 +161,34 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
             break  # Found team and got data needed, dont continue loop
 
     return team_info
+
+
+def restructure_clock(game: dict) -> str:
+    """Restructure game clock to get quarter and time left."""
+    match = re.match(r"PT(\d+)M(\d+)", game["gameClock"])
+    quarter = game["period"]
+    minutes = int(match.group(1))
+    seconds = int(float(match.group(2)))  # Handles possible decimals like 40.00
+    result = f"{minutes}:{seconds:02}"
+
+    if quarter == 1:
+        quarter = str(quarter) + "st"
+    elif quarter == 2:
+        quarter = str(quarter) + "nd"
+    elif quarter == 3:
+        quarter = str(quarter) + "rd"
+    elif quarter == 4:
+        quarter = str(quarter) + "th"
+    else:
+        quarter = "Overtime"
+
+    return result + " " + quarter
+
+
+def get_play_by_play(game_id: int) -> str:
+    """Get play by play information."""
+    pbp = playbyplay.PlayByPlay(game_id)
+    actions = pbp.get_dict()["game"]["actions"]  # plays are referred to in the live data as `actions`
+    last_action = actions[-1]
+
+    return str(last_action["description"])
