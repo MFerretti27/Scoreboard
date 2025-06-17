@@ -61,6 +61,10 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]
 
+            # Check if game is currently playing
+            if "am" not in game["gameStatusText"] or "pm" not in game["gameStatusText"]:
+                team_info = append_nba_data(team_info, team_name)
+
             if get_game_type("NBA", team_name) != "":
                 # If game type is not empty, then its the Finals, display it
                 team_info["under_score_image"] = get_game_type("NBA", team_name)
@@ -94,8 +98,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 elif game["homeTeam"]["inBonus"] == "0":
                     team_info["home_bonus"] = False
                     home_team_bonus = False
-                elif game["homeTeam"]["inBonus"] is None:
-                    team_info["home_bonus"] = home_team_bonus
 
                 if game["awayTeam"]["inBonus"] == "1":
                     team_info["away_bonus"] = True
@@ -103,8 +105,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 elif game["awayTeam"]["inBonus"] == "0":
                     team_info["away_bonus"] = False
                     away_team_bonus = False
-                elif game["awayTeam"]["inBonus"] is None:
-                    team_info["away_bonus"] = away_team_bonus
 
             if settings.display_nba_timeouts:
                 home_timeouts = game["homeTeam"]["timeoutsRemaining"]
@@ -114,9 +114,11 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
                     home_timeouts = home_timeouts_saved
                     away_timeouts = away_timeouts_saved
+                    team_info["home_bonus"] = away_team_bonus
                 else:
                     home_timeouts_saved = home_timeouts
                     away_timeouts_saved = away_timeouts
+                    team_info["away_bonus"] = away_team_bonus
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
