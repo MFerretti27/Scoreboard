@@ -116,7 +116,7 @@ def main(data_saved: dict) -> None:
                             saved_datetime = datetime.fromisoformat(saved_date)  # convert string to datetime
                         else:
                             saved_datetime = saved_date  # already a datetime
-                        saved_datetime = datetime.fromisoformat(saved_date)
+
                         date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
