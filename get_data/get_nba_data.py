@@ -1,5 +1,6 @@
 """Get NBA from NBA specific API."""
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 
 from nba_api.live.nba.endpoints import playbyplay, scoreboard  # type: ignore
@@ -9,6 +10,7 @@ import settings
 from get_data.get_game_type import get_game_type
 from get_data.get_series_data import get_series
 from get_data.get_team_id import get_nba_team_id
+from helper_functions.data_helpers import check_playing_each_other
 
 home_team_bonus = False
 away_team_bonus = False
@@ -41,17 +43,24 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             # Can't get network image so display nothing
             team_info["under_score_image"] = ""
 
-            # Get Bottom Info
-            team_info["bottom_info"] = game["gameStatusText"].rstrip()
+            # Get game time
+            utc_time = datetime.strptime(game["gameTimeUTC"], "%Y-%m-%dT%H:%M:%S%z")
+            game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
+            team_info["bottom_info"] = game_time
 
             # Get above score text
-            home_team = game["homeTeam"]["teamName"]
-            away_team = game["awayTeam"]["teamName"]
-            team_info["above_score_txt"] = f"{away_team} @ {home_team}"
+            home_team_name = game["homeTeam"]["teamName"]
+            away_team_name = game["awayTeam"]["teamName"]
+            team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
+
+            # Check if two of your teams are playing each other to not display same data twice
+            if check_playing_each_other(home_team_name, away_team_name):
+                team_has_data = False
+                return team_info, team_has_data, currently_playing
 
             # Get team records
-            home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team)).get_dict()
-            away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team)).get_dict()
+            home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team_name)).get_dict()
+            away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team_name)).get_dict()
 
             team_info["home_record"] = (str(home_team_info["resultSets"][0]["rowSet"][0][9]) +
                                         "-" + str(home_team_info["resultSets"][0]["rowSet"][0][10])
@@ -65,9 +74,9 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
             for file in file_names:
                 filename = file.name.upper()
-                if home_team.upper() in filename:
+                if home_team_name.upper() in filename:
                     home_team = filename
-                if away_team.upper() in filename:
+                if away_team_name.upper() in filename:
                     away_team = filename
 
             team_info["away_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / away_team))

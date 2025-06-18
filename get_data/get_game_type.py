@@ -1,5 +1,5 @@
 """Get if the Game is playoff/championship."""
-import logging
+
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -96,8 +96,6 @@ def get_nhl_game_type(team_name: str) -> str:
     :return: Path for championship image or empty string if not a championship game
     """
     try:
-
-        logging.getLogger("httpx").setLevel(logging.WARNING)
 
         # Get abbreviations for the teams in the current game
         team_id = get_nhl_game_id(team_name)

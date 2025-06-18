@@ -6,6 +6,7 @@ import requests
 import statsapi  # type: ignore
 
 import settings
+from helper_functions.data_helpers import check_playing_each_other
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_mlb
@@ -41,6 +42,9 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
         live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
+
+        live_feed = requests.get(f"https://statsapi.mlb.com/api/v1.1/game/{data[0]["game_id"]}/feed/live",
+                                 timeout=5).json()
     except Exception:
         return team_info, has_data, currently_playing  # Could not find game
 
@@ -53,42 +57,39 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
 
     # Get date and put in local time
-    iso_string = live["gameData"]["datetime"]["dateTime"]
-    utc_time = datetime.strptime(iso_string, "%Y-%m-%dT%H:%M:%S%z")
-    utc_time = utc_time.replace(tzinfo=UTC)
-    local_time = utc_time.astimezone()
-    game_time = local_time.strftime("%-m/%-d %-I:%M %p")
+    utc_time = datetime.strptime(live["gameData"]["datetime"]["dateTime"], "%Y-%m-%dT%H:%M:%S%z")
+    game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
 
     # Get venue and set bottom info to display game time and venue
+    team_info["bottom_info"] = game_time
     if settings.display_venue:
-        try:
-            game_id = data[0]["game_id"]
-            url = f"https://statsapi.mlb.com/api/v1.1/game/{game_id}/feed/live"
-            response = requests.get(url, timeout=5)
-            live_feed = response.json()
-            venue = live_feed["gameData"]["venue"]["name"]
-            team_info["bottom_info"] = f"{game_time} @ {venue}"
-        except Exception:
-            team_info["bottom_info"] = game_time
+        venue = live_feed["gameData"]["venue"]["name"]
+        team_info["bottom_info"] = f"{game_time} @ {venue}"
 
-    # Get Home and Away team logos
-    home_team = live["gameData"]["teams"]["home"]["teamName"]
-    away_team = live["gameData"]["teams"]["away"]["teamName"]
-    team_info["above_score_txt"] = f"{away_team} @ {home_team}"
+    # Get Home and Away team logos/names
+    home_team_name = live["gameData"]["teams"]["home"]["teamName"]
+    away_team_name = live["gameData"]["teams"]["away"]["teamName"]
+    team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
+
+    # Check if two of your teams are playing each other to not display same data twice
+    full_home_team_name = live_feed["gameData"]["teams"]["home"]["franchiseName"] + " " + home_team_name
+    full_away_team_name = live_feed["gameData"]["teams"]["away"]["franchiseName"] + " " + away_team_name
+    if check_playing_each_other(full_home_team_name, full_away_team_name):
+        team_has_data = False
+        return team_info, team_has_data, currently_playing
+
+    # If team is D-backs change to "ARIZONA DIAMONDBACKS", there is no logo file called D-backs
+    home_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+    away_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+
     folder_path = Path.cwd() / "images" / "sport_logos" / "MLB"
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
     for file in file_names:
         filename = file.name.upper()
-        if home_team.upper() in filename:
-            home_team = file
-        if away_team.upper() in filename:
-            away_team = file
-
-    # If team is D-backs change to "ARIZONA DIAMONDBACKS", there is no file called D-backs
-    if home_team == "D-backs":
-        home_team = "ARIZONA DIAMONDBACKS.png"
-    elif away_team == "D-backs":
-        away_team = "ARIZONA DIAMONDBACKS.png"
+        if home_team_name.upper() in filename:
+            home_team = filename
+        if away_team_name.upper() in filename:
+            away_team = filename
 
     team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / away_team
     team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / home_team
@@ -103,16 +104,19 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
         away_losses = live["gameData"]["teams"]["away"]["record"]["losses"]
         team_info["away_record"] = f"{away_wins!s}-{away_losses!s}"
 
+    # Check if game is currently playing
     if "Progress" in live["gameData"]["status"]["detailedState"]:
         currently_playing = True
         team_info = append_mlb_data(team_info, team_name)
+
+    # Check if game is over
     elif "Final" in live["gameData"]["status"]["detailedState"]:
         team_info["top_info"] = get_current_series_mlb(team_name)
-        team_info["bottom_info"] = "FINAL"
+        team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("MLB", team_name) != "":
-        # If str returned is not empty, then it world series/conference championship, so display championship png
+        # If str returned is not empty, then its world series/conference championship, so display championship png
         team_info["under_score_image"] = get_game_type("MLB", team_name)
 
     return team_info, has_data, currently_playing
@@ -147,22 +151,21 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         inning_state = live["liveData"]["linescore"].get("inningState", "Top")
         inning_number = live["liveData"]["linescore"].get("currentInningOrdinal", 0)
         team_info["above_score_txt"] = inning_state + " " + str(inning_number)
-    else:
-        team_info["bottom_info"] = ""
 
     # Get pitcher and batter for bottom info
     if settings.display_pitcher_batter:
         batter_full_name = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
-        batter = " ".join(batter_full_name.split()[1:])  # Remove First Name
-        pitcher = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
-        pitcher = " ".join(pitcher.split()[1:])  # Remove First Name
+        batter_last_name = " ".join(batter_full_name.split()[1:])  # Remove First Name
+        pitcher_full_name = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
+        pitcher_last_name = " ".join(pitcher_full_name.split()[1:])  # Remove First Name
 
         team_info["bottom_info"] = ""
-        if pitcher != "":
-            team_info["bottom_info"] += (f"P: {pitcher}   ")
-        if batter != "":
-            team_info["bottom_info"] += (f"AB: {batter}")
+        if pitcher_last_name != "":
+            team_info["bottom_info"] += (f"P: {pitcher_last_name}   ")
+        if batter_last_name != "":
+            team_info["bottom_info"] += (f"AB: {batter_last_name}")
 
+    team_info["top_info"] = ""
     # If inning is changing do not display count and move inning to display below score
     if "Mid" not in team_info["above_score_txt"] and "End" not in team_info["above_score_txt"]:
         try:
@@ -213,5 +216,8 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
         # Get image location for representing runners on base
         base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
         team_info["under_score_image"] = f"images/baseball_base_images/{base_image}"
+
+        if "Status Change" in team_info["bottom_info"]:
+            team_info["bottom_info"] = "Game Starting"
 
     return team_info
