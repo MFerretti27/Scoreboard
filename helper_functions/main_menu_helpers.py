@@ -12,14 +12,14 @@ from get_data.get_team_league import MLB, NBA, NFL, NHL
 filename = "settings.py"
 
 # List of setting keys to be updated
-setting_keys = [
+setting_keys_booleans = [
     "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
     "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
 
     "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
     "display_nba_play_by_play",
 
-    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play"
+    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play",
 
     "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
     "display_nfl_timeouts", "display_nfl_redzone",
@@ -27,6 +27,9 @@ setting_keys = [
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
     "display_date_ended", "prioritize_playing_team", "always_get_logos",
 ]
+
+setting_keys_integers = ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
+                            "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM", "FETCH_DATA_PLAYING_TIMER"]
 
 
 def read_teams_from_file() -> list:
@@ -57,25 +60,7 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
     :return: dictionary of values
     """
     settings: dict[str, int | bool | str] = {}
-    keys_to_find = [
-        "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
-        "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM",
-
-        "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
-        "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
-
-        "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
-        "display_nba_play_by_play",
-
-        "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play",
-
-        "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
-        "display_nfl_timeouts", "display_nfl_redzone",
-
-        "display_records", "display_venue", "display_network", "display_series", "display_odds",
-        "display_date_ended", "prioritize_playing_team", "always_get_logos",
-    ]
-
+    keys_to_find = ["FONT", *setting_keys_booleans, *setting_keys_integers]
     with Path.open(filename) as file:
         lines = file.readlines()
 
@@ -83,8 +68,7 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
         for key in keys_to_find:
             if line.strip().startswith(f"{key} ="):
                 value = line.strip().split("=")[-1].strip()
-                if (key in ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
-                            "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM"]):
+                if (key in setting_keys_integers):
                     try:
                         settings[key] = int(value)
                     except ValueError:
@@ -221,7 +205,7 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
         if line.strip().startswith("HOW_LONG_TO_DISPLAY_TEAM ="):
             contents[i] = f"HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n"
 
-    for key, selected in zip(setting_keys, selected_items, strict=False):
+    for key, selected in zip(setting_keys_booleans, selected_items, strict=False):
         for i, line in enumerate(contents):
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {selected!s}\n"
