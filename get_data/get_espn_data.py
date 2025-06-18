@@ -116,6 +116,10 @@ def get_data(team: list[str]) -> tuple:
                     currently_playing = False
                     team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
 
+                    # If Postponed, delayed, or canceled display reason why
+                    if team_info["bottom_info"] in ["DELAYED", "POSTPONED", "CANCELED"]:
+                        team_info["bottom_info"] = competition["headlines"][0]["shortLinkText"]
+
                 # Check if Game hasn't been played yet
                 elif not currently_playing:
                     if settings.display_venue:

@@ -21,12 +21,13 @@ API_FIELDS = (
 )
 
 
-def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
+def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, str], bool, bool]:
     """Get all information for MLB team.
 
     Call this if ESPN fails to get MLB data as backup.
 
     :param team_name: The team name to get information for
+    :param double_header: If team has double header, defaults to 0 (no)
 
     :return team_info: dictionary containing team information to display
     """
@@ -41,11 +42,13 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
         data = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
-        live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
+        live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
 
         live_feed = requests.get(f"https://statsapi.mlb.com/api/v1.1/game/{data[0]["game_id"]}/feed/live",
                                  timeout=5).json()
+
     except Exception:
+        double_header = 0
         return team_info, has_data, currently_playing  # Could not find game
 
     has_data = True
@@ -113,6 +116,24 @@ def get_all_mlb_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
     elif "Final" in live["gameData"]["status"]["detailedState"]:
         team_info["top_info"] = get_current_series_mlb(team_name)
         team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
+
+        # Once game is over check if its a double header but ensure second game does't call this
+        if live["gameData"]["game"]["doubleHeader"] not in ["N", "S"]and double_header !=1:
+            team_info = get_all_mlb_data(team_name, double_header=1)
+
+    # Game has not been played yet but scheduled
+    else:
+
+        # Check if postponed or delayed
+        scheduled = statsapi.get(
+            "schedule", {"gamePk": data[0]["game_id"],
+                         "sportId": 1,
+                         "fields": "dates,date,games,status,detailedState,abstractGameState,reason"},
+            )
+        if scheduled["dates"][0]["games"][0]["status"]["detailedState"] in ["Postponed", "Delayed", "Canceled"]:
+            sate_of_game = scheduled["dates"][0]["games"][0]["status"]["detailedState"]
+            reason_for_state = scheduled["dates"][0]["games"][0]["status"]["reason"]
+            team_info["bottom_info"] = sate_of_game + " due to " + reason_for_state
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("MLB", team_name) != "":
