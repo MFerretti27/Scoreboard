@@ -225,7 +225,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
 
     :param new_ordered_teams: teams in settings array to reorder
 
-    :return: str showing new order of teams
+    :return: None
     """
     # Flatten the list of teams in case it's a list of lists
     flattened_teams = [team[0] for team in new_ordered_teams] \
