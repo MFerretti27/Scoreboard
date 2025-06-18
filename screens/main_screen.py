@@ -18,7 +18,7 @@ from helper_functions.main_menu_helpers import (
     load_teams_order,
     positive_num,
     save_teams_order,
-    setting_keys,
+    setting_keys_booleans,
     update_settings,
     update_teams,
 )
@@ -147,7 +147,7 @@ def main(saved_data: dict) -> None:
 
         elif event == "Save" and current_window == "settings":
 
-            selected_items = [values.get(key, False) for key in setting_keys]
+            selected_items = [values.get(key, False) for key in setting_keys_booleans]
 
             live_data_delay = values["live_delay"]
             fetch_timer = values["fetch_not_playing"]
