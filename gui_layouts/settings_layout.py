@@ -263,6 +263,10 @@ def create_settings_layout(window_width: int) -> list:
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nba_shooting", False))],
+                [Sg.Checkbox("Display play by play", key="display_nba_play_by_play",
+                              size=(checkbox_width, checkbox_height),
+                              font=(settings.FONT, checkbox_size), expand_x=True,
+                              default=current_settings.get("display_nba_play_by_play", False))],
              ], expand_x=True, vertical_alignment="top"),
              Sg.Column([
                  [Sg.Text("NHL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
@@ -278,6 +282,10 @@ def create_settings_layout(window_width: int) -> list:
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nhl_clock", False))],
+                 [Sg.Checkbox("Display play by play", key="display_nhl_play_by_play",
+                               size=(checkbox_width, checkbox_height),
+                               font=(settings.FONT, checkbox_size), expand_x=True,
+                               default=current_settings.get("display_nhl_play_by_play", False))],
              ], expand_x=True, vertical_alignment="top"),
              Sg.Column([
                  [Sg.Text("NFL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],

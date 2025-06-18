@@ -17,8 +17,9 @@ setting_keys = [
     "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
 
     "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
+    "display_nba_play_by_play",
 
-    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
+    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play"
 
     "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
     "display_nfl_timeouts", "display_nfl_redzone",
@@ -64,8 +65,9 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
         "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
 
         "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
+        "display_nba_play_by_play",
 
-        "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
+        "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play",
 
         "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
         "display_nfl_timeouts", "display_nfl_redzone",

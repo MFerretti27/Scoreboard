@@ -167,6 +167,9 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
                 team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
+                if settings.display_nba_play_by_play:
+                    team_info["bottom_info"] += get_play_by_play(game["gameId"])
+
             break  # Found team and got data needed, dont continue loop
 
     return team_info

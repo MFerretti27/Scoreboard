@@ -13,6 +13,7 @@ from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
 from .get_team_id import get_nhl_game_id
 
+last_play_saved = ""
 
 def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NHL team.
@@ -168,6 +169,11 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
         except KeyError:
             team_info["home_power_play"] = False
 
+        if settings.display_nhl_play_by_play:
+            team_info["bottom_info"] += get_play_by_play(box_score["id"],
+                                                        box_score["homeTeam"]["abbrev"],
+                                                        box_score["awayTeam"]["abbrev"])
+
     return team_info
 
 
@@ -189,3 +195,47 @@ def get_final_status(period_descriptor: int, game_type: int) -> str:
         final_status = "FINAL"
 
     return final_status
+
+
+def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> str:
+    """Get play by play information."""
+    global last_play_saved
+
+    play_by_play = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play", timeout=5)
+    play = play_by_play.json()
+    plays = play["plays"][-1]["typeDescKey"]
+
+    last_play = ""
+
+    # Get play and player if shooting play
+    if plays not in ["period-end", "giveaway", "stoppage"]:
+        players = requests.get(f"https://api-web.nhle.com/v1/roster/{home_team_abrr}/current", timeout=5)
+        positions = players.json()
+        for position in positions:
+            for player in positions[position]:
+                try:
+                    if player["id"] == play["plays"][-1]["details"]["shootingPlayerId"]:
+                        last_play = plays.replace("-", " ") + " (" + player["lastName"]["default"] + ")"
+                        break
+                except KeyError:
+                    last_play = plays.replace("-", " ")
+        players = requests.get(f"https://api-web.nhle.com/v1/roster/{away_team_abbr}/current", timeout=5)
+        positions = players.json()
+        for position in positions:
+            for player in positions[position]:
+                try:
+                    if player["id"] == play["plays"][-1]["details"]["shootingPlayerId"]:
+                        last_play = plays.replace("-", " ") + " (" + player["lastName"]["default"] + ")"
+                        break
+                except KeyError:
+                    last_play= plays.replace("-", " ")
+
+    if last_play != "":
+        last_play = "  " + last_play
+
+    if last_play == last_play_saved:
+        last_play = ""
+    else:
+        last_play_saved = last_play
+
+    return last_play
