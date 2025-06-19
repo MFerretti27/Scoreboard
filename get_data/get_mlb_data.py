@@ -44,7 +44,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         )
         live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
 
-        live_feed = requests.get(f"https://statsapi.mlb.com/api/v1.1/game/{data[0]["game_id"]}/feed/live",
+        live_feed = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{data[0]["game_id"]}/feed/live',
                                  timeout=5).json()
 
     except Exception:
@@ -117,7 +117,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         team_info["top_info"] = get_current_series_mlb(team_name)
         team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
 
-        # Once game is over check if its a double header but ensure second game does't call this
+        # Once game is over check if its a double header but ensure second game doesn't call this
         if live["gameData"]["game"]["doubleHeader"] not in ["N", "S"] and double_header !=1:
             temp_first_game_score = f'{team_info["away_score"]} - {team_info["home_score"]}'
             winning_team = home_team_name if team_info["home_score"] > team_info["away_score"] else away_team_name

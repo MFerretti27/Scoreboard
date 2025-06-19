@@ -29,7 +29,7 @@ from main import set_screen
 def main(saved_data: dict) -> None:
     """Create Main screen GUI functionality.
 
-    :param saved_data: dictonary of save team information as to not lose it going to main screen
+    :param saved_data: dictionary of save team information as to not lose it going to main screen
     """
     set_screen()
     update = False
