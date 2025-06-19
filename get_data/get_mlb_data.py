@@ -118,12 +118,15 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
 
         # Once game is over check if its a double header but ensure second game does't call this
-        if live["gameData"]["game"]["doubleHeader"] not in ["N", "S"]and double_header !=1:
-            team_info = get_all_mlb_data(team_name, double_header=1)
+        if live["gameData"]["game"]["doubleHeader"] not in ["N", "S"] and double_header !=1:
+            temp_first_game_score = f'{team_info["away_score"]} - {team_info["home_score"]}'
+            winning_team = home_team_name if team_info["home_score"] > team_info["away_score"] else away_team_name
+            team_info, has_data, currently_playing = get_all_mlb_data(team_name, double_header=1)
+            if not currently_playing:
+                team_info["top_info"] = f"Doubleheader: {temp_first_game_score} {winning_team} won"
 
     # Game has not been played yet but scheduled
     else:
-
         # Check if postponed or delayed
         scheduled = statsapi.get(
             "schedule", {"gamePk": data[0]["game_id"],
@@ -134,6 +137,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
             sate_of_game = scheduled["dates"][0]["games"][0]["status"]["detailedState"]
             reason_for_state = scheduled["dates"][0]["games"][0]["status"]["reason"]
             team_info["bottom_info"] = sate_of_game + " due to " + reason_for_state
+            team_info["top_info"] = f"New game set for {game_time}"
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("MLB", team_name) != "":
