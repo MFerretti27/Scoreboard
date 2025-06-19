@@ -97,6 +97,11 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / away_team
     team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / home_team
 
+    # Check if game is a championship game, if so display its championship game
+    if get_game_type("MLB", team_name) != "":
+        # If str returned is not empty, then its world series/conference championship, so display championship png
+        team_info["under_score_image"] = get_game_type("MLB", team_name)
+
     # Get Home and Away team records
     if settings.display_records:
         home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
@@ -110,7 +115,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     # Check if game is currently playing
     if "Progress" in live["gameData"]["status"]["detailedState"]:
         currently_playing = True
-        team_info = append_mlb_data(team_info, team_name)
+        team_info = append_mlb_data(team_info, team_name, double_header)
 
     # Check if game is over
     elif "Final" in live["gameData"]["status"]["detailedState"]:
@@ -129,11 +134,13 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
             if not currently_playing:
                 team_info["top_info"] = f"Doubleheader: {winning_team} Won {temp_first_game_score} First Game"
 
+            return team_info, has_data, currently_playing
+
     # Game has not been played yet but scheduled
     else:
         # Check if postponed or delayed
         scheduled = statsapi.get(
-            "schedule", {"gamePk": data[0]["game_id"],
+            "schedule", {"gamePk": data[double_header]["game_id"],
                          "sportId": 1,
                          "fields": "dates,date,games,status,detailedState,abstractGameState,reason"},
             )
@@ -143,15 +150,10 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
             team_info["bottom_info"] = sate_of_game + " due to " + reason_for_state
             team_info["top_info"] = f"New game set for {game_time}"
 
-    # Check if game is a championship game, if so display its championship game
-    if get_game_type("MLB", team_name) != "":
-        # If str returned is not empty, then its world series/conference championship, so display championship png
-        team_info["under_score_image"] = get_game_type("MLB", team_name)
-
     return team_info, has_data, currently_playing
 
 
-def append_mlb_data(team_info: dict, team_name: str) -> dict:
+def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> dict:
     """Get information for MLB team if playing.
 
     :param team_info: Dictionary where data is stored to display
@@ -160,7 +162,7 @@ def append_mlb_data(team_info: dict, team_name: str) -> dict:
     :return team_info: dictionary containing team information to display
     """
     data = statsapi.schedule(team=get_mlb_team_id(team=team_name), include_series_status=True)
-    live = statsapi.get("game", {"gamePk": data[0]["game_id"], "fields": API_FIELDS})
+    live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
 
     # Get Scores
     team_info["home_score"] = str(live["liveData"]["linescore"]["teams"]["home"]["runs"])

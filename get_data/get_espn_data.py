@@ -18,7 +18,7 @@ from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_series_data import get_series
 
-doubleheader = [False, ""]
+doubleheader = 0
 
 
 def get_data(team: list[str]) -> tuple:
@@ -53,13 +53,10 @@ def get_data(team: list[str]) -> tuple:
             if team_name.upper() in event["name"].upper():
                 print(f"Found Game: {team_name}")
 
-                if team_league == "mlb":
-                    raise Exception
-
-                # If mlb game, is double header, and first game finished get second game/instance
-                if not doubleheader[0] and doubleheader[1] != team_name:
-                    # Reset, avoid infinite loop for second game, and for other instance calls for other teams
-                    doubleheader = [False, ""]
+                # # If mlb game, is double header, and first game finished get second game/instance
+                # if doubleheader == 1:
+                #     # Reset, avoid infinite loop for second game, and for other instance calls for other teams
+                #     doubleheader = 0
 
                 team_has_data = True
 
@@ -233,7 +230,7 @@ def get_data(team: list[str]) -> tuple:
                     saved_info = copy.deepcopy(team_info)
                     # Get info from specific MLB API, has more data and updates faster
                     try:
-                        team_info = append_mlb_data(team_info, team_name)
+                        team_info = append_mlb_data(team_info, team_name, doubleheader)
 
                     # If call to API fails get MLB specific info just from ESPN
                     except Exception:
@@ -326,9 +323,9 @@ def get_data(team: list[str]) -> tuple:
 
                 # Check for MLB doubleheader
                 if ("FINAL" in team_info["bottom_info"] and team_league == "mlb" and
-                        check_for_doubleheader(response_as_json, team_name) and not doubleheader[0]):
+                        check_for_doubleheader(response_as_json, team_name) and doubleheader == 0):
 
-                        doubleheader = [True, team_name]
+                        doubleheader = 1
                         temp_first_game_score = (f'{team_info["away_score"]}-{team_info["home_score"]}'
                                                  if int(team_info["away_score"]) > int(team_info["home_score"]) else
                                                  f'{team_info["home_score"]}-{team_info["away_score"]}'
@@ -340,12 +337,10 @@ def get_data(team: list[str]) -> tuple:
                         if not currently_playing:
                             team_info["top_info"] = (f"Doubleheader: {winning_team} Won "
                                                      f"{temp_first_game_score} First Game")
-
-                        doubleheader = [False, ""]
-
+                        doubleheader = 0
 
                 # If mlb game, is double header, and first game finished get second game/instance
-                if not doubleheader[0] and doubleheader[1] != team_name:
+                if doubleheader == 0:
                     break  # Found team in sports events and got data, no need to continue looking
 
             index += 1  # Continue looking for team in sports league events
