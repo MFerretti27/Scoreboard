@@ -113,7 +113,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
 
                 img_path_png = Path.cwd() / "images" / "sport_logos" / str(team_name) + "_Original.png"
                 response = requests.get(logo_url, stream=True, timeout=5)
-                with Path.open(img_path_png, "wb") as file:
+                with Path(img_path_png).open("wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
                         file.write(chunk)
 

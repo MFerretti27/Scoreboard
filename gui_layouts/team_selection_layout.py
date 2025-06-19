@@ -7,7 +7,7 @@ from helper_functions.main_menu_helpers import read_teams_from_file
 
 
 def create_team_selection_layout(window_width: int, league: str) -> list:
-    """Create General User Interface fo selecting teams to add.
+    """Create General User Interface for selecting teams to add.
 
     :param window_width: The width of the screen being used
     "param league: The sports league of the team that the user wants to add

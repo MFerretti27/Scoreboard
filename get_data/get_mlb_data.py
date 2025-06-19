@@ -1,6 +1,7 @@
 """Get MLB from MLB specific API."""
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import requests
 import statsapi  # type: ignore
@@ -21,7 +22,7 @@ API_FIELDS = (
 )
 
 
-def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, str], bool, bool]:
+def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for MLB team.
 
     Call this if ESPN fails to get MLB data as backup.

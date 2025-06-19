@@ -57,7 +57,7 @@ def get_network_logos(broadcast: str | list) -> str:
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
     for file in file_names:
         file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
-        if file_no_png.upper() in broadcast.upper() and broadcast != "":
+        if file_no_png in broadcast and broadcast != "":
             file_path = Path.cwd() / "images" / "Networks" / file
             break
 
