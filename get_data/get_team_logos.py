@@ -183,7 +183,7 @@ def resize_images_from_folder(image_folder_path: list) -> None:
     :param image_folder_path: folder to look through to find png images
     """
     for folder in image_folder_path:
-        folder_path = Path.getcwd() + folder
+        folder_path = Path.cwd() + folder
         file_names = [
             f for f in Path(folder_path).iterdir()
             if Path.is_file(Path.cwd() / "images" / " sport_logos" / f) and f.lower().endswith(".png")

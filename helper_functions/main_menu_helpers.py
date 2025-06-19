@@ -9,7 +9,7 @@ import FreeSimpleGUI as Sg  # type: ignore
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 
-filename = "settings.py"
+file_path = Path("settings.py")
 
 # List of setting keys to be updated
 setting_keys_booleans = [
@@ -38,7 +38,7 @@ def read_teams_from_file() -> list:
     :return: list of team names
     """
     teams = []
-    with Path.open(filename) as file:
+    with file_path.open(encoding="utf-8") as file:
         lines = file.readlines()
         inside_teams = False
         for line in lines:
@@ -61,7 +61,7 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
     """
     settings: dict[str, int | bool | str] = {}
     keys_to_find = ["FONT", *setting_keys_booleans, *setting_keys_integers]
-    with Path.open(filename) as file:
+    with file_path.open(encoding="utf-8") as file:
         lines = file.readlines()
 
     for line in lines:
@@ -97,8 +97,8 @@ def load_teams_order() -> list[str]:
 
     :return: list of teams in order in settings.py list
     """
-    with Path.open(filename) as f:
-        tree = ast.parse(f.read(), filename=filename)
+    with file_path.open(encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename="settings.py")
     for node in tree.body:
         if isinstance(node, ast.Assign):
             target = node.targets[0]
@@ -133,7 +133,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         teams_string += f'    ["{team}"],\n'
     teams_string += "]\n"
 
-    with Path.open(filename) as file:
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     start_index, end_index = None, None
@@ -155,7 +155,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     if start_index is not None and end_index is not None:
         contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
 
-        with Path.open(filename, "w") as file:
+        with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
         added_teams = [team for team in selected_teams if team not in existing_teams]
@@ -186,7 +186,7 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
 
     :return: None
     """
-    with Path.open(filename) as file:
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     for i, line in enumerate(contents):
@@ -216,7 +216,7 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
     else:
         settings.always_get_logos = False
 
-    with Path.open(filename, "w") as file:
+    with file_path.open("w", encoding="utf-8") as file:
         file.writelines(contents)
 
 
@@ -238,7 +238,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
     teams_string += "]\n"
 
     # Read the file and find the teams section to update
-    with Path.open(filename) as file:
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     start_index, end_index = None, None
@@ -262,7 +262,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
         contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
 
         # Write the updated contents back to the file
-        with Path.open(filename, "w") as file:
+        with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
         print(f"Teams Reordered: {', '.join(flattened_teams)}")
