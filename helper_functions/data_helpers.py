@@ -35,7 +35,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_network_logos(broadcast: str | list) -> Path:
+def get_network_logos(broadcast: str | list) -> Path | str:
     """Get the network logo of the broadcast game is on.
 
     Only supports generic networks and not local networks. All networks supported

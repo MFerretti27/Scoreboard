@@ -73,7 +73,7 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     # Resize and save the new image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    new_path_png = Path.cwd() / directory / str(file_name) + ".png"
+    new_path_png = (Path.cwd() / directory / file_name).with_suffix(".png")
     img_resized.save(new_path_png)
 
 
@@ -111,7 +111,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 print(f"Downloading logo for {team_name} from {teams[i][1]}...")
                 print()
 
-                img_path_png = Path.cwd() / "images" / "sport_logos" / str(team_name) + "_Original.png"
+                img_path_png = (Path.cwd() / "images" / "sport_logos" / str(team_name)).with_suffix("_Original.png")
                 response = requests.get(logo_url, stream=True, timeout=5)
                 with Path(img_path_png).open("wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
@@ -184,9 +184,10 @@ def resize_images_from_folder(image_folder_path: list) -> None:
     """
     for folder in image_folder_path:
         folder_path = Path.cwd() + folder
-        file_names = [
+        files = [
             f for f in Path(folder_path).iterdir()
             if Path.is_file(Path.cwd() / "images" / " sport_logos" / f) and str(f).lower().endswith(".png")
         ]
-        for file in file_names:
-            resize_image(f"{folder_path}/{file}", folder_path, file)
+        for file in files:
+            file_name = file.name
+            resize_image(f"{folder_path}/{file}", folder_path, file_name)

@@ -1,5 +1,5 @@
 """GUI Layout for selecting teams in main menu."""
-import FreeSimpleGUI as Sg
+import FreeSimpleGUI as Sg  # ignore
 
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
