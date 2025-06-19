@@ -10,13 +10,15 @@ import requests  # type: ignore
 from dateutil.parser import isoparse  # type: ignore
 
 import settings
-from helper_functions.data_helpers import check_playing_each_other, get_network_logos
+from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other, get_network_logos
 
 from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
 from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_series_data import get_series
+
+doubleheader = [False, ""]
 
 
 def get_data(team: list[str]) -> tuple:
@@ -26,6 +28,7 @@ def get_data(team: list[str]) -> tuple:
 
     :return team_info: List of Boolean values representing if team is has data to display
     """
+    global doubleheader
     team_has_data: bool = False
     currently_playing: bool = False
 
@@ -49,6 +52,15 @@ def get_data(team: list[str]) -> tuple:
         for event in response_as_json["events"]:
             if team_name.upper() in event["name"].upper():
                 print(f"Found Game: {team_name}")
+
+                if team_league == "mlb":
+                    raise Exception
+
+                # If mlb game, is double header, and first game finished get second game/instance
+                if not doubleheader[0] and doubleheader[1] != team_name:
+                    # Reset, avoid infinite loop for second game, and for other instance calls for other teams
+                    doubleheader = [False, ""]
+
                 team_has_data = True
 
                 competition = response_as_json["events"][index]["competitions"][0]
@@ -312,7 +324,29 @@ def get_data(team: list[str]) -> tuple:
                     # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
                     team_info["under_score_image"] = get_game_type(team_league, team_name)
 
-                break  # Found team in sports events and got data, no need to continue looking
+                # Check for MLB doubleheader
+                if ("FINAL" in team_info["bottom_info"] and team_league == "mlb" and
+                        check_for_doubleheader(response_as_json, team_name) and not doubleheader[0]):
+
+                        doubleheader = [True, team_name]
+                        temp_first_game_score = (f'{team_info["away_score"]}-{team_info["home_score"]}'
+                                                 if int(team_info["away_score"]) > int(team_info["home_score"]) else
+                                                 f'{team_info["home_score"]}-{team_info["away_score"]}'
+                                                 )
+                        winning_team = (home_name
+                                        if int(team_info["home_score"]) > int(team_info["away_score"]) else away_name)
+                        team_info, team_has_data, currently_playing = get_data(team)
+
+                        if not currently_playing:
+                            team_info["top_info"] = (f"Doubleheader: {winning_team} Won "
+                                                     f"{temp_first_game_score} First Game")
+
+                        doubleheader = [False, ""]
+
+
+                # If mlb game, is double header, and first game finished get second game/instance
+                if not doubleheader[0] and doubleheader[1] != team_name:
+                    break  # Found team in sports events and got data, no need to continue looking
 
             index += 1  # Continue looking for team in sports league events
 

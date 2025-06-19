@@ -51,7 +51,7 @@ def get_network_logos(broadcast: str | list) -> Path | str:
     elif isinstance(broadcast, list):
         broadcast = [b.upper() for b in broadcast]
 
-    file_path = ""
+    file_path: Path | str = ""
 
     folder_path = Path.cwd() / "images" / "Networks"
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
@@ -62,3 +62,16 @@ def get_network_logos(broadcast: str | list) -> Path | str:
             break
 
     return file_path
+
+
+def check_for_doubleheader(response_as_json: dict, team_name: str) -> bool:
+    """Check to see if MLB game is doubleheader."""
+    count = 0
+
+    # Get how many games is team in today
+    for event in response_as_json["events"]:
+            if team_name.upper() in event["name"].upper():
+                count += 1
+
+    return count == 2
+

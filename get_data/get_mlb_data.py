@@ -45,9 +45,8 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         )
         live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
 
-        live_feed = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{data[0]["game_id"]}/feed/live',
+        live_feed = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live',
                                  timeout=5).json()
-
     except Exception:
         double_header = 0
         return team_info, has_data, currently_playing  # Could not find game
@@ -119,12 +118,16 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
 
         # Once game is over check if its a double header but ensure second game doesn't call this
-        if live["gameData"]["game"]["doubleHeader"] not in ["N", "S"] and double_header !=1:
-            temp_first_game_score = f'{team_info["away_score"]} - {team_info["home_score"]}'
-            winning_team = home_team_name if team_info["home_score"] > team_info["away_score"] else away_team_name
+        if live_feed["gameData"]["game"]["doubleHeader"] != "N" and double_header !=1:
+            temp_first_game_score = (f'{team_info["away_score"]}-{team_info["home_score"]}'
+                                        if int(team_info["away_score"]) > int(team_info["home_score"]) else
+                                        f'{team_info["home_score"]}-{team_info["away_score"]}'
+                                        )
+            winning_team = (full_home_team_name
+                            if team_info["home_score"] > team_info["away_score"] else full_away_team_name)
             team_info, has_data, currently_playing = get_all_mlb_data(team_name, double_header=1)
             if not currently_playing:
-                team_info["top_info"] = f"Doubleheader: {temp_first_game_score} {winning_team} won"
+                team_info["top_info"] = f"Doubleheader: {winning_team} Won {temp_first_game_score} First Game"
 
     # Game has not been played yet but scheduled
     else:
