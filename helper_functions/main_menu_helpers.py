@@ -279,7 +279,7 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string: str) -> None:
+    def write(self, string: str) -> int:
         """Override the write method to redirect output to the window.
 
         :param string: string to write to the window
@@ -292,6 +292,8 @@ class RedirectText(io.StringIO):
                 self.window["terminal_output"].set_vscroll_position(1)
         except (KeyError, AttributeError, RuntimeError) as e:
             print(e)
+
+        return len(string)
 
     def restore_stdout(self) -> None:
         """Restore the original stdout."""
