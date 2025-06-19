@@ -22,7 +22,7 @@ def new_league_added() -> bool:
     return any(league_name[1].upper() not in folder_names for league_name in settings.teams)
 
 
-def resize_image(image_path: str, directory: str, file_name: str) -> None:
+def resize_image(image_path: str | Path, directory: str | Path, file_name: str) -> None:
     """Resize image to fit better on Monitor.
 
     :param image_path: Path of where image was downloaded
