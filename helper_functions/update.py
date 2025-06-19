@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from shutil import ignore_patterns
 
 import requests  # type: ignore
 
@@ -118,15 +119,10 @@ def backup_entire_repo(project_folder: str, version: str) -> None:
         print(f"Backup folder already exists. Deleting old backup: {backup_folder_path}")
         shutil.rmtree(backup_folder_path)
 
-    def ignore_patterns(files: list[str]) -> list[str]:
-        return [
-            f
-            for f in files
-            if f in {"venv", ".git", ".vscode", "backup_files", "__pycache__"} or f.endswith(".pyc")
-        ]
-
     try:
-        shutil.copytree(project_path, backup_folder_path, ignore=ignore_patterns)
+        shutil.copytree(project_path, backup_folder_path, ignore=ignore_patterns("*.pyc", "venv", ".git",
+                                                                                 ".vscode", "backup_files",
+                                                                                 "__pycache__"))
         print(f"Backup completed successfully at: {backup_folder_path}")
     except Exception as e:
         print(f"Error during backup: {e}")

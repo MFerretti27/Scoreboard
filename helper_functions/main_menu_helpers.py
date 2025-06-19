@@ -279,7 +279,7 @@ class RedirectText(io.StringIO):
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string: str) -> int | None:
+    def write(self, string: str) -> None:
         """Override the write method to redirect output to the window.
 
         :param string: string to write to the window

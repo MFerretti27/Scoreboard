@@ -32,7 +32,7 @@ def resize_image(image_path: str | Path, directory: str | Path, file_name: str) 
     window_width = Sg.Window.get_screen_size()[0] * .9
     window_height = Sg.Window.get_screen_size()[1] * .9
 
-    if "sport_logos" in image_path:  # If team logo it should fit into these specifications
+    if "sport_logos" in str(image_path):  # If team logo it should fit into these specifications
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (4 / 5)
