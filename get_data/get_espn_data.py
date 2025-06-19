@@ -4,14 +4,13 @@ import copy
 import gc
 import traceback
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Any
 
 import requests  # type: ignore
 from dateutil.parser import isoparse  # type: ignore
 
 import settings
-from helper_functions.data_helpers import check_playing_each_other
+from helper_functions.data_helpers import check_playing_each_other, get_network_logos
 
 from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
@@ -98,13 +97,7 @@ def get_data(team: list[str]) -> tuple:
 
                 # Get Network and display logo if possible
                 if settings.display_network:
-                    folder_path = Path.cwd() / "images" / "Networks"
-                    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-                    for file in file_names:
-                        file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
-                        if file_no_png in broadcast.upper() and broadcast != "":
-                            team_info["under_score_image"] = Path.cwd() / "images" / "Networks" / file
-                            break
+                    team_info["under_score_image"] = get_network_logos(broadcast)
 
                 # Check if Team is Currently Playing
                 if "PM" not in str(team_info["bottom_info"]) and "AM" not in str(team_info["bottom_info"]):

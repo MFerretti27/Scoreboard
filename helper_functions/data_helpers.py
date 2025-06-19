@@ -1,5 +1,7 @@
 """Functions for helping grab data from api's."""
 
+from pathlib import Path
+
 import settings
 
 should_skip = False
@@ -31,3 +33,32 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
         return False
 
     return False
+
+
+def get_network_logos(broadcast: str | list) -> str:
+    """Get the network logo of the broadcast game is on.
+
+    Only supports generic networks and not local networks. All networks supported
+    can be found in images/network folder.
+
+    :param broadcast: The broadcast game is on to look to display
+
+    :return file_path: The string location of what logo to display, return black if cannot find
+    """
+    # Make broadcast upper (could be list or )
+    if isinstance(broadcast, str):
+        broadcast = broadcast.upper()
+    elif isinstance(broadcast, list):
+        broadcast = [b.upper() for b in broadcast]
+
+    file_path = ""
+
+    folder_path = Path.cwd() / "images" / "Networks"
+    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
+    for file in file_names:
+        file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
+        if file_no_png.upper() in broadcast.upper() and broadcast != "":
+            file_path = Path.cwd() / "images" / "Networks" / file
+            break
+
+    return file_path
