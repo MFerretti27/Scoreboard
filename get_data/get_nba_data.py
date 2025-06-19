@@ -179,22 +179,24 @@ def restructure_clock(game: dict) -> str:
     """Restructure game clock to get quarter and time left."""
     match = re.match(r"PT(\d+)M(\d+)", game["gameClock"])
     quarter = game["period"]
-    minutes = int(match.group(1))
-    seconds = int(float(match.group(2)))  # Handles possible decimals like 40.00
-    result = f"{minutes}:{seconds:02}"
+    if match is not None:
+        minutes = int(match.group(1))
+        seconds = int(float(match.group(2)))  # Handles possible decimals like 40.00
+        result = f"{minutes}:{seconds:02}"
 
-    if quarter == 1:
-        quarter = str(quarter) + "st"
-    elif quarter == 2:
-        quarter = str(quarter) + "nd"
-    elif quarter == 3:
-        quarter = str(quarter) + "rd"
-    elif quarter == 4:
-        quarter = str(quarter) + "th"
-    else:
-        quarter = "Overtime"
+        if quarter == 1:
+            quarter = str(quarter) + "st"
+        elif quarter == 2:
+            quarter = str(quarter) + "nd"
+        elif quarter == 3:
+            quarter = str(quarter) + "rd"
+        elif quarter == 4:
+            quarter = str(quarter) + "th"
+        else:
+            quarter = "Overtime"
 
-    return result + " " + quarter
+        return result + " " + quarter
+    return ""
 
 
 def get_play_by_play(game_id: int) -> str:

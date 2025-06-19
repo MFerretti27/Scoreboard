@@ -32,7 +32,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
 
     :return team_info: dictionary containing team information to display
     """
-    team_info: dict[str, str] = {}
+    team_info: dict[str, Any] = {}
     has_data = False
     currently_playing = False
 

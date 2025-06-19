@@ -186,7 +186,7 @@ def resize_images_from_folder(image_folder_path: list) -> None:
         folder_path = Path.cwd() + folder
         file_names = [
             f for f in Path(folder_path).iterdir()
-            if Path.is_file(Path.cwd() / "images" / " sport_logos" / f) and f.lower().endswith(".png")
+            if Path.is_file(Path.cwd() / "images" / " sport_logos" / f) and str(f).lower().endswith(".png")
         ]
         for file in file_names:
             resize_image(f"{folder_path}/{file}", folder_path, file)
