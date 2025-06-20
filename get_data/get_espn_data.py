@@ -53,9 +53,6 @@ def get_data(team: list[str]) -> tuple:
             if team_name.upper() in event["name"].upper():
                 print(f"Found Game: {team_name}")
 
-                if team_league == "nba":
-                    raise Exception
-
                 team_has_data = True
 
                 competition = response_as_json["events"][index]["competitions"][0]
