@@ -13,3 +13,5 @@ quote-style = "double"
 max-branches = 20
 max-statements = 60
 
+[tool.mypy]
+ignore_missing_imports = true

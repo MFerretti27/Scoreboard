@@ -10,7 +10,7 @@ teams = [
     ["Detroit Tigers"],
     ["Pittsburgh Steelers"],
     ["Detroit Red Wings"],
-    ["Detroit Pistons"]
+    ["Detroit Pistons"],
 ]
 
 
@@ -67,11 +67,13 @@ display_nba_timeouts = True
 display_nba_bonus = True
 display_nba_clock = True
 display_nba_shooting = True
+display_nba_play_by_play = False
 
 # NHL
 display_nhl_sog = True
 display_nhl_power_play = True
 display_nhl_clock = True
+display_nhl_play_by_play = False
 
 # NFL
 display_nfl_timeouts = True

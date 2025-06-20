@@ -1,4 +1,5 @@
-import logging
+"""Get if the Game is playoff/championship."""
+
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -34,12 +35,11 @@ def get_game_type(team_league: str, team_name: str) -> str:
     return ""
 
 
-def get_nba_game_type(team_name) -> str:
+def get_nba_game_type(team_name: str) -> str:
     """Check if NBA game is championship.
 
     :return: Path for championship image or empty string if not a championship game
     """
-
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
@@ -49,7 +49,7 @@ def get_nba_game_type(team_name) -> str:
         was_finals_game[0] = "NBA Finals" in game_type
         was_finals_game[1] = team_name if was_finals_game[0] else ""
 
-    except Exception as e:
+    except (KeyError, IndexError) as e:
         print(f"Error getting NBA game type: {e}")
         if was_finals_game[0] and was_finals_game[1] == team_name:
             return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
@@ -71,9 +71,9 @@ def get_mlb_game_type(team_name: str) -> str:
         today = datetime.now(UTC).strftime("%Y-%m-%d")
         three_days_later = (datetime.now(UTC) + timedelta(days=3)).strftime("%Y-%m-%d")
         games = statsapi.schedule(
-            team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later
+            team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
-        game_type = games.get("game_type")
+        game_type = games[0].get("game_type")
         if game_type == "WS":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
         if game_type == "ALCS":
@@ -82,11 +82,12 @@ def get_mlb_game_type(team_name: str) -> str:
             return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
         if game_type == "P":
             return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
-        else:
-            return ""
 
-    except Exception:
+    except Exception as e:
+        print(f"Could not get MLB game type {e}")
         return ""
+
+    return ""
 
 
 def get_nhl_game_type(team_name: str) -> str:
@@ -96,11 +97,9 @@ def get_nhl_game_type(team_name: str) -> str:
     """
     try:
 
-        logging.getLogger("httpx").setLevel(logging.WARNING)
-
         # Get abbreviations for the teams in the current game
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail")
+        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
         res = resp.json()
 
         away_team_abbr = res["seasonSeries"][0]["awayTeam"]["abbrev"]
@@ -130,7 +129,7 @@ def get_nhl_game_type(team_name: str) -> str:
         season = f"{start_year}{end_year}"
 
         # Get playoff information for the current season
-        playoff_info = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/")
+        playoff_info = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/", timeout=5)
         playoff_info = playoff_info.json()
 
         # Check if the team is in the playoffs/championship
@@ -146,8 +145,9 @@ def get_nhl_game_type(team_name: str) -> str:
                 path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_western_championship.png")
             elif current_round in [2, 1]:
                 path = str(Path.cwd() / "images" / "playoff_images" / "nhl_playoffs.png")
-        return path
 
     except Exception as e:
         print(f"Error getting NHL game type: {e}")
         return ""
+
+    return path

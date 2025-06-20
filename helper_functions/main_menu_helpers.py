@@ -2,27 +2,34 @@
 import ast
 import io
 import sys
+from pathlib import Path
+
+import FreeSimpleGUI as Sg  # type: ignore
 
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 
-filename = "settings.py"
+file_path = Path("settings.py")
 
 # List of setting keys to be updated
-setting_keys = [
+setting_keys_booleans = [
     "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
     "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
 
     "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
+    "display_nba_play_by_play",
 
-    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
+    "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play", "display_nhl_play_by_play",
 
     "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
     "display_nfl_timeouts", "display_nfl_redzone",
 
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
-    "display_date_ended", "prioritize_playing_team", "always_get_logos"
+    "display_date_ended", "prioritize_playing_team", "always_get_logos",
 ]
+
+setting_keys_integers = ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
+                            "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM", "FETCH_DATA_PLAYING_TIMER"]
 
 
 def read_teams_from_file() -> list:
@@ -31,7 +38,7 @@ def read_teams_from_file() -> list:
     :return: list of team names
     """
     teams = []
-    with open(filename, "r") as file:
+    with file_path.open(encoding="utf-8") as file:
         lines = file.readlines()
         inside_teams = False
         for line in lines:
@@ -41,7 +48,7 @@ def read_teams_from_file() -> list:
             if inside_teams:
                 if line.strip().startswith("]"):
                     break
-                team_name = line.strip().strip('[],').strip('"').strip("'")
+                team_name = line.strip().strip("[],").strip('"').strip("'")
                 if team_name:
                     teams.append(team_name)
     return teams
@@ -53,33 +60,15 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
     :return: dictionary of values
     """
     settings: dict[str, int | bool | str] = {}
-    keys_to_find = [
-        "FONT", "LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "FETCH_DATA_PLAYING_TIMER",
-        "DISPLAY_NOT_PLAYING_TIMER", "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM",
-
-        "display_last_pitch", "display_play_description", "display_bases", "display_balls_strikes",
-        "display_hits_errors", "display_pitcher_batter", "display_inning", "display_outs",
-
-        "display_nba_timeouts", "display_nba_bonus", "display_nba_clock", "display_nba_shooting",
-
-        "display_nhl_clock", "display_nhl_sog", "display_nhl_power_play",
-
-        "display_nfl_clock", "display_nfl_down", "display_nfl_possession",
-        "display_nfl_timeouts", "display_nfl_redzone",
-
-        "display_records", "display_venue", "display_network", "display_series", "display_odds",
-        "display_date_ended", "prioritize_playing_team", "always_get_logos"
-    ]
-
-    with open(filename, "r") as file:
+    keys_to_find = ["FONT", *setting_keys_booleans, *setting_keys_integers]
+    with file_path.open(encoding="utf-8") as file:
         lines = file.readlines()
 
     for line in lines:
         for key in keys_to_find:
             if line.strip().startswith(f"{key} ="):
                 value = line.strip().split("=")[-1].strip()
-                if (key in ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
-                            "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM"]):
+                if (key in setting_keys_integers):
                     try:
                         settings[key] = int(value)
                     except ValueError:
@@ -93,14 +82,14 @@ def read_settings_from_file() -> dict[str, int | bool | str]:
     return settings
 
 
-def positive_num(input: str) -> bool:
+def positive_num(input_str: str) -> bool:
     """Check if string is a positive integer.
 
     :param input: string value
 
     :return: True if parameter passed is positive integer, False otherwise
     """
-    return input.isdigit() and int(input) >= 0
+    return input_str.isdigit() and int(input_str) >= 0
 
 
 def load_teams_order() -> list[str]:
@@ -108,18 +97,18 @@ def load_teams_order() -> list[str]:
 
     :return: list of teams in order in settings.py list
     """
-    with open(filename, 'r') as f:
-        tree = ast.parse(f.read(), filename=filename)
+    with file_path.open(encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename="settings.py")
     for node in tree.body:
         if isinstance(node, ast.Assign):
             target = node.targets[0]
-            if isinstance(target, ast.Name) and target.id == 'teams':
+            if isinstance(target, ast.Name) and target.id == "teams":
                 return ast.literal_eval(ast.unparse(node.value))
     return []
 
 
 def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
-    """update settings.py teams list to contain team names user wants to display.
+    """Update settings.py teams list to contain team names user wants to display.
 
     :param selected_teams: teams selected by user to display
     :param league: league that team selected is in
@@ -130,7 +119,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         "MLB": MLB,
         "NHL": NHL,
         "NBA": NBA,
-        "NFL": NFL
+        "NFL": NFL,
     }.get(league, [])
 
     teams_added = ""
@@ -144,7 +133,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         teams_string += f'    ["{team}"],\n'
     teams_string += "]\n"
 
-    with open(filename, "r") as file:
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     start_index, end_index = None, None
@@ -166,12 +155,21 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     if start_index is not None and end_index is not None:
         contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
 
-        with open(filename, "w") as file:
+        with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
         added_teams = [team for team in selected_teams if team not in existing_teams]
         removed_teams = \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
+
+        # Update the settings.teams list in-memory for when downloading logos later
+        for team in added_teams:
+            settings.teams.append([team])
+        for team in removed_teams:
+            try:
+                settings.teams.remove([team])
+            except ValueError:
+                print("Failed to delete instance of team in settings.teams list")  # In case it was already removed
 
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
@@ -185,7 +183,19 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
 
 def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
                     display_timer_live: int, font_selected: str, selected_items: list) -> None:
-    with open(filename, "r") as file:
+    """Update settings.py with new values.
+
+    :param live_data_delay: delay for live data in seconds
+    :param fetch_timer: timer for fetching data in seconds
+    :param display_timer: timer for displaying data in seconds
+    :param display_time: time to display team in seconds
+    :param display_timer_live: timer for displaying live data in seconds
+    :param font_selected: font selected by user
+    :param selected_items: list of selected items to update in settings
+
+    :return: None
+    """
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     for i, line in enumerate(contents):
@@ -194,20 +204,20 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
         if line.strip().startswith("FONT ="):
             contents[i] = f'FONT = "{font_selected}"\n'
         if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
-            contents[i] = f'FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n'
-        if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
-            contents[i] = f'FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n'
+            contents[i] = f"FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n"
+        if line.strip().startswith("FETCH_DATA_PLAYING_TIMER ="):
+            contents[i] = f"FETCH_DATA_PLAYING_TIMER = {fetch_timer}\n"
         if line.strip().startswith("DISPLAY_NOT_PLAYING_TIMER ="):
-            contents[i] = f'DISPLAY_NOT_PLAYING_TIMER = {display_timer}\n'
+            contents[i] = f"DISPLAY_NOT_PLAYING_TIMER = {display_timer}\n"
         if line.strip().startswith("DISPLAY_PLAYING_TIMER ="):
-            contents[i] = f'DISPLAY_PLAYING_TIMER = {display_timer_live}\n'
+            contents[i] = f"DISPLAY_PLAYING_TIMER = {display_timer_live}\n"
         if line.strip().startswith("HOW_LONG_TO_DISPLAY_TEAM ="):
-            contents[i] = f'HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n'
+            contents[i] = f"HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n"
 
-    for key, selected in zip(setting_keys, selected_items, strict=False):
+    for key, selected in zip(setting_keys_booleans, selected_items, strict=False):
         for i, line in enumerate(contents):
             if line.strip().startswith(f"{key} ="):
-                contents[i] = f"{key} = {str(selected)}\n"
+                contents[i] = f"{key} = {selected!s}\n"
 
     # Must do this to change settings as module won't get reloaded until scoreboard screen starts
     if key == "always_get_logos" and selected is True:
@@ -215,18 +225,17 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
     else:
         settings.always_get_logos = False
 
-    with open(filename, "w") as file:
+    with file_path.open("w", encoding="utf-8") as file:
         file.writelines(contents)
 
 
-def save_teams_order(new_ordered_teams: list) -> str:
-    """Replaces the existing teams array with a newly ordered array.
+def save_teams_order(new_ordered_teams: list) -> None:
+    """Replace the existing teams array with a newly ordered array.
 
     :param new_ordered_teams: teams in settings array to reorder
 
-    :return: str showing new order of teams
+    :return: None
     """
-
     # Flatten the list of teams in case it's a list of lists
     flattened_teams = [team[0] for team in new_ordered_teams] \
         if isinstance(new_ordered_teams[0], list) else new_ordered_teams
@@ -238,7 +247,7 @@ def save_teams_order(new_ordered_teams: list) -> str:
     teams_string += "]\n"
 
     # Read the file and find the teams section to update
-    with open(filename, "r") as file:
+    with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
     start_index, end_index = None, None
@@ -262,31 +271,38 @@ def save_teams_order(new_ordered_teams: list) -> str:
         contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
 
         # Write the updated contents back to the file
-        with open(filename, "w") as file:
+        with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
-        teams_reordered = f"Teams Reordered: {', '.join(flattened_teams)}"
-        return teams_reordered
-    else:
-        return "Teams block not found in the file."
+        print(f"Teams Reordered: {', '.join(flattened_teams)}")
 
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
-    def __init__(self, window):
+
+    def __init__(self, window: Sg.Window) -> None:
+        """Initialize the RedirectText class.
+
+        :param window: PySimpleGUI window to redirect output to
+        """
         self.window = window
         self.original_stdout = sys.stdout  # Save the original stdout
 
-    def write(self, string: str):
-        """Override the write method to redirect output to the window."""
+    def write(self, string: str) -> int:
+        """Override the write method to redirect output to the window.
+
+        :param string: string to write to the window
+        """
         try:
             if self.window is not None and not self.window.was_closed():
                 current_value = self.window["terminal_output"].get()
                 current_value += string + "\n"  # Append the new string
                 self.window["terminal_output"].update(current_value)
                 self.window["terminal_output"].set_vscroll_position(1)
-        except Exception as e:
+        except (KeyError, AttributeError, RuntimeError) as e:
             print(e)
+
+        return len(string)
 
     def restore_stdout(self) -> None:
         """Restore the original stdout."""

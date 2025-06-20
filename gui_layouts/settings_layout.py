@@ -1,13 +1,19 @@
 """GUI Layout for changing scoreboard settings in main menu."""
 import tkinter as tk
 
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as Sg  # ignore
 
 import settings
 from helper_functions.main_menu_helpers import read_settings_from_file
 
 
 def create_settings_layout(window_width: int) -> list:
+    """Create General User Interface layout for changing settings.
+
+    :param window_width: The width of the screen being used
+    "param league: The sports league of the team that the user wants to add
+    :return layout: List of elements and how the should be displayed
+    """
     # Common base screen widths
     common_base_widths = [1366, 1920, 1440, 1280]
     # Find the largest base width that doesn't exceed the window width using `max()`
@@ -31,11 +37,11 @@ def create_settings_layout(window_width: int) -> list:
     root = tk.Tk()
     font_options = sorted(root.tk.call("font", "families"))
     popular_fonts = [
-        'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Optima',
-        'Gill Sans', 'Comic Sans MS', 'Georgia', 'Lucida Console',
-        'Calibri', 'Trebuchet MS', 'Century Gothic', 'Consolas',
-        'QuickSand', 'Z003', 'FreeMono', 'P052', 'Droid Sans Fallback',
-        'C509', 'URW Bookman', 'Noto Mono', 'PibotoLt'
+        "Arial", "Helvetica", "Times New Roman", "Courier New", "Optima",
+        "Gill Sans", "Comic Sans MS", "Georgia", "Lucida Console",
+        "Calibri", "Trebuchet MS", "Century Gothic", "Consolas",
+        "QuickSand", "Z003", "FreeMono", "P052", "Droid Sans Fallback",
+        "C509", "URW Bookman", "Noto Mono", "PibotoLt",
     ]
 
     # Filter the available fonts to include only those that are in the "popular_fonts" list
@@ -45,281 +51,288 @@ def create_settings_layout(window_width: int) -> list:
     # Split into rows and columns
     font_rows = [font_options[i:i + 14] for i in range(0, len(font_options), 13)]
 
-    general_setting_layout = sg.Frame(
-        '',
+    general_setting_layout = Sg.Frame(
+        "",
         [
             # Row containing "Live Data Delay", Input, Live Data Message, and Delay Text
-            [sg.Push(),
-                sg.Column(
+            [Sg.Push(),
+                Sg.Column(
                     [
-                        [sg.Text("Live Data Delay:", font=(settings.FONT, top_label_size)),
-                         sg.Spin([str(i) for i in range(1000)], key='live_delay', enable_events=True,
+                        [Sg.Text("Live Data Delay:", font=(settings.FONT, top_label_size)),
+                         Sg.Spin([str(i) for i in range(1000)], key="live_delay", enable_events=True,
                                  size=(text_input_size, 1),
-                                 font=('Arial', text_size),
+                                 font=("Arial", text_size),
                                  initial_value=str(current_settings.get("LIVE_DATA_DELAY", 0))),
-                         sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
+                         Sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
                          ],
                         [
-                            sg.Push(),
-                            sg.Text("Delay to display live data", key="Live_data_message",
+                            Sg.Push(),
+                            Sg.Text("Delay to display live data", key="Live_data_message",
                                     font=(settings.FONT, message_size, "italic")),
-                            sg.Push(),
+                            Sg.Push(),
                         ],
                     ],
             ),
-                sg.Column(
+                Sg.Column(
                     [
-                        [sg.Text("Display Timer (LIVE):", font=(settings.FONT, top_label_size)),
-                         sg.Spin([str(i) for i in range(1000)], key='display_playing', enable_events=True,
+                        [Sg.Text("Display Timer (LIVE):", font=(settings.FONT, top_label_size)),
+                         Sg.Spin([str(i) for i in range(1000)], key="display_playing", enable_events=True,
                                  size=(text_input_size, 1),
-                                 font=('Arial', text_size),
+                                 font=("Arial", text_size),
                                  initial_value=str(current_settings.get("DISPLAY_PLAYING_TIMER", 0))),
-                         sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
+                         Sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
                          ],
                         [
-                            sg.Push(),
-                            sg.Text("How often to Display each team when teams are playing",
+                            Sg.Push(),
+                            Sg.Text("How often to Display each team when teams are playing",
                                     key="display_playing_message",
                                     font=(settings.FONT, message_size, "italic")),
-                            sg.Push(),
+                            Sg.Push(),
                         ],
                     ],
             ),
-                sg.Push(),
+                Sg.Push(),
             ],
             [
-                sg.Push(),
-                sg.Column(
+                Sg.Push(),
+                Sg.Column(
                     [
-                        [sg.Text("Fetch Timer:", font=(settings.FONT, top_label_size)),
-                         sg.Spin([str(i) for i in range(1000)], key='fetch_not_playing', enable_events=True,
+                        [Sg.Text("Fetch Timer:", font=(settings.FONT, top_label_size)),
+                         Sg.Spin([str(i) for i in range(1000)], key="fetch_not_playing", enable_events=True,
                                  size=(text_input_size, 1),
-                                 font=('Arial', text_size),
+                                 font=("Arial", text_size),
                                  initial_value=str(current_settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
-                         sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
+                         Sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
                          ],
                         [
-                            sg.Push(),
-                            sg.Text("How often to get data when no team is playing",
+                            Sg.Push(),
+                            Sg.Text("How often to get data when no team is playing",
                                     key="fetch_not_playing_message",
                                     font=(settings.FONT, message_size, "italic")),
-                            sg.Push()
+                            Sg.Push(),
                         ],
                     ],
                 ),
-                sg.Column(
+                Sg.Column(
                     [
-                        [sg.Text("Display Timer:", font=(settings.FONT, top_label_size)),
-                         sg.Spin([str(i) for i in range(1000)], key='display_not_playing', enable_events=True,
+                        [Sg.Text("Display Timer:", font=(settings.FONT, top_label_size)),
+                         Sg.Spin([str(i) for i in range(1000)], key="display_not_playing", enable_events=True,
                                  size=(text_input_size, 1),
-                                 font=('Arial', text_size),
+                                 font=("Arial", text_size),
                                  initial_value=str(current_settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
-                         sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
+                         Sg.Text("seconds", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
                          ],
                         [
-                            sg.Push(),
-                            sg.Text("How often to Display each team when no team is playing",
+                            Sg.Push(),
+                            Sg.Text("How often to Display each team when no team is playing",
                                     key="display_not_playing_message",
                                     font=(settings.FONT, message_size, "italic")),
-                            sg.Push(),
+                            Sg.Push(),
                         ],
                     ],
                 ),
-                sg.Column(
+                Sg.Column(
                     [
-                        [sg.Text("Display Time:", font=(settings.FONT, top_label_size)),
-                         sg.Spin([str(i) for i in range(1000)], key='display_time', enable_events=True,
+                        [Sg.Text("Display Time:", font=(settings.FONT, top_label_size)),
+                         Sg.Spin([str(i) for i in range(1000)], key="display_time", enable_events=True,
                                  size=(text_input_size, 1),
-                                 font=('Arial', text_size),
+                                 font=("Arial", text_size),
                                  initial_value=str(current_settings.get("HOW_LONG_TO_DISPLAY_TEAM", 0))),
-                         sg.Text("days", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
+                         Sg.Text("days", font=(settings.FONT, message_size), expand_x=True, pad=(0, 0)),
                          ],
                         [
-                            sg.Push(),
-                            sg.Text("How long to display team info when finished",
+                            Sg.Push(),
+                            Sg.Text("How long to display team info when finished",
                                     key="display_time_message",
                                     font=(settings.FONT, message_size, "italic")),
-                            sg.Push(),
+                            Sg.Push(),
                         ],
-                    ]
+                    ],
                 ),
-                sg.Push()
+                Sg.Push(),
             ],
-            [sg.Text("", font=(settings.FONT, bottom_label_size)),],
+            [Sg.Text("", font=(settings.FONT, bottom_label_size))],
             [
-                sg.Checkbox("Display Records", key="display_records",
+                Sg.Checkbox("Display Records", key="display_records",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_records", False)),
-                sg.Checkbox("Display Venue", key="display_venue",
+                Sg.Checkbox("Display Venue", key="display_venue",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_venue", False)),
-                sg.Checkbox("Display Broadcast", key="display_network",
+                Sg.Checkbox("Display Broadcast", key="display_network",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_network", False)),
-                sg.Checkbox("Display Odds", key="display_odds",
+                Sg.Checkbox("Display Odds", key="display_odds",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_odds", False)),
-                sg.Checkbox("Display Series Info", key="display_series",
+                Sg.Checkbox("Display Series Info", key="display_series",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_series", False)),
             ],
             [
-                sg.Checkbox("Display Date Ended", key="display_date_ended",
+                Sg.Checkbox("Display Date Ended", key="display_date_ended",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_date_ended", False)),
-                sg.Checkbox("Always Get Logos when starting", key="always_get_logos",
+                Sg.Checkbox("Always Get Logos when starting", key="always_get_logos",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("always_get_logos", False)),
-                sg.Checkbox("Prioritize Playing team(s)", key="prioritize_playing_team",
+                Sg.Checkbox("Prioritize Playing team(s)", key="prioritize_playing_team",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("prioritize_playing_team", False)),
             ],
             # Row containing "Change Font" label
-            [sg.Text("Change Font:", font=(settings.FONT, bottom_label_size)),
-             sg.Text("", font=(settings.FONT, message_size), key="font_message", text_color='red'),
+            [Sg.Text("Change Font:", font=(settings.FONT, bottom_label_size)),
+             Sg.Text("", font=(settings.FONT, message_size), key="font_message", text_color="red"),
              ],
 
             # Adding the checkboxes using the font
             *[
-                [sg.Checkbox(f, key=f"font_{f}", font=(f, message_size), expand_x=True,
+                [Sg.Checkbox(f, key=f"font_{f}", font=(f, message_size), expand_x=True,
                              default=(f == current_settings["FONT"])) for f in row]
                 for row in font_rows
             ],
 
         ],
         expand_x=True,
-        relief=sg.RELIEF_SOLID,
+        relief=Sg.RELIEF_SOLID,
         border_width=2,
-        pad=(0, button_size)
+        pad=(0, button_size),
     )
 
-    specific_settings_layout = sg.Frame(
-        '',
+    specific_settings_layout = Sg.Frame(
+        "",
         [
-            [sg.Push(),
-             sg.Column([
-                 [sg.Text("MLB Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
-                 [sg.Checkbox("Display Last Pitch", key="display_last_pitch",
+            [Sg.Push(),
+             Sg.Column([
+                 [Sg.Text("MLB Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
+                 [Sg.Checkbox("Display Last Pitch", key="display_last_pitch",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_last_pitch", False))],
-                 [sg.Checkbox("Display Play Description", key="display_play_description",
+                 [Sg.Checkbox("Display Play Description", key="display_play_description",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size),
                               default=current_settings.get("display_play_description", False))],
-                 [sg.Checkbox("Display Bases", key="display_bases",
+                 [Sg.Checkbox("Display Bases", key="display_bases",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_bases", False))],
-                 [sg.Checkbox("Display Count", key="display_balls_strikes",
+                 [Sg.Checkbox("Display Count", key="display_balls_strikes",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_balls_strikes", False))],
-                 [sg.Checkbox("Display Hits/Errors", key="display_hits_errors",
+                 [Sg.Checkbox("Display Hits/Errors", key="display_hits_errors",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_hits_errors", False))],
-                 [sg.Checkbox("Display Pitcher/Batter", key="display_pitcher_batter",
+                 [Sg.Checkbox("Display Pitcher/Batter", key="display_pitcher_batter",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_pitcher_batter", False))],
-                 [sg.Checkbox("Display Inning", key="display_inning",
+                 [Sg.Checkbox("Display Inning", key="display_inning",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_inning", False))],
-                 [sg.Checkbox("Display Outs", key="display_outs",
+                 [Sg.Checkbox("Display Outs", key="display_outs",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_outs", False))],
-             ], expand_x=True, vertical_alignment='top'),
-             sg.Column([
-                 [sg.Text("NBA Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
-                 [sg.Checkbox("Display Timeouts", key="display_nba_timeouts",
+             ], expand_x=True, vertical_alignment="top"),
+             Sg.Column([
+                 [Sg.Text("NBA Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
+                 [Sg.Checkbox("Display Timeouts", key="display_nba_timeouts",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nba_timeouts", False))],
-                 [sg.Checkbox("Display Bonus", key="display_nba_bonus", size=(checkbox_width, checkbox_height),
+                 [Sg.Checkbox("Display Bonus", key="display_nba_bonus", size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nba_bonus", False))],
-                 [sg.Checkbox("Display Clock", key="display_nba_clock",
+                 [Sg.Checkbox("Display Clock", key="display_nba_clock",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nba_clock", False))],
-                 [sg.Checkbox("Display Shooting Stats", key="display_nba_shooting",
+                 [Sg.Checkbox("Display Shooting Stats", key="display_nba_shooting",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nba_shooting", False))],
-             ], expand_x=True, vertical_alignment='top'),
-             sg.Column([
-                 [sg.Text("NHL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
-                 [sg.Checkbox("Display Shots On Goal", key="display_nhl_sog",
+                [Sg.Checkbox("Display play by play", key="display_nba_play_by_play",
+                              size=(checkbox_width, checkbox_height),
+                              font=(settings.FONT, checkbox_size), expand_x=True,
+                              default=current_settings.get("display_nba_play_by_play", False))],
+             ], expand_x=True, vertical_alignment="top"),
+             Sg.Column([
+                 [Sg.Text("NHL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
+                 [Sg.Checkbox("Display Shots On Goal", key="display_nhl_sog",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nhl_sog", False))],
-                 [sg.Checkbox("Display Power Play", key="display_nhl_power_play",
+                 [Sg.Checkbox("Display Power Play", key="display_nhl_power_play",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nhl_power_play", False))],
-                 [sg.Checkbox("Display Clock", key="display_nhl_clock",
+                 [Sg.Checkbox("Display Clock", key="display_nhl_clock",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nhl_clock", False))],
-             ], expand_x=True, vertical_alignment='top'),
-             sg.Column([
-                 [sg.Text("NFL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
-                 [sg.Checkbox("Display Timeouts", key="display_nfl_timeouts",
+                 [Sg.Checkbox("Display play by play", key="display_nhl_play_by_play",
+                               size=(checkbox_width, checkbox_height),
+                               font=(settings.FONT, checkbox_size), expand_x=True,
+                               default=current_settings.get("display_nhl_play_by_play", False))],
+             ], expand_x=True, vertical_alignment="top"),
+             Sg.Column([
+                 [Sg.Text("NFL Settings", font=(settings.FONT, bottom_label_size), expand_x=True)],
+                 [Sg.Checkbox("Display Timeouts", key="display_nfl_timeouts",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nfl_timeouts", False))],
-                 [sg.Checkbox("Display RedZone", key="display_nfl_redzone",
+                 [Sg.Checkbox("Display RedZone", key="display_nfl_redzone",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nfl_redzone", False))],
-                 [sg.Checkbox("Display Possession", key="display_nfl_possession",
+                 [Sg.Checkbox("Display Possession", key="display_nfl_possession",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nfl_possession", False))],
-                 [sg.Checkbox("Display Down/Yardage", key="display_nfl_down",
+                 [Sg.Checkbox("Display Down/Yardage", key="display_nfl_down",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nfl_down", False))],
-                 [sg.Checkbox("Display Clock", key="display_nfl_clock",
+                 [Sg.Checkbox("Display Clock", key="display_nfl_clock",
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size), expand_x=True,
                               default=current_settings.get("display_nfl_clock", False))],
-             ], expand_x=True, vertical_alignment='top'),
-             sg.Push(),
+             ], expand_x=True, vertical_alignment="top"),
+             Sg.Push(),
              ],
         ],
         expand_x=True,
-        relief=sg.RELIEF_SOLID,
+        relief=Sg.RELIEF_SOLID,
         border_width=2,
-        pad=(0, 0)
+        pad=(0, 0),
     )
 
-    layout = [
-        [sg.Push(), sg.Text("Settings", font=(settings.FONT, title_size, "underline")), sg.Push()],
+    return [
+        [Sg.Push(), Sg.Text("Settings", font=(settings.FONT, title_size, "underline")), Sg.Push()],
         [general_setting_layout],
         [specific_settings_layout],
-        [[sg.VPush()],
-         sg.Push(),
-         sg.Text("", font=(settings.FONT, button_size), key="confirmation_message", text_color='Green'),
-         sg.Push(),
-         [sg.VPush()],
+        [[Sg.VPush()],
+         Sg.Push(),
+         Sg.Text("", font=(settings.FONT, button_size), key="confirmation_message", text_color="Green"),
+         Sg.Push(),
+         [Sg.VPush()],
          ],
-        [[sg.VPush()],
-         sg.Push(),
-         sg.Button("Save", font=(settings.FONT, button_size)),
-         sg.Button("Back", font=(settings.FONT, button_size)),
-         sg.Push(),
+        [[Sg.VPush()],
+         Sg.Push(),
+         Sg.Button("Save", font=(settings.FONT, button_size)),
+         Sg.Button("Back", font=(settings.FONT, button_size)),
+         Sg.Push(),
          ],
     ]
-    return layout

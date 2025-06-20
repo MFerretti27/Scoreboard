@@ -1,4 +1,5 @@
-"""This function uses the RapidFuzz library to find the best match for the team name.
+"""Use the RapidFuzz library to find the best match for the team name.
+
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
@@ -11,7 +12,7 @@ NBA = [
     "Houston Rockets", "Indiana Pacers", "LA Clippers", "Los Angeles Lakers", "Memphis Grizzlies",
     "Miami Heat", "Milwaukee Bucks", "Minnesota Timberwolves", "New Orleans Pelicans", "New York Knicks",
     "Oklahoma City Thunder", "Orlando Magic", "Philadelphia 76ers", "Phoenix Suns", "Portland Trail Blazers",
-    "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors", "Utah Jazz", "Washington Wizards"
+    "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors", "Utah Jazz", "Washington Wizards",
 ]
 
 MLB = [
@@ -20,7 +21,7 @@ MLB = [
     "Houston Astros", "Kansas City Royals", "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins",
     "Milwaukee Brewers", "Minnesota Twins", "New York Yankees", "New York Mets", "Oakland Athletics",
     "Philadelphia Phillies", "Pittsburgh Pirates", "San Diego Padres", "San Francisco Giants", "Seattle Mariners",
-    "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", "Toronto Blue Jays", "Washington Nationals"
+    "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", "Toronto Blue Jays", "Washington Nationals",
 ]
 
 NFL = [
@@ -30,7 +31,7 @@ NFL = [
     "Kansas City Chiefs", "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
     "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants", "New York Jets",
     "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers", "Seattle Seahawks", "Tampa Bay Buccaneers",
-    "Tennessee Titans", "Washington Commanders"
+    "Tennessee Titans", "Washington Commanders",
 ]
 
 NHL = [
@@ -40,14 +41,14 @@ NHL = [
     "Montreal Canadiens", "Nashville Predators", "New Jersey Devils", "New York Islanders", "New York Rangers",
     "Ottawa Senators", "Philadelphia Flyers", "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken",
     "St. Louis Blues", "Tampa Bay Lightning", "Toronto Maple Leafs", "Vancouver Canucks", "Vegas Golden Knights",
-    "Washington Capitals", "Winnipeg Jets"
+    "Washington Capitals", "Winnipeg Jets",
 ]
 
 ALL_TEAMS = {
     "NBA": NBA,
     "MLB": MLB,
     "NFL": NFL,
-    "NHL": NHL
+    "NHL": NHL,
 }
 
 
@@ -81,12 +82,14 @@ def get_team_league(team__name: str) -> tuple:
 
     if best_match[1] >= 70:
         return matched_team  # return tuple of league and sport name
-    else:
-        raise ValueError(f"Team '{team__name}' not found in any league.")
+
+    # If no match found, raise an error
+    msg = f"Team '{team__name}' not found in any league."
+    raise ValueError(msg)
 
 
 # Get Team league and sport name, needed for various functions later in script
-def append_team_array(teams) -> None:
+def append_team_array(teams: list) -> None:
     """Get the team league and sport name from the team list.
 
     :param teams: List of teams

@@ -1,16 +1,14 @@
 """Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen."""
 
-import os
 import random
 import shutil
+from pathlib import Path
 
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore
 import requests  # type: ignore
 from PIL import Image  # type: ignore
 
 import settings
-
-logo_folder_path = "images/sport_logos"
 
 
 def new_league_added() -> bool:
@@ -18,28 +16,23 @@ def new_league_added() -> bool:
 
     :return: True if new league added, False otherwise
     """
+    folder_names = ([name for name in Path(Path.cwd() / "images" / "sport_logos").iterdir()
+                     if Path.is_dir(Path.cwd() / "images" / "sport_logos" / name)])
 
-    folder_names = ([name for name in os.listdir(logo_folder_path)
-                     if os.path.isdir(os.path.join(logo_folder_path, name))])
-
-    for league_name in settings.teams:
-        if league_name[1].upper() not in folder_names:
-            return True
-
-    return False
+    return any(league_name[1].upper() not in folder_names for league_name in settings.teams)
 
 
-def resize_image(image_path: str, directory: str, file_name: str) -> None:
+def resize_image(image_path: str | Path, directory: str | Path, file_name: str) -> None:
     """Resize image to fit better on Monitor.
 
     :param image_path: Path of where image was downloaded
     :param directory: Folder were new resized image should be put
     :param file_name: Name to use as file name
     """
-    window_width = sg.Window.get_screen_size()[0] * .9
-    window_height = sg.Window.get_screen_size()[1] * .9
+    window_width = Sg.Window.get_screen_size()[0] * .9
+    window_height = Sg.Window.get_screen_size()[1] * .9
 
-    if "sport_logos" in image_path:  # If team logo it should fit into these specifications
+    if "sport_logos" in str(image_path):  # If team logo it should fit into these specifications
         column_width = window_width / 3
         column_height = window_height * .66
         column_height = column_height * (4 / 5)
@@ -80,11 +73,11 @@ def resize_image(image_path: str, directory: str, file_name: str) -> None:
 
     # Resize and save the new image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    new_path_png = os.path.join(directory, f"{file_name}.png")
+    new_path_png = (Path.cwd() / directory / file_name).with_suffix(".png")
     img_resized.save(new_path_png)
 
 
-def download_team_logos(window, teams: list) -> None:
+def download_team_logos(window: Sg.Window, teams: list) -> None:
     """Use ESPN API to download team logos for all leagues that user selects for their teams.
 
     :param teams: Dictionary with teams to display
@@ -94,33 +87,33 @@ def download_team_logos(window, teams: list) -> None:
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
         sport_name = teams[i][2].lower()
-        if not os.path.exists(f"images/sport_logos/{sport_league.upper()}"):
+        if not Path.exists(Path.cwd() / "images" / "sport_logos" / sport_league.upper()):
 
             # Create a directory for the current sport if it doesn't exist
-            sport_dir = os.path.join(logo_folder_path, sport_league.upper())
-            if not os.path.exists(sport_dir):
-                os.makedirs(sport_dir)
+            sport_dir = Path.cwd() / "images" / "sport_logos" / sport_league.upper()
+            if not Path.exists(sport_dir):
+                Path.mkdir(sport_dir)
 
             # Fetch the JSON data
             url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
-            response = requests.get(url)
+            response = requests.get(url, timeout=5)
             data = response.json()
 
             # Extract team data
-            teams_data = data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', [])
+            teams_data = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
 
             # Download, process, resize, and save each logo
             for team in teams_data:
-                team_name = team['team']["displayName"]
-                logo_url = team['team']['logos'][0]['href']
+                team_name = team["team"]["displayName"]
+                logo_url = team["team"]["logos"][0]["href"]
                 team_name = team_name.upper()
 
                 print(f"Downloading logo for {team_name} from {teams[i][1]}...")
                 print()
 
-                img_path_png = os.path.join(sport_dir, f"{team_name}_Original.png")
-                response = requests.get(logo_url, stream=True)
-                with open(img_path_png, 'wb') as file:
+                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
+                response = requests.get(logo_url, stream=True, timeout=5)
+                with Path(img_path_png).open("wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
                         file.write(chunk)
 
@@ -129,29 +122,31 @@ def download_team_logos(window, teams: list) -> None:
                     resize_image(img_path_png, sport_dir, team_name)
 
                 # Delete the original .png file
-                os.remove(img_path_png)
+                Path.unlink(Path(img_path_png))
                 window.refresh()  # Refresh to display text
 
-    if os.path.exists('sport_logos'):
+    if Path.exists(Path.cwd() / "images" / "sport_logos"):
         print("All logos have been downloaded!")
 
 
-def get_team_logos(window, teams: list) -> None:
-    """Determine if logos need to be downloaded
+def get_team_logos(window: Sg.Window, teams: list) -> None:
+    """Determine if logos need to be downloaded.
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
     """
     already_downloaded = True
-    if not os.path.exists(logo_folder_path):
-        os.makedirs(logo_folder_path, exist_ok=True)
+    if not Path.exists(Path.cwd() / "images" / "sport_logos"):
+        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
-        resize_images_from_folder(["/images/Networks/",
-                                   "/images/baseball_base_images/",
-                                   "/images/conference_championship_images/",
-                                   "/images/playoff_images/",
-                                   "/images/championship_images/"])
+        resize_images_from_folder([
+            Path("images/Networks"),
+            Path("images/baseball_base_images"),
+            Path("images/conference_championship_images"),
+            Path("images/playoff_images"),
+            Path("images/championship_images"),
+        ])
         already_downloaded = False  # If hit this is the first time getting images and resizing
 
     # If user selects new team in a league they haven't selected before download all logos in that league
@@ -159,8 +154,9 @@ def get_team_logos(window, teams: list) -> None:
         download_team_logos(window, teams)  # Will only get new league team logos
 
     if settings.always_get_logos and already_downloaded:
-        shutil.rmtree(logo_folder_path)  # Dont want to continually resize images multiple times, so remove
-        os.makedirs(logo_folder_path, exist_ok=True)
+        # Dont want to continually resize images multiple times, so remove
+        shutil.rmtree(Path.cwd() / "images" / "sport_logos")
+        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
         download_team_logos(window, teams)
 
 
@@ -183,17 +179,16 @@ def get_random_logo() -> dict:
     return logos
 
 
-def resize_images_from_folder(image_folder_path: list) -> None:
+def resize_images_from_folder(image_folder_path: list[Path]) -> None:
     """Resize all images in the folder.
 
     :param image_folder_path: folder to look through to find png images
     """
-
     for folder in image_folder_path:
-        folder_path = os.getcwd() + folder
-        file_names = [
-            f for f in os.listdir(folder_path)
-            if os.path.isfile(os.path.join(folder_path, f)) and f.lower().endswith('.png')
-        ]
-        for file in file_names:
-            resize_image(f"{folder_path}/{file}", folder_path, file)
+            folder_path = Path.cwd() / folder
+            files = [
+                f for f in folder_path.iterdir()
+                if f.is_file() and f.suffix.lower() == ".png"
+            ]
+            for file in files:
+                resize_image(file, file.parent, file.name)

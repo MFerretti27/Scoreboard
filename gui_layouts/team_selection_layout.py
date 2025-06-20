@@ -1,5 +1,5 @@
 """GUI Layout for selecting teams in main menu."""
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as Sg  # ignore
 
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
@@ -7,6 +7,12 @@ from helper_functions.main_menu_helpers import read_teams_from_file
 
 
 def create_team_selection_layout(window_width: int, league: str) -> list:
+    """Create General User Interface for selecting teams to add.
+
+    :param window_width: The width of the screen being used
+    "param league: The sports league of the team that the user wants to add
+    :return layout: List of elements and how the should be displayed
+    """
     checkboxes_per_column = 8
     selected_teams = read_teams_from_file()
 
@@ -14,7 +20,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         "MLB": MLB,
         "NHL": NHL,
         "NBA": NBA,
-        "NFL": NFL
+        "NFL": NFL,
     }.get(league, [])
 
     # Common base screen widths
@@ -33,7 +39,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     confirmation_txt_size = min(max_size, max(10, int(24 * scale)))
 
     team_checkboxes = [
-        sg.Checkbox(team, key=f"{team}", size=(checkbox_width, checkbox_height),
+        Sg.Checkbox(team, key=f"{team}", size=(checkbox_width, checkbox_height),
                     font=(settings.FONT, checkbox_txt_size), pad=(0, 0), default=(team in selected_teams))
         for team in team_names
     ]
@@ -44,33 +50,32 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     ]
 
     column_layouts = [
-        sg.Column([[cb] for cb in col], pad=(0, 0), element_justification='Center') for col in columns
+        Sg.Column([[cb] for cb in col], pad=(0, 0), element_justification="Center") for col in columns
     ]
 
-    layout = [
-        [sg.VPush()],
-        [sg.Push(), sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), sg.Push()],
-        [sg.VPush()],
-        [[sg.VPush()],
-         sg.Push(), *column_layouts, sg.Push(),
-         [sg.VPush()],],
-        [sg.VPush()],
-        [[sg.VPush()],
-         sg.Push(),
-         sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color='green'),
-         sg.Push(),
-         [sg.VPush()],
+    return [
+        [Sg.VPush()],
+        [Sg.Push(), Sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), Sg.Push()],
+        [Sg.VPush()],
+        [[Sg.VPush()],
+         Sg.Push(), *column_layouts, Sg.Push(),
+         [Sg.VPush()]],
+        [Sg.VPush()],
+        [[Sg.VPush()],
+         Sg.Push(),
+         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color="green"),
+         Sg.Push(),
+         [Sg.VPush()],
          ],
-        [[sg.VPush()],
-         sg.Push(),
-         sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color='red'),
-         sg.Push(),
-         [sg.VPush()],
+        [[Sg.VPush()],
+         Sg.Push(),
+         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color="red"),
+         Sg.Push(),
+         [Sg.VPush()],
          ],
-        [sg.Push(),
-         sg.Button("Save", font=(settings.FONT, button_size)), sg.Button("Back", font=(settings.FONT, button_size)),
-         sg.Push()
+        [Sg.Push(),
+         Sg.Button("Save", font=(settings.FONT, button_size)), Sg.Button("Back", font=(settings.FONT, button_size)),
+         Sg.Push(),
          ],
-        [sg.VPush()],
+        [Sg.VPush()],
     ]
-    return layout

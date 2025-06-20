@@ -1,4 +1,4 @@
-"""Script to Display a Scoreboard for your Favorite Teams"""
+"""Script to Display a Scoreboard for your Favorite Teams."""
 
 import copy
 import json
@@ -10,7 +10,7 @@ import traceback
 from datetime import datetime, timedelta
 from typing import Any
 
-import FreeSimpleGUI as sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
 
 import settings
@@ -34,7 +34,7 @@ from screens.currently_playing_screen import team_currently_playing
 #                                #
 ##################################
 def main(data_saved: dict) -> None:
-    """Main function to run the scoreboard application.
+    """Create Main function to run the scoreboard application.
 
     :param saved_data: Dictionary containing saved data for teams
     """
@@ -61,12 +61,12 @@ def main(data_saved: dict) -> None:
     resize_text()  # Resize text to fit screen size
 
     # Create the window
-    window = sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
+    window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
                        resizable=True, return_keyboard_events=True).Finalize()
 
     # Maximize does not work on MacOS, so we use attributes to set fullscreen
-    if platform.system() == 'Darwin':
-        window.TKroot.attributes('-fullscreen', True)
+    if platform.system() == "Darwin":
+        window.TKroot.attributes("-fullscreen", True)
     else:
         window.Maximize()
     window.TKroot.config(cursor="none")  # Remove cursor from screen
@@ -97,16 +97,16 @@ def main(data_saved: dict) -> None:
                             del saved_data[teams[fetch_index][0]]
 
                     # Save data for to display longer than data is available (minimum 3 days)
-                    if data is True and "FINAL" in info['bottom_info'] and teams[fetch_index][0] not in saved_data:
+                    if data is True and "FINAL" in info["bottom_info"] and teams[fetch_index][0] not in saved_data:
                         saved_data[teams[fetch_index][0]] = [info, datetime.now()]
                         if settings.display_date_ended:
-                            info['bottom_info'] += "   " + datetime.now().strftime("%-m/%-d/%y")
+                            info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
                         print("Saving Data to display longer that its available")
 
                     # If team is already saved dont overwrite it with new date
                     elif teams[fetch_index][0] in saved_data and data is True:
                         if "FINAL" in info["bottom_info"]:
-                            info['bottom_info'] = saved_data[teams[fetch_index][0]][0]['bottom_info']
+                            info["bottom_info"] = saved_data[teams[fetch_index][0]][0]["bottom_info"]
 
                     elif teams[fetch_index][0] in saved_data and data is False:
                         print("Data is no longer available, checking if should display")
@@ -116,7 +116,7 @@ def main(data_saved: dict) -> None:
                             saved_datetime = datetime.fromisoformat(saved_date)  # convert string to datetime
                         else:
                             saved_datetime = saved_date  # already a datetime
-                        saved_datetime = datetime.fromisoformat(saved_date)
+
                         date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
@@ -125,8 +125,7 @@ def main(data_saved: dict) -> None:
                             teams_with_data.append(True)
                             continue
                         # If greater than days allowed remove
-                        else:
-                            del saved_data[teams[fetch_index][0]]
+                        del saved_data[teams[fetch_index][0]]
 
                     team_info.append(info)
                     teams_with_data.append(data)
@@ -140,17 +139,17 @@ def main(data_saved: dict) -> None:
                     print(f"\nUpdating Display for {teams[display_index][0]}")
                     reset_window_elements(window)
 
-                    if ("@" not in team_info[display_index]['above_score_txt'] and
-                        team_info[display_index]['above_score_txt'] != ""):
-                        window["above_score_txt"].update(font=(settings.FONT, settings.TOP_TXT_SIZE, "underline")),
+                    if ("@" not in team_info[display_index]["above_score_txt"] and
+                        team_info[display_index]["above_score_txt"] != ""):
+                        window["above_score_txt"].update(font=(settings.FONT, settings.TOP_TXT_SIZE, "underline"))
 
-                    should_scroll = will_text_fit_on_screen(team_info[display_index]['bottom_info'])
+                    should_scroll = will_text_fit_on_screen(team_info[display_index]["bottom_info"])
 
                     for key, value in team_info[display_index].items():
                         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                             window[key].update(filename=value)
                         elif "possession" not in key and "redzone" not in key:
-                            window[key].update(value=value, text_color='white')
+                            window[key].update(value=value, text_color="white")
 
                     if settings.no_spoiler_mode:
                         set_spoiler_mode(window, team_info=team_info[display_index])
@@ -183,7 +182,7 @@ def main(data_saved: dict) -> None:
 
             # Scroll bottom info if text is too long
             if should_scroll and not settings.no_spoiler_mode:
-                text = team_info[original_index]['bottom_info'] + "         "
+                text = team_info[original_index]["bottom_info"] + "         "
                 for _ in range(2):
                     for _ in range(len(text)):
                         event = window.read(timeout=100)
@@ -216,7 +215,7 @@ def main(data_saved: dict) -> None:
                     time.sleep(30)
                     time_till_clock = time_till_clock + 1
                 if time_till_clock >= 12:  # 6 minutes without data, display clock
-                    message = 'Failed to Get Data, trying again every 3 minutes'
+                    message = "Failed to Get Data, trying again every 3 minutes"
                     teams_with_data = clock(window, message)
                 # Reset timers
                 while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:

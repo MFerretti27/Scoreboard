@@ -1,9 +1,16 @@
-import FreeSimpleGUI as sg  # type: ignore
+"""GUI Layout screen for showing instructions in main menu."""
+import FreeSimpleGUI as Sg  # type: ignore
 
 import settings
 
 
 def create_instructions_layout(window_width: int) -> list:
+    """Create the layout for instructions screen.
+
+    :param window_width: The width of the screen being used
+
+    :return layout: List of elements and how the should be displayed
+    """
     common_base_widths = [1366, 1920, 1440, 1280]
     base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
     scale = window_width / base_width
@@ -12,18 +19,17 @@ def create_instructions_layout(window_width: int) -> list:
     text_size = min(max_size, max(20, int(25 * scale)))
     button_size = min(max_size, max(48, int(50 * scale)))
     instructions_size = min(max_size, max(25, int(20 * scale)))
-    layout = [
-        [sg.Text('Manual', font=(settings.FONT, title_size, "underline"), justification='center', expand_x=True)],
-        [sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
-                      no_scrollbar=False, font=('Courier', text_size))],
+    return [
+        [Sg.Text("Manual", font=(settings.FONT, title_size, "underline"), justification="center", expand_x=True)],
+        [Sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
+                      no_scrollbar=False, font=("Courier", text_size))],
         [
-            [sg.VPush()],
-            sg.Push(),
-            sg.Button('Back', font=(settings.FONT, button_size)),
-            sg.Push(),
+            [Sg.VPush()],
+            Sg.Push(),
+            Sg.Button("Back", font=(settings.FONT, button_size)),
+            Sg.Push(),
         ],
     ]
-    return layout
 
 
 help_text = """
@@ -42,7 +48,7 @@ Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.
 
 How Data is Displayed
 ------------------------
-- Only displays teams that have upcoming or recent games (not offseason or long gaps).
+- Only displays teams that have upcoming or recent games (not off-season or long gaps).
 - Completed games stay visible for 7 days unless new data replaces them (can be changed in settings).
 - Prioritizes displaying teams currently playing (Unless changed in settings):
     - One team playing: display only that team.
