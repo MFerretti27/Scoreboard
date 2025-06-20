@@ -211,8 +211,7 @@ def get_data(team: list[str]) -> tuple:
                     team_info["home_bonus"] = False
                     saved_info = copy.deepcopy(team_info)
                     try:
-                        # Have to give short name due to how finding nba works
-                        team_info = append_nba_data(team_info, home_short_name)
+                        team_info = append_nba_data(team_info, team_name)
                     except Exception as e:
                         print(f"Failed to get data from NBA API: {e}")
                         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary

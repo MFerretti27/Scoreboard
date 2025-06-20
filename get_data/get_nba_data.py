@@ -118,10 +118,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     games = scoreboard.ScoreBoard()
     data = games.get_dict()
     for game in data["scoreboard"]["games"]:
-        if team_name.upper() in (
-            game["homeTeam"]["teamName"].upper(),
-            game["awayTeam"]["teamName"].upper(),
-        ):
+        if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
 
             # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
