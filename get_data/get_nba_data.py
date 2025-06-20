@@ -220,7 +220,7 @@ def restructure_clock(game: dict) -> str:
         else:
             quarter = "Overtime"
 
-        if minutes == 0 and seconds == 0:
+        if result == "0:00":
             if quarter == 1:
                 return "End of 1st"
             if quarter == 2:
