@@ -53,11 +53,6 @@ def get_data(team: list[str]) -> tuple:
             if team_name.upper() in event["name"].upper():
                 print(f"Found Game: {team_name}")
 
-                # # If mlb game, is double header, and first game finished get second game/instance
-                # if doubleheader == 1:
-                #     # Reset, avoid infinite loop for second game, and for other instance calls for other teams
-                #     doubleheader = 0
-
                 team_has_data = True
 
                 competition = response_as_json["events"][index]["competitions"][0]
