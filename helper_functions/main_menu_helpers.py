@@ -162,6 +162,15 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         removed_teams = \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 
+        # Update the settings.teams list in-memory for when downloading logos later
+        for team in added_teams:
+            settings.teams.append([team])
+        for team in removed_teams:
+            try:
+                settings.teams.remove([team])
+            except ValueError:
+                print("Failed to delete instance of team in settings.teams list")  # In case it was already removed
+
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
         if removed_teams:

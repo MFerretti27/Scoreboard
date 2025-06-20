@@ -16,8 +16,8 @@ def new_league_added() -> bool:
 
     :return: True if new league added, False otherwise
     """
-    folder_names = ([name for name in Path(Path.cwd() / "images" / " sport_logos").iterdir()
-                     if Path.is_dir(Path.cwd() / "images" / " sport_logos" / name)])
+    folder_names = ([name for name in Path(Path.cwd() / "images" / "sport_logos").iterdir()
+                     if Path.is_dir(Path.cwd() / "images" / "sport_logos" / name)])
 
     return any(league_name[1].upper() not in folder_names for league_name in settings.teams)
 
@@ -111,7 +111,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 print(f"Downloading logo for {team_name} from {teams[i][1]}...")
                 print()
 
-                img_path_png = (Path.cwd() / "images" / "sport_logos" / str(team_name)).with_suffix("_Original.png")
+                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png" 
                 response = requests.get(logo_url, stream=True, timeout=5)
                 with Path(img_path_png).open("wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
@@ -136,15 +136,17 @@ def get_team_logos(window: Sg.Window, teams: list) -> None:
     :param TEAM_LOGO_SIZE: Size of team logos to display
     """
     already_downloaded = True
-    if not Path.exists(Path.cwd() / "images" / " sport_logos"):
-        Path.mkdir((Path.cwd() / "images" / " sport_logos"), exist_ok=True)
+    if not Path.exists(Path.cwd() / "images" / "sport_logos"):
+        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
         download_team_logos(window, teams)
         # Resize local images to fit on screen
-        resize_images_from_folder(["/images/Networks/",
-                                   "/images/baseball_base_images/",
-                                   "/images/conference_championship_images/",
-                                   "/images/playoff_images/",
-                                   "/images/championship_images/"])
+        resize_images_from_folder([
+            Path("images/Networks"),
+            Path("images/baseball_base_images"),
+            Path("images/conference_championship_images"),
+            Path("images/playoff_images"),
+            Path("images/championship_images"),
+        ])
         already_downloaded = False  # If hit this is the first time getting images and resizing
 
     # If user selects new team in a league they haven't selected before download all logos in that league
@@ -153,8 +155,8 @@ def get_team_logos(window: Sg.Window, teams: list) -> None:
 
     if settings.always_get_logos and already_downloaded:
         # Dont want to continually resize images multiple times, so remove
-        shutil.rmtree(Path.cwd() / "images" / " sport_logos")
-        Path.mkdir((Path.cwd() / "images" / " sport_logos"), exist_ok=True)
+        shutil.rmtree(Path.cwd() / "images" / "sport_logos")
+        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
         download_team_logos(window, teams)
 
 
@@ -177,17 +179,16 @@ def get_random_logo() -> dict:
     return logos
 
 
-def resize_images_from_folder(image_folder_path: list) -> None:
+def resize_images_from_folder(image_folder_path: list[Path]) -> None:
     """Resize all images in the folder.
 
     :param image_folder_path: folder to look through to find png images
     """
     for folder in image_folder_path:
-        folder_path = Path.cwd() + folder
-        files = [
-            f for f in Path(folder_path).iterdir()
-            if Path.is_file(Path.cwd() / "images" / " sport_logos" / f) and str(f).lower().endswith(".png")
-        ]
-        for file in files:
-            file_name = file.name
-            resize_image(f"{folder_path}/{file}", folder_path, file_name)
+            folder_path = Path.cwd() / folder
+            files = [
+                f for f in folder_path.iterdir()
+                if f.is_file() and f.suffix.lower() == ".png"
+            ]
+            for file in files:
+                resize_image(file, file.parent, file.name)
