@@ -190,7 +190,8 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info["top_info"] = away_stats + "\t\t " + home_stats
 
             if settings.display_nba_play_by_play:
-                team_info["bottom_info"] += get_play_by_play(game["gameId"])
+                team_info["above_score_txt"] = team_info["bottom_info"]  # Move clock to above score
+                team_info["bottom_info"] = get_play_by_play(game["gameId"])
 
             break  # Found team and got data needed, dont continue loop
 

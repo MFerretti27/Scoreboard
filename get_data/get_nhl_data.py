@@ -170,6 +170,7 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
             team_info["home_power_play"] = False
 
         if settings.display_nhl_play_by_play:
+            team_info["above_score_txt"] = team_info["bottom_info"]  # Move clock to above score
             team_info["bottom_info"] += get_play_by_play(box_score["id"],
                                                         box_score["homeTeam"]["abbrev"],
                                                         box_score["awayTeam"]["abbrev"])
