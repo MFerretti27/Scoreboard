@@ -237,4 +237,4 @@ def get_play_by_play(game_id: int) -> str:
     actions = pbp.get_dict()["game"]["actions"]  # plays are referred to in the live data as `actions`
     last_action = actions[-1]
 
-    return str(last_action["description"])
+    return " " + str(last_action["description"])
