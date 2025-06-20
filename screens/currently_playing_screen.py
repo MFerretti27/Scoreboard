@@ -166,7 +166,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                                                        text_color="yellow")
 
                     # Ensure bonus is in dictionary to not cause key error
-                    if "away_power_play" in key or "home_power_play" in team_info[display_index]:
+                    if "home_bonus" in key or "away_bonus" in team_info[display_index]:
                         if team_info[display_index]["home_bonus"] and key == "home_score":
                             window[key].update(value=value, text_color="orange")
                         if team_info[display_index]["away_bonus"] and key == "away_score":
