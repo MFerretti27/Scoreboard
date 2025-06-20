@@ -230,7 +230,7 @@ def restructure_clock(game: dict) -> str:
             if quarter == 4:
                 return "End of 4th"
 
-        return result + " " + quarter
+        return result + " - " + quarter
     return ""
 
 
