@@ -111,7 +111,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 print(f"Downloading logo for {team_name} from {teams[i][1]}...")
                 print()
 
-                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png" 
+                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
                 response = requests.get(logo_url, stream=True, timeout=5)
                 with Path(img_path_png).open("wb") as file:
                     for chunk in response.iter_content(chunk_size=1024):
@@ -122,7 +122,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                     resize_image(img_path_png, sport_dir, team_name)
 
                 # Delete the original .png file
-                Path.unlink(img_path_png)
+                Path.unlink(Path(img_path_png))
                 window.refresh()  # Refresh to display text
 
     if Path.exists(Path.cwd() / "images" / "sport_logos"):
