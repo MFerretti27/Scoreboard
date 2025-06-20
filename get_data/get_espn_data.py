@@ -109,7 +109,7 @@ def get_data(team: list[str]) -> tuple:
 
                 # Check if Team is Done Playing
                 if any(keyword in str(team_info["bottom_info"])
-                       for keyword in ["Delayed", "Postponed", "Final", "Canceled"]):
+                       for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):
                     currently_playing = False
                     team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
 

@@ -3,7 +3,7 @@ import re
 from datetime import UTC, datetime
 from pathlib import Path
 
-from nba_api.live.nba.endpoints import playbyplay, scoreboard  # type: ignore
+from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore
 from nba_api.stats.endpoints import teaminfocommon  # type: ignore
 
 import settings
@@ -95,9 +95,8 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
                 team_info = append_nba_data(team_info, team_name.split(" ")[-1])
                 currently_playing = True
 
-                # Re-structure clock and get play by play
-                team_info["top_info"] = restructure_clock(game)
-                team_info["bottom_info"] = get_play_by_play(game["gameId"])
+                # Re-structure clock
+                team_info["bottom_info"] = restructure_clock(game)
 
             if get_game_type("NBA", team_name) != "":
                 # If game type is not empty, then its the Finals, display it
@@ -167,8 +166,34 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
                 team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
-                if settings.display_nba_play_by_play:
-                    team_info["bottom_info"] += get_play_by_play(game["gameId"])
+            if settings.display_nba_shooting:
+                box_score = boxscore.BoxScore(game["gameId"]).get_dict()
+                home_field_goal_attempt = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsAttempted", 0))
+                home_field_goal_made = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsMade", 0))
+
+                home_3pt_attempt = (box_score["game"]["homeTeam"]["statistics"].get("threePointersAttempted", 0))
+                home_3pt_made= (box_score["game"]["homeTeam"]["statistics"].get("threePointersMade", 0))
+
+                away_field_goal_attempt = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsAttempted", 0))
+                away_field_goal_made = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsMade", 0))
+
+                away_3pt_attempt = (box_score["game"]["awayTeam"]["statistics"].get("threePointersAttempted", 0))
+                away_3pt_made = (box_score["game"]["awayTeam"]["statistics"].get("threePointersMade", 0))
+
+                away_stats = (
+                    f"FG: {away_field_goal_made}/{away_field_goal_attempt} "
+                    f"3PT: {away_3pt_made}/{away_3pt_attempt}"
+                )
+
+                home_stats = (
+                    f"FG: {home_field_goal_made}/{home_field_goal_attempt} "
+                    f"3PT: {home_3pt_made}/{home_3pt_attempt}"
+                )
+
+                team_info["top_info"] = away_stats + "\t\t " + home_stats
+
+            if settings.display_nba_play_by_play:
+                team_info["bottom_info"] += get_play_by_play(game["gameId"])
 
             break  # Found team and got data needed, dont continue loop
 
