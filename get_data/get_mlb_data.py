@@ -248,7 +248,4 @@ def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> 
         base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
         team_info["under_score_image"] = f"images/baseball_base_images/{base_image}"
 
-        if "Status Change" in team_info["bottom_info"]:
-            team_info["bottom_info"] = "Game Starting"
-
     return team_info
