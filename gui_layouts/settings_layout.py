@@ -1,5 +1,4 @@
 """GUI Layout for changing scoreboard settings in main menu."""
-import tkinter as tk
 
 import FreeSimpleGUI as Sg  # ignore
 
