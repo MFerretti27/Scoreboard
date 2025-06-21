@@ -2,6 +2,7 @@
 import re
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore
 from nba_api.stats.endpoints import teaminfocommon  # type: ignore
@@ -18,7 +19,7 @@ home_timeouts_saved = 0
 away_timeouts_saved = 0
 
 
-def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
+def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NBA team.
 
     Call this if ESPN fails to get MLB data as backup.
