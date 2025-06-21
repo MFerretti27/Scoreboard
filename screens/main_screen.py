@@ -203,10 +203,17 @@ def main(saved_data: dict) -> None:
             window.refresh()  # Refresh to display text
             append_team_array(settings.teams)  # Get the team league and sport name
             window.refresh()  # Refresh to display text
-            get_team_logos(window, settings.teams)  # Get the team logos
+            download_logo_msg = get_team_logos(window, settings.teams)  # Get the team logos
             redirect.restore_stdout()  # Restore the original stdout after all output tasks are done
-            window["terminal_output"].update(value="Starting scoreboard...")
+            window["terminal_output"].update(value=f"{download_logo_msg}")
             window.refresh()
+
+            # If failed dont start
+            if "Failed" in download_logo_msg:
+                continue
+            else:
+                download_logo_msg = "Starting..."
+
             window.close()
             gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
