@@ -156,18 +156,11 @@ def main(saved_data: dict) -> None:
             display_time = values["display_time"]
             input_error_message = "Please Enter Positive Digits Only"
 
-            font_selected = [key for key in values if key.startswith("font_") and values[key]]
-            no_fonts_available = False
-            if not any(key.startswith("font_") for key in values):
-                no_fonts_available = True
-
             if (positive_num(live_data_delay) and positive_num(fetch_timer) and positive_num(display_timer)
-                and positive_num(display_time) and positive_num(display_timer_live) and
-                (len(font_selected) == 1 or no_fonts_available)):
+                and positive_num(display_time) and positive_num(display_timer_live)):
 
-                new_font = font_selected[0].replace('"', "").replace("font_", "") if font_selected else settings.FONT
                 update_settings(int(live_data_delay), int(fetch_timer), int(display_timer), int(display_time),
-                                int(display_timer_live), new_font, selected_items)
+                                int(display_timer_live), selected_items)
 
                 window.refresh()
                 correct = True
@@ -198,11 +191,6 @@ def main(saved_data: dict) -> None:
             else:
                 window["display_time_message"].update(value="How long to display team info when finished",
                                                       text_color="black")
-            if len(font_selected) != 1 and not no_fonts_available:
-                window["font_message"].update(value="Please Select One Font")
-            else:
-                window["font_message"].update(value="")
-
             if correct:
                 window["confirmation_message"].update(value="Settings saved successfully!")
             else:

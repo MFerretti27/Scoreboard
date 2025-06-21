@@ -34,22 +34,6 @@ def create_settings_layout(window_width: int) -> list:
     text_size = min(max_size, max(12, int(16 * scale)))
 
     current_settings = read_settings_from_file()
-    root = tk.Tk()
-    font_options = sorted(root.tk.call("font", "families"))
-    popular_fonts = [
-        "Arial", "Helvetica", "Times New Roman", "Courier New", "Optima",
-        "Gill Sans", "Comic Sans MS", "Georgia", "Lucida Console",
-        "Calibri", "Trebuchet MS", "Century Gothic", "Consolas",
-        "QuickSand", "Z003", "FreeMono", "P052", "Droid Sans Fallback",
-        "C509", "URW Bookman", "Noto Mono", "PibotoLt",
-    ]
-
-    # Filter the available fonts to include only those that are in the "popular_fonts" list
-    font_options = [font for font in popular_fonts if font in font_options]
-    root.destroy()
-
-    # Split into rows and columns
-    font_rows = [font_options[i:i + 14] for i in range(0, len(font_options), 13)]
 
     general_setting_layout = Sg.Frame(
         "",
@@ -188,18 +172,6 @@ def create_settings_layout(window_width: int) -> list:
                             expand_x=True,
                             default=current_settings.get("prioritize_playing_team", False)),
             ],
-            # Row containing "Change Font" label
-            [Sg.Text("Change Font:", font=(settings.FONT, bottom_label_size)),
-             Sg.Text("", font=(settings.FONT, message_size), key="font_message", text_color="red"),
-             ],
-
-            # Adding the checkboxes using the font
-            *[
-                [Sg.Checkbox(f, key=f"font_{f}", font=(f, message_size), expand_x=True,
-                             default=(f == current_settings["FONT"])) for f in row]
-                for row in font_rows
-            ],
-
         ],
         expand_x=True,
         relief=Sg.RELIEF_SOLID,
