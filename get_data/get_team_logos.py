@@ -163,7 +163,7 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
         download_team_logos(window, teams)
         return check_downloaded_correctly()
 
-    return ""
+    return "Starting..."
 
 def get_random_logo() -> dict:
     """Get 2 random teams from teams array, if only one team then it will return the only team there.
