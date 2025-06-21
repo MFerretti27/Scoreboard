@@ -79,8 +79,8 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
                 if away_team_name.upper() in filename:
                     away_team = filename
 
-            team_info["away_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png")))
-            team_info["home_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png")))
+            team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png")
+            team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png")
 
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]
