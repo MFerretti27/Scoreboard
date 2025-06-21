@@ -211,8 +211,6 @@ def main(saved_data: dict) -> None:
             # If failed dont start
             if "Failed" in download_logo_msg:
                 continue
-            else:
-                download_logo_msg = "Starting..."
 
             window.close()
             gc.collect()  # Clean up memory
