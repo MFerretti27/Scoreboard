@@ -190,7 +190,6 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
     :param display_timer: timer for displaying data in seconds
     :param display_time: time to display team in seconds
     :param display_timer_live: timer for displaying live data in seconds
-    :param font_selected: font selected by user
     :param selected_items: list of selected items to update in settings
 
     :return: None
