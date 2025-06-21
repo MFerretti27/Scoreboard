@@ -128,6 +128,7 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     window["away_timeouts"].update(value="")
     window["home_record"].update(value="")
     window["away_record"].update(value="")
+    window["signature"].update(value="Created By: Matthew Ferretti", text_color="white")
 
     return window
 

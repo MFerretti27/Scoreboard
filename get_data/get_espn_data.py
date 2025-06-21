@@ -214,6 +214,7 @@ def get_data(team: list[str]) -> tuple:
                         team_info = append_nba_data(team_info, team_name)
                     except Exception as e:
                         print(f"Failed to get data from NBA API: {e}")
+                        team_info["signature"] = "Failed to get data from NBA API"
                         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
 
                     if not settings.display_nba_clock:
@@ -231,6 +232,7 @@ def get_data(team: list[str]) -> tuple:
                     # If call to API fails get MLB specific info just from ESPN
                     except Exception as e:
                         print(f"Failed to get data from MLB API: {e}")
+                        team_info["signature"] = "Failed to get data from MLB API"
                         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
                         team_info["bottom_info"] = team_info["bottom_info"].replace("Bot", "Bottom")
                         team_info["bottom_info"] = team_info["bottom_info"].replace("Mid", "Middle")
@@ -306,6 +308,7 @@ def get_data(team: list[str]) -> tuple:
                         team_info = append_nhl_data(team_info, team_name)
                     except Exception as e:
                         print(f"Could not get info from NHL API {e}")
+                        team_info["signature"] = "Failed to get data from NHL API"
                         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
 
                 # If game is over try displaying series information if available
@@ -347,6 +350,7 @@ def get_data(team: list[str]) -> tuple:
     # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
         print(f"Error fetching data from ESPN API: {e}")
+        team_info["signature"] = "Failed to get data from ESPN API"
         traceback.print_exc()  # Prints the full traceback
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
