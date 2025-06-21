@@ -2,6 +2,7 @@
 import re
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore
 from nba_api.stats.endpoints import teaminfocommon  # type: ignore
@@ -18,7 +19,7 @@ home_timeouts_saved = 0
 away_timeouts_saved = 0
 
 
-def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
+def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NBA team.
 
     Call this if ESPN fails to get MLB data as backup.
@@ -79,8 +80,12 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, str], bool, bool]:
                 if away_team_name.upper() in filename:
                     away_team = filename
 
-            team_info["away_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / away_team))
-            team_info["home_logo"] = (str(Path.cwd() / "images" / "sport_logos" / "NBA" / home_team))
+            team_info["away_logo"] = str(
+                Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png")
+                )
+            team_info["home_logo"] = str(
+                Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png")
+                )
 
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]

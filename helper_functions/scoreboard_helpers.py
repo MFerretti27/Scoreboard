@@ -6,6 +6,7 @@ import sys
 import time
 import tkinter as tk
 from tkinter import font as tk_font
+from pathlib import Path
 
 import FreeSimpleGUI as Sg  # type: ignore
 import orjson  # type: ignore
@@ -52,6 +53,8 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["above_score_txt"].update(value="", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
                                      text_color="white")
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
+    window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
+                               text_color="white")
 
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
@@ -65,7 +68,8 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         window.close()
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
-        json_saved_data = orjson.dumps(settings.saved_data)
+        json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
+        json_saved_data = orjson.dumps(json_ready_data)
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
         sys.exit()
 
@@ -170,3 +174,15 @@ def resize_text() -> None:
     print(f"Not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
     print(f"Top txt size:{settings.TOP_TXT_SIZE}")
     print(f"Signature txt size:{settings.SIGNATURE_SIZE}\n")
+
+
+
+def convert_paths_to_strings(obj):
+    if isinstance(obj, dict):
+        return {k: convert_paths_to_strings(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_paths_to_strings(i) for i in obj]
+    elif isinstance(obj, Path):
+        return str(obj)
+    else:
+        return obj

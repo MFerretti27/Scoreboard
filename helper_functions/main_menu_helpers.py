@@ -182,7 +182,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
 
 
 def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
-                    display_timer_live: int, font_selected: str, selected_items: list) -> None:
+                    display_timer_live: int, selected_items: list) -> None:
     """Update settings.py with new values.
 
     :param live_data_delay: delay for live data in seconds
@@ -190,7 +190,6 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
     :param display_timer: timer for displaying data in seconds
     :param display_time: time to display team in seconds
     :param display_timer_live: timer for displaying live data in seconds
-    :param font_selected: font selected by user
     :param selected_items: list of selected items to update in settings
 
     :return: None
@@ -201,8 +200,6 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
     for i, line in enumerate(contents):
         if line.strip().startswith("LIVE_DATA_DELAY ="):
             contents[i] = f"LIVE_DATA_DELAY = {live_data_delay}\n"
-        if line.strip().startswith("FONT ="):
-            contents[i] = f'FONT = "{font_selected}"\n'
         if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
             contents[i] = f"FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n"
         if line.strip().startswith("FETCH_DATA_PLAYING_TIMER ="):

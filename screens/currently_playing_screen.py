@@ -126,6 +126,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             for key, value in team_info[display_index].items():
                 if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
+                elif key == "signature":
+                    window[key].update(filename=value, text_color="red")
                 elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
                       "power_play" not in key):
                     window[key].update(value=value)
