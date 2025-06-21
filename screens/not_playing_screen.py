@@ -149,7 +149,7 @@ def main(data_saved: dict) -> None:
                         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                             window[key].update(filename=value)
                         elif key == "signature":
-                            window[key].update(filename=value, text_color="red")
+                            window[key].update(value=value, text_color="red")
                         elif "possession" not in key and "redzone" not in key:
                             window[key].update(value=value, text_color="white")
 

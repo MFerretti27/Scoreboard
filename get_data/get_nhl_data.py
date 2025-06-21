@@ -74,8 +74,8 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
             home_team = filename
         if away_team_name.upper() in filename:
             away_team = filename
-    team_info["away_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / away_team)
-    team_info["home_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / home_team)
+    team_info["away_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / away_team.replace("PNG", "png"))
+    team_info["home_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / home_team.replace("PNG", "png"))
 
     # Get game time and venue
     iso_string = box_score["startTimeUTC"]

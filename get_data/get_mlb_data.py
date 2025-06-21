@@ -94,8 +94,8 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         if away_team_name.upper() in filename:
             away_team = filename
 
-    team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / away_team
-    team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / home_team
+    team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / away_team.replace("PNG", "png")
+    team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / home_team.replace("PNG", "png")
 
     # Check if game is a championship game, if so display its championship game
     if get_game_type("MLB", team_name) != "":

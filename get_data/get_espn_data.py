@@ -350,7 +350,6 @@ def get_data(team: list[str]) -> tuple:
     # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
         print(f"Error fetching data from ESPN API: {e}")
-        team_info["signature"] = "Failed to get data from ESPN API"
         traceback.print_exc()  # Prints the full traceback
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
@@ -364,6 +363,8 @@ def get_data(team: list[str]) -> tuple:
         else:
             msg = f"Could Not Get {team_name} data"
             raise RuntimeError(msg) from e
+        
+        team_info["signature"] = f"Failed to get data from ESPN API for {team_league}"
         return team_info, team_has_data, currently_playing
 
     return team_info, team_has_data, currently_playing
