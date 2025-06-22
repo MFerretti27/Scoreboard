@@ -9,24 +9,32 @@
     - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
 
 # Screen Shots
-Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code.<br />
-<img width="200" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
-<img width="200" alt="Screenshot 2025-05-23 at 9 38 58 PM" src="https://github.com/user-attachments/assets/875b2eae-882a-46ee-a761-61c07fc6f752" />
-<img width="200" alt="Screenshot 2025-05-23 at 9 39 07 PM" src="https://github.com/user-attachments/assets/ace14a8b-e4df-4ca2-a3c0-13b2d4a5a0c0" />
+Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code:<br />
+<img width="175" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
+<img width="175" alt="Screenshot 2025-05-23 at 9 38 58 PM" src="https://github.com/user-attachments/assets/875b2eae-882a-46ee-a761-61c07fc6f752" />
+<img width="175" alt="Screenshot 2025-05-23 at 9 39 07 PM" src="https://github.com/user-attachments/assets/ace14a8b-e4df-4ca2-a3c0-13b2d4a5a0c0" />
+<img width="175" alt="image" src="https://github.com/user-attachments/assets/64f473c3-21d4-4b26-866d-b9feb25a8fca" />
 
 
 Screens when no teams are currently playing but have games scheduled: <br />
-<img width="200" alt="NHL Not Playing" src="https://github.com/user-attachments/assets/3547da83-0236-495d-ae7d-4b494e1c860a" />
-<img width="200" alt="NFL Not Playing" src="https://github.com/user-attachments/assets/0a164789-db49-475a-8928-a6b8be7eb3c8" />
-<img width="200" alt="Screenshot 2025-05-23 at 7 34 50 PM" src="https://github.com/user-attachments/assets/3e22b6d5-d841-485e-bc24-50bf449109ca" />
+<img width="175" alt="Screenshot 2025-06-19 at 5 05 03 PM" src="https://github.com/user-attachments/assets/752c588a-986f-462b-b354-4b4265d32dbe" />
+<img width="175" alt="Screenshot 2025-05-23 at 7 34 50 PM" src="https://github.com/user-attachments/assets/3e22b6d5-d841-485e-bc24-50bf449109ca" />
+<img width="175" alt="NHL Not Playing" src="https://github.com/user-attachments/assets/3547da83-0236-495d-ae7d-4b494e1c860a" />
+<img width="175" alt="NFL Not Playing" src="https://github.com/user-attachments/assets/0a164789-db49-475a-8928-a6b8be7eb3c8" />
 
 Screens when teams are currently playing:<br />
-<img width="200" alt="MLB Playing" src="https://github.com/user-attachments/assets/7bf61e47-0e7a-4783-bfcb-59c563b3dc30" />
-<img width="200" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
+<img width="175" alt="MLB Playing" src="https://github.com/user-attachments/assets/7bf61e47-0e7a-4783-bfcb-59c563b3dc30" />
+<img width="175" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
 
 Screen when games are over:<br />
-<img width="200" alt="Screenshot 2025-05-21 at 1 46 33 AM" src="https://github.com/user-attachments/assets/1e87ce4c-3169-449c-b937-4e4ca21a63ef" />
-<br />
+<img width="175" alt="Screenshot 2025-05-21 at 1 46 33 AM" src="https://github.com/user-attachments/assets/1e87ce4c-3169-449c-b937-4e4ca21a63ef" />
+<img width="175" alt="Screenshot 2025-06-20 at 12 23 38 AM" src="https://github.com/user-attachments/assets/39377230-fc2a-4db8-9d2f-023490d649fd" />
+
+
+If game is in a playoffs/champianship game, or in the Bonus/PowerPlay/RedZone it will show something like this:<br />
+<img width="175" alt="Screenshot 2025-06-09 at 10 18 15 PM" src="https://github.com/user-attachments/assets/a9e6693d-10ec-4f2c-943c-5fe9dca71752" />
+
+
 
 ## Controls
 Pressing keys on the keyboard while script is running will trigger different actions.
@@ -41,43 +49,84 @@ Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.<
 
 ## How to Run
 Using Python run the main.py file e.g. ```python main.py``` <br />
-- This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries should already be on your machine, full list of all libraries listed in Requirements section)<br /><br />
-- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates of code, change display or of teams, and change overall settings. The settings allow you to change what elements on the scoreboard are displayed such as what font text is used, how long to display each team for, adding a delay in displaying live data to not be too fast.
-- Press the start button on main menu to start displaying teams selected.
-- Press Escape to return to main menu or press escape while at main menu to quit.
+- This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries should already be on your machine)<br />
+- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates of code, change display order of teams, and change overall settings. The settings allow you to change what elements on the scoreboard are displayed, how long to display each team for, adding a delay in displaying live data to not be too fast.<br />
+- Press the Start button on main menu to start displaying teams selected.<br />
+- Press Escape on the keyboard to return to main menu or press escape while at main menu to quit.<br />
 
 
 ## How Data is Collected
 -	Primary source: ESPN API.
 -	Secondary Source: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
 -	If only primary source fails:
-    -   Tries backup APIs based on the sport.
+    -   Tries backup APIs based on the sport, all data but Spread/OverUnder will still be displayed.
+    -   A small message will appear in bottom right telling ESPN API failed (Only will be displayed for team that it failed for).
 -   If only secondary sources fail:
     -   Displays basic info from ESPN.
-    -   Some details (last pitch thrown, bonus status, shots on goal, etc) might be missing but most data will still be displayed.
+    -   Some details (last pitch thrown, bonus status, shots on goal, play by play, etc) might be missing but most data will still be displayed.
+    -   A small message will appear in bottom right telling MLB/NBA/NFL/NHL API failed (Only will be displayed for team that it failed for).
 -	If all data fetching fails:
     -	Shows a clock until connection/data is restored.
 -	Logos are gotten when first running for the first time.
-    -	If you need to re-download logos such as if a team has updated their logo, you can re-download logos by selecting ""Always Get Logos when Starting" in settings.
+    -	If you need to re-download logos or resize images such as if a team has updated their logo, you can re-download logos and resize by selecting "Download/Resize Images when Starting" in settings.
 -	Any Game information that is more than a month away will not display.
 
 ## Main Screen
 -	The main screen allows you to:
     -	Update scoreboard.
-        - Pressing Update bottom will see if there is an update, if there is click it again to update.
+        - Pressing Update bottom will check Github if there is an update, if there is click it again to update.
     -	Restore to previous version.
         - If update went wrong or critical issues arise in newest version you can restore to a previous software version you were on before.
+        - Everytime you update scoreboard through update button it will save a local copy of older version in the same directory.
     -	Add teams from MLB, NBA, NHL, and NFL to be follow and display.
     -	Set the order of teams to be displayed.
-    -	Change what is displayed (should be self-explanatory on settings screen).
-    -	Change functionality of scoreboard.
+    -	Change what is displayed (See Scoreboard screen section below to see what information can be displayed or not displayed on the scoreboard screen).
+    -	Change functionality of scoreboard in settings section.
         - You can set a delay for live data so that if watching on TV the scoreboard doesn’t update before TV has.
         - How often each team is displayed on screen for.
             - This can be done individually for when currently playing and when no team is playing.
         - How often the scoreboard should update new information.
-            - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV)
-        - How long team information should be displayed when game is over. 
+            - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV).
+        - How long team information should be displayed once game is over.
 
+## Scoreboard Screen
+-   Home team will always display on the right.
+-	Scoreboard will prioritize games playing meaning if a game is finished/scheduled for later it wont display until no games are currently playing (Can be changed in settings).
+-	Scoreboard will always disiplay team logos, score, game time/game status and teams names.
+-	Other generic elements below can be displayed or not displayed based of settings:
+    -	Team season record.
+    -	Betting Odds MoneyLine/OverUnder/Spread before the game has started.
+    -	Venue of where game is being played before the game has started (stadium name).
+    -	Date of when game finished.
+    -	Series unformation for sports play a series of games (MLB, NBA, NHL).
+    -	The broadcast network game is on, only if its national broadcast not local one.
+-	Sports specific elements can be displayed or not displated based off settings:
+    -	MLB
+          -	Last pitch thrown.
+          -	Batter Count.
+          -	Image of bases showing what base is occupied.
+          -	Hits and errors of each team.
+          -	What inning the game is in.
+          -	How many outs there are.
+          -	Discription of last play.
+    -	NBA
+          -	How mant Timeouts each team has.
+          -	If a team is in the bouns (If a team is in the bonus their score will go orange).
+          -	Game Clock and quarter the game is in.
+          -	Shooting stats of each team (3pt/FG made and attempted).
+          -	Play by Play of the game.
+    -	NHL
+          -	The number of shots on goal each team has.
+          -	If a team is on a power play (If a team is on a power play their score will go blue).
+          -	Game Clock and period the game is in.
+          -	Play by Play of the game.
+    -	NFL
+          -	How mant Timeouts each team has.
+          -	If a team is in the RedZone (If a team is in the RedZone their score will go red).
+          -	What team has possession of the ball (What ever team has possession their score will be underined).
+          -	What down and yardage a team is at on the feild.
+          -	Game Clock and quarter the game is in.
+     
 ## Clock Screen
 -	Displays a clock:
     -	If data fetching fails.
@@ -93,7 +142,6 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 - Python needs to be installed and in your PATH (install [HERE](https://www.python.org/downloads/))<br />
 - pip (usually installed with python) needs to be installed <br />
 - All other requirements are in requirements.txt file and will be installed when you run the main.py file in virtual environment.
-- Full list of all library's used below:<br />
 
 Unique Libraries Script needs to be installed to work (these will be installed in virtual environment when running main.py):<br />
   - adafruit-circuitpython-ticks -- Used to keep track of when to fetch data and switch displaying teams <br />
@@ -101,28 +149,11 @@ Unique Libraries Script needs to be installed to work (these will be installed i
   - pillow -- Used to resize logo images without losing quality <br />
   - requests -- Used for being able to grab data from ESPN API <br />
   - ruff -- Used for code quality rules for repo <br />
-  - MLB-StatsAPI -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB
-  - nba_api -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB
-  - nhl-api-py -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB
-  - rapidfuzz -- Used to find best matches within lists
-<br />
-
-
-Other libraries Used (should already be on system without having to be installed):
-  - datetime -- Used to get when game is scheduled/ended
-  - subprocess -- Used for attempting to recover internet connection
-  - platform -- Used for attempting to recover internet connection by knowing what commands to run based on OS computer is running
-  - sys -- Used to determine if you are in virtual environment (ensures script is being run correctly)
-  - os -- Used to see if file paths exists
-  - time -- Used for sleep functionality
-  - venv -- Used for creating virtual environment to install script dependencies and run script
-  - gc -- Garbage collection to ensure memory isn’t being eaten up
-  - random -- Used for getting random index's of list to display random logos of your teams
-  - shutil -- Used for safely deleting folder for downloading team logos multiple times
-  - copy -- Used for copying full dictionaries and their contents for storing information to display later
-  - traceback -- Used to print full traceback on error for debugging help
-  - ast -- Used to assign elements in list a number for setting order
-  - io -- Used to display terminal information on gui, this shows what's going on while waiting for logos to be downloaded
+  - MLB-StatsAPI -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
+  - nba_api -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
+  - nhl-api-py -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
+  - rapidfuzz -- Used to find best matches within lists <br />
+  - orjson -- Used to send data between subproocces as JSON <br />
 
 ## Hardware Recommended
 - Raspberry PI (3b+ and up, the better the CPU the less lag displaying images)
