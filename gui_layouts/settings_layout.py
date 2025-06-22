@@ -162,7 +162,7 @@ def create_settings_layout(window_width: int) -> list:
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_date_ended", False)),
-                Sg.Checkbox("Download/Resize Logos when Starting", key="always_get_logos",
+                Sg.Checkbox("Download/Resize Images when Starting", key="always_get_logos",
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("always_get_logos", False)),
