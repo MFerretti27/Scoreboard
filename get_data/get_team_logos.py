@@ -17,7 +17,7 @@ def new_league_added() -> bool:
 
     :return: True if new league added, False otherwise
     """
-    folder_names = ([name for name in Path(Path.cwd() / "images" / "sport_logos").iterdir()
+    folder_names = ([str(name).split("/")[-1] for name in Path(Path.cwd() / "images" / "sport_logos").iterdir()
                      if Path.is_dir(Path.cwd() / "images" / "sport_logos" / name)])
 
     return any(league_name[1].upper() not in folder_names for league_name in settings.teams)
@@ -67,6 +67,11 @@ def resize_image(image_path: str | Path, directory: str | Path, file_name: str) 
         new_width = int(width * (iteration + .005))
         new_height = int(height * (iteration + .005))
 
+    # If images dont need resizing then dont resave images (images get distorted over time, copy of a copy)
+    if abs(width - new_width) <= 3 and abs(height - new_height) <= 3 and "sport_logos" not in str(image_path):
+        print(f"{file_name} Does not need resizing")
+        return
+
     print(f"Resizing {file_name} logo to {new_width}x{new_height} from {width}x{height}.")
 
     if ".png" in file_name:  # Remove .png if in filename as it will be saved with .png below
@@ -82,7 +87,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
     """Use ESPN API to download team logos for all leagues that user selects for their teams.
 
     :param teams: Dictionary with teams to display
-    :param TEAM_LOGO_SIZE: Size of team logos to display
+    :param teams: List of teams containing leagues to get logos for
     """
     # Loop through each league to get the teams
     for i in range(len(teams)):
@@ -127,7 +132,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 window.refresh()  # Refresh to display text
 
     if Path.exists(Path.cwd() / "images" / "sport_logos"):
-        print("All logos have been downloaded!")
+        print("All logos have been downloaded!\n")
 
 
 def get_team_logos(window: Sg.Window, teams: list) -> str:
@@ -135,6 +140,8 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
 
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
+
+    :return: message to display if things logos where downloaded and resized successful or failed
     """
     already_downloaded = True
     if not Path.exists(Path.cwd() / "images" / "sport_logos"):
@@ -161,6 +168,13 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
         shutil.rmtree(Path.cwd() / "images" / "sport_logos")
         Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
         download_team_logos(window, teams)
+        resize_images_from_folder([
+            Path("images/Networks"),
+            Path("images/baseball_base_images"),
+            Path("images/conference_championship_images"),
+            Path("images/playoff_images"),
+            Path("images/championship_images"),
+        ])
         return check_downloaded_correctly()
 
     return "Starting..."
