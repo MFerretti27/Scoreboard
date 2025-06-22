@@ -141,7 +141,7 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
     :param teams: Dictionary with teams to display
     :param TEAM_LOGO_SIZE: Size of team logos to display
 
-    :return" message to display if things logos where downloaded and resized successful or failed
+    :return: message to display if things logos where downloaded and resized successful or failed
     """
     already_downloaded = True
     if not Path.exists(Path.cwd() / "images" / "sport_logos"):
