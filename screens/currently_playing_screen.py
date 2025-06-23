@@ -95,6 +95,20 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                             if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
                                 team_info[index]["above_score_txt"] = ""
                             team_info[index]["under_score_image"] = ""
+
+                            # Ensure score color doesn't display in delay
+                            if "possession" in team_info and "redzone" in team_info:
+                                team_info[display_index]["home_redzone"] = False
+                                team_info[display_index]["away_redzone"] = False
+                                team_info[display_index]["home_possession"] = False
+                                team_info[display_index]["away_possession"] = False
+                            elif "bonus" in team_info:
+                                team_info[display_index]["home_bonus"] = False
+                                team_info[display_index]["away_bonus"] = False
+                            elif "power_play"  in team_info:
+                                team_info[display_index]["home_power_play"] = False
+                                team_info[display_index]["away_power_play"] = False
+
                         index += 1
             if settings.delay and first_time:
                 index = 0
@@ -109,6 +123,18 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                         if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
                             team_info[index]["above_score_txt"] = ""
                         team_info[index]["under_score_image"] = ""
+                        # Ensure score color doesn't display in delay
+                        if "possession" in team_info and "redzone" in team_info:
+                            team_info[display_index]["home_redzone"] = False
+                            team_info[display_index]["away_redzone"] = False
+                            team_info[display_index]["home_possession"] = False
+                            team_info[display_index]["away_possession"] = False
+                        elif "bonus" in team_info:
+                            team_info[display_index]["home_bonus"] = False
+                            team_info[display_index]["away_bonus"] = False
+                        elif "power_play"  in team_info:
+                            team_info[display_index]["home_power_play"] = False
+                            team_info[display_index]["away_power_play"] = False
                     index += 1
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer

@@ -121,7 +121,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
 
     # Save away @ home to display if quarter End
-    saved_team_names = team_info["top_info"]
+    saved_team_names = team_info["above_score_txt"]
 
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
     games = scoreboard.ScoreBoard()
