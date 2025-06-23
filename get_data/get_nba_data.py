@@ -153,7 +153,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
                     home_timeouts = home_timeouts_saved
                     away_timeouts = away_timeouts_saved
-                    team_info["home_bonus"] = away_team_bonus
+                    team_info["home_bonus"] = home_team_bonus
                     team_info["away_bonus"] = away_team_bonus
                 else:
                     home_timeouts_saved = home_timeouts
