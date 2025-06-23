@@ -195,8 +195,9 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                         window["away_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
                                                        text_color="yellow")
 
+
                     # Ensure bonus is in dictionary to not cause key error
-                    if "home_bonus" in key or "away_bonus" in key:
+                    if "home_bonus" in team_info[display_index] or "away_bonus" in team_info[display_index]:
                         if team_info[display_index]["home_bonus"] and key == "home_score":
                             window[key].update(value=value, text_color="orange")
                         if team_info[display_index]["away_bonus"] and key == "away_score":
@@ -221,7 +222,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                     # Ensure power play is in dictionary to not cause key error
-                    if "away_power_play" in key or "home_power_play" in key:
+                    if "home_power_play" in team_info[display_index] or "away_power_play" in team_info[display_index]:
                         if team_info[display_index]["home_power_play"] and key == "home_score":
                             window["home_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
                                                         text_color="blue")
