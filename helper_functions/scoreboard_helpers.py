@@ -5,8 +5,8 @@ import subprocess
 import sys
 import time
 import tkinter as tk
-from tkinter import font as tk_font
 from pathlib import Path
+from tkinter import font as tk_font
 
 import FreeSimpleGUI as Sg  # type: ignore
 import orjson  # type: ignore

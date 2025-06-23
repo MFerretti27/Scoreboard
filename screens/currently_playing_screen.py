@@ -158,6 +158,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
                 # NBA Specific display size for top info
                 if "NBA" in sport_league.upper() and teams_currently_playing[display_index]:
+                    if key == "above_score_txt" and settings.display_nba_play_by_play:
+                        window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
                     if key == "top_info":
                         window["top_info"].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
                     elif key == "home_timeouts":
@@ -189,6 +191,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
                     if key == "top_info":
                         window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+                    if key == "above_score_txt" and settings.display_nhl_power_play:
+                        window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
                     # Ensure power play is in dictionary to not cause key error
                     if "away_power_play" in key or "home_power_play" in team_info[display_index]:

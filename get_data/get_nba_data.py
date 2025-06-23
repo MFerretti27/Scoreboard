@@ -119,6 +119,10 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     :return team_info: dictionary containing team information to display
     """
     global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
+
+    # Save away @ home to display if quarter End
+    saved_team_names = team_info["top_info"]
+
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
     games = scoreboard.ScoreBoard()
     data = games.get_dict()
@@ -197,6 +201,10 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
             if settings.display_nba_play_by_play:
                 team_info["above_score_txt"] = team_info["bottom_info"]  # Move clock to above score
                 team_info["bottom_info"] = get_play_by_play(game["gameId"])
+                if "End" in team_info["bottom_info"]:
+                    team_info["bottom_info"] = team_info["above_score_txt"]
+                    team_info["above_score_txt"] = saved_team_names
+
 
             break  # Found team and got data needed, dont continue loop
 
