@@ -97,15 +97,16 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                             team_info[index]["under_score_image"] = ""
 
                             # Ensure score color doesn't display in delay
-                            if "possession" in team_info and "redzone" in team_info:
+                            if ("home_possession" in team_info and "away_possession" in team_info
+                                and "home_redzone" in team_info and "away_redzone" in team_info):
                                 team_info[display_index]["home_redzone"] = False
                                 team_info[display_index]["away_redzone"] = False
                                 team_info[display_index]["home_possession"] = False
                                 team_info[display_index]["away_possession"] = False
-                            elif "bonus" in team_info:
+                            elif "home_bonus" in team_info and "away_bonus" in team_info:
                                 team_info[display_index]["home_bonus"] = False
                                 team_info[display_index]["away_bonus"] = False
-                            elif "power_play"  in team_info:
+                            elif "home_power_play" in team_info and "away_power_play" in team_info:
                                 team_info[display_index]["home_power_play"] = False
                                 team_info[display_index]["away_power_play"] = False
 
@@ -124,15 +125,16 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                             team_info[index]["above_score_txt"] = ""
                         team_info[index]["under_score_image"] = ""
                         # Ensure score color doesn't display in delay
-                        if "possession" in team_info and "redzone" in team_info:
+                        if ("home_possession" in team_info and "away_possession" in team_info
+                            and "home_redzone" in team_info and "away_redzone" in team_info):
                             team_info[display_index]["home_redzone"] = False
                             team_info[display_index]["away_redzone"] = False
                             team_info[display_index]["home_possession"] = False
                             team_info[display_index]["away_possession"] = False
-                        elif "bonus" in team_info:
+                        elif "home_bonus" in team_info and "away_bonus" in team_info:
                             team_info[display_index]["home_bonus"] = False
                             team_info[display_index]["away_bonus"] = False
-                        elif "power_play"  in team_info:
+                        elif "home_power_play" in team_info and "away_power_play" in team_info:
                             team_info[display_index]["home_power_play"] = False
                             team_info[display_index]["away_power_play"] = False
                     index += 1
