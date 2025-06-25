@@ -25,7 +25,7 @@ from helper_functions.scoreboard_helpers import (
     will_text_fit_on_screen,
 )
 from screens.clock_screen import clock
-from screens.currently_playing_screen import team_currently_playing
+from screens.currently_playing_screen import CurrentlyPlayingScreen
 
 
 ##################################
@@ -85,7 +85,7 @@ def main(data_saved: dict) -> None:
                     # If Game in Play call function to display data differently
                     if currently_playing:
                         print(f"{teams[fetch_index][0]} Currently Playing")
-                        team_info = team_currently_playing(window, teams)
+                        team_info = CurrentlyPlayingScreen.team_currently_playing(CurrentlyPlayingScreen(window, teams), window, teams)
                         # Reset timers
                         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
                             display_clock = ticks_add(display_clock, display_timer)
