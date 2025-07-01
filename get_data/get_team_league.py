@@ -51,6 +51,98 @@ ALL_TEAMS = {
     "NHL": NHL,
 }
 
+#################
+# MLB Divisions #
+#################
+# American League:
+MLB_AL_EAST = ["Baltimore Orioles", "Boston Red Sox", "New York Yankees", "Tampa Bay Rays", "Toronto Blue Jays"]
+MLB_AL_CENTRAL = ["Chicago White Sox", "Cleveland Guardians", "Detroit Tigers", "Kansas City Royals", "Minnesota Twins"]
+MLB_AL_WEST = ["Houston Astros", "Los Angeles Angels", "Oakland Athletics", "Seattle Mariners", "Texas Rangers"]
+# National League:
+MLB_NL_EAST = ["Atlanta Braves", "Miami Marlins", "New York Mets", "Philadelphia Phillies", "Washington Nationals"]
+MLB_NL_CENTRAL = ["Chicago Cubs", "Cincinnati Reds", "Milwaukee Brewers", "Pittsburgh Pirates", "St. Louis Cardinals"]
+MLB_NL_WEST = ["Arizona Diamondbacks", "Colorado Rockies", "Los Angeles Dodgers", "San Diego Padres",
+               "San Francisco Giants"]
+
+#################
+# NFL Divisions #
+#################
+NFL_AFC_EAST = ["Buffalo Bills", "Miami Dolphins", "New England Patriots", "New York Jets"]
+NFL_AFC_NORTH = ["Cincinnati Bengals", "Cleveland Browns", "Baltimore Ravens", "Pittsburgh Steelers"]
+NFL_AFC_SOUTH = ["Indianapolis Colts", "Jacksonville Jaguars", "Houston Texans", "Tennessee Titans"]
+NFL_AFC_WEST = ["Denver Broncos", "Kansas City Chiefs", "Las Vegas Raiders", "Los Angeles Chargers"]
+NFL_NFC_EAST = ["Dallas Cowboys", "New York Giants", "Philadelphia Eagles", "Washington Commanders"]
+NFL_NFC_NORTH = ["Chicago Bears", "Detroit Lions", "Green Bay Packers", "Minnesota Vikings"]
+NFL_NFC_SOUTH = ["Atlanta Falcons", "Carolina Panthers", "New Orleans Saints", "Tampa Bay Buccaneers"]
+NFL_NFC_WEST = ["Arizona Cardinals", "Los Angeles Rams", "San Francisco 49ers", "Seattle Seahawks"]
+
+#################
+# NBA Divisions #
+#################
+# Eastern Conference:
+NBA_ATLANTIC_DIVISION = ["Boston Celtics", "Brooklyn Nets", "New York Knicks", "Philadelphia 76ers", "Toronto Raptors"]
+NBA_CENTRAL_DIVISION = ["Chicago Bulls", "Cleveland Cavaliers", "Detroit Pistons", "Indiana Pacers", "Milwaukee Bucks"]
+NBA_SOUTHEAST_DIVISION = ["Atlanta Hawks", "Charlotte Hornets", "Miami Heat", "Orlando Magic", "Washington Wizards"]
+# Western Conference:
+NBA_NORTHWEST_DIVISION = ["Denver Nuggets", "Minnesota Timberwolves", "Oklahoma City Thunder", "Portland Trail Blazers",
+                      "Utah Jazz"]
+NBA_PACIFIC_DIVISION = ["Golden State Warriors", "LA Clippers", "Los Angeles Lakers", "Phoenix Suns",
+                        "Sacramento Kings"]
+NBA_SOUTHWEST_DIVISION = ["Dallas Mavericks", "Houston Rockets", "Memphis Grizzlies", "New Orleans Pelicans",
+                      "San Antonio Spurs"]
+
+#################
+# NHL Divisions #
+#################
+# Eastern Conference:
+NHL_ATLANTIC_DIVISION = ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers",
+                         "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs"]
+NHL_METROPOLITAN_DIVISION = ["Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders",
+                         "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals"]
+# Western Conference:
+NHL_CENTRAL_DIVISION = ["Arizona Coyotes", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild",
+                    "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"]
+NHL_PACIFIC_DIVISION = ["Anaheim Ducks", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks",
+                    "Seattle Kraken", "Vancouver Canucks", "Vegas Golden Knights"]
+
+ALL_DIVISIONS = {
+    "MLB": ["American League East", "American League Central", "American League West", "National League East",
+            "National League Central", "National League West"],
+    "NFL": ["AFC East", "AFC North", "AFC South", "AFC West", "NFC East", "NFC North", "NFC South", "NFC West"],
+    "NBA": ["Atlantic Division", "Central Division", "Southeast Division", "Northwest Division", "Pacific Division",
+            "Southwest Division"],
+    "NHL": ["Atlantic Division", "Metropolitan Division", "Central Division", "Pacific Division"],
+}
+
+DIVISION_TEAMS = {
+    "MLB American League East": MLB_AL_EAST,
+    "MLB American League Central": MLB_AL_CENTRAL,
+    "MLB American League West": MLB_AL_WEST,
+    "MLB National League East": MLB_NL_EAST,
+    "MLB National League Central": MLB_NL_CENTRAL,
+    "MLB National League West": MLB_NL_WEST,
+
+    "NFL AFC East": NFL_AFC_EAST,
+    "NFL AFC North": NFL_AFC_NORTH,
+    "NFL AFC South": NFL_AFC_SOUTH,
+    "NFL AFC West": NFL_AFC_WEST,
+    "NFL NFC East": NFL_NFC_EAST,
+    "NFL NFC North": NFL_NFC_NORTH,
+    "NFL NFC South": NFL_NFC_SOUTH,
+    "NFL NFC West": NFL_NFC_WEST,
+
+    "NHL Atlantic Division": NHL_ATLANTIC_DIVISION,
+    "NHL Central Division": NHL_CENTRAL_DIVISION,
+    "NHL Pacific Division": NHL_PACIFIC_DIVISION,
+    "NHL Metropolitan Division": NHL_METROPOLITAN_DIVISION,
+
+    "NBA Southeast Division": NBA_SOUTHEAST_DIVISION,
+    "NBA Northwest Division": NBA_NORTHWEST_DIVISION,
+    "NBA Southwest Division": NBA_SOUTHWEST_DIVISION,
+    "NBA Pacific Division": NBA_PACIFIC_DIVISION,
+    "NBA Central Division": NBA_CENTRAL_DIVISION,
+    "NBA Atlantic Division": NBA_ATLANTIC_DIVISION,
+}
 
 def get_team_league(team__name: str) -> tuple:
     """Get the league and sport name for a given team name.

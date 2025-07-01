@@ -7,7 +7,7 @@ from pathlib import Path
 import FreeSimpleGUI as Sg  # type: ignore
 
 import settings
-from get_data.get_team_league import MLB, NBA, NFL, NHL
+from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
 
 file_path = Path("settings.py")
 
@@ -122,11 +122,18 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         "NFL": NFL,
     }.get(league, [])
 
+    if any(team in ALL_DIVISIONS[league] for team in selected_teams):
+        # If a division is selected, add all teams in that division
+        for team in selected_teams:
+            if team in ALL_DIVISIONS[league]:
+                division_key = league + " " + team
+                selected_teams += [team for team in available_checkbox_teams if team in DIVISION_TEAMS[division_key]]
+                selected_teams.remove(team)  # Remove the division name itself
+
     teams_added = ""
     teams_removed = ""
     existing_teams = read_teams_from_file()
-    untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
-    new_teams = sorted(set(untouched_teams + selected_teams))
+    new_teams = list(dict.fromkeys(existing_teams + selected_teams))  # Remove duplicates
 
     teams_string = "teams = [\n"
     for team in new_teams:
