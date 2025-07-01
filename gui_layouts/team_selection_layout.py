@@ -2,7 +2,7 @@
 import FreeSimpleGUI as Sg  # ignore
 
 import settings
-from get_data.get_team_league import MLB, NBA, NFL, NHL
+from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
 from helper_functions.main_menu_helpers import read_teams_from_file
 
 
@@ -22,6 +22,15 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         "NBA": NBA,
         "NFL": NFL,
     }.get(league, [])
+
+    division_names = ALL_DIVISIONS.get(league, [])
+
+    division_checkboxes_per_column: int = {
+        "MLB": 3,
+        "NHL": 2,
+        "NBA": 3,
+        "NFL": 4,
+    }.get(league, 4)
 
     # Common base screen widths
     common_base_widths = [1366, 1920, 1440, 1280]
@@ -44,6 +53,19 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         for team in team_names
     ]
 
+    # Get whether divisions are already checked by seeing if all teams in the division are selected
+    divisions_already_checked = []
+    for division in ALL_DIVISIONS.get(league, []):
+        if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
+            divisions_already_checked.append(division)
+
+    division_checkboxes = [
+        Sg.Checkbox(division_name, key=division_name,
+                    font=(settings.FONT, checkbox_txt_size), pad=(0, 0),
+                    default=division_name in divisions_already_checked)
+        for division_name in division_names
+    ]
+
     columns = [
         team_checkboxes[i:i + checkboxes_per_column]
         for i in range(0, len(team_checkboxes), checkboxes_per_column)
@@ -51,6 +73,15 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
 
     column_layouts = [
         Sg.Column([[cb] for cb in col], pad=(0, 0), element_justification="Center") for col in columns
+    ]
+
+    division_columns = [
+        division_checkboxes[i:i + division_checkboxes_per_column]
+        for i in range(0, len(division_checkboxes), division_checkboxes_per_column)
+    ]
+
+    division_column_layouts = [
+        Sg.Column([[cb] for cb in col], pad=(0, 0), element_justification="Center") for col in division_columns
     ]
 
     return [
@@ -61,17 +92,22 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
          Sg.Push(), *column_layouts, Sg.Push(),
          [Sg.VPush()]],
         [Sg.VPush()],
+        [Sg.Push(), Sg.Text("Select Division to Add", font=(settings.FONT, text_size-20, "underline")), Sg.Push()],
+        [Sg.VPush()],
+        [
+         Sg.Push(), *division_column_layouts, Sg.Push(),
+        ],
         [[Sg.VPush()],
          Sg.Push(),
          Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color="green"),
          Sg.Push(),
          [Sg.VPush()],
          ],
-        [[Sg.VPush()],
+        [
          Sg.Push(),
          Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color="red"),
          Sg.Push(),
-         [Sg.VPush()],
+
          ],
         [Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)), Sg.Button("Back", font=(settings.FONT, button_size)),
