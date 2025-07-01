@@ -77,7 +77,7 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
         - Pressing Update bottom will check Github if there is an update, if there is click it again to update.
     -	Restore to previous version.
         - If update went wrong or critical issues arise in newest version you can restore to a previous software version you were on before.
-        - Everytime you update scoreboard through update button it will save a local copy of older version in the same directory.
+        - Every time you update scoreboard through update button it will save a local copy of older version in the same directory.
     -	Add teams from MLB, NBA, NHL, and NFL to be follow and display.
     -	Set the order of teams to be displayed.
     -	Change what is displayed (See Scoreboard screen section below to see what information can be displayed or not displayed on the scoreboard screen).
@@ -91,16 +91,16 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 
 ## Scoreboard Screen
 -   Home team will always display on the right.
--	Scoreboard will prioritize games playing meaning if a game is finished/scheduled for later it wont display until no games are currently playing (Can be changed in settings).
--	Scoreboard will always disiplay team logos, score, game time/game status and teams names.
+-	Scoreboard will prioritize games playing meaning if a game is finished/scheduled for later it won't display until no games are currently playing (Can be changed in settings).
+-	Scoreboard will always display team logos, score, game time/game status and teams names.
 -	Other generic elements below can be displayed or not displayed based of settings:
     -	Team season record.
     -	Betting Odds MoneyLine/OverUnder/Spread before the game has started.
     -	Venue of where game is being played before the game has started (stadium name).
     -	Date of when game finished.
-    -	Series unformation for sports play a series of games (MLB, NBA, NHL).
+    -	Series information for sports play a series of games (MLB, NBA, NHL).
     -	The broadcast network game is on, only if its national broadcast not local one.
--	Sports specific elements can be displayed or not displated based off settings:
+-	Sports specific elements can be displayed or not displayed based off settings:
     -	MLB
           -	Last pitch thrown.
           -	Batter Count.
@@ -108,10 +108,10 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
           -	Hits and errors of each team.
           -	What inning the game is in.
           -	How many outs there are.
-          -	Discription of last play.
+          -	Description of last play.
     -	NBA
-          -	How mant Timeouts each team has.
-          -	If a team is in the bouns (If a team is in the bonus their score will go orange).
+          -	How many Timeouts each team has.
+          -	If a team is in the bonus (If a team is in the bonus their score will go orange).
           -	Game Clock and quarter the game is in.
           -	Shooting stats of each team (3pt/FG made and attempted).
           -	Play by Play of the game.
@@ -121,10 +121,10 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
           -	Game Clock and period the game is in.
           -	Play by Play of the game.
     -	NFL
-          -	How mant Timeouts each team has.
+          -	How many Timeouts each team has.
           -	If a team is in the RedZone (If a team is in the RedZone their score will go red).
-          -	What team has possession of the ball (What ever team has possession their score will be underined).
-          -	What down and yardage a team is at on the feild.
+          -	What team has possession of the ball (What ever team has possession their score will be underlined).
+          -	What down and yardage a team is at on the field.
           -	Game Clock and quarter the game is in.
      
 ## Clock Screen
@@ -153,7 +153,7 @@ Unique Libraries Script needs to be installed to work (these will be installed i
   - nba_api -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
   - nhl-api-py -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
   - rapidfuzz -- Used to find best matches within lists <br />
-  - orjson -- Used to send data between subproocces as JSON <br />
+  - orjson -- Used to send data between subprocess as JSON <br />
 
 ## Hardware Recommended
 - Raspberry PI (3b+ and up, the better the CPU the less lag displaying images)
