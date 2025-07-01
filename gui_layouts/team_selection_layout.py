@@ -25,12 +25,12 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
 
     division_names = ALL_DIVISIONS.get(league, [])
 
-    division_checkboxes_per_column = {
+    division_checkboxes_per_column: int = {
         "MLB": 3,
         "NHL": 2,
         "NBA": 3,
         "NFL": 4,
-    }.get(league, [])
+    }.get(league, 4)
 
     # Common base screen widths
     common_base_widths = [1366, 1920, 1440, 1280]
