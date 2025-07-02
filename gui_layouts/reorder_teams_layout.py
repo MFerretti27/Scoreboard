@@ -31,9 +31,10 @@ def create_order_teams_layout(window_width: int) -> list:
     team_names = [team[0] for team in teams]
 
     return [
-        [Sg.Push(), Sg.Text("Reorder Teams", font=(settings.FONT, title_size, "underline")), Sg.Push()],
+        [Sg.Push(), Sg.Text("Set Team Display Order", font=(settings.FONT, title_size, "underline")), Sg.Push()],
         [Sg.Push(),
-         Sg.Text("The order here will be the order teams are displayed in", font=(settings.FONT, message_size)),
+         Sg.Text("The order here will be the order teams are displayed in (top to bottom), select team to move",
+                 font=(settings.FONT, message_size)),
          Sg.Push()],
         [Sg.Push(),
          Sg.Listbox(team_names, size=(list_box_size_width, list_box_size_height),
