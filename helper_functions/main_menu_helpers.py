@@ -271,7 +271,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
     # Create the string representation of the teams array to insert into the file
     teams_string = "teams = [\n"
     for team in flattened_teams:
-        teams_string += f"    ['{team}'],\n"
+        teams_string += f'    ["{team}"],\n'
     teams_string += "]\n"
 
     # Read the file and find the teams section to update
