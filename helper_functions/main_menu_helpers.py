@@ -115,6 +115,11 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
 
     :return: list of strings telling what team(s) was selected and what team(s) where unselected
     """
+    existing_teams = read_teams_from_file()
+    teams_added = ""
+    teams_removed = ""
+    removed_teams = []
+
     available_checkbox_teams = {
         "MLB": MLB,
         "NHL": NHL,
@@ -122,18 +127,37 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         "NFL": NFL,
     }.get(league, [])
 
-    if any(team in ALL_DIVISIONS[league] for team in selected_teams):
-        # If a division is selected, add all teams in that division
+    # If Division is selected but team in division was unselected remove team
+    if any(team in ALL_DIVISIONS[league] for team in selected_teams) and settings.division_checked:
+        for team in existing_teams:
+            if team not in selected_teams and team in available_checkbox_teams:
+                existing_teams.remove(team)
+                removed_teams.append(team)
+        for team in selected_teams:
+            if team in ALL_DIVISIONS[league]:
+                selected_teams.remove(team)  # Remove the division name itself
+
+    # If a team is selected, add all teams in that division
+    elif any(team in ALL_DIVISIONS[league] for team in selected_teams):
         for team in selected_teams:
             if team in ALL_DIVISIONS[league]:
                 division_key = league + " " + team
                 selected_teams += [team for team in available_checkbox_teams if team in DIVISION_TEAMS[division_key]]
                 selected_teams.remove(team)  # Remove the division name itself
 
-    teams_added = ""
-    teams_removed = ""
-    existing_teams = read_teams_from_file()
-    new_teams = list(dict.fromkeys(existing_teams + selected_teams))  # Remove duplicates
+    # If division is not selected, but a division was previously checked when screen was opened
+    # then it was unselected so remove all teams in that division from selected_teams
+    elif settings.division_checked:
+        for division in ALL_DIVISIONS.get(league, []):
+            for team in selected_teams:
+                if team not in ALL_DIVISIONS[league]:
+                    if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
+                        for team in DIVISION_TEAMS[league + " " + division]:
+                            if team in selected_teams:
+                                selected_teams.remove(team)
+
+    untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
+    new_teams = list(dict.fromkeys(untouched_teams + selected_teams))  # Remove duplicates
 
     teams_string = "teams = [\n"
     for team in new_teams:
@@ -166,7 +190,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
             file.writelines(contents)
 
         added_teams = [team for team in selected_teams if team not in existing_teams]
-        removed_teams = \
+        removed_teams += \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 
         # Update the settings.teams list in-memory for when downloading logos later
@@ -247,7 +271,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
     # Create the string representation of the teams array to insert into the file
     teams_string = "teams = [\n"
     for team in flattened_teams:
-        teams_string += f"    ['{team}'],\n"
+        teams_string += f'    ["{team}"],\n'
     teams_string += "]\n"
 
     # Read the file and find the teams section to update

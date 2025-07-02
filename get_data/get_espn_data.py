@@ -62,8 +62,9 @@ def get_data(team: list[str]) -> tuple:
                 target_date = isoparse(date)
                 now = datetime.now(UTC)  # Current UTC date
                 one_month_later = now + timedelta(days=30)  # Set range to be a month
-                if now <= target_date >= one_month_later:
-                    print("Game is more than a month away skipping")
+                min_past_date = now - timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM)  # Set range to be a month
+                if target_date > one_month_later or target_date < min_past_date:
+                    print("Game is too far in the future or too old, skipping")
                     return team_info, False, False
 
                 # Get Score
@@ -112,10 +113,6 @@ def get_data(team: list[str]) -> tuple:
                        for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):
                     currently_playing = False
                     team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
-
-                    # If Postponed, delayed, or canceled display reason why
-                    if team_info["bottom_info"] in ["DELAYED", "POSTPONED", "CANCELED"]:
-                        team_info["bottom_info"] = competition["headlines"][0]["shortLinkText"]
 
                 # Check if Game hasn't been played yet
                 elif not currently_playing:

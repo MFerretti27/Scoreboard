@@ -67,7 +67,7 @@ display_nba_timeouts = True
 display_nba_bonus = True
 display_nba_clock = True
 display_nba_shooting = True
-display_nba_play_by_play = False
+display_nba_play_by_play = True
 
 # NHL
 display_nhl_sog = True
@@ -103,3 +103,4 @@ delay = False
 # Variables used in multiple files (avoid circular import)
 ###########################################################
 saved_data: Any = {}
+division_checked: bool = False  # Used to check if a division was checked when the screen was opened

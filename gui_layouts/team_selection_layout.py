@@ -15,6 +15,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     """
     checkboxes_per_column = 8
     selected_teams = read_teams_from_file()
+    settings.division_checked = False  # Reset division checked status for new screen
 
     team_names = {
         "MLB": MLB,
@@ -58,6 +59,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     for division in ALL_DIVISIONS.get(league, []):
         if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
             divisions_already_checked.append(division)
+            settings.division_checked = True
 
     division_checkboxes = [
         Sg.Checkbox(division_name, key=division_name,
