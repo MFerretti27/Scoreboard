@@ -144,40 +144,43 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
     :return: message to display if things logos where downloaded and resized successful or failed
     """
     already_downloaded = True
-    if not Path.exists(Path.cwd() / "images" / "sport_logos"):
-        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
-        download_team_logos(window, teams)
-        # Resize local images to fit on screen
-        resize_images_from_folder([
-            Path("images/Networks"),
-            Path("images/baseball_base_images"),
-            Path("images/conference_championship_images"),
-            Path("images/playoff_images"),
-            Path("images/championship_images"),
-        ])
-        already_downloaded = False  # If hit this is the first time getting images and resizing
-        return check_downloaded_correctly()
+    try:
+        if not Path.exists(Path.cwd() / "images" / "sport_logos"):
+            Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
+            download_team_logos(window, teams)
+            # Resize local images to fit on screen
+            resize_images_from_folder([
+                Path("images/Networks"),
+                Path("images/baseball_base_images"),
+                Path("images/conference_championship_images"),
+                Path("images/playoff_images"),
+                Path("images/championship_images"),
+            ])
+            already_downloaded = False  # If hit this is the first time getting images and resizing
+            return check_downloaded_correctly()
 
-    # If user selects new team in a league they haven't selected before download all logos in that league
-    elif new_league_added():
-        download_team_logos(window, teams)  # Will only get new league team logos
-        return check_downloaded_correctly()
+        # If user selects new team in a league they haven't selected before download all logos in that league
+        elif new_league_added():
+            download_team_logos(window, teams)  # Will only get new league team logos
+            return check_downloaded_correctly()
 
-    if settings.always_get_logos and already_downloaded:
-        # Dont want to continually resize images multiple times, so remove
-        shutil.rmtree(Path.cwd() / "images" / "sport_logos")
-        Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
-        download_team_logos(window, teams)
-        resize_images_from_folder([
-            Path("images/Networks"),
-            Path("images/baseball_base_images"),
-            Path("images/conference_championship_images"),
-            Path("images/playoff_images"),
-            Path("images/championship_images"),
-        ])
-        return check_downloaded_correctly()
+        if settings.always_get_logos and already_downloaded:
+            # Dont want to continually resize images multiple times, so remove
+            shutil.rmtree(Path.cwd() / "images" / "sport_logos")
+            Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
+            download_team_logos(window, teams)
+            resize_images_from_folder([
+                Path("images/Networks"),
+                Path("images/baseball_base_images"),
+                Path("images/conference_championship_images"),
+                Path("images/playoff_images"),
+                Path("images/championship_images"),
+            ])
+            return check_downloaded_correctly()
 
-    return "Starting..."
+        return "Starting..."
+    except Exception as e:
+        return "Failed to download team logos, please try again. Error: " + str(e)
 
 def get_random_logo() -> dict:
     """Get 2 random teams from teams array, if only one team then it will return the only team there.
