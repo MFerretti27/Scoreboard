@@ -11,10 +11,9 @@
 # Screen Shots
 Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code:<br />
 <img width="175" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
-<img width="175" alt="Screenshot 2025-05-23 at 9 38 58 PM" src="https://github.com/user-attachments/assets/875b2eae-882a-46ee-a761-61c07fc6f752" />
-<img width="175" alt="Screenshot 2025-05-23 at 9 39 07 PM" src="https://github.com/user-attachments/assets/ace14a8b-e4df-4ca2-a3c0-13b2d4a5a0c0" />
-<img width="175" alt="image" src="https://github.com/user-attachments/assets/64f473c3-21d4-4b26-866d-b9feb25a8fca" />
-
+<img width="175" alt="image" src="https://github.com/user-attachments/assets/e77fe8b8-caf0-4d1a-86de-6f2760a049b7" />
+<img width="175" alt="Screenshot 2025-07-02 at 5 42 16 PM" src="https://github.com/user-attachments/assets/11a40492-cc17-4dc8-983b-435eebc46bc3" />
+<img width="175" alt="image" src="https://github.com/user-attachments/assets/0315fde6-bfb0-4af8-82a7-504c2ef353b8" />
 
 Screens when no teams are currently playing but have games scheduled: <br />
 <img width="175" alt="Screenshot 2025-06-19 at 5 05 03 PM" src="https://github.com/user-attachments/assets/752c588a-986f-462b-b354-4b4265d32dbe" />
@@ -23,7 +22,7 @@ Screens when no teams are currently playing but have games scheduled: <br />
 <img width="175" alt="NFL Not Playing" src="https://github.com/user-attachments/assets/0a164789-db49-475a-8928-a6b8be7eb3c8" />
 
 Screens when teams are currently playing:<br />
-<img width="175" alt="MLB Playing" src="https://github.com/user-attachments/assets/7bf61e47-0e7a-4783-bfcb-59c563b3dc30" />
+<img width="175" alt="Screenshot 2025-07-02 at 6 59 21 PM" src="https://github.com/user-attachments/assets/8499ffd5-83f5-4f6c-873d-b66a66535c60" />
 <img width="175" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
 
 Screen when games are over:<br />
@@ -33,6 +32,8 @@ Screen when games are over:<br />
 
 If game is in a playoffs/champianship game, or in the Bonus/PowerPlay/RedZone it will show something like this:<br />
 <img width="175" alt="Screenshot 2025-06-09 at 10 18 15 PM" src="https://github.com/user-attachments/assets/a9e6693d-10ec-4f2c-943c-5fe9dca71752" />
+<img width="175" alt="Screenshot 2025-06-22 at 10 44 39 PM" src="https://github.com/user-attachments/assets/9fc4de32-c387-4636-913e-88234e92ab23" />
+
 
 
 
