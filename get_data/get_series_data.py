@@ -1,5 +1,5 @@
 """Get series information."""
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import requests
 import statsapi  # type: ignore
@@ -7,7 +7,7 @@ from nba_api.live.nba.endpoints import scoreboard  # type: ignore
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
-mlb_series = ""
+mlb_series = {}
 
 
 def get_series(team_league: str, team_name: str) -> str:
@@ -41,18 +41,18 @@ def get_current_series_mlb(team_name: str) -> str:
         team_id = get_mlb_team_id(team_name)
 
         # Get today's games for that team
-        today = datetime.now(UTC).strftime("%Y-%m-%d")
-        three_days_later = (datetime.now(UTC) + timedelta(days=3)).strftime("%Y-%m-%d")
-        schedule = statsapi.schedule(team=team_id, start_date=today, end_date=three_days_later)
+        today = datetime.now().strftime("%Y-%m-%d")
+        one_day_later = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        schedule = statsapi.schedule(team=team_id, start_date=today, end_date=one_day_later)
 
         game = schedule[0]  # Take the first game today
         series_summary = game.get("series_status", "")
         if series_summary == "" or series_summary is None:
-            series_summary = mlb_series
+            series_summary = mlb_series.get(team_name, "")
+        else:
+            mlb_series[team_name] = series_summary
 
-        mlb_series = series_summary
-
-    except IndexError as e:
+    except (IndexError, KeyError) as e:
         print(f"Error getting MLB series information: {e}")
         return series_summary
 
@@ -104,8 +104,7 @@ def get_current_series_nba(team_name: str) -> str:
     :return series_summary: str telling series information
     """
     series_summary = ""
-    # Today's Score Board
-    games = scoreboard.ScoreBoard()
+    games = scoreboard.ScoreBoard()  # Today's Score Board
     live = games.get_dict()
     try:
         for game in live["scoreboard"]["games"]:
