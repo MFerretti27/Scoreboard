@@ -300,6 +300,17 @@ def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
         message, successful = restore_backup(selected_version)
         if successful:
             window["update_message"].update(value=message, text_color="green")
+            settings = settings_to_json()
+            settings_json = json.dumps(settings, indent=2)
+
+            time.sleep(5)
+            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+                tmp.write(settings_json)
+                tmp_path = tmp.name
+
+            # Relaunch script, passing temp filename as argument
+            python = sys.executable
+            os.execl(python, python, sys.argv[0], "--settings", tmp_path)
         else:
             window["update_message"].update(value=message, text_color="red")
 
