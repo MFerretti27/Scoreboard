@@ -4,9 +4,11 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import requests
-import statsapi  # type: ignore
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore
-from nhlpy.nhl_client import NHLClient  # type: ignore
+import statsapi  # type: ignore[import]
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
+from nhlpy.nhl_client import NHLClient  # type: ignore[import]
+
+from helper_functions.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
@@ -49,8 +51,8 @@ def get_nba_game_type(team_name: str) -> str:
         was_finals_game[0] = "NBA Finals" in game_type
         was_finals_game[1] = team_name if was_finals_game[0] else ""
 
-    except (KeyError, IndexError) as e:
-        print(f"Error getting NBA game type: {e}")
+    except (KeyError, IndexError):
+        logger.exception("Error getting NBA game type")
         if was_finals_game[0] and was_finals_game[1] == team_name:
             return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
         return ""
@@ -83,8 +85,8 @@ def get_mlb_game_type(team_name: str) -> str:
         if game_type == "P":
             return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
 
-    except Exception as e:
-        print(f"Could not get MLB game type {e}")
+    except Exception:
+        logger.exception("Could not get MLB game type")
         return ""
 
     return ""
@@ -146,8 +148,8 @@ def get_nhl_game_type(team_name: str) -> str:
             elif current_round in [2, 1]:
                 path = str(Path.cwd() / "images" / "playoff_images" / "nhl_playoffs.png")
 
-    except Exception as e:
-        print(f"Error getting NHL game type: {e}")
+    except Exception:
+        logger.exception("Error getting NHL game type")
         return ""
 
     return path

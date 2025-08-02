@@ -2,12 +2,14 @@
 from datetime import datetime, timedelta
 
 import requests
-import statsapi  # type: ignore
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore
+import statsapi  # type: ignore[import]
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
+
+from helper_functions.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
-mlb_series = {}
+mlb_series: dict = {}
 
 
 def get_series(team_league: str, team_name: str) -> str:
@@ -35,7 +37,6 @@ def get_current_series_mlb(team_name: str) -> str:
 
     :return series_summary: str telling series information
     """
-    global mlb_series
     series_summary = ""
     try:
         team_id = get_mlb_team_id(team_name)
@@ -52,8 +53,8 @@ def get_current_series_mlb(team_name: str) -> str:
         else:
             mlb_series[team_name] = series_summary
 
-    except (IndexError, KeyError) as e:
-        print(f"Error getting MLB series information: {e}")
+    except (IndexError, KeyError):
+        logger.exception("Error getting MLB series information")
         return series_summary
 
     return series_summary
@@ -89,8 +90,8 @@ def get_current_series_nhl(team_name: str) -> str:
         elif home_series_wins == away_series_wins:
             series_summary = f"Series Tied {away_series_wins}-{home_series_wins}"
 
-    except KeyError as e:
-        print(f"Error getting NHL series information: {e}")
+    except KeyError:
+        logger.exception("Error getting NHL series information")
         return series_summary
 
     return series_summary
@@ -111,8 +112,8 @@ def get_current_series_nba(team_name: str) -> str:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
                 series_summary = game["seriesText"]
 
-    except KeyError as e:
-        print(f"Error getting NBA series information: {e}")
+    except KeyError:
+        logger.exception("Error getting NBA series information")
         return series_summary
 
     return series_summary

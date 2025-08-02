@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore
-from nba_api.stats.endpoints import teaminfocommon  # type: ignore
+from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore[import]
+from nba_api.stats.endpoints import teaminfocommon  # type: ignore[import]
 
 import settings
 from get_data.get_game_type import get_game_type
@@ -81,10 +81,10 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                     away_team = filename
 
             team_info["away_logo"] = str(
-                Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png")
+                Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png"),
                 )
             team_info["home_logo"] = str(
-                Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png")
+                Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png"),
                 )
 
             team_info["home_score"] = game["homeTeam"]["score"]
@@ -131,19 +131,15 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
             # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
-                if game["homeTeam"]["inBonus"] == "1":
-                    team_info["home_bonus"] = True
-                    home_team_bonus = True
-                elif game["homeTeam"]["inBonus"] == "0":
-                    team_info["home_bonus"] = False
-                    home_team_bonus = False
-
-                if game["awayTeam"]["inBonus"] == "1":
-                    team_info["away_bonus"] = True
-                    away_team_bonus = True
-                elif game["awayTeam"]["inBonus"] == "0":
-                    team_info["away_bonus"] = False
-                    away_team_bonus = False
+                team_info["home_bonus"] = game["homeTeam"]["inBonus"] == "1"
+                team_info["away_bonus"] = game["awayTeam"]["inBonus"] == "1"
+                # When "inBonus" is not None its a good value to store
+                if game["homeTeam"]["inBonus"] is not None and game["awayTeam"]["inBonus"] is not None:
+                    home_team_bonus = team_info["home_bonus"]
+                    away_team_bonus = team_info["away_bonus"]
+                else:
+                    team_info["home_bonus"] = home_team_bonus
+                    team_info["away_bonus"] = away_team_bonus
 
             if settings.display_nba_timeouts:
                 home_timeouts = game["homeTeam"]["timeoutsRemaining"]
@@ -153,8 +149,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
                     home_timeouts = home_timeouts_saved
                     away_timeouts = away_timeouts_saved
-                    team_info["home_bonus"] = home_team_bonus
-                    team_info["away_bonus"] = away_team_bonus
                 else:
                     home_timeouts_saved = home_timeouts
                     away_timeouts_saved = away_timeouts
@@ -213,37 +207,30 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
 def restructure_clock(game: dict) -> str:
     """Restructure game clock to get quarter and time left."""
-    match = re.match(r"PT(\d+)M(\d+)", game["gameClock"])
-    quarter = game["period"]
-    if match is not None:
-        minutes = int(match.group(1))
-        seconds = int(float(match.group(2)))  # Handles possible decimals like 40.00
-        result = f"{minutes}:{seconds:02}"
+    match = re.match(r"PT(\d+)M(\d+)", game.get("gameClock", ""))
+    if not match:
+        return ""
 
-        if quarter == 1:
-            quarter = str(quarter) + "st"
-        elif quarter == 2:
-            quarter = str(quarter) + "nd"
-        elif quarter == 3:
-            quarter = str(quarter) + "rd"
-        elif quarter == 4:
-            quarter = str(quarter) + "th"
-        else:
-            quarter = "Overtime"
+    minutes = int(match.group(1))
+    seconds = int(float(match.group(2)))
+    time_str = f"{minutes}:{seconds:02}"
 
-        if result == "0:00":
-            if quarter == "1st":
-                return "End of 1st"
-            if quarter == "2nd":
-                return "Halftime"
-            if quarter == "3rd":
-                return "End of 3rd"
-            if quarter == "4th":
-                return "End of 4th"
+    quarter = {
+        1: "1st",
+        2: "2nd",
+        3: "3rd",
+        4: "4th",
+    }.get(game.get("period", 0), "Overtime")
 
-        return result + " - " + quarter
-    return ""
+    if time_str == "0:00":
+        return {
+            "1st": "End of 1st",
+            "2nd": "Halftime",
+            "3rd": "End of 3rd",
+            "4th": "End of 4th",
+        }.get(quarter, f"End of {quarter}")
 
+    return f"{time_str} - {quarter}"
 
 def get_play_by_play(game_id: int) -> str:
     """Get play by play information."""

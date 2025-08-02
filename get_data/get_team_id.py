@@ -1,9 +1,9 @@
 """Get the id of team for API calls."""
 import requests
-import statsapi  # type: ignore
-from nba_api.live.nba.endpoints import scoreboard  # type: ignore
-from nba_api.stats.static import teams as nba_teams  # type: ignore
-from nhlpy.nhl_client import NHLClient  # type: ignore
+import statsapi  # type: ignore[import]
+from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
+from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
+from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
 
 def get_mlb_team_id(team: str) -> int:

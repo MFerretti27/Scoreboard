@@ -10,13 +10,14 @@ import traceback
 from datetime import datetime, timedelta
 from typing import Any
 
-import FreeSimpleGUI as Sg  # type: ignore
-from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
 from gui_layouts.scoreboard_layout import create_scoreboard_layout
 from helper_functions.internet_connection import is_connected, reconnect
+from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
     reset_window_elements,
@@ -79,12 +80,12 @@ def main(data_saved: dict) -> None:
                 teams_with_data.clear()
                 team_info.clear()
                 for fetch_index in range(len(teams)):
-                    print(f"\nFetching data for {teams[fetch_index][0]}")
+                    logger.info(f"\nFetching data for {teams[fetch_index][0]}")
                     info, data, currently_playing = get_data(teams[fetch_index])
 
                     # If Game in Play call function to display data differently
                     if currently_playing:
-                        print(f"{teams[fetch_index][0]} Currently Playing")
+                        logger.info(f"{teams[fetch_index][0]} Currently Playing")
                         team_info = team_currently_playing(window, teams)
                         # Reset timers
                         while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
@@ -101,7 +102,7 @@ def main(data_saved: dict) -> None:
                         saved_data[teams[fetch_index][0]] = [info, datetime.now()]
                         if settings.display_date_ended:
                             info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
-                        print("Saving Data to display longer that its available")
+                        logger.info("Saving Data to display longer that its available")
 
                     # If team is already saved dont overwrite it with new date
                     elif teams[fetch_index][0] in saved_data and data is True:
@@ -109,7 +110,7 @@ def main(data_saved: dict) -> None:
                             info["bottom_info"] = saved_data[teams[fetch_index][0]][0]["bottom_info"]
 
                     elif teams[fetch_index][0] in saved_data and data is False:
-                        print("Data is no longer available, checking if should display")
+                        ("Data is no longer available, checking if should display")
                         current_date = datetime.now()
                         saved_date = saved_data[teams[fetch_index][0]][1]
                         if isinstance(saved_date, str):  # check if saved_date is a string, happens if went to main menu
@@ -120,7 +121,7 @@ def main(data_saved: dict) -> None:
                         date_difference = current_date - saved_datetime
                         # Check if 3 days have passed after data is no longer available
                         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
-                            print(f"It will display, time its been: {date_difference}")
+                            logger.info(f"It will display, time its been: {date_difference}")
                             team_info.append(saved_data[teams[fetch_index][0]][0])
                             teams_with_data.append(True)
                             continue
@@ -136,7 +137,7 @@ def main(data_saved: dict) -> None:
             if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
                 if teams_with_data[display_index]:
                     display_first_time = False
-                    print(f"\nUpdating Display for {teams[display_index][0]}")
+                    logger.info(f"\nUpdating Display for {teams[display_index][0]}")
                     reset_window_elements(window)
 
                     if ("@" not in team_info[display_index]["above_score_txt"] and
@@ -162,14 +163,16 @@ def main(data_saved: dict) -> None:
                     for x in range(len(teams)):
                         if teams_with_data[(original_index + x) % len(teams)] is False:
                             display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, has no data")
+                            logger.info(
+                                f"skipping displaying {teams[(original_index + x) % len(teams)][0]}, has no data")
                         elif teams_with_data[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                            logger.info(
+                                f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                             break
 
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
                 else:
-                    print(f"\nTeam doesn't have data {teams[display_index][0]}")
+                    logger.info(f"\nTeam doesn't have data {teams[display_index][0]}")
                 display_index = (display_index + 1) % len(teams)
 
             event = window.read(timeout=1)
@@ -178,7 +181,7 @@ def main(data_saved: dict) -> None:
             if settings.no_spoiler_mode:
                 set_spoiler_mode(window, team_info=team_info[display_index])
             if temp_spoiler_mode is not settings.no_spoiler_mode:  # If turned off get new data instantly
-                print("No spoiler mode changed, refreshing data")
+                logger.info("No spoiler mode changed, refreshing data")
                 fetch_first_time = True
                 display_first_time = True
 
@@ -190,14 +193,15 @@ def main(data_saved: dict) -> None:
                         event = window.read(timeout=100)
                         text = text[1:] + text[0]
                         window["bottom_info"].update(value=text)
+                        check_events(window, event)
                     time.sleep(5)
 
             if True not in teams_with_data:  # No data to display
-                print("\nNo Teams with Data Displaying Clock\n")
+                logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
         except Exception as error:
-            print(f"Error: {error}")
+            logger.info(f"Error: {error}")
             traceback.print_exc()  # Prints the full traceback
             time_till_clock = 0
             if is_connected():
@@ -209,7 +213,7 @@ def main(data_saved: dict) -> None:
                             get_data(teams[fetch_index])
                         break  # If all data is fetched successfully, break out of loop
                     except Exception as error:
-                        print("Could not get data, trying again...")
+                        logger.info("Could not get data, trying again...")
                         window["top_info"].update(value="Could not get data, trying again...", text_color="red")
                         window["bottom_info"].update(value=f"Error: {error}",
                                                      font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
@@ -225,12 +229,12 @@ def main(data_saved: dict) -> None:
                 while ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer * 2:
                     fetch_clock = ticks_add(fetch_clock, fetch_timer)
             else:
-                print("Internet connection is active")
+                logger.info("Internet connection is active")
 
             while not is_connected():
                 event = window.read(timeout=5)
                 check_events(window, event)  # Check for button presses
-                print("Internet connection is down, trying to reconnect...")
+                logger.info("Internet connection is down, trying to reconnect...")
                 window["top_info"].update(value="Internet connection is down, trying to reconnect...",
                                           font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
@@ -239,7 +243,7 @@ def main(data_saved: dict) -> None:
 
                 if time_till_clock >= 12:  # If no connection within 4 minutes display clock
                     message = "No Internet Connection"
-                    print("\nNo Internet connection Displaying Clock\n")
+                    logger.info("\nNo Internet connection Displaying Clock\n")
                     teams_with_data = clock(window, message)
                     # Reset timers
                     while ticks_diff(ticks_ms(), display_clock) >= display_timer * 2:
@@ -256,9 +260,9 @@ if __name__ == "__main__":
         try:
             saved_data = json.loads(sys.argv[1])
         except json.JSONDecodeError as e:
-            print("Invalid JSON argument:", e)
+            logger.info("Invalid JSON argument:", e)
             saved_data = {}
     else:
-        print("No argument passed. Using default data.")
+        logger.info("No argument passed. Using default data.")
         saved_data = {}
     main(saved_data)

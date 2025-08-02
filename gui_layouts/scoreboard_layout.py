@@ -1,11 +1,12 @@
 """Create layout of how Scoreboard should look."""
 import math
 
-import FreeSimpleGUI as Sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_random_logo
+from helper_functions.logger_config import logger
 from main import set_screen
 
 
@@ -27,10 +28,10 @@ def create_scoreboard_layout() -> list:
     info_height = window_height * (1 / 6.75)
     space_between_score = column_width / 8
 
-    print(f"\n\nWindow Width: {math.ceil(window_width)}, Window Height: {math.ceil(window_height)}")
-    print(f"Column Width: {math.ceil(column_width)}, Column Height: {math.ceil(column_height)}")
-    print(f"Info Height: {math.ceil(info_height)}")
-    print(f"Space Between Score: {math.ceil(space_between_score)}")
+    logger.info("\n\nWindow Width: %d, Window Height: %d", math.ceil(window_width), math.ceil(window_height))
+    logger.info("Column Width: %d, Column Height: %d", math.ceil(column_width), math.ceil(column_height))
+    logger.info("Info Height: %d", math.ceil(info_height))
+    logger.info("Space Between Score: %d", math.ceil(space_between_score))
 
     home_logo_layout = [
         [Sg.Push()],
@@ -54,7 +55,6 @@ def create_scoreboard_layout() -> list:
         [Sg.Push()],
     ]
     home_record_layout = [
-        [Sg.VPush()],
         [Sg.Push()],
         [Sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="home_record", pad=((0, 0), (0, 0)))],
         [Sg.Push()],
@@ -96,13 +96,25 @@ def create_scoreboard_layout() -> list:
                           [Sg.VPush()],
                           [Sg.Push()]]
 
+    # Lower the logo images if the records are not displayed
+    if settings.display_records:
+        away_logo_height = column_height * (4 / 5)
+        home_logo_height = column_height * (4 / 5)
+        away_record_height = column_height * (1 / 5)
+        home_record_height = column_height * (1 / 5)
+    else:
+        away_logo_height = column_height
+        home_logo_height = column_height
+        away_record_height = 0
+        home_record_height = 0
+
     return [
         [
             Sg.Column([  # Vertical stack for away team
                 [Sg.Frame("", away_logo_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (4 / 5)))],
+                          size=(column_width, away_logo_height))],
                 [Sg.Frame("", away_record_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (1 / 5)))],
+                          size=(column_width, away_record_height))],
             ], element_justification="center", pad=((0, 0), (0, 0))),
             Sg.Column([  # Vertical score
                 [Sg.Frame("", above_score_layout, element_justification="center", border_width=0,
@@ -114,9 +126,9 @@ def create_scoreboard_layout() -> list:
             ], element_justification="center", pad=((0, 0), (0, 0))),
             Sg.Column([  # Vertical stack for home team
                 [Sg.Frame("", home_logo_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (4 / 5)))],
+                          size=(column_width, home_logo_height))],
                 [Sg.Frame("", home_record_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (1 / 5)))],
+                          size=(column_width, home_record_height))],
             ], element_justification="center", pad=((0, 0), (0, 0))),
         ],
         [Sg.VPush()],

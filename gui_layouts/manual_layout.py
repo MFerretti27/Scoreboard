@@ -1,5 +1,5 @@
 """GUI Layout screen for showing instructions in main menu."""
-import FreeSimpleGUI as Sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 

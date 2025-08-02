@@ -5,7 +5,9 @@ import shutil
 from pathlib import Path
 from shutil import ignore_patterns
 
-import requests  # type: ignore
+import requests  # type: ignore[import]
+
+from helper_functions.logger_config import logger
 
 # Path to local version.txt
 LOCAL_VERSION_FILE = "version.txt"
@@ -37,8 +39,6 @@ def get_files_to_update(directory: str, extensions: list[str] | None = None) -> 
         if any(x in path_parts for x in ("venv", ".vscode", ".git", "backup_files", "__pycache__")):
             continue
         for file in files:
-            if file == "settings.py":
-                continue
             if any(file.endswith(ext) for ext in extensions):
                 relative_path = str(Path(root).joinpath(file).relative_to(directory))
                 files_to_update.append(relative_path)
@@ -57,10 +57,10 @@ def get_local_version() -> str | None:
         with Path(LOCAL_VERSION_FILE).open() as f:
             return f.read().strip()
     except FileNotFoundError:
-        print(f"Error: {LOCAL_VERSION_FILE} not found!")
+        logger.exception("Error: %s not found!", LOCAL_VERSION_FILE, exc_info=True)
         return None
-    except Exception as e:
-        print(f"Error reading {LOCAL_VERSION_FILE}: {e}")
+    except Exception:
+        logger.exception("Error reading %s", LOCAL_VERSION_FILE, exc_info=True)
         return None
 
 
@@ -75,10 +75,10 @@ def get_remote_version() -> str | None:
         text = response.text.strip()
 
         if text.startswith("<!DOCTYPE html") or "<html" in text.lower():
-            print("Error: version.txt not found or invalid URL.")
+            logger.info("Error: version.txt not found or invalid URL.")
             return None
-    except Exception as e:
-        print(f"Error checking remote version: {e}")
+    except Exception:
+        logger.info("Error checking remote version", exc_info=True)
         return None
     return text
 
@@ -108,24 +108,24 @@ def backup_entire_repo(project_folder: str, version: str) -> None:
     backup_folder_name = f"{project_path.name}-v{version}-backup"
     backup_folder_path = parent_folder / backup_folder_name
 
-    print(f"Backing up project: {project_folder}")
-    print(f"Backup will be saved at: {backup_folder_path}")
+    logger.info("Backing up project: %s", project_folder)
+    logger.info("Backup will be saved at: %s", backup_folder_path)
 
     if backup_folder_path.resolve() == project_path.resolve():
-        print("Error: Backup path is the same as project path! Aborting.")
+        logger.info("Error: Backup path is the same as project path! Aborting.")
         return
 
     if backup_folder_path.exists():
-        print(f"Backup folder already exists. Deleting old backup: {backup_folder_path}")
+        logger.info("Backup folder already exists. Deleting old backup: %s", backup_folder_path)
         shutil.rmtree(backup_folder_path)
 
     try:
         shutil.copytree(project_path, backup_folder_path, ignore=ignore_patterns("*.pyc", "venv", ".git",
                                                                                  ".vscode", "backup_files",
                                                                                  "__pycache__"))
-        print(f"Backup completed successfully at: {backup_folder_path}")
-    except Exception as e:
-        print(f"Error during backup: {e}")
+        logger.info("Backup completed successfully at: %s", backup_folder_path)
+    except Exception:
+        logger.exception("Error during backup", exc_info=True)
 
 
 def download_file(file_path: str) -> None:
@@ -144,10 +144,10 @@ def download_file(file_path: str) -> None:
         with local_path.open("w", encoding="utf-8") as f:
             f.write(response.text)
 
-        print(f"Updated: {file_path}")
+        logger.info("Updated: %s", file_path)
 
-    except Exception as e:
-        print(f"Failed to update {file_path}: {e}")
+    except Exception:
+        logger.exception("Failed to update %s",file_path, exc_info=True)
 
 
 def update_all_files() -> None:
@@ -182,7 +182,7 @@ def list_backups(max_backups: int = 5) -> list[str]:
         backups_to_remove = available_backups[max_backups:]
         for backup in backups_to_remove:
             backup_folder_path = parent_folder / f"{project_name}-v{backup}-backup"
-            print(f"Removing old backup: {backup_folder_path}")
+            logger.info("Removing old backup: %s", backup_folder_path)
             shutil.rmtree(backup_folder_path)
         available_backups = available_backups[:max_backups]
 
@@ -198,13 +198,13 @@ def restore_backup(version: str) -> tuple[str, bool]:
     parent_folder = project_folder.parent
     backup_folder_path = parent_folder / f"{project_folder.name}-v{version}-backup"
 
-    print(f"Attempting to restore from: {backup_folder_path}")
+    logger.info("Attempting to restore from: %s", backup_folder_path)
 
     if not backup_folder_path.exists():
         return f"Backup folder for version {version} not found!", False
 
     try:
-        print("Removing current project files...")
+        logger.info("Removing current project files...")
         for item in project_folder.iterdir():
             if item.name in {"venv", ".git", ".vscode", "backup_files", "__pycache__"}:
                 continue
@@ -213,7 +213,7 @@ def restore_backup(version: str) -> tuple[str, bool]:
             else:
                 item.unlink()
 
-        print("Restoring backup files...")
+        logger.info("Restoring backup files...")
         for item in backup_folder_path.iterdir():
             dst = project_folder / item.name
             if item.is_dir():

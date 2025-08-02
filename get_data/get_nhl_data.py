@@ -1,13 +1,13 @@
 """Get NHL from NHL specific API."""
 from datetime import UTC
-from pathlib import Path
 from typing import Any
 
 import requests
-from dateutil.parser import isoparse  # type: ignore
+from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
-from helper_functions.data_helpers import check_playing_each_other
+from helper_functions.data_helpers import check_playing_each_other, get_team_logo
+from helper_functions.logger_config import logger
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
@@ -30,8 +30,8 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     try:
         team_id = get_nhl_game_id(team_name)
         box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-    except (requests.exceptions.RequestException, IndexError) as e:
-        print(f"Error fetching NHL data: {e}, team: {team_name}")
+    except (requests.exceptions.RequestException, IndexError):
+        logger.info("Error fetching NHL data for team: %s", team_name)
         return team_info, has_data, currently_playing  # Could not find any game to display
 
     box_score = box_score.json()
@@ -66,16 +66,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                 team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
 
     # Get team logos
-    folder_path = Path.cwd() / "images" / "sport_logos" / "NHL"
-    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-    for file in file_names:
-        filename = file.name.upper()
-        if home_team_name.upper() in filename:
-            home_team = filename
-        if away_team_name.upper() in filename:
-            away_team = filename
-    team_info["away_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / away_team.replace("PNG", "png"))
-    team_info["home_logo"] = str(Path.cwd() / "images" / "sport_logos" / "NHL" / home_team.replace("PNG", "png"))
+    team_info = get_team_logo(home_team_name, away_team_name, "NHL", team_info)
 
     # Get game time and venue
     iso_string = box_score["startTimeUTC"]
@@ -99,10 +90,8 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info["bottom_info"] = get_final_status(box_score["periodDescriptor"]["number"],
                                                     box_score["gameType"])
 
-    # Check if game is a championship game, if so display its championship game
-    if get_game_type("NHL", team_name) != "":
-        # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
-        team_info["under_score_image"] = get_game_type("NHL", team_name)
+    # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
+    team_info["under_score_image"] = get_game_type("NHL", team_name)
 
     return team_info, has_data, currently_playing
 
@@ -199,9 +188,14 @@ def get_final_status(period_descriptor: int, game_type: int) -> str:
 
 
 def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> str:
-    """Get play by play information."""
-    global last_play_saved
+    """Get play by play information.
 
+    param game_id: The game ID to get play by play information for
+    param home_team_abrr: The abbreviation of the home team
+    param away_team_abbr: The abbreviation of the away team
+
+    :return last_play: The last play that occurred in the game, if it was a shooting play
+    """
     play_by_play = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play", timeout=5)
     play = play_by_play.json()
     plays = play["plays"][-1]["typeDescKey"]
@@ -229,14 +223,6 @@ def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> 
                         last_play = plays.replace("-", " ") + " (" + player["lastName"]["default"] + ")"
                         break
                 except KeyError:
-                    last_play= plays.replace("-", " ")
-
-    if last_play != "":
-        last_play = "  " + last_play
-
-    if last_play == last_play_saved:
-        last_play = ""
-    else:
-        last_play_saved = last_play
+                    last_play = plays.replace("-", " ")
 
     return last_play

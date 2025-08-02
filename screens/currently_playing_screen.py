@@ -2,11 +2,12 @@
 import copy
 import time
 
-import FreeSimpleGUI as sg  # type: ignore
-from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+import FreeSimpleGUI as sg  # type: ignore[import]
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
+from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
     reset_window_elements,
@@ -47,7 +48,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             team_info.clear()
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
-                print(f"\nFetching data for {teams[fetch_index][0]}")
+                logger.info(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(teams[fetch_index])
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
@@ -143,7 +144,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
-            print(f"\n{teams[display_index][0]} is currently playing, updating display")
+            logger.info(f"\n{teams[display_index][0]} is currently playing, updating display")
             sport_league = teams[display_index][1]
 
             # Reset text color, underline and timeouts, for new display
@@ -155,7 +156,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
                 elif key == "signature":
-                    window[key].update(filename=value, text_color="red")
+                    window[key].update(value=value, text_color="red")
                 elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
                       "power_play" not in key):
                     window[key].update(value=value)
@@ -251,21 +252,24 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:
                             display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                            logger.info(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                         elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                            logger.info(
+                                f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                             break
                 elif not settings.stay_on_team and not settings.prioritize_playing_team:
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_with_data[(original_index + x) % len(teams)] is False:
                             display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                            logger.info(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                         elif teams_with_data[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                            logger.info(
+                                f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                             break
                 else:
-                    print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+                    logger.info(
+                        f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
             display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
             if not settings.stay_on_team:
@@ -278,6 +282,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     event = window.read(timeout=100)
                     text = text[1:] + text[0]
                     window["bottom_info"].update(value=text)
+                    check_events(window, event)
                 time.sleep(5)
             should_scroll = False
 
@@ -300,7 +305,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             if settings.stay_on_team and currently_displaying != team_info[display_index]:
                 display_index = original_index
 
-    print("\nNo Team Currently Playing\n")
+    logger.info("\nNo Team Currently Playing\n")
     reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info

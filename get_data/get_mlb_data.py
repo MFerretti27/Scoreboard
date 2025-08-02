@@ -1,13 +1,13 @@
 """Get MLB from MLB specific API."""
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Any
 
 import requests
-import statsapi  # type: ignore
+import statsapi  # type: ignore[import]
 
 import settings
-from helper_functions.data_helpers import check_playing_each_other
+from helper_functions.data_helpers import check_playing_each_other, get_team_logo
+from helper_functions.logger_config import logger
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_mlb
@@ -37,8 +37,8 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     currently_playing = False
 
     # Try to get first game from now for the next 3 days
-    today = datetime.now(UTC).strftime("%Y-%m-%d")
-    three_days_later = (datetime.now(UTC) + timedelta(days=3)).strftime("%Y-%m-%d")
+    today = datetime.now().strftime("%Y-%m-%d")
+    three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
     try:
         data = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
@@ -48,6 +48,7 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         live_feed = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live',
                                  timeout=5).json()
     except Exception:
+        logger.exception("Could not get MLB data")
         double_header = 0
         return team_info, has_data, currently_playing  # Could not find game
 
@@ -82,25 +83,14 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         return team_info, team_has_data, currently_playing
 
     # If team is D-backs change to "ARIZONA DIAMONDBACKS", there is no logo file called D-backs
-    home_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
-    away_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+    home_team_name = home_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+    away_team_name = away_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
 
-    folder_path = Path.cwd() / "images" / "sport_logos" / "MLB"
-    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-    for file in file_names:
-        filename = file.name.upper()
-        if home_team_name.upper() in filename:
-            home_team = filename
-        if away_team_name.upper() in filename:
-            away_team = filename
+    # Get team logos
+    team_info = get_team_logo(home_team_name, away_team_name, "MLB", team_info)
 
-    team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / away_team.replace("PNG", "png")
-    team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / "MLB" / home_team.replace("PNG", "png")
-
-    # Check if game is a championship game, if so display its championship game
-    if get_game_type("MLB", team_name) != "":
-        # If str returned is not empty, then its world series/conference championship, so display championship png
-        team_info["under_score_image"] = get_game_type("MLB", team_name)
+    # If str returned is not empty, then its world series/conference championship, so display championship png
+    team_info["under_score_image"] = get_game_type("MLB", team_name)
 
     # Get Home and Away team records
     if settings.display_records:
@@ -185,52 +175,22 @@ def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> 
 
     # Get pitcher and batter for bottom info
     if settings.display_pitcher_batter:
-        batter_full_name = live["liveData"]["linescore"]["offense"]["batter"]["fullName"]
+        batter_full_name = live["liveData"]["linescore"]["offense"].get("batter", {}).get("fullName", "")
         batter_last_name = " ".join(batter_full_name.split()[1:])  # Remove First Name
-        pitcher_full_name = live["liveData"]["linescore"]["defense"]["pitcher"]["fullName"]
+        pitcher_full_name = live["liveData"]["linescore"]["defense"].get("pitcher", {}).get("fullName", "")
         pitcher_last_name = " ".join(pitcher_full_name.split()[1:])  # Remove First Name
 
-        team_info["bottom_info"] = ""
-        if pitcher_last_name != "":
-            team_info["bottom_info"] += (f"P: {pitcher_last_name}   ")
-        if batter_last_name != "":
-            team_info["bottom_info"] += (f"AB: {batter_last_name}")
+        team_info["bottom_info"] = (f"P: {pitcher_last_name}   AB: {batter_last_name}")
 
     team_info["top_info"] = ""
-    # If inning is changing do not display count and move inning to display below score
-    if "Mid" not in team_info["above_score_txt"] and "End" not in team_info["above_score_txt"]:
-        try:
-            pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
-            if pitch.get("isPitch", True) and settings.display_last_pitch:
-                team_info["top_info"] += pitch["details"]["type"]["description"].replace("Four-Seam", "") + "  "
-
-            play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
-            if play and settings.display_play_description:
-                team_info["bottom_info"] = play
-        except Exception:
-            print("couldn't get Pitch or play")
-
-        if settings.display_balls_strikes:
-            balls = live["liveData"]["linescore"].get("balls", 0)
-            strikes = live["liveData"]["linescore"].get("strikes", 0)
-            outs = live["liveData"]["linescore"].get("outs", 0)
-            team_info["top_info"] += (f"{balls}-{strikes}, {outs} Outs")
-    else:
-        # If it is the Middle or End of inning show who is leading off batting
-        if settings.display_pitcher_batter:
-            team_info["bottom_info"] = (f"DueUp: {batter_full_name}")
-        team_info["top_info"] = ""
+    team_info = get_data_based_on_inning_state(live, batter_full_name, team_info)
 
     if settings.display_bases:
         bases = {"first": False, "second": False, "third": False}  # Dictionary to store info of occupied bases
 
+        offense = live.get("liveData", {}).get("linescore", {}).get("offense", {})
         for key in bases:
-            try:
-                # Dont need to store name of whose on just has to ensure call is successful
-                _ = live["liveData"]["linescore"]["offense"][key]["fullName"]
-                bases[key] = True  # If call is successful someone is on that base
-            except KeyError:
-                bases[key] = False  # If call fails no one is on that base
+            bases[key] = bool(offense.get(key, {}).get("fullName"))
 
         # Get which image to display based on what base is occupied
         base_conditions = {
@@ -247,5 +207,42 @@ def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> 
         # Get image location for representing runners on base
         base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
         team_info["under_score_image"] = f"images/baseball_base_images/{base_image}"
+
+    return team_info
+
+def get_data_based_on_inning_state(live: dict, batter_full_name: str, team_info: dict) -> dict:
+    """Get data based on inning state.
+
+    If inning is changing do not display count/play etc. display batter due up.
+
+    :param live: The live data from MLBStats API
+    :param batter_full_name: The full name of the batter to display
+    :param team_info: The team information dictionary to update
+
+    :return team_info: Updated team information dictionary
+    """
+    # If inning is changing do not display count and move inning to display below score
+    if "Mid" not in team_info["above_score_txt"] and "End" not in team_info["above_score_txt"]:
+        try:
+            pitch = live["liveData"]["plays"].get("currentPlay", {}).get("playEvents", [{}])[-1]
+            if pitch.get("isPitch", True) and settings.display_last_pitch:
+                team_info["top_info"] += pitch["details"]["type"]["description"].replace("Four-Seam", "") + "  "
+
+            play = live["liveData"]["plays"].get("currentPlay", {}).get("result", {}).get("description", "")
+            if play and settings.display_play_description:
+                team_info["bottom_info"] = play
+        except Exception:
+            logger.exception("couldn't get Pitch or play")
+
+        if settings.display_balls_strikes:
+            balls = live["liveData"]["linescore"].get("balls", 0)
+            strikes = live["liveData"]["linescore"].get("strikes", 0)
+            outs = live["liveData"]["linescore"].get("outs", 0)
+            team_info["top_info"] += (f"{balls}-{strikes}, {outs} Outs")
+    else:
+        # If it is the Middle or End of inning show who is leading off batting
+        if settings.display_pitcher_batter:
+            team_info["bottom_info"] = (f"DueUp: {batter_full_name}")
+        team_info["top_info"] = ""
 
     return team_info

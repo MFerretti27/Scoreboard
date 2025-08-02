@@ -4,7 +4,9 @@ It compares the input team name with a list of known team names in various leagu
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
 
-from rapidfuzz import fuzz, process  # type: ignore
+from rapidfuzz import fuzz, process  # type: ignore[import]
+
+from helper_functions.logger_config import logger
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
@@ -161,7 +163,10 @@ def get_team_league(team__name: str) -> tuple:
         if score > best_match[1]:
             best_match = (teams[index], score, league)
 
-    print(f"Team Name: {team__name} Best Match: {best_match[0]}, Score: {best_match[1]}, League: {best_match[2]}")
+    logger.info(
+        "Team Name: %s Best Match: %s, Score: %s, League: %s",
+        team__name, best_match[0], best_match[1], best_match[2],
+    )
 
     if best_match[2].upper() == "NFL":
         matched_team = (best_match[2], "football")

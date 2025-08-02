@@ -41,7 +41,6 @@ SIGNATURE_SIZE = 8
 LIVE_DATA_DELAY = 0
 
 FETCH_DATA_NOT_PLAYING_TIMER = 180
-FETCH_DATA_PLAYING_TIMER = 0
 
 DISPLAY_NOT_PLAYING_TIMER = 25
 DISPLAY_PLAYING_TIMER = 25
@@ -91,6 +90,8 @@ display_odds = True
 display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
+prioritize_playoff_championship_image = True
+display_playoff_championship_image = True
 
 ############################################
 # Variables to to keep track of key presses
