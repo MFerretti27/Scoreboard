@@ -321,7 +321,7 @@ def settings_to_json() -> dict[str, Any]:
     :return: dictionary with all variables defined in the settings file
     """
     namespace: dict = {}
-    with file_path.open(encoding="utf-8") as f:
+    with file_path.open("w", encoding="utf-8") as f:
         code = f.read()
 
     # Execute the settings file code safely in a fresh namespace
@@ -331,7 +331,7 @@ def settings_to_json() -> dict[str, Any]:
     return {key: value for key, value in namespace.items() if not key.startswith("__")}
 
 
-def write_settings_to_py(settings: dict[Any, Any], file_path: Path = Path("settings.py")) -> None:
+def write_settings_to_py(settings: dict[Any, Any]) -> None:
     """Update only known settings in settings.py while preserving all other content."""
     assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
     updated_lines = []
