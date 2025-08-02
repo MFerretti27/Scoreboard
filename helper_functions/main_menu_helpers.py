@@ -372,7 +372,7 @@ def write_settings_to_py(settings_saved: dict[Any, Any]) -> None:
 
     # If teams block wasn't found, append it at the end
     if "teams" in settings_saved and not teams_replaced:
-        updated_lines.append(format_teams_block(settings["teams"]))
+        updated_lines.append(format_teams_block(settings.teams))
 
     file_path.write_text("\n".join(updated_lines) + "\n")
 

@@ -318,7 +318,7 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_message"].update(value=message, text_color="green")
             number_of_times_pressed = 0
             window.read(timeout=5)
-            time.sleep()
+            time.sleep(3)
 
             # Relaunch script, passing temp filename as argument
             python = sys.executable
