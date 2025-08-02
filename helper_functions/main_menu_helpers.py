@@ -321,7 +321,7 @@ def settings_to_json() -> dict[str, Any]:
     :return: dictionary with all variables defined in the settings file
     """
     namespace: dict = {}
-    with file_path.open("w", encoding="utf-8") as f:
+    with file_path.open(encoding="utf-8") as f:
         code = f.read()
 
     # Execute the settings file code safely in a fresh namespace
