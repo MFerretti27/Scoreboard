@@ -264,7 +264,7 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_button"].update(text="Update", button_color=("white", "green"))
             window["update_message"].update(value=message, text_color="green")
             number_of_times_pressed = 0
-            settings = settings_to_json("settings.py")
+            settings = settings_to_json()
             settings_json = json.dumps(settings, indent=2)
 
             time.sleep(5)
@@ -336,7 +336,7 @@ if __name__ == "__main__":
                     settings_path = sys.argv[idx + 1]
                     with settings_path.open(encoding="utf-8") as f:
                         settings = json.load(f)
-                        write_settings_to_py(settings, "settings.py")
+                        write_settings_to_py(settings)
                         logger.info("Settings.py updated from JSON.")
             else:
                 saved_data = json.loads(sys.argv[1])

@@ -313,13 +313,13 @@ def update_division(league: str, selected_teams: list, existing_teams: list, rem
 
     return selected_teams, existing_teams, removed_teams
 
-def settings_to_json(file_path: str) -> dict[str, Any]:
+def settings_to_json() -> dict[str, Any]:
     """Load a Python settings file and convert all its top-level variables to a dict.
 
     :param file_path: Path to the settings .py file
     :return: dictionary with all variables defined in the settings file
     """
-    namespace = {}
+    namespace: dict = {}
     with file_path.open(encoding="utf-8") as f:
         code = f.read()
 
@@ -330,7 +330,7 @@ def settings_to_json(file_path: str) -> dict[str, Any]:
     return {key: value for key, value in namespace.items() if not key.startswith("__")}
 
 
-def write_settings_to_py(settings: dict, settings_path: str = "settings.py") -> None:
+def write_settings_to_py(settings: dict[Any, Any]) -> None:
     """Write settings to settings.py after updated to preserve user settings when updating."""
     lines = ['"""Settings used to tell what to display and variable used in multiple files."""\n']
 
@@ -363,7 +363,7 @@ def write_settings_to_py(settings: dict, settings_path: str = "settings.py") -> 
             lines.append(f"{key} = {formatted_value}\n")
 
     # Write to file
-    Path(settings_path).write_text("".join(lines))
+    Path(file_path).write_text("".join(lines))
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
