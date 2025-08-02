@@ -6,7 +6,6 @@ This screen should be displayed when:
 - Or When There is No Team Data to Display
 """
 
-import gc
 import subprocess
 import sys
 import time
@@ -67,7 +66,6 @@ def clock(window: Sg.Window, message: str) -> list:
         event = window.read(timeout=5000)
         if event[0] == Sg.WIN_CLOSED or "Escape" in event[0]:
             window.close()
-            gc.collect()  # Clean up memory
             time.sleep(0.5)  # Give OS time to destroy the window
             json_saved_data = orjson.dumps(settings.saved_data)
             subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
