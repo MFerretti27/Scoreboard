@@ -37,8 +37,8 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     currently_playing = False
 
     # Try to get first game from now for the next 3 days
-    today = datetime.now().strftime("%Y-%m-%d")  # noqa: DTZ005
-    three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")  # noqa: DTZ005
+    today = datetime.now().strftime("%Y-%m-%d")
+    three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
     try:
         data = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,

@@ -51,7 +51,7 @@ def clock(window: Sg.Window, message: str) -> list:
             fetch_picture = ticks_add(fetch_picture, fetch_picture_timer)  # Reset Timer if picture updated
 
         # Get the current time and display it
-        current_time = datetime.now()  # noqa: DTZ005
+        current_time = datetime.now()
         hour = current_time.hour if current_time.hour < 13 else current_time.hour - 12
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
 
