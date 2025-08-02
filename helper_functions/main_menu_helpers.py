@@ -1,6 +1,7 @@
 """Helper functions used in main menu."""
 import ast
 import io
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -330,40 +331,46 @@ def settings_to_json() -> dict[str, Any]:
     return {key: value for key, value in namespace.items() if not key.startswith("__")}
 
 
-def write_settings_to_py(settings: dict[Any, Any]) -> None:
-    """Write settings to settings.py after updated to preserve user settings when updating."""
-    lines = ['"""Settings used to tell what to display and variable used in multiple files."""\n']
+def write_settings_to_py(settings: dict[Any, Any], file_path: Path) -> None:
+    """Update only known settings in settings.py while preserving all other content."""
+    assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
+    updated_lines = []
 
-    allowed_keys = ["FONT", *setting_keys_booleans, *setting_keys_integers]
+    lines = file_path.read_text().splitlines() if file_path.exists() else []
 
-    for key in sorted(allowed_keys):
-        if key not in settings:
-            continue
+    for original_line in lines:
+        match = assign_pattern.match(original_line)
+        if match:
+            key, _ = match.groups()
+            if key in settings:
+                value = settings[key]
+                formatted_value = (
+                    f'"{value}"' if isinstance(value, str)
+                    else (
+                        "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
+                        if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
+                        else repr(value)
+                    )
+                )
+                updated_line = f"{key} = {formatted_value}"
+                updated_lines.append(updated_line)
+                continue  # Skip appending original_line
+        updated_lines.append(original_line)
 
-        value = settings[key]
+    existing_keys = {match.group(1) for match in map(assign_pattern.match, lines) if match}
+    for key, value in settings.items():
+        if key not in existing_keys:
+            formatted_value = (
+                f'"{value}"' if isinstance(value, str)
+                else (
+                    "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
+                    if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
+                    else repr(value)
+                )
+            )
+            updated_lines.append(f"{key} = {formatted_value}")
 
-        # Format the value
-        if isinstance(value, str):
-            formatted_value = f'"{value}"'
-        elif isinstance(value, list):
-            # Format nested lists nicely
-            if all(isinstance(item, list) and len(item) == 1 for item in value):
-                formatted_value = "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
-            else:
-                formatted_value = repr(value)
-        else:
-            formatted_value = repr(value)
-
-        # Handle optional typing for saved_data
-        if key == "saved_data":
-            lines.append(f"{key}: Any = {formatted_value}\n")
-        elif key == "division_checked":
-            lines.append(f"{key}: bool = {formatted_value}\n")
-        else:
-            lines.append(f"{key} = {formatted_value}\n")
-
-    # Write to file
-    file_path.write_text("".join(lines))
+    file_path.write_text("\n".join(updated_lines) + "\n")
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
