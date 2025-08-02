@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
 
@@ -19,8 +20,10 @@ from helper_functions.main_menu_helpers import (
     positive_num,
     save_teams_order,
     setting_keys_booleans,
+    settings_to_json,
     update_settings,
     update_teams,
+    write_settings_to_py,
 )
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
@@ -261,10 +264,17 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_button"].update(text="Update", button_color=("white", "green"))
             window["update_message"].update(value=message, text_color="green")
             number_of_times_pressed = 0
+            settings = settings_to_json("settings.py")
+            settings_json = json.dumps(settings, indent=2)
 
             time.sleep(5)
-            python = sys.executable  # Path to current python.exe
-            os.execl(python, python, *sys.argv)  # Relaunch same script with same arguments
+            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+                tmp.write(settings_json)
+                tmp_path = tmp.name
+
+            # Relaunch script, passing temp filename as argument
+            python = sys.executable
+            os.execl(python, python, sys.argv[0], "--settings", tmp_path)
     else:
         window["update_message"].update(value=message, text_color="red")
 
@@ -319,7 +329,17 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         try:
-            saved_data = json.loads(sys.argv[1])
+            if "--settings" in sys.argv:
+                idx = sys.argv.index("--settings")
+                saved_data = {}  # If settings pass passed in not saved data dont pass settings to scoreboard.py
+                if idx + 1 < len(sys.argv):
+                    settings_path = sys.argv[idx + 1]
+                    with settings_path.open(encoding="utf-8") as f:
+                        settings = json.load(f)
+                        write_settings_to_py(settings, "settings.py")
+                        logger.info("Settings.py updated from JSON.")
+            else:
+                saved_data = json.loads(sys.argv[1])
         except json.JSONDecodeError:
             logger.exception("Invalid JSON argument:")
             saved_data = {}

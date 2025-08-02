@@ -3,6 +3,7 @@ import ast
 import io
 import sys
 from pathlib import Path
+from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
@@ -170,13 +171,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 
         # Update the settings.teams list in-memory for when downloading logos later
-        for team in added_teams:
-            settings.teams.append([team])
-        for team in removed_teams:
-            try:
-                settings.teams.remove([team])
-            except ValueError:  # In case it was already removed
-                logger.info("Failed to delete instance of team in settings.teams list")
+        settings.teams.extend([[team] for team in added_teams])
 
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
@@ -317,6 +312,58 @@ def update_division(league: str, selected_teams: list, existing_teams: list, rem
                 selected_teams[:] = [t for t in selected_teams if t not in teams]
 
     return selected_teams, existing_teams, removed_teams
+
+def settings_to_json(file_path: str) -> dict[str, Any]:
+    """Load a Python settings file and convert all its top-level variables to a dict.
+
+    :param file_path: Path to the settings .py file
+    :return: dictionary with all variables defined in the settings file
+    """
+    namespace = {}
+    with file_path.open(encoding="utf-8") as f:
+        code = f.read()
+
+    # Execute the settings file code safely in a fresh namespace
+    exec(code, {}, namespace)
+
+    # Remove built-ins and imported modules, keep only variables
+    return {key: value for key, value in namespace.items() if not key.startswith("__")}
+
+
+def write_settings_to_py(settings: dict, settings_path: str = "settings.py") -> None:
+    """Write settings to settings.py after updated to preserve user settings when updating."""
+    lines = ['"""Settings used to tell what to display and variable used in multiple files."""\n']
+
+    allowed_keys = ["FONT", *setting_keys_booleans, *setting_keys_integers]
+
+    for key in sorted(allowed_keys):
+        if key not in settings:
+            continue
+
+        value = settings[key]
+
+        # Format the value
+        if isinstance(value, str):
+            formatted_value = f'"{value}"'
+        elif isinstance(value, list):
+            # Format nested lists nicely
+            if all(isinstance(item, list) and len(item) == 1 for item in value):
+                formatted_value = "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
+            else:
+                formatted_value = repr(value)
+        else:
+            formatted_value = repr(value)
+
+        # Handle optional typing for saved_data
+        if key == "saved_data":
+            lines.append(f"{key}: Any = {formatted_value}\n")
+        elif key == "division_checked":
+            lines.append(f"{key}: bool = {formatted_value}\n")
+        else:
+            lines.append(f"{key} = {formatted_value}\n")
+
+    # Write to file
+    Path(settings_path).write_text("".join(lines))
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""

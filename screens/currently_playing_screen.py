@@ -48,7 +48,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             team_info.clear()
             teams_currently_playing.clear()
             for fetch_index in range(len(teams)):
-                print(f"\nFetching data for {teams[fetch_index][0]}")
+                logger.info(f"\nFetching data for {teams[fetch_index][0]}")
                 info, data, currently_playing = get_data(teams[fetch_index])
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
@@ -144,7 +144,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
-            print(f"\n{teams[display_index][0]} is currently playing, updating display")
+            logger.info(f"\n{teams[display_index][0]} is currently playing, updating display")
             sport_league = teams[display_index][1]
 
             # Reset text color, underline and timeouts, for new display
@@ -252,21 +252,24 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     for x in range(len(teams) * 2):
                         if teams_currently_playing[(original_index + x) % len(teams)] is False:
                             display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                            logger.info(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                         elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                            logger.info(
+                                f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                             break
                 elif not settings.stay_on_team and not settings.prioritize_playing_team:
                     original_index = display_index
                     for x in range(len(teams) * 2):
                         if teams_with_data[(original_index + x) % len(teams)] is False:
                             display_index = (display_index + 1) % len(teams)
-                            print(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
+                            logger.info(f"skipping displaying {teams[(original_index + x) % len(teams)][0]}")
                         elif teams_with_data[(original_index + x) % len(teams)] is True and x != 0:
-                            print(f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                            logger.info(
+                                f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
                             break
                 else:
-                    print(f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
+                    logger.info(
+                        f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
 
             display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
             if not settings.stay_on_team:
