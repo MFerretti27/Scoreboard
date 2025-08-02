@@ -162,7 +162,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
                 break
 
     if start_index is not None and end_index is not None:
-        contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
+        contents = [*contents[:start_index], teams_string, *contents[end_index + 1:]]
 
         with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
@@ -257,7 +257,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
 
     # If teams block is found, replace it with the new reordered list
     if start_index is not None and end_index is not None:
-        contents = contents[:start_index] + [teams_string] + contents[end_index + 1:]
+        contents = [*contents[:start_index], teams_string, *contents[end_index + 1:]]
 
         # Write the updated contents back to the file
         with file_path.open("w", encoding="utf-8") as file:
