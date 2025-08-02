@@ -394,7 +394,7 @@ def get_live_game_data(league: str, name: str, info: dict, comp: dict) -> dict:
     return info
 
 def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
-                         team_name: str, *, currently_playing: bool = False) -> list:
+                         team_name: str, *, currently_playing: bool = False) -> tuple[dict[Any, Any], bool]:
     """Get data if team is not currently playing.
 
     param info: Dictionary containing team information

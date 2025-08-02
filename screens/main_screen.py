@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import time
+from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
@@ -76,7 +77,7 @@ def main(saved_data: dict) -> None:
         elif "Manual" in event:
             window = manual_screen(window)
 
-def add_team_screen(window: Sg.Window, event: str, team_names: list) -> list:
+def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[Any, list[Any]]:
     """GUI screen to add different team to display information for.
 
     :param window: Window GUI to display
@@ -291,7 +292,7 @@ def handle_restore(window: Sg.Window, values: list) -> None:
         else:
             window["update_message"].update(value=message, text_color="red")
 
-def handle_starting_script(window: Sg.Window, saved_data: json) -> None:
+def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> None:
     """Run the script to display live team data in a new process.
 
     :param window: window GUI to display

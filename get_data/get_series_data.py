@@ -9,7 +9,7 @@ from helper_functions.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
-mlb_series = {}
+mlb_series: dict = {}
 
 
 def get_series(team_league: str, team_name: str) -> str:
@@ -42,8 +42,8 @@ def get_current_series_mlb(team_name: str) -> str:
         team_id = get_mlb_team_id(team_name)
 
         # Get today's games for that team
-        today = datetime.now().strftime("%Y-%m-%d")  # noqa: DTZ005
-        one_day_later = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")  # noqa: DTZ005
+        today = datetime.now().strftime("%Y-%m-%d")
+        one_day_later = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
         schedule = statsapi.schedule(team=team_id, start_date=today, end_date=one_day_later)
 
         game = schedule[0]  # Take the first game today

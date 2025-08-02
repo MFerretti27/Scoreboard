@@ -118,9 +118,9 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     :return: list of strings telling what team(s) was selected and what team(s) where unselected
     """
     existing_teams = read_teams_from_file()
-    teams_added = ""
-    teams_removed = ""
-    removed_teams = []
+    teams_added: str = ""
+    teams_removed: str = ""
+    removed_teams: list = []
 
     available_checkbox_teams = {
         "MLB": MLB,
@@ -271,7 +271,7 @@ def save_teams_order(new_ordered_teams: list) -> None:
 
 
 def update_division(league: str, selected_teams: list, existing_teams: list, removed_teams: list,
-                    available_checkbox_teams: list) -> list:
+                    available_checkbox_teams: list) -> tuple[list, list, list]:
     """If Division is selected or unselected remove or add teams.
 
     :param league: Current sports league
