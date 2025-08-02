@@ -270,7 +270,7 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
 
     return number_of_times_pressed
 
-def handle_restore(window: Sg.Window, values: list) -> None:
+def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
     """Restore files when user pressed restore button.
 
     :param window: window GUI to display
