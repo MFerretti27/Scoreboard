@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -61,12 +62,15 @@ def main(saved_data: dict) -> None:
             sys.exit()
 
         elif "Add" in event:
+            number_of_times_pressed = 0
             window, team_names = add_team_screen(window, event, team_names)
 
         elif event == "Settings":
+            number_of_times_pressed = 0
             window = settings_screen(window)
 
         elif event == "Set Team Order":
+            number_of_times_pressed = 0
             window = set_team_order_screen(window)
 
         elif event == "update_button":
@@ -79,6 +83,7 @@ def main(saved_data: dict) -> None:
             handle_starting_script(window, saved_data)
 
         elif "Manual" in event:
+            number_of_times_pressed = 0
             window = manual_screen(window)
 
 def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[Any, list[Any]]:
@@ -260,22 +265,27 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_message"].update(value=message + " Press Again to Update")
             number_of_times_pressed = 1
     elif successful and number_of_times_pressed == 1:
+        settings = settings_to_json()
+        serializable_settings = {
+            k: v for k, v in settings.items()
+            if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
+        }
+
+        settings_json = json.dumps(serializable_settings, indent=2)
+
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+            tmp.write(settings_json)
+            tmp_path = tmp.name
         message, successful = update_program()
         if successful:
             window["update_button"].update(text="Update", button_color=("white", "green"))
             window["update_message"].update(value=message, text_color="green")
             number_of_times_pressed = 0
-            settings = settings_to_json()
-            settings_json = json.dumps(settings, indent=2)
-
             time.sleep(5)
-            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
-                tmp.write(settings_json)
-                tmp_path = tmp.name
 
             # Relaunch script, passing temp filename as argument
             python = sys.executable
-            os.execl(python, python, sys.argv[0], "--settings", tmp_path)
+            os.execl(python, python, "-m", "screens.main_screen", "--settings", tmp_path)
     else:
         window["update_message"].update(value=message, text_color="red")
 

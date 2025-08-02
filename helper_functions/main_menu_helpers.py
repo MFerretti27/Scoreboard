@@ -331,46 +331,56 @@ def settings_to_json() -> dict[str, Any]:
     return {key: value for key, value in namespace.items() if not key.startswith("__")}
 
 
-def write_settings_to_py(settings: dict[Any, Any]) -> None:
-    """Update only known settings in settings.py while preserving all other content."""
+def write_settings_to_py(settings_saved: dict[Any, Any]) -> None:
+    """Replace only the 'teams' block and update other settings in-place."""
     assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
+    lines = file_path.read_text().splitlines() if file_path.exists() else []
     updated_lines = []
 
-    lines = file_path.read_text().splitlines() if file_path.exists() else []
+    in_teams_block = False
+    bracket_balance = 0
+    teams_replaced = False
 
-    for original_line in lines:
-        match = assign_pattern.match(original_line)
+    for line in lines:
+        if not in_teams_block and line.strip().startswith("teams") and "=" in line and "[" in line:
+            in_teams_block = True
+            bracket_balance = line.count("[") - line.count("]")
+            # Replace this line with new teams assignment
+            updated_lines.append(format_teams_block(settings_saved.get("teams", [])))
+            teams_replaced = True
+            continue
+
+        if in_teams_block:
+            bracket_balance += line.count("[") - line.count("]")
+            if bracket_balance <= 0:
+                in_teams_block = False
+            continue  # Skip old lines in the block
+
+        match = assign_pattern.match(line)
         if match:
             key, _ = match.groups()
-            if key in settings:
-                value = settings[key]
+            if key in settings_saved and key != "teams":
+                value = settings_saved[key]
                 formatted_value = (
                     f'"{value}"' if isinstance(value, str)
-                    else (
-                        "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
-                        if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
-                        else repr(value)
-                    )
-                )
-                updated_line = f"{key} = {formatted_value}"
-                updated_lines.append(updated_line)
-                continue  # Skip appending original_line
-        updated_lines.append(original_line)
-
-    existing_keys = {match.group(1) for match in map(assign_pattern.match, lines) if match}
-    for key, value in settings.items():
-        if key not in existing_keys:
-            formatted_value = (
-                f'"{value}"' if isinstance(value, str)
-                else (
-                    "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
-                    if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
                     else repr(value)
                 )
-            )
-            updated_lines.append(f"{key} = {formatted_value}")
+                updated_lines.append(f"{key} = {formatted_value}")
+                continue
+
+        updated_lines.append(line)
+
+    # If teams block wasn't found, append it at the end
+    if "teams" in settings_saved and not teams_replaced:
+        updated_lines.append(format_teams_block(settings["teams"]))
 
     file_path.write_text("\n".join(updated_lines) + "\n")
+
+def format_teams_block(teams: list[list[str]]) -> str:
+    """Format team block in settings."""
+    if isinstance(teams, list) and all(isinstance(item, list) and len(item) == 1 for item in teams):
+        return "teams = [\n" + "\n".join(f"    {item!r}," for item in teams) + "\n]"
+    return f"teams = {teams!r}"
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
