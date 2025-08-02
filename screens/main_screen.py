@@ -334,7 +334,6 @@ if __name__ == "__main__":
                 idx = sys.argv.index("--settings")
                 saved_data = {}  # If settings pass passed in not saved data dont pass settings to scoreboard.py
                 if idx + 1 < len(sys.argv):
-                    settings_path = sys.argv[idx + 1]
                     settings_path = Path(sys.argv[idx + 1])  # Convert to Path
                     with settings_path.open(encoding="utf-8") as f:
                         settings_saved = json.load(f)
