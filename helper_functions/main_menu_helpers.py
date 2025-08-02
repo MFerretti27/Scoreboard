@@ -335,43 +335,43 @@ def write_settings_to_py(settings: dict[Any, Any]) -> None:
     """Update only known settings in settings.py while preserving all other content."""
     assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
     updated_lines = []
-    file = Path("settings.py")
+    # file = Path("settings.py")
 
-    lines = file.read_text().splitlines() if file.exists() else []
+    # lines = file.read_text().splitlines() if file.exists() else []
 
-    for original_line in lines:
-        match = assign_pattern.match(original_line)
-        if match:
-            key, _ = match.groups()
-            if key in settings:
-                value = settings[key]
-                formatted_value = (
-                    f'"{value}"' if isinstance(value, str)
-                    else (
-                        "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
-                        if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
-                        else repr(value)
-                    )
-                )
-                updated_line = f"{key} = {formatted_value}"
-                updated_lines.append(updated_line)
-                continue  # Skip appending original_line
-        updated_lines.append(original_line)
+    # for original_line in lines:
+    #     match = assign_pattern.match(original_line)
+    #     if match:
+    #         key, _ = match.groups()
+    #         if key in settings:
+    #             value = settings[key]
+    #             formatted_value = (
+    #                 f'"{value}"' if isinstance(value, str)
+    #                 else (
+    #                     "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
+    #                     if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
+    #                     else repr(value)
+    #                 )
+    #             )
+    #             updated_line = f"{key} = {formatted_value}"
+    #             updated_lines.append(updated_line)
+    #             continue  # Skip appending original_line
+    #     updated_lines.append(original_line)
 
-    existing_keys = {match.group(1) for match in map(assign_pattern.match, lines) if match}
-    for key, value in settings.items():
-        if key not in existing_keys:
-            formatted_value = (
-                f'"{value}"' if isinstance(value, str)
-                else (
-                    "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
-                    if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
-                    else repr(value)
-                )
-            )
-            updated_lines.append(f"{key} = {formatted_value}")
+    # existing_keys = {match.group(1) for match in map(assign_pattern.match, lines) if match}
+    # for key, value in settings.items():
+    #     if key not in existing_keys:
+    #         formatted_value = (
+    #             f'"{value}"' if isinstance(value, str)
+    #             else (
+    #                 "[\n" + "\n".join(f"    {item!r}," for item in value) + "\n]"
+    #                 if isinstance(value, list) and all(isinstance(item, list) and len(item) == 1 for item in value)
+    #                 else repr(value)
+    #             )
+    #         )
+    #         updated_lines.append(f"{key} = {formatted_value}")
 
-    file.write_text("\n".join(updated_lines) + "\n")
+    # file.write_text("\n".join(updated_lines) + "\n")
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
