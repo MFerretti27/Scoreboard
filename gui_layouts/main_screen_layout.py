@@ -1,7 +1,8 @@
 """GUI Layout screen for main menu."""
-import FreeSimpleGUI as Sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from get_data.get_team_league import MLB, NBA, NFL, NHL
 
 
 def create_main_layout(window_width: int) -> list:
@@ -16,6 +17,7 @@ def create_main_layout(window_width: int) -> list:
     button_size = max(12, window_width // 40)
     update_button_size = max(12, window_width // 80)
     message_size = max(12, window_width // 60)
+    count = int(len(MLB) + len(NFL) + len(NBA) + len(NHL))
     return [
         [Sg.Push(), Sg.Text("Major League Scoreboard", font=(settings.FONT, text_size)), Sg.Push()],
         [Sg.Push(),
@@ -56,19 +58,13 @@ def create_main_layout(window_width: int) -> list:
             Sg.Button("Settings", font=(settings.FONT, button_size), expand_x=True),
         ],
         [Sg.Button("Start", font=(settings.FONT, button_size), expand_x=True)],
-        [
-            Sg.Push(),
-            Sg.Column([
-                [Sg.Multiline(size=(80, 20), key="terminal_output",
-                              autoscroll=True, disabled=True,
-                              background_color=Sg.theme_background_color(),
-                              text_color=Sg.theme_text_color(),
-                              sbar_background_color=Sg.theme_background_color(),
-                              sbar_trough_color=Sg.theme_background_color(),
-                              no_scrollbar=True, sbar_relief=Sg.RELIEF_FLAT,
-                              expand_x=True, visible=False)],
-            ], expand_x=True),
-            Sg.Push(),
-        ],
+        [Sg.VPush()],
+        [Sg.Push(),
+         Sg.Text("", font=(settings.FONT, message_size), key="download_message"),
+         Sg.Push()],
+        [Sg.Push(),
+         Sg.ProgressBar(count, key="PROGRESS_BAR", size=(window_width, message_size),
+                        bar_color=("green", "white"), visible=False),
+         Sg.Push()],
         [Sg.VPush()],
     ]

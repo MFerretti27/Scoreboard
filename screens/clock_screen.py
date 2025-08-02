@@ -10,16 +10,17 @@ import gc
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 
-import FreeSimpleGUI as Sg  # type: ignore
-import orjson  # type: ignore
-from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
+import orjson  # type: ignore[import]
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
 from get_data.get_team_logos import get_random_logo
 from helper_functions.internet_connection import is_connected, reconnect
+from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import reset_window_elements
 
 
@@ -39,6 +40,7 @@ def clock(window: Sg.Window, message: str) -> list:
     first_time = True
 
     reset_window_elements(window)
+    window["under_score_image"].update(filename="")
 
     while True not in teams_with_data:
 
@@ -49,7 +51,7 @@ def clock(window: Sg.Window, message: str) -> list:
             fetch_picture = ticks_add(fetch_picture, fetch_picture_timer)  # Reset Timer if picture updated
 
         # Get the current time and display it
-        current_time = datetime.now(UTC)
+        current_time = datetime.now()  # noqa: DTZ005
         hour = current_time.hour if current_time.hour < 13 else current_time.hour - 12
         minute = current_time.minute if current_time.minute > 9 else f"0{current_time.minute}"
 
@@ -76,7 +78,7 @@ def clock(window: Sg.Window, message: str) -> list:
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer:
                 teams_with_data.clear()
                 for fetch_index in range(len(settings.teams)):
-                    print(f"\nFetching data for {settings.teams[fetch_index][0]}")
+                    logger.info("\nFetching data for %s", settings.teams[fetch_index][0])
                     data = get_data(settings.teams[fetch_index])
                     teams_with_data.append(data[1])
                     message = "No Data For Any Teams"
@@ -85,11 +87,11 @@ def clock(window: Sg.Window, message: str) -> list:
 
         # If fetched failed find out why and display message
         except Exception as error:
-            print(f"Failed to Get Data, Error: {error}")
+            logger.exception("Failed to Get Data")
             if is_connected():
                 message = f"Failed to Get Info From ESPN, Error:{error}"
             if not is_connected():
-                print("Internet connection is down, trying to reconnect...")
+                logger.exception("Internet connection is down, trying to reconnect...")
                 message = "No Internet Connection"
                 reconnect()
                 time.sleep(20)  # Wait 20 seconds for connection

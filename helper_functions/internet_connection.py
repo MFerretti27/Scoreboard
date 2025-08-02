@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import time
 
+from helper_functions.logger_config import logger
+
 
 def is_connected() -> bool:
     """Check if there's an internet connection by pinging 8.8.8.8 (Google DNS)."""
@@ -64,7 +66,7 @@ def reconnect() -> None:
             time.sleep(5)
             subprocess.run([nmcli_path, "radio", "wifi", "on"], check=True)
 
-    except subprocess.CalledProcessError as error:
-        print(f"Error resetting the network interface : {error}")
+    except subprocess.CalledProcessError:
+        logger.exception("Error resetting the network interface")
 
     time.sleep(5)  # Wait for the network interface to come back up

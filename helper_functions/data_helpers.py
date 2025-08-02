@@ -1,8 +1,8 @@
 """Functions for helping grab data from api's."""
-
 from pathlib import Path
 
 import settings
+from helper_functions.logger_config import logger
 
 should_skip = False
 
@@ -20,7 +20,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
 
     if home_team.upper() in team_names and away_team.upper() in team_names:
         if should_skip:
-            print(f"{home_team} is playing {away_team}, skipping to not display twice")
+            logger.info("%s is playing %s, skipping to not display twice", home_team, away_team)
             should_skip = False
 
             # Remove the skipped team data to prevent stale display
@@ -62,6 +62,30 @@ def get_network_logos(broadcast: str | list) -> Path | str:
             break
 
     return file_path
+
+def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_info: dict) -> dict:
+    """Get the team logo for the given team name.
+
+    :param home_team_name: Name of the home team
+    :param away_team_name: Name of the away team
+    :param league: League of the teams (e.g., MLB)
+    :param team_info: Dictionary to store team logo paths
+
+    :return team_info: Updated dictionary all data to display for the team
+    """
+    folder_path = Path.cwd() / "images" / "sport_logos" / league
+    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
+    for file in file_names:
+        filename = file.name.upper()
+        if home_team_name.upper() in filename:
+            home_team = filename
+        if away_team_name.upper() in filename:
+            away_team = filename
+
+    team_info["away_logo"] = Path.cwd() / "images" / "sport_logos" / league / away_team.replace("PNG", "png")
+    team_info["home_logo"] = Path.cwd() / "images" / "sport_logos" / league / home_team.replace("PNG", "png")
+
+    return team_info
 
 
 def check_for_doubleheader(response_as_json: dict, team_name: str) -> bool:

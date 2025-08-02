@@ -2,11 +2,12 @@
 import copy
 import time
 
-import FreeSimpleGUI as sg  # type: ignore
-from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore
+import FreeSimpleGUI as sg  # type: ignore[import]
+from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
+from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
     reset_window_elements,
@@ -155,7 +156,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
                     window[key].update(filename=value)
                 elif key == "signature":
-                    window[key].update(filename=value, text_color="red")
+                    window[key].update(value=value, text_color="red")
                 elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
                       "power_play" not in key):
                     window[key].update(value=value)
@@ -278,6 +279,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     event = window.read(timeout=100)
                     text = text[1:] + text[0]
                     window["bottom_info"].update(value=text)
+                    check_events(window, event)
                 time.sleep(5)
             should_scroll = False
 
@@ -300,7 +302,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             if settings.stay_on_team and currently_displaying != team_info[display_index]:
                 display_index = original_index
 
-    print("\nNo Team Currently Playing\n")
+    logger.info("\nNo Team Currently Playing\n")
     reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info

@@ -1,5 +1,4 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
-
 import gc
 import subprocess
 import sys
@@ -8,10 +7,11 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import font as tk_font
 
-import FreeSimpleGUI as Sg  # type: ignore
-import orjson  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
+import orjson  # type: ignore[import]
 
 import settings
+from helper_functions.logger_config import logger
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -31,7 +31,7 @@ def will_text_fit_on_screen(text: str) -> bool:
     root.destroy()
 
     if width >= screen_width:
-        print(f"Bottom Text will scroll, text size: {width}, screen size: {screen_width}")
+        logger.info("Bottom Text will scroll, text size: %s, screen size: %s", width, screen_width)
         return True
 
     return False
@@ -86,26 +86,26 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
 
     if currently_playing:
         if "Caps_Lock" in events[0] and not settings.stay_on_team:
-            print("Caps Lock key pressed, Staying on team")
+            logger.info("Caps Lock key pressed, Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
         elif ("Shift_L" in events[0] or "Shift_R" in events[0]) and settings.stay_on_team:
-            print("shift key pressed, Rotating teams")
+            logger.info("shift key pressed, Rotating teams")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
 
     if "Left" in events[0] and settings.delay:
-        print("left key pressed, delay off")
+        logger.info("left key pressed, delay off")
         settings.delay = False
         window["bottom_info"].update(value="Turning delay OFF")
         window.refresh()
         time.sleep(5)
     elif "Right" in events[0] and not settings.delay:
-        print("Right key pressed, delay on")
+        logger.info("Right key pressed, delay on")
         settings.delay = True
         window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
         window.refresh()
@@ -146,7 +146,7 @@ def resize_text() -> None:
     base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
     scale = window_width / base_width
 
-    print(f"Closest screen size: {base_width}, multiplier: {scale}\n")
+    logger.info("Closest screen size: %s, multiplier: %s\n", base_width, scale)
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(60, int(113 * scale)))
@@ -162,27 +162,28 @@ def resize_text() -> None:
     settings.TOP_TXT_SIZE = min(max_size, max(40, int(60 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(8, int(8 * scale)))
 
-    print(f"\nScore txt size:{settings.SCORE_TXT_SIZE}")
-    print(f"Info txt size:{settings.INFO_TXT_SIZE}")
-    print(f"Record txt size:{settings.RECORD_TXT_SIZE}")
-    print(f"Clock txt size:{settings.CLOCK_TXT_SIZE}")
-    print(f"Hyphen txt size:{settings.HYPHEN_SIZE}")
-    print(f"Timeout txt size:{settings.TIMEOUT_SIZE}")
-    print(f"NBA top txt size:{settings.NBA_TOP_INFO_SIZE}")
-    print(f"MLB bottom txt size:{settings.MLB_BOTTOM_INFO_SIZE}")
-    print(f"Playing txt size:{settings.PLAYING_TOP_INFO_SIZE}")
-    print(f"Not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
-    print(f"Top txt size:{settings.TOP_TXT_SIZE}")
-    print(f"Signature txt size:{settings.SIGNATURE_SIZE}\n")
+    logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
+    logger.info("Info txt size: %s", settings.INFO_TXT_SIZE)
+    logger.info("Record txt size: %s", settings.RECORD_TXT_SIZE)
+    logger.info("Clock txt size: %s", settings.CLOCK_TXT_SIZE)
+    logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
+    logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
+    logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
+    logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
+    logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
+    logger.info("Not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
+    logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
+    logger.info("Signature txt size: %s\n", settings.SIGNATURE_SIZE)
 
 
 
-def convert_paths_to_strings(obj):
+def convert_paths_to_strings(obj: object) -> object:
+    """Recursively convert all Path objects in a nested structure to strings."""
     if isinstance(obj, dict):
         return {k: convert_paths_to_strings(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [convert_paths_to_strings(i) for i in obj]
-    elif isinstance(obj, Path):
+    if isinstance(obj, Path):
         return str(obj)
-    else:
-        return obj
+
+    return obj

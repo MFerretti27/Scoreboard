@@ -1,15 +1,15 @@
 """Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen."""
-
 import random
 import shutil
 from pathlib import Path
 
-import FreeSimpleGUI as Sg  # type: ignore
-import requests  # type: ignore
-from PIL import Image  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
+import requests  # type: ignore[import]
+from PIL import Image  # type: ignore[import]
 
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
+from helper_functions.logger_config import logger
 
 
 def new_league_added() -> bool:
@@ -69,10 +69,10 @@ def resize_image(image_path: str | Path, directory: str | Path, file_name: str) 
 
     # If images dont need resizing then dont resave images (images get distorted over time, copy of a copy)
     if abs(width - new_width) <= 3 and abs(height - new_height) <= 3 and "sport_logos" not in str(image_path):
-        print(f"{file_name} Does not need resizing")
+        logger.info("%s Does not need resizing", file_name)
         return
 
-    print(f"Resizing {file_name} logo to {new_width}x{new_height} from {width}x{height}.")
+    logger.info("Resizing %s logo to %dx%d from %dx%d.", file_name, new_width, new_height, width, height)
 
     if ".png" in file_name:  # Remove .png if in filename as it will be saved with .png below
         file_name = file_name.replace(".png", "")
@@ -89,6 +89,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
     :param teams: Dictionary with teams to display
     :param teams: List of teams containing leagues to get logos for
     """
+    count = 0
     # Loop through each league to get the teams
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
@@ -114,8 +115,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 logo_url = team["team"]["logos"][0]["href"]
                 team_name = team_name.upper()
 
-                print(f"Downloading logo for {team_name} from {teams[i][1]}...")
-                print()
+                logger.info("Downloading logo for %s from %s...", team_name, teams[i][1])
 
                 img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
                 response = requests.get(logo_url, stream=True, timeout=5)
@@ -129,10 +129,12 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
 
                 # Delete the original .png file
                 Path.unlink(Path(img_path_png))
+                count +=1
+                window["PROGRESS_BAR"].update(current_count=count)
                 window.refresh()  # Refresh to display text
 
     if Path.exists(Path.cwd() / "images" / "sport_logos"):
-        print("All logos have been downloaded!\n")
+        logger.info("All logos have been downloaded!\n")
 
 
 def get_team_logos(window: Sg.Window, teams: list) -> str:
@@ -147,6 +149,8 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
     try:
         if not Path.exists(Path.cwd() / "images" / "sport_logos"):
             Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
+            msg = "First time running, Downloading and Re-sizing logos"
+            window["download_message"].update(value=msg)
             download_team_logos(window, teams)
             # Resize local images to fit on screen
             resize_images_from_folder([
@@ -160,11 +164,15 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
             return check_downloaded_correctly()
 
         # If user selects new team in a league they haven't selected before download all logos in that league
-        elif new_league_added():
+        if new_league_added():
+            msg = "New league added, Downloading and Re-sizing logos for new league"
+            window["download_message"].update(value=msg)
             download_team_logos(window, teams)  # Will only get new league team logos
             return check_downloaded_correctly()
 
         if settings.always_get_logos and already_downloaded:
+            msg = "Always get logos in settings selected, Downloading and Re-sizing logos"
+            window["download_message"].update(value=msg)
             # Dont want to continually resize images multiple times, so remove
             shutil.rmtree(Path.cwd() / "images" / "sport_logos")
             Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
@@ -178,9 +186,11 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
             ])
             return check_downloaded_correctly()
 
-        return "Starting..."
     except Exception as e:
+        logger.exception("Failed to download team logos")
         return "Failed to download team logos, please try again. Error: " + str(e)
+
+    return "Starting..."
 
 def get_random_logo() -> dict:
     """Get 2 random teams from teams array, if only one team then it will return the only team there.
@@ -217,8 +227,10 @@ def resize_images_from_folder(image_folder_path: list[Path]) -> None:
 
 
 def check_downloaded_correctly() -> str:
-    """Check to see that all logos for every team was downloaded."""
+    """Check to see that all logos for every team was downloaded.
 
+    return: Empty string if all logos downloaded correctly, otherwise error message
+    """
     folder_path = Path.cwd() / "images" / "sport_logos"
 
     sports_logo_folders = list(folder_path.iterdir())
@@ -241,34 +253,30 @@ def check_downloaded_correctly() -> str:
         else:
             return "Failed to get Logos, Please Retry By Pressing Start Again."
 
-        if looking_at_sport == "MLB":
-            if len(list(folder.iterdir())) != len(MLB) - 1:
-                number_of_files = len(list(folder.iterdir()))
-                shutil.rmtree(folder_path)
-                MLB.remove("MLB")
-                return ("Failed to get MLB Logos, Please Retry By Pressing Start Again."
-                        f" Got {number_of_files} logos but MLB has {len(MLB)} teams.")
-        if looking_at_sport == "NFL":
-            if len(list(folder.iterdir())) != len(NFL) - 1:
-                number_of_files = len(list(folder.iterdir()))
-                shutil.rmtree(folder_path)
-                NFL.remove("NFL")
-                return ("Failed to get NFL Logos, Please Retry By Pressing Start Again."
-                        f" Got {number_of_files} logos but NFL has {len(NFL)} teams.")
-        if looking_at_sport == "NBA":
-            if len(list(folder.iterdir())) != len(NBA) - 1:
-                number_of_files = len(list(folder.iterdir()))
-                shutil.rmtree(folder_path)
-                NBA.remove("NBA")
-                return ("Failed to get NBA Logos, Please Retry By Pressing Start Again."
-                        f" Got {number_of_files} logos but NBA has {len(NBA)} teams.")
-        if looking_at_sport == "NHL":
-            if len(list(folder.iterdir())) != len(NHL) - 1:
-                number_of_files = len(list(folder.iterdir()))
-                shutil.rmtree(folder_path)
-                NHL.remove("NHL")
-                return ("Failed to get NHL Logos, Please Retry By Pressing Start Again."
-                        f" Got {number_of_files} logos but NHL has {len(NHL)} teams.")
+        if looking_at_sport == "MLB" and len(list(folder.iterdir())) != len(MLB) - 1:
+            number_of_files = len(list(folder.iterdir()))
+            shutil.rmtree(folder_path)
+            MLB.remove("MLB")
+            return ("Failed to get MLB Logos, Please Retry By Pressing Start Again."
+                    f" Got {number_of_files} logos but MLB has {len(MLB)} teams.")
+        if looking_at_sport == "NFL" and len(list(folder.iterdir())) != len(NFL) - 1:
+            number_of_files = len(list(folder.iterdir()))
+            shutil.rmtree(folder_path)
+            NFL.remove("NFL")
+            return ("Failed to get NFL Logos, Please Retry By Pressing Start Again."
+                    f" Got {number_of_files} logos but NFL has {len(NFL)} teams.")
+        if looking_at_sport == "NBA" and len(list(folder.iterdir())) != len(NBA) - 1:
+            number_of_files = len(list(folder.iterdir()))
+            shutil.rmtree(folder_path)
+            NBA.remove("NBA")
+            return ("Failed to get NBA Logos, Please Retry By Pressing Start Again."
+                    f" Got {number_of_files} logos but NBA has {len(NBA)} teams.")
+        if looking_at_sport == "NHL" and len(list(folder.iterdir())) != len(NHL) - 1:
+            number_of_files = len(list(folder.iterdir()))
+            shutil.rmtree(folder_path)
+            NHL.remove("NHL")
+            return ("Failed to get NHL Logos, Please Retry By Pressing Start Again."
+                    f" Got {number_of_files} logos but NHL has {len(NHL)} teams.")
 
     MLB.remove("MLB")
     NFL.remove("NFL")

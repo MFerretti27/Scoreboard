@@ -42,7 +42,7 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Column(
                     [
                         [Sg.Text("Live Data Delay:", font=(settings.FONT, top_label_size)),
-                         Sg.Spin([str(i) for i in range(1000)], key="live_delay", enable_events=True,
+                         Sg.Spin([str(i) for i in range(1000)], key="LIVE_DATA_DELAY", enable_events=True,
                                  size=(text_input_size, 1),
                                  font=("Arial", text_size),
                                  initial_value=str(current_settings.get("LIVE_DATA_DELAY", 0))),
@@ -50,7 +50,7 @@ def create_settings_layout(window_width: int) -> list:
                          ],
                         [
                             Sg.Push(),
-                            Sg.Text("Delay to display live data", key="Live_data_message",
+                            Sg.Text("Delay to display live data", key="LIVE_DATA_DELAY_MESSAGE",
                                     font=(settings.FONT, message_size, "italic")),
                             Sg.Push(),
                         ],
@@ -59,7 +59,7 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Column(
                     [
                         [Sg.Text("Display Timer (LIVE):", font=(settings.FONT, top_label_size)),
-                         Sg.Spin([str(i) for i in range(1000)], key="display_playing", enable_events=True,
+                         Sg.Spin([str(i) for i in range(1000)], key="DISPLAY_PLAYING_TIMER", enable_events=True,
                                  size=(text_input_size, 1),
                                  font=("Arial", text_size),
                                  initial_value=str(current_settings.get("DISPLAY_PLAYING_TIMER", 0))),
@@ -68,7 +68,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(),
                             Sg.Text("How often to Display each team when teams are playing",
-                                    key="display_playing_message",
+                                    key="DISPLAY_PLAYING_TIMER_MESSAGE",
                                     font=(settings.FONT, message_size, "italic")),
                             Sg.Push(),
                         ],
@@ -81,7 +81,7 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Column(
                     [
                         [Sg.Text("Fetch Timer:", font=(settings.FONT, top_label_size)),
-                         Sg.Spin([str(i) for i in range(1000)], key="fetch_not_playing", enable_events=True,
+                         Sg.Spin([str(i) for i in range(1000)], key="FETCH_DATA_NOT_PLAYING_TIMER", enable_events=True,
                                  size=(text_input_size, 1),
                                  font=("Arial", text_size),
                                  initial_value=str(current_settings.get("FETCH_DATA_NOT_PLAYING_TIMER", 0))),
@@ -90,7 +90,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(),
                             Sg.Text("How often to get data when no team is playing",
-                                    key="fetch_not_playing_message",
+                                    key="FETCH_DATA_NOT_PLAYING_TIMER_MESSAGE",
                                     font=(settings.FONT, message_size, "italic")),
                             Sg.Push(),
                         ],
@@ -99,7 +99,7 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Column(
                     [
                         [Sg.Text("Display Timer:", font=(settings.FONT, top_label_size)),
-                         Sg.Spin([str(i) for i in range(1000)], key="display_not_playing", enable_events=True,
+                         Sg.Spin([str(i) for i in range(1000)], key="DISPLAY_NOT_PLAYING_TIMER", enable_events=True,
                                  size=(text_input_size, 1),
                                  font=("Arial", text_size),
                                  initial_value=str(current_settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
@@ -108,7 +108,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(),
                             Sg.Text("How often to Display each team when no team is playing",
-                                    key="display_not_playing_message",
+                                    key="DISPLAY_NOT_PLAYING_TIMER_MESSAGE",
                                     font=(settings.FONT, message_size, "italic")),
                             Sg.Push(),
                         ],
@@ -117,7 +117,7 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Column(
                     [
                         [Sg.Text("Display Time:", font=(settings.FONT, top_label_size)),
-                         Sg.Spin([str(i) for i in range(1000)], key="display_time", enable_events=True,
+                         Sg.Spin([str(i) for i in range(1000)], key="HOW_LONG_TO_DISPLAY_TEAM", enable_events=True,
                                  size=(text_input_size, 1),
                                  font=("Arial", text_size),
                                  initial_value=str(current_settings.get("HOW_LONG_TO_DISPLAY_TEAM", 0))),
@@ -126,7 +126,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(),
                             Sg.Text("How long to display team info when finished",
-                                    key="display_time_message",
+                                    key="HOW_LONG_TO_DISPLAY_TEAM_MESSAGE",
                                     font=(settings.FONT, message_size, "italic")),
                             Sg.Push(),
                         ],
@@ -162,6 +162,10 @@ def create_settings_layout(window_width: int) -> list:
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("display_date_ended", False)),
+                Sg.Checkbox("Display Playoff/Championship Image", key="display_playoff_championship_image",
+                            font=(settings.FONT, text_size),
+                            expand_x=True,
+                            default=current_settings.get("display_playoff_championship_image", False)),
                 Sg.Checkbox("Download/Resize Images when Starting", key="always_get_logos",
                             font=(settings.FONT, text_size),
                             expand_x=True,
@@ -170,6 +174,11 @@ def create_settings_layout(window_width: int) -> list:
                             font=(settings.FONT, text_size),
                             expand_x=True,
                             default=current_settings.get("prioritize_playing_team", False)),
+                Sg.Checkbox("Prioritize Playoff/Championship Image Over Broadcast",
+                            key="prioritize_playoff_championship_image",
+                            font=(settings.FONT, text_size),
+                            expand_x=True,
+                            default=current_settings.get("prioritize_playoff_championship_image", False)),
             ],
         ],
         expand_x=True,

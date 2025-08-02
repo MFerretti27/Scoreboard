@@ -4,10 +4,11 @@ import io
 import sys
 from pathlib import Path
 
-import FreeSimpleGUI as Sg  # type: ignore
+import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
+from helper_functions.logger_config import logger
 
 file_path = Path("settings.py")
 
@@ -25,7 +26,8 @@ setting_keys_booleans = [
     "display_nfl_timeouts", "display_nfl_redzone",
 
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
-    "display_date_ended", "prioritize_playing_team", "always_get_logos",
+    "display_date_ended", "prioritize_playing_team", "always_get_logos", "prioritize_playoff_championship_image",
+    "display_playoff_championship_image",
 ]
 
 setting_keys_integers = ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
@@ -127,34 +129,8 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         "NFL": NFL,
     }.get(league, [])
 
-    # If Division is selected but team in division was unselected remove team
-    if any(team in ALL_DIVISIONS[league] for team in selected_teams) and settings.division_checked:
-        for team in existing_teams:
-            if team not in selected_teams and team in available_checkbox_teams:
-                existing_teams.remove(team)
-                removed_teams.append(team)
-        for team in selected_teams:
-            if team in ALL_DIVISIONS[league]:
-                selected_teams.remove(team)  # Remove the division name itself
-
-    # If a team is selected, add all teams in that division
-    elif any(team in ALL_DIVISIONS[league] for team in selected_teams):
-        for team in selected_teams:
-            if team in ALL_DIVISIONS[league]:
-                division_key = league + " " + team
-                selected_teams += [team for team in available_checkbox_teams if team in DIVISION_TEAMS[division_key]]
-                selected_teams.remove(team)  # Remove the division name itself
-
-    # If division is not selected, but a division was previously checked when screen was opened
-    # then it was unselected so remove all teams in that division from selected_teams
-    elif settings.division_checked:
-        for division in ALL_DIVISIONS.get(league, []):
-            for team in selected_teams:
-                if team not in ALL_DIVISIONS[league]:
-                    if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
-                        for team in DIVISION_TEAMS[league + " " + division]:
-                            if team in selected_teams:
-                                selected_teams.remove(team)
+    selected_teams, existing_teams, removed_teams, = \
+        update_division(league, selected_teams, existing_teams, removed_teams, available_checkbox_teams)
 
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = list(dict.fromkeys(untouched_teams + selected_teams))  # Remove duplicates
@@ -199,8 +175,8 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         for team in removed_teams:
             try:
                 settings.teams.remove([team])
-            except ValueError:
-                print("Failed to delete instance of team in settings.teams list")  # In case it was already removed
+            except ValueError:  # In case it was already removed
+                logger.info("Failed to delete instance of team in settings.teams list")
 
         if added_teams:
             teams_added = f"Teams Added: {', '.join(added_teams)}  "
@@ -212,8 +188,7 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
     return teams_added, teams_removed
 
 
-def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, display_time: int,
-                    display_timer_live: int, selected_items: list) -> None:
+def update_settings(selected_items_integers: dict, selected_items_boolean: list) -> None:
     """Update settings.py with new values.
 
     :param live_data_delay: delay for live data in seconds
@@ -229,29 +204,19 @@ def update_settings(live_data_delay: int, fetch_timer: int, display_timer: int, 
         contents = file.readlines()
 
     for i, line in enumerate(contents):
-        if line.strip().startswith("LIVE_DATA_DELAY ="):
-            contents[i] = f"LIVE_DATA_DELAY = {live_data_delay}\n"
-        if line.strip().startswith("FETCH_DATA_NOT_PLAYING_TIMER ="):
-            contents[i] = f"FETCH_DATA_NOT_PLAYING_TIMER = {fetch_timer}\n"
-        if line.strip().startswith("FETCH_DATA_PLAYING_TIMER ="):
-            contents[i] = f"FETCH_DATA_PLAYING_TIMER = {fetch_timer}\n"
-        if line.strip().startswith("DISPLAY_NOT_PLAYING_TIMER ="):
-            contents[i] = f"DISPLAY_NOT_PLAYING_TIMER = {display_timer}\n"
-        if line.strip().startswith("DISPLAY_PLAYING_TIMER ="):
-            contents[i] = f"DISPLAY_PLAYING_TIMER = {display_timer_live}\n"
-        if line.strip().startswith("HOW_LONG_TO_DISPLAY_TEAM ="):
-            contents[i] = f"HOW_LONG_TO_DISPLAY_TEAM = {display_time}\n"
+        for key in setting_keys_integers:
+            if line.strip().startswith(f"{key} ="):
+                contents[i] = f"{key} = {selected_items_integers[key]}\n"
 
-    for key, selected in zip(setting_keys_booleans, selected_items, strict=False):
+    for key, selected in zip(setting_keys_booleans, selected_items_boolean, strict=False):
         for i, line in enumerate(contents):
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {selected!s}\n"
 
     # Must do this to change settings as module won't get reloaded until scoreboard screen starts
+    settings.always_get_logos = False
     if key == "always_get_logos" and selected is True:
         settings.always_get_logos = True
-    else:
-        settings.always_get_logos = False
 
     with file_path.open("w", encoding="utf-8") as file:
         file.writelines(contents)
@@ -302,8 +267,56 @@ def save_teams_order(new_ordered_teams: list) -> None:
         with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
-        print(f"Teams Reordered: {', '.join(flattened_teams)}")
+        logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
 
+
+def update_division(league: str, selected_teams: list, existing_teams: list, removed_teams: list,
+                    available_checkbox_teams: list) -> list:
+    """If Division is selected or unselected remove or add teams.
+
+    :param league: Current sports league
+    :param selected_teams: Teams that should be added
+    :param existing_teams: Teams where selected beforehand
+    :param removed_teams: Teams that should be removed
+    :param available_checkbox_teams: Possible teams that could be selected
+
+    :return selected_teams: Teams that should be added
+    :return existing_teams: Teams where selected beforehand
+    :return removed_teams: Teams that should be removed
+    """
+    divisions = ALL_DIVISIONS.get(league, [])
+    division_checked = settings.division_checked
+    selected_divisions = [d for d in selected_teams if d in divisions]
+
+    is_division_selected = bool(selected_divisions)
+    should_remove_division = is_division_selected and division_checked
+    should_add_division_teams = is_division_selected and not division_checked
+    should_uncheck_division_teams = not is_division_selected and division_checked
+
+    if should_remove_division:
+        for team in existing_teams[:]:
+            if team not in selected_teams and team in available_checkbox_teams:
+                existing_teams.remove(team)
+                removed_teams.append(team)
+        selected_teams[:] = [t for t in selected_teams if t not in divisions]
+
+    if should_add_division_teams:
+        for division in selected_divisions:
+            division_key = f"{league} {division}"
+            teams = DIVISION_TEAMS.get(division_key, [])
+            for team in teams:
+                if team in available_checkbox_teams and team not in selected_teams:
+                    selected_teams.append(team)
+            selected_teams.remove(division)
+
+    if should_uncheck_division_teams:
+        for division in divisions:
+            key = f"{league} {division}"
+            teams = DIVISION_TEAMS.get(key, [])
+            if all(t in selected_teams for t in teams):
+                selected_teams[:] = [t for t in selected_teams if t not in teams]
+
+    return selected_teams, existing_teams, removed_teams
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
@@ -327,8 +340,8 @@ class RedirectText(io.StringIO):
                 current_value += string + "\n"  # Append the new string
                 self.window["terminal_output"].update(current_value)
                 self.window["terminal_output"].set_vscroll_position(1)
-        except (KeyError, AttributeError, RuntimeError) as e:
-            print(e)
+        except (KeyError, AttributeError, RuntimeError):
+            logger.exception("Failed to write output to window")
 
         return len(string)
 
