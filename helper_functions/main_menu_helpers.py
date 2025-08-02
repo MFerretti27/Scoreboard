@@ -335,6 +335,7 @@ def write_settings_to_py(settings: dict[Any, Any]) -> None:
     """Update only known settings in settings.py while preserving all other content."""
     assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
     updated_lines = []
+    file_path = Path("settings.py")
 
     lines = file_path.read_text().splitlines() if file_path.exists() else []
 
