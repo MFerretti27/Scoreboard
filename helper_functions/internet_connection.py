@@ -86,7 +86,7 @@ def connect_to_wifi(network_name: str, password: str) -> str:
 
         if platform.system() == "Darwin":
             # Use networksetup on macOS
-            network_setup_path: str = shutil.which("networksetup")
+            network_setup_path = shutil.which("networksetup")
             if not network_setup_path:
                 return "networksetup command not found"
 
@@ -105,7 +105,7 @@ def connect_to_wifi(network_name: str, password: str) -> str:
         # Create the Wi-Fi connection using nmcli
         nmcli_path = shutil.which("nmcli")
         if not nmcli_path:
-                return "nmcli not found in PATH"
+            return "nmcli not found in PATH"
         subprocess.run([nmcli_path, "radio", "wifi", "on"], check=True)
         command = f"nmcli dev wifi connect '{network_name}' password '{password}'"
         subprocess.run(command, shell=True, check=True)
