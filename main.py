@@ -27,7 +27,7 @@ def install_requirements(venv_dir: str, requirements_file: str) -> None:
     :param venv_dir: virtual environment directory name
     :param requirements_file: file name to install requirements from
     """
-    if not Path(requirements_file).exists:
+    if not Path(requirements_file).exists():
         logger.info("No requirements file found. Script cannot run.")
         sys.exit(1)
 
@@ -36,7 +36,7 @@ def install_requirements(venv_dir: str, requirements_file: str) -> None:
     pip_executable = (Path(venv_dir) / "Scripts" / "pip.exe") \
         if platform.system() == "Windows" else (Path(venv_dir) / "bin" / "pip")
 
-    if not Path(pip_executable).exists:
+    if not Path(pip_executable).exists():
         logger.info(f"Error: pip executable not found at {pip_executable}")
         sys.exit(1)
 
@@ -52,7 +52,7 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
     python_executable = (Path(venv_dir) / "Scripts" / "python.exe") \
         if platform.system() == "Windows" else (Path(venv_dir) / "bin" / "python")
 
-    if not Path(python_executable).exists:
+    if not Path(python_executable).exists():
         logger.info(f"Error: Python executable not found at {python_executable}")
         sys.exit(1)
 
