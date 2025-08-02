@@ -39,8 +39,6 @@ def get_files_to_update(directory: str, extensions: list[str] | None = None) -> 
         if any(x in path_parts for x in ("venv", ".vscode", ".git", "backup_files", "__pycache__")):
             continue
         for file in files:
-            if file == "settings.py":
-                continue
             if any(file.endswith(ext) for ext in extensions):
                 relative_path = str(Path(root).joinpath(file).relative_to(directory))
                 files_to_update.append(relative_path)
