@@ -335,8 +335,8 @@ if __name__ == "__main__":
                 if idx + 1 < len(sys.argv):
                     settings_path = sys.argv[idx + 1]
                     with settings_path.open(encoding="utf-8") as f:
-                        settings = json.load(f)
-                        write_settings_to_py(settings)
+                        settings_saved = json.load(f)
+                        write_settings_to_py(settings_saved)
                         logger.info("Settings.py updated from JSON.")
             else:
                 saved_data = json.loads(sys.argv[1])

@@ -363,7 +363,7 @@ def write_settings_to_py(settings: dict[Any, Any]) -> None:
             lines.append(f"{key} = {formatted_value}\n")
 
     # Write to file
-    Path(file_path).write_text("".join(lines))
+    file_path.write_text("".join(lines))
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
