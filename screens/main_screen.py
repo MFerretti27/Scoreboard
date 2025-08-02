@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
@@ -334,6 +335,7 @@ if __name__ == "__main__":
                 saved_data = {}  # If settings pass passed in not saved data dont pass settings to scoreboard.py
                 if idx + 1 < len(sys.argv):
                     settings_path = sys.argv[idx + 1]
+                    settings_path = Path(sys.argv[idx + 1])  # Convert to Path
                     with settings_path.open(encoding="utf-8") as f:
                         settings_saved = json.load(f)
                         write_settings_to_py(settings_saved)

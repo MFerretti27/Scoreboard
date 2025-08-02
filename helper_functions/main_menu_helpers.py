@@ -335,9 +335,8 @@ def write_settings_to_py(settings: dict[Any, Any]) -> None:
     """Update only known settings in settings.py while preserving all other content."""
     assign_pattern = re.compile(r"^(\w+)\s*=\s*(.+)$")
     updated_lines = []
-    file = Path("settings.py")
 
-    lines = file.read_text().splitlines() if file.exists() else []
+    lines = file_path.read_text().splitlines() if file_path.exists() else []
 
     for original_line in lines:
         match = assign_pattern.match(original_line)
@@ -371,7 +370,7 @@ def write_settings_to_py(settings: dict[Any, Any]) -> None:
             )
             updated_lines.append(f"{key} = {formatted_value}")
 
-    file.write_text("\n".join(updated_lines) + "\n")
+    file_path.write_text("\n".join(updated_lines) + "\n")
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
