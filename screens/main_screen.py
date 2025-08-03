@@ -265,6 +265,8 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_message"].update(value=message + " Press Again to Update")
             number_of_times_pressed = 1
     elif successful and number_of_times_pressed == 1:
+        window["update_message"].update(value="Updating", text_color="green")
+        window.read(timeout=5)
         settings = settings_to_json()
         serializable_settings = {
             k: v for k, v in settings.items()
@@ -282,7 +284,7 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_message"].update(value=message, text_color="green")
             number_of_times_pressed = 0
             window.read(timeout=5)
-            time.sleep()
+            time.sleep(3)
 
             # Relaunch script, passing temp filename as argument
             python = sys.executable
