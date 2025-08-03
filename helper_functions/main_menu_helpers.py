@@ -372,15 +372,20 @@ def write_settings_to_py(settings_saved: dict[Any, Any]) -> None:
 
     # If teams block wasn't found, append it at the end
     if "teams" in settings_saved and not teams_replaced:
-        updated_lines.append(format_teams_block(settings["teams"]))
+        updated_lines.append(format_teams_block(settings_saved["teams"]))
 
     file_path.write_text("\n".join(updated_lines) + "\n")
 
 def format_teams_block(teams: list[list[str]]) -> str:
-    """Format team block in settings."""
+    """Format the 'teams' block using double quotes."""
     if isinstance(teams, list) and all(isinstance(item, list) and len(item) == 1 for item in teams):
-        return "teams = [\n" + "\n".join(f"    {item!r}," for item in teams) + "\n]"
-    return f"teams = {teams!r}"
+        formatted = "teams = [\n"
+        for item in teams:
+            team_name = item[0].replace('"', '\\"')  # escape quotes
+            formatted += f'    ["{team_name}"],\n'
+        formatted += "]"
+        return formatted
+    return f'teams = {str(teams)}'
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""
