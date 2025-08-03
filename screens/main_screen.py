@@ -301,8 +301,8 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
             window["update_message"].update(value=message + " Press Again to Update")
             number_of_times_pressed = 1
     elif successful and number_of_times_pressed == 1:
-        window["update_message"].update(value="Updating", text_color="green")
-        window.read(timeout=5)
+        window["update_message"].update(value="Updating...", text_color="green")
+        window.read(timeout=100)
         settings = settings_to_json()
         serializable_settings = {
             k: v for k, v in settings.items()
@@ -418,6 +418,9 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
                 return new_window
 
         if event == "Save":
+            event, _ = window.read(timeout=100)
+            window["connection_message"].update(value="Trying to Connect...", text_color="black")
+            time.sleep(1)
             connect_to_wifi(values.get("SSID", ""), values.get("password", ""))
             if is_connected():
                 window["connection_message"].update(value="Connected!", text_color="green")
