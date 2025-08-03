@@ -30,6 +30,7 @@ from helper_functions.main_menu_helpers import (
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
 
+set_screen()
 window_width = Sg.Window.get_screen_size()[0]
 window_height = Sg.Window.get_screen_size()[1]
 logging.basicConfig(
@@ -43,7 +44,6 @@ def main(saved_data: dict) -> None:
 
     :param saved_data: dictionary of save team information as to not lose it going to main screen
     """
-    set_screen()
     number_of_times_pressed = 0
     layout = main_screen_layout.create_main_layout(window_width)
     window = Sg.Window("", layout, resizable=True,
