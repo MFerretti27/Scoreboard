@@ -23,6 +23,7 @@ def create_main_layout(window_width: int) -> list:
         [Sg.Push(),
          Sg.Button("Restore from Version", font=(settings.FONT, update_button_size), key="restore_button"),
          Sg.Button("Check for Update", font=(settings.FONT, update_button_size), key="update_button"),
+         Sg.Button("Connect to Internet", font=(settings.FONT, update_button_size)),
          Sg.Push(),
          ],
         [
