@@ -303,16 +303,19 @@ def create_settings_layout(window_width: int) -> list:
         [Sg.Push(), Sg.Text("Settings", font=(settings.FONT, title_size, "underline")), Sg.Push()],
         [general_setting_layout],
         [specific_settings_layout],
-        [[Sg.VPush()],
+        [Sg.VPush()],
+        [
          Sg.Push(),
          Sg.Text("", font=(settings.FONT, button_size), key="confirmation_message", text_color="Green"),
          Sg.Push(),
-         [Sg.VPush()],
          ],
-        [[Sg.VPush()],
+         [Sg.VPush()],
+        [
          Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)),
          Sg.Button("Back", font=(settings.FONT, button_size)),
          Sg.Push(),
          ],
+         [Sg.VPush()],
+         [Sg.VPush()],
     ]

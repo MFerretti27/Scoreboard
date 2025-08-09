@@ -23,12 +23,13 @@ def create_instructions_layout(window_width: int) -> list:
         [Sg.Text("Manual", font=(settings.FONT, title_size, "underline"), justification="center", expand_x=True)],
         [Sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
                       no_scrollbar=False, font=("Courier", text_size))],
+        [Sg.VPush()],
         [
-            [Sg.VPush()],
             Sg.Push(),
             Sg.Button("Back", font=(settings.FONT, button_size)),
             Sg.Push(),
         ],
+        [Sg.VPush()],
     ]
 
 
