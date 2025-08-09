@@ -47,20 +47,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+
 def main(saved_data: dict) -> None:
     """Create Main screen GUI functionality.
 
     :param saved_data: dictionary of save team information as to not lose it going to main screen
     """
     number_of_times_pressed = 0
-    layout = main_screen_layout.create_main_layout(window_width)
-    window = Sg.Window("", layout, resizable=True,
-                       size=(window_width, window_height), return_keyboard_events=True).Finalize()
-
-    current_window = "main"
     teams = load_teams_order()
     team_names = [team[0] for team in teams]
 
+    # Create individual layout columns
+    main_column = Sg.Frame("",
+        main_screen_layout.create_main_layout(window_width),
+        key="MAIN",
+        size=(window_width, window_height),
+        border_width=0,
+    )
+
+    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
+    window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
+                       return_keyboard_events=True).Finalize()
+
+    teams = load_teams_order()
+    team_names = [team[0] for team in teams]
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
         window["Connect to Internet"].update(button_color=("white", "red"))
@@ -75,33 +86,93 @@ def main(saved_data: dict) -> None:
 
         elif "Add" in event:
             number_of_times_pressed = 0
+            league = event.split(" ")[1]
+            show_view(league, window)
             window, team_names = add_team_screen(window, event, team_names)
 
-        elif event == "Connect to Internet":
+        elif "Connect to Internet" in event:
             number_of_times_pressed = 0
+            show_view("INTERNET", window)
             window = internet_connection_screen(window)
 
-        elif event == "Settings":
+        elif "Settings" in event:
             number_of_times_pressed = 0
+            show_view("SETTINGS", window)
             window = settings_screen(window)
 
-        elif event == "Set Team Order":
+        elif "Set Team Order" in event:
             number_of_times_pressed = 0
+            show_view("SET_ORDER", window)
             window = set_team_order_screen(window)
 
-        elif event == "update_button":
+        elif "update_button" in event:
             number_of_times_pressed = handle_update(window, number_of_times_pressed)
 
-        elif event == "restore_button":
+        elif "restore_button" in event:
             number_of_times_pressed = 0
             handle_restore(window, values)
 
-        elif event == "Start" or ("Return" in event and current_window == "main"):
+        elif "Start" in event or "Return" in event:
             handle_starting_script(window, saved_data)
 
         elif "Manual" in event:
             number_of_times_pressed = 0
+            show_view("MANUAL", window)
             window = manual_screen(window)
+
+def show_view(view_to_show: str, window: Sg.Window) -> None:
+    """Switch main screen views.
+
+    :param view_to_show: Which view to make visible
+    :param window: element containing all buttons and texts
+    """
+    logger.info("Switching layout to %s", view_to_show)
+
+    container = window["VIEW_CONTAINER"]
+
+    for child in list(container.Widget.winfo_children()):
+        child.destroy()
+
+    # Destroy all widgets from the window
+    for element_key, element in list(window.AllKeysDict.items()):
+        if element_key != "VIEW_CONTAINER":  # Don't touch container
+            try:
+                element.Widget.destroy()
+                del window.AllKeysDict[element_key]  # Remove from keys dict
+            except Exception:
+                logger.info("Could not delete element")
+
+    settings.division_checked = False  # Reset division checked status for new screen
+
+    # Get the appropriate layout
+    layouts = {
+        "MAIN":     main_screen_layout.create_main_layout(window_width),
+        "MLB":      team_selection_layout.create_team_selection_layout(window_width, "MLB"),
+        "NFL":      team_selection_layout.create_team_selection_layout(window_width, "NFL"),
+        "NBA":      team_selection_layout.create_team_selection_layout(window_width, "NBA"),
+        "NHL":      team_selection_layout.create_team_selection_layout(window_width, "NHL"),
+        "SETTINGS": settings_layout.create_settings_layout(window_width),
+        "INTERNET": internet_connection_layout.create_internet_connection_layout(window_width),
+        "SET_ORDER": reorder_teams_layout.create_order_teams_layout(window_width),
+        "MANUAL": manual_layout.create_instructions_layout(window_width),
+    }
+
+    new_layout = [[Sg.Frame("", layouts[view_to_show], key=view_to_show,
+                            size=(window_width, window_height), border_width=0)]]
+
+    window.extend_layout(container, new_layout)
+
+    # Refresh to avoid greying issues
+    window.refresh()
+    time.sleep(0.05)
+
+    # Fix rendering quirks when dynamically switching views with extend_layout()
+    if view_to_show == "SET_ORDER":
+        window["TEAM_ORDER"].set_focus()  # Focus the listbox
+    elif view_to_show == "INTERNET":
+        window["password"].set_focus() # Focus the input box
+        window["SSID"].set_focus()  # Focus the input box
+
 
 def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[Any, list[Any]]:
     """GUI screen to add different team to display information for.
@@ -114,30 +185,20 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
     :return window: Window GUI to display
     """
     league = event.split(" ")[1]
-    new_layout = team_selection_layout.create_team_selection_layout(window_width, league)
-    window.hide()
-    new_window = Sg.Window("", new_layout, resizable=True, finalize=True,
-                        return_keyboard_events=True, size=(window_width, window_height))
-    window.close()
-    window = new_window
     while True:
-        event, values = window.read()
+        event, values = window.read(timeout=1000)
 
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        if event == "Back":
-            window.hide()
-            new_window = Sg.Window("", main_screen_layout.create_main_layout(window_width),
-                                    resizable=True, finalize=True, return_keyboard_events=True,
-                                    size=(window_width, window_height)).Finalize()
-            window.close()
-            window = new_window
+        if "Back" in event:
+            show_view("MAIN", window)
             return window, team_names
 
-        if event == "Save":
+        if "Save" in event:
             selected_teams = [team for team, selected in values.items() if selected]
+            selected_teams.remove("versions")
             teams_added, teams_removed = update_teams(selected_teams, league)
             window["teams_added"].update(value=teams_added)
             window["teams_removed"].update(value=teams_removed)
@@ -151,19 +212,13 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
-    new_layout = settings_layout.create_settings_layout(window_width)
-    window.hide()
-    new_window = Sg.Window("", new_layout, resizable=True, finalize=True,
-                            return_keyboard_events=True, size=(window_width, window_height))
-    window.close()
-    window = new_window
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        if event == "Save":
+        if "Save" in event:
             selected_items_booleans = [values.get(key, False) for key in setting_keys_booleans]
 
             selected_items_integers = {
@@ -202,13 +257,9 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
             else:
                 window["confirmation_message"].update(value="")
 
-        elif event == "Back":
-            window.hide()
-            new_window = Sg.Window("", main_screen_layout.create_main_layout(window_width),
-                                   resizable=True, finalize=True, return_keyboard_events=True,
-                                   size=(window_width, window_height)).Finalize()
-            window.close()
-            return new_window
+        elif "Back" in event:
+            show_view("MAIN", window)
+            return window
 
 def set_team_order_screen(window: Sg.Window) -> Sg.Window:
     """Display GUI to change to order that team info is displayed.
@@ -217,12 +268,6 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
-    new_layout = reorder_teams_layout.create_order_teams_layout(window_width)
-    window.hide()
-    new_window = Sg.Window("", new_layout, resizable=True, finalize=True,
-                            return_keyboard_events=True, size=(window_width, window_height))
-    window.close()
-    window = new_window
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
@@ -235,26 +280,22 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
         if selected:
             index = team_names.index(selected[0])
 
-        if event == "Move Up" and index > 0:
+        if "Move Up" in event and index > 0:
             team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
             window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
 
-        elif event == "Move Down" and index < len(team_names) - 1:
+        elif "Move Down" in event and index < len(team_names) - 1:
             team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
             window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
 
-        elif event == "Save":
+        elif "Save" in event:
             new_teams = [[name] for name in team_names]
             save_teams_order(new_teams)
             window["order_message"].update(value="Order Saved Successfully!")
 
-        if event == "Back":
-            window.hide()
-            new_window = Sg.Window("", main_screen_layout.create_main_layout(window_width),
-                                   resizable=True, finalize=True, return_keyboard_events=True,
-                                   size=(window_width, window_height)).Finalize()
-            window.close()
-            return new_window
+        if "Back" in event:
+            show_view("MAIN", window)
+            return window
 
 def manual_screen(window: Sg.Window) -> Sg.Window:
     """Display GUI to change to order that team info is displayed.
@@ -263,26 +304,15 @@ def manual_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
-    window.hide()
-    new_window = Sg.Window("Documentation",
-                            manual_layout.create_instructions_layout(window_width),
-                            resizable=True, finalize=True, return_keyboard_events=True,
-                            size=(window_width, window_height))
-    window.close()
-    window = new_window
     while True:
         event, _ = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        if event == "Back":
-            window.hide()
-            new_window = Sg.Window("", main_screen_layout.create_main_layout(window_width),
-                                    resizable=True, finalize=True, return_keyboard_events=True,
-                                    size=(window_width, window_height)).Finalize()
-            window.close()
-            return new_window
+        if "Back" in event:
+            show_view("MAIN", window)
+            return window
 
 def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
     """Update files when user pressed update button.
@@ -369,6 +399,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     :param window: window GUI to display
     """
     window["PROGRESS_BAR"].update(visible=True)
+    window["PROGRESS_BAR"].update(current_count=0)
     window.refresh()  # Refresh to display text
     append_team_array(settings.teams)  # Get the team league and sport name
     window.refresh()  # Refresh to display text
@@ -395,32 +426,21 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
-    window.hide()
-    new_window = Sg.Window("Internet",
-                            internet_connection_layout.create_internet_connection_layout(window_width),
-                            resizable=True, finalize=True, return_keyboard_events=True,
-                            size=(window_width, window_height))
-    window.close()
-    window = new_window
-
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        if event == "Back":
-                window.hide()
-                new_window = Sg.Window("", main_screen_layout.create_main_layout(window_width),
-                                    resizable=True, finalize=True, return_keyboard_events=True,
-                                    size=(window_width, window_height)).Finalize()
-                window.close()
-                return new_window
+        if "Back" in event:
+            show_view("MAIN", window)
+            return window
 
-        if event == "Save":
-            event, _ = window.read(timeout=100)
+        if "Save" in event:
             window["connection_message"].update(value="Trying to Connect...", text_color="black")
+            event, _ = window.read(timeout=100)
             time.sleep(1)
+            logger.info("User Entered %s and %s", values.get("SSID", ""), values.get("password", ""))
             connect_to_wifi(values.get("SSID", ""), values.get("password", ""))
             if is_connected():
                 window["connection_message"].update(value="Connected!", text_color="green")

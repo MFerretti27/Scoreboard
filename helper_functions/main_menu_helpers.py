@@ -131,6 +131,11 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
         "NFL": NFL,
     }.get(league, [])
 
+    # Check to ensure selected item is valid
+    for items in selected_teams:
+        if items not in available_checkbox_teams and items not in ALL_DIVISIONS[league]:
+            selected_teams.remove(items)
+
     selected_teams, existing_teams, removed_teams, = \
         update_division(league, selected_teams, existing_teams, removed_teams, available_checkbox_teams)
 
@@ -385,7 +390,7 @@ def format_teams_block(teams: list[list[str]]) -> str:
             formatted += f'    ["{team_name}"],\n'
         formatted += "]"
         return formatted
-    return f'teams = {str(teams)}'
+    return f"teams = {teams!s}"
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""

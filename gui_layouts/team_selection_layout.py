@@ -15,7 +15,6 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     """
     checkboxes_per_column = 8
     selected_teams = read_teams_from_file()
-    settings.division_checked = False  # Reset division checked status for new screen
 
     team_names = {
         "MLB": MLB,
@@ -87,30 +86,28 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     ]
 
     return [
-        [Sg.VPush()],
         [Sg.Push(), Sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), Sg.Push()],
         [Sg.VPush()],
-        [[Sg.VPush()],
+        [
          Sg.Push(), *column_layouts, Sg.Push(),
-         [Sg.VPush()]],
+         ],
         [Sg.VPush()],
         [Sg.Push(), Sg.Text("Select Division to Add", font=(settings.FONT, text_size-20, "underline")), Sg.Push()],
-        [Sg.VPush()],
         [
          Sg.Push(), *division_column_layouts, Sg.Push(),
         ],
-        [[Sg.VPush()],
+        [Sg.VPush()],
+        [
          Sg.Push(),
          Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color="green"),
          Sg.Push(),
-         [Sg.VPush()],
          ],
         [
          Sg.Push(),
          Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color="red"),
          Sg.Push(),
-
          ],
+         [Sg.VPush()],
         [Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)), Sg.Button("Back", font=(settings.FONT, button_size)),
          Sg.Push(),

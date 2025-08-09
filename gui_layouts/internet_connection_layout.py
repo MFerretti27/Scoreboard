@@ -25,8 +25,9 @@ def create_internet_connection_layout(window_width: int) -> list:
     help_message = min(max_size, max(12, int(16 * scale)))
     return [
         [Sg.Push(), Sg.Text("Connect to Internet", font=(settings.FONT, title_size, "underline")), Sg.Push()],
-        [[Sg.VPush()],
-         Sg.Push(),
+        [Sg.VPush()],
+        [Sg.VPush()],
+        [Sg.Push(),
          Sg.Text("Enter SSID: ", font=(settings.FONT, text_size), justification="center"),
          Sg.Input("", enable_events=True, key="SSID", font=(settings.FONT, input_size), justification="left"),
          Sg.Text("*Enter exact, case sensitive", font=(settings.FONT, help_message), justification="center"),
@@ -37,14 +38,16 @@ def create_internet_connection_layout(window_width: int) -> list:
          Sg.Input("", enable_events=True, key="password", font=(settings.FONT, input_size), justification="left"),
          Sg.Push(),
          ],
-         [[Sg.VPush()],
+         [Sg.VPush()],
+         [
           Sg.Push(), Sg.Text("", font=(settings.FONT, text_size), key="connection_message"),
           Sg.Push(),
           ],
-         [[Sg.VPush()],
-         Sg.Push(),
+          [Sg.VPush()],
+         [Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)),
          Sg.Button("Back", font=(settings.FONT, button_size)),
          Sg.Push(),
          ],
+         [Sg.VPush()],
     ]

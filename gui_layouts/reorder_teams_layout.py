@@ -23,7 +23,7 @@ def create_order_teams_layout(window_width: int) -> list:
     button_size = min(max_size, max(38, int(40 * scale)))
     list_box_size_height = min(max_size, max(10, int(15 * scale)))
     list_box_size_width = min(max_size, max(18, int(40 * scale)))
-    list_box_txt_size = min(max_size, max(18, int(24 * scale)))
+    list_box_txt_size = min(max_size, max(18, int(22 * scale)))
     message_size = min(max_size, max(6, int(22 * scale)))
     move_button_size = min(max_size, max(38, int(20 * scale)))
 
@@ -42,7 +42,6 @@ def create_order_teams_layout(window_width: int) -> list:
                     key="TEAM_ORDER", enable_events=True,
                     ),
          Sg.Push(),
-         [Sg.VPush()],
          ],
         [Sg.Push(),
          Sg.Button("Move Up", font=(settings.FONT, move_button_size), pad=(10, button_size)),
@@ -53,10 +52,12 @@ def create_order_teams_layout(window_width: int) -> list:
          Sg.Text("", font=(settings.FONT, button_size), key="order_message", text_color="Green"),
          Sg.Push(),
          ],
-        [[Sg.VPush()],
+         [Sg.VPush()],
+        [
          Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)),
          Sg.Button("Back", font=(settings.FONT, button_size)),
          Sg.Push(),
          ],
+         [Sg.VPush()],
     ]
