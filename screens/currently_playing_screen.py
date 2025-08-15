@@ -43,7 +43,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
 
     for team in settings.teams:
-        delay_over[team] = False
+        delay_over[team[0]] = False
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
