@@ -87,6 +87,10 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
 
     return [
         [Sg.Push(), Sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), Sg.Push()],
+         [Sg.Push(),
+          Sg.Button("Update Names", font=(settings.FONT, confirmation_txt_size)),
+         Sg.Push(),
+         ],
         [Sg.VPush()],
         [
          Sg.Push(), *column_layouts, Sg.Push(),
