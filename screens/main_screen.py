@@ -239,7 +239,8 @@ def show_fetch_popup(league: str) -> None:
          Sg.Push(),
          ],
          [Sg.Push(),
-         Sg.Text("\nNew Logo's Can be re-downloaded in settings", key="bottom_message", font=(settings.FONT, message),
+         Sg.Text("\nIf Team's are updated logo's will be re-downloaded when starting", key="bottom_message",
+                 font=(settings.FONT, message),
                  ),
          Sg.Push(),
          ],
@@ -304,6 +305,7 @@ def show_fetch_popup(league: str) -> None:
                 window["bottom_message"].Update(value="")
                 window["middle_message"].Update(value=error_message, font=(settings.FONT, message), text_color="red")
             else:
+                settings.always_get_logos = True  # re-download logos when starting
                 window.close()
                 return
 
@@ -532,6 +534,8 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
+    if is_connected:
+        window["connection_message"].update(value="Already connected to internet", text_color="green")
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
