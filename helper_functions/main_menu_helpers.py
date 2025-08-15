@@ -117,11 +117,12 @@ def load_teams_order() -> list[str]:
     return []
 
 
-def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
+def update_teams(selected_teams: list, league: str, specific_remove: list | None=None) -> tuple[str, str]:
     """Update settings.py teams list to contain team names user wants to display.
 
     :param selected_teams: teams selected by user to display
     :param league: league that team selected is in
+    :param specific_remove: remove specific list of teams teams if passed in
 
     :return: list of strings telling what team(s) was selected and what team(s) where unselected
     """
@@ -147,6 +148,11 @@ def update_teams(selected_teams: list, league: str) -> tuple[str, str]:
 
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = list(dict.fromkeys(untouched_teams + selected_teams))  # Remove duplicates
+
+    # If need to remove specific team passed in such as team name no longer exists
+    if specific_remove:
+        for remove_team in specific_remove:
+            new_teams.remove(remove_team)
 
     teams_string = "teams = [\n"
     for team in new_teams:
@@ -604,10 +610,11 @@ def update_new_division(league: str) -> str:
     return "Updating Team's Successful!"
 
 
-def update_new_names(list_to_update: str, new_teams: list) -> None:
+def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=None) -> None:
     """Update specified list in a Python file.
 
     :param list_to_update: List of which to change the team names
+    :param renamed: List teams and what they were renamed to
     :param new_teams: New teams that are being added to list
     """
     team_file_path = Path("get_data/get_team_league.py")
@@ -651,6 +658,16 @@ def update_new_names(list_to_update: str, new_teams: list) -> None:
     current_list = getattr(get_data.get_team_league, list_to_update)
     current_list.clear()
     current_list.extend(sorted_names)
+
+    # update settings.py file team name if it needs to change
+    if list_to_update in ["MLB", "NFL", "NBA", "NHL"]:
+        remove_specifically = []
+        settings_dict = read_teams_from_file()
+        for renamed_team in renamed:
+            if renamed_team[0] in settings_dict:
+                settings_dict[settings_dict.index(renamed_team[0])] = renamed_team[1]
+                remove_specifically.append(renamed_team[0])
+        update_teams(settings_dict, list_to_update, specific_remove=remove_specifically)
 
 class RedirectText(io.StringIO):
     """Redirect print statements to window element."""

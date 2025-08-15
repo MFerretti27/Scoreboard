@@ -29,6 +29,7 @@ from helper_functions.main_menu_helpers import (
     get_new_team_names,
     load_teams_order,
     positive_num,
+    read_teams_from_file,
     save_teams_order,
     setting_keys_booleans,
     settings_to_json,
@@ -298,7 +299,7 @@ def show_fetch_popup(league: str) -> None:
                                                 font=(settings.FONT, message), text_color="black")
 
         elif "update" in event and update:
-            update_new_names(league, new_teams)
+            update_new_names(league, new_teams, renamed)
             error_message = update_new_division(league)
             if "Failed" in error_message:
                 window["top_message"].Update(value="")
