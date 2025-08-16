@@ -83,7 +83,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                     for team_info_temp in team_info:
                         if ("bottom_info" in team_info_temp and teams_with_data[index] and
                             not any(keyword in str(team_info_temp["bottom_info"]).lower()
-                                for keyword in ["delayed", "postponed", "final", "canceled", "delay"])):
+                                for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
                             teams_currently_playing[index] = True
                         index += 1
                 else:
@@ -167,6 +167,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
                 # Football specific display information
                 if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
+                    print(teams_currently_playing)
                     if key == "top_info":
                         window["top_info"].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     if key == "home_timeouts":
@@ -301,6 +302,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 settings.stay_on_team = False
 
             if temp_delay is not settings.delay:
+                print("here")
                 delay_clock = ticks_ms()
                 delay_timer = settings.LIVE_DATA_DELAY * 1000
                 delay_over[teams[fetch_index][0]] = False
