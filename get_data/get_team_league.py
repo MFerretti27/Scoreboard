@@ -18,12 +18,12 @@ NBA = [
 ]
 
 MLB = [
-    "Arizona Diamondbacks", "Atlanta Braves", "Baltimore Orioles", "Boston Red Sox", "Chicago White Sox",
-    "Chicago Cubs", "Cincinnati Reds", "Cleveland Guardians", "Colorado Rockies", "Detroit Tigers",
-    "Houston Astros", "Kansas City Royals", "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins",
-    "Milwaukee Brewers", "Minnesota Twins", "New York Yankees", "New York Mets", "Oakland Athletics",
-    "Philadelphia Phillies", "Pittsburgh Pirates", "San Diego Padres", "San Francisco Giants", "Seattle Mariners",
-    "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", "Toronto Blue Jays", "Washington Nationals",
+"Arizona Diamondbacks", "Athletics", "Atlanta Braves", "Baltimore Orioles", "Boston Red Sox", "Chicago Cubs",
+"Chicago White Sox", "Cincinnati Reds", "Cleveland Guardians", "Colorado Rockies", "Detroit Tigers", "Houston Astros",
+"Kansas City Royals", "Los Angeles Angels", "Los Angeles Dodgers", "Miami Marlins", "Milwaukee Brewers",
+"Minnesota Twins", "New York Mets", "New York Yankees", "Philadelphia Phillies", "Pittsburgh Pirates",
+"San Diego Padres", "San Francisco Giants", "Seattle Mariners", "St. Louis Cardinals", "Tampa Bay Rays",
+"Texas Rangers", "Toronto Blue Jays", "Washington Nationals",
 ]
 
 NFL = [
@@ -37,13 +37,13 @@ NFL = [
 ]
 
 NHL = [
-    "Anaheim Ducks", "Arizona Coyotes", "Boston Bruins", "Buffalo Sabres", "Calgary Flames",
-    "Carolina Hurricanes", "Chicago Blackhawks", "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars",
-    "Detroit Red Wings", "Edmonton Oilers", "Florida Panthers", "Los Angeles Kings", "Minnesota Wild",
-    "Montreal Canadiens", "Nashville Predators", "New Jersey Devils", "New York Islanders", "New York Rangers",
-    "Ottawa Senators", "Philadelphia Flyers", "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken",
-    "St. Louis Blues", "Tampa Bay Lightning", "Toronto Maple Leafs", "Vancouver Canucks", "Vegas Golden Knights",
-    "Washington Capitals", "Winnipeg Jets",
+"Anaheim Ducks", "Boston Bruins", "Buffalo Sabres", "Calgary Flames", "Carolina Hurricanes", "Chicago Blackhawks",
+"Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings", "Edmonton Oilers",
+"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montréal Canadiens", "Nashville Predators",
+"New Jersey Devils", "New York Islanders", "New York Rangers", "Ottawa Senators", "Philadelphia Flyers",
+"Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken", "St. Louis Blues", "Tampa Bay Lightning",
+"Toronto Maple Leafs", "Utah Hockey Club", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
+"Winnipeg Jets",
 ]
 
 ALL_TEAMS = {
@@ -57,14 +57,25 @@ ALL_TEAMS = {
 # MLB Divisions #
 #################
 # American League:
-MLB_AL_EAST = ["Baltimore Orioles", "Boston Red Sox", "New York Yankees", "Tampa Bay Rays", "Toronto Blue Jays"]
-MLB_AL_CENTRAL = ["Chicago White Sox", "Cleveland Guardians", "Detroit Tigers", "Kansas City Royals", "Minnesota Twins"]
-MLB_AL_WEST = ["Houston Astros", "Los Angeles Angels", "Oakland Athletics", "Seattle Mariners", "Texas Rangers"]
+MLB_AL_EAST = [
+"Baltimore Orioles", "Boston Red Sox", "New York Yankees", "Toronto Blue Jays",
+]
+MLB_AL_CENTRAL = [
+"Chicago White Sox", "Cleveland Guardians", "Detroit Tigers", "Kansas City Royals",
+]
+MLB_AL_WEST = [
+"Houston Astros", "Los Angeles Angels", "Seattle Mariners", "Texas Rangers",
+]
 # National League:
-MLB_NL_EAST = ["Atlanta Braves", "Miami Marlins", "New York Mets", "Philadelphia Phillies", "Washington Nationals"]
-MLB_NL_CENTRAL = ["Chicago Cubs", "Cincinnati Reds", "Milwaukee Brewers", "Pittsburgh Pirates", "St. Louis Cardinals"]
-MLB_NL_WEST = ["Arizona Diamondbacks", "Colorado Rockies", "Los Angeles Dodgers", "San Diego Padres",
-               "San Francisco Giants"]
+MLB_NL_EAST = [
+"Atlanta Braves", "Miami Marlins", "New York Mets", "Washington Nationals",
+]
+MLB_NL_CENTRAL = [
+"Chicago Cubs", "Cincinnati Reds", "Milwaukee Brewers", "St. Louis Cardinals",
+]
+MLB_NL_WEST = [
+"Arizona Diamondbacks", "Colorado Rockies", "Los Angeles Dodgers", "San Francisco Giants",
+]
 
 #################
 # NFL Divisions #
@@ -97,15 +108,23 @@ NBA_SOUTHWEST_DIVISION = ["Dallas Mavericks", "Houston Rockets", "Memphis Grizzl
 # NHL Divisions #
 #################
 # Eastern Conference:
-NHL_ATLANTIC_DIVISION = ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers",
-                         "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs"]
-NHL_METROPOLITAN_DIVISION = ["Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders",
-                         "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals"]
+NHL_ATLANTIC_DIVISION = [
+"Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montréal Canadiens", "Ottawa Senators",
+"Tampa Bay Lightning",
+]
+NHL_METROPOLITAN_DIVISION = [
+"Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers",
+"Philadelphia Flyers", "Pittsburgh Penguins",
+]
 # Western Conference:
-NHL_CENTRAL_DIVISION = ["Arizona Coyotes", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild",
-                    "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"]
-NHL_PACIFIC_DIVISION = ["Anaheim Ducks", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks",
-                    "Seattle Kraken", "Vancouver Canucks", "Vegas Golden Knights"]
+NHL_CENTRAL_DIVISION = [
+"Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues",
+"Utah Hockey Club",
+]
+NHL_PACIFIC_DIVISION = [
+"Anaheim Ducks", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Seattle Kraken",
+"Vancouver Canucks",
+]
 
 ALL_DIVISIONS = {
     "MLB": ["American League East", "American League Central", "American League West", "National League East",
