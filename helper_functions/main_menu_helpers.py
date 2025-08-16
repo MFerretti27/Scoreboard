@@ -469,10 +469,10 @@ def get_new_team_names(league: str) -> tuple:
     new_norm = [(n, normalize(n)) for n in new_list]
 
     # quick lookups
-    city_count_new: dict[str, str] = {}
-    city_count_old: dict[str, str] = {}
-    old_meta: dict[str, str] = {}
-    new_meta: dict[str, str] = {}
+    city_count_new: dict[Any | int] = {}
+    city_count_old: dict[Any | int] = {}
+    old_meta: dict[Any | int] = {}
+    new_meta: dict[Any | int] = {}
 
     for orig, norm in old_norm:
         city, nick = split_city_nickname(norm)
@@ -625,7 +625,7 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
         re.MULTILINE,
     )
 
-    match: re.Match[str] = pattern.search(content)
+    match: re.Match[str]| None = pattern.search(content)
     _, list_block, _ = match.group(1), match.group(2), match.group(3)
 
     # Sort the new team list alphabetically
@@ -660,7 +660,7 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     current_list.extend(sorted_names)
 
     # update settings.py file team name if it needs to change
-    if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and not renamed:
+    if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and renamed:
         remove_specifically = []
         settings_dict = read_teams_from_file()
         for renamed_team in renamed:
