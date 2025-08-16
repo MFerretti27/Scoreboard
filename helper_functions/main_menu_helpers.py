@@ -445,7 +445,7 @@ def get_new_team_names(league: str) -> tuple:
 
     new_list = []
     old_list = team_names_before.copy()
-    renamed = []
+    renamed: list = []
     try:
         if league == "MLB":
             teams = statsapi.get("teams", {"sportIds": 1})["teams"]
@@ -469,10 +469,10 @@ def get_new_team_names(league: str) -> tuple:
     new_norm = [(n, normalize(n)) for n in new_list]
 
     # quick lookups
-    city_count_new = {}
-    city_count_old = {}
-    old_meta = {}
-    new_meta = {}
+    city_count_new: dict[Any] = {}
+    city_count_old: dict[Any] = {}
+    old_meta: dict[Any] = {}
+    new_meta: dict[Any] = {}
 
     for orig, norm in old_norm:
         city, nick = split_city_nickname(norm)
@@ -562,7 +562,7 @@ def update_new_division(league: str) -> str:
 
     :return: Message if updating was successful
     """
-    new_team_divisions = {}
+    new_team_divisions: dict[str, str] = {}
 
     try:
         if league == "MLB":
@@ -625,7 +625,7 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
         re.MULTILINE,
     )
 
-    match = pattern.search(content)
+    match: re.Match[str] = pattern.search(content)
     _, list_block, _ = match.group(1), match.group(2), match.group(3)
 
     # Sort the new team list alphabetically
