@@ -469,10 +469,10 @@ def get_new_team_names(league: str) -> tuple:
     new_norm = [(n, normalize(n)) for n in new_list]
 
     # quick lookups
-    city_count_new: dict[Any | int] = {}
-    city_count_old: dict[Any | int] = {}
-    old_meta: dict[Any | int] = {}
-    new_meta: dict[Any | int] = {}
+    city_count_new: dict[str, Any | int] = {}
+    city_count_old: dict[str, Any | int] = {}
+    old_meta: dict[str, Any | int] = {}
+    new_meta: dict[str, Any | int] = {}
 
     for orig, norm in old_norm:
         city, nick = split_city_nickname(norm)
@@ -626,6 +626,9 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     )
 
     match: re.Match[str]| None = pattern.search(content)
+
+    if not match:
+        return
     _, list_block, _ = match.group(1), match.group(2), match.group(3)
 
     # Sort the new team list alphabetically
