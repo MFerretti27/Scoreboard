@@ -471,8 +471,8 @@ def get_new_team_names(league: str) -> tuple:
     # quick lookups
     city_count_new: dict[str, int] = {}
     city_count_old: dict[str, int] = {}
-    old_meta: dict[str, int] = {}
-    new_meta: dict[str, int] = {}
+    old_meta: dict[str, str] = {}
+    new_meta: dict[str, str] = {}
 
     for orig, norm in old_norm:
         city, nick = split_city_nickname(norm)
