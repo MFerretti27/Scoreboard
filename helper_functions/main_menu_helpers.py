@@ -660,7 +660,7 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     current_list.extend(sorted_names)
 
     # update settings.py file team name if it needs to change
-    if list_to_update in ["MLB", "NFL", "NBA", "NHL"]:
+    if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and not renamed:
         remove_specifically = []
         settings_dict = read_teams_from_file()
         for renamed_team in renamed:

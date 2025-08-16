@@ -535,7 +535,7 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
-    if is_connected:
+    if is_connected():
         window["connection_message"].update(value="Already connected to internet", text_color="green")
     while True:
         event, values = window.read()
