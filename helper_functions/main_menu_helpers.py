@@ -469,10 +469,10 @@ def get_new_team_names(league: str) -> tuple:
     new_norm = [(n, normalize(n)) for n in new_list]
 
     # quick lookups
-    city_count_new: dict[Any] = {}
-    city_count_old: dict[Any] = {}
-    old_meta: dict[Any] = {}
-    new_meta: dict[Any] = {}
+    city_count_new: dict[str, str] = {}
+    city_count_old: dict[str, str] = {}
+    old_meta: dict[str, str] = {}
+    new_meta: dict[str, str] = {}
 
     for orig, norm in old_norm:
         city, nick = split_city_nickname(norm)
@@ -562,7 +562,7 @@ def update_new_division(league: str) -> str:
 
     :return: Message if updating was successful
     """
-    new_team_divisions: dict[str, str] = {}
+    new_team_divisions: dict[str, list] = {}
 
     try:
         if league == "MLB":
