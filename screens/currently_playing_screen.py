@@ -25,8 +25,9 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     :return team_info: List of information for teams following
     """
     teams_currently_playing: list[bool] = []
+    number_teams_playing = 0
     first_time = True
-    delay_over = False
+    delay_over = {}
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
     saved_data = []
@@ -42,6 +43,11 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     delay_clock = ticks_ms()  # Start timer how long to start displaying information
     delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
 
+    for team in settings.teams:
+        delay_over[team[0]] = False
+
+    number_teams_playing = teams_currently_playing.count(True)
+
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             teams_with_data.clear()
@@ -52,6 +58,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 info, data, currently_playing = get_data(teams[fetch_index])
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
+
+                if teams_currently_playing.count(True) != number_teams_playing:
+                    number_teams_playing = teams_currently_playing.count(True)
+                    delay_clock = ticks_ms()
 
                 # If delay don't keep updating as to not display latest data
                 if not settings.delay or first_time:
@@ -69,17 +79,18 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
                 # Wait for delay to be over to start displaying data
                 if ticks_diff(ticks_ms(), delay_clock) >= delay_timer:
-                    delay_over = True
+                    delay_over[teams[fetch_index][0]] = True
                     delay_clock = ticks_add(delay_clock, delay_timer)  # Reset Timer
 
-                if delay_over:  # If delay over start displaying everything got before delay, in order
+                if delay_over[teams[fetch_index][0]]:  # If delay over start displaying everything got before delay, in order
                     team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
 
                     # Ensure currently_play is true until delay catches up
                     index = 0
                     for team_info_temp in team_info:
                         if ("bottom_info" in team_info_temp and teams_with_data[index] and
-                            "FINAL" not in team_info_temp["bottom_info"]):
+                            not any(keyword in str(team_info_temp["bottom_info"]).lower()
+                                for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
                             teams_currently_playing[index] = True
                         index += 1
                 else:
@@ -297,9 +308,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 settings.stay_on_team = False
 
             if temp_delay is not settings.delay:
+                print("here")
                 delay_clock = ticks_ms()
                 delay_timer = settings.LIVE_DATA_DELAY * 1000
-                delay_over = False
+                delay_over[teams[fetch_index][0]] = False
 
             # If button was pressed but team is already set to change, change it back
             if settings.stay_on_team and currently_displaying != team_info[display_index]:

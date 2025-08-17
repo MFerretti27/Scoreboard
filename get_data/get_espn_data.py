@@ -163,6 +163,10 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
     team_info["bottom_info"] = str(team_info["top_info"])
     team_info["top_info"] = temp
 
+    if ("1st" in team_info["top_info"] or "2nd" in team_info["top_info"]
+        or "3rd" in team_info["top_info"]or "4th" in team_info["top_info"]):
+        team_info["top_info"] = team_info["top_info"] + " Quarter"
+
     return team_info
 
 
