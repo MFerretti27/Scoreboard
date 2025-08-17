@@ -25,6 +25,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     :return team_info: List of information for teams following
     """
     teams_currently_playing: list[bool] = []
+    number_teams_playing = 0
     first_time = True
     delay_over = {}
     team_info: list[dict] = []
@@ -45,6 +46,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     for team in settings.teams:
         delay_over[team[0]] = False
 
+    number_teams_playing = teams_currently_playing.count(True)
+
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             teams_with_data.clear()
@@ -55,6 +58,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 info, data, currently_playing = get_data(teams[fetch_index])
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
+
+                if teams_currently_playing.count(True) != number_teams_playing:
+                    number_teams_playing = teams_currently_playing.count(True)
+                    delay_clock = ticks_ms()
 
                 # If delay don't keep updating as to not display latest data
                 if not settings.delay or first_time:
@@ -167,7 +174,6 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
 
                 # Football specific display information
                 if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
-                    print(teams_currently_playing)
                     if key == "top_info":
                         window["top_info"].update(value=value, font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
                     if key == "home_timeouts":
