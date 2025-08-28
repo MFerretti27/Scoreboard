@@ -4,6 +4,7 @@ It compares the input team name with a list of known team names in various leagu
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
 
+from soupsieve import match
 from rapidfuzz import fuzz, process  # type: ignore[import]
 
 from helper_functions.logger_config import logger
@@ -179,6 +180,11 @@ def get_team_league(team_name: str) -> tuple:
     for league, teams in ALL_TEAMS.items():
         upper_teams = [team.upper() for team in teams]
         _, score, index = process.extractOne(team_name_capitalized, upper_teams, scorer=fuzz.WRatio)
+
+        if match is None:
+            continue  # no matches in this league, skip
+
+        matched_team, score, index = match
         if score > best_match[1]:
             best_match = (teams[index], score, league)
 
