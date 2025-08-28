@@ -3,8 +3,6 @@
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
-
-from soupsieve import match
 from rapidfuzz import fuzz, process  # type: ignore[import]
 
 from helper_functions.logger_config import logger
