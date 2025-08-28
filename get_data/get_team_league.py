@@ -184,7 +184,7 @@ def get_team_league(team_name: str) -> tuple:
         if matched is None:
             continue  # no matches in this league, skip
 
-        matched_team, score, index = matched
+        _, score, index = matched
         if score > best_match[1]:
             best_match = (teams[index], score, league)
 
