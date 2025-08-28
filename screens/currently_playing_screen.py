@@ -16,7 +16,17 @@ from helper_functions.scoreboard_helpers import (
 )
 
 
-def set_delay_display(team_info: dict, teams_with_data: list, teams_currently_playing: list, display_index: int) -> dict:
+def set_delay_display(team_info: list, teams_with_data: list,
+                      teams_currently_playing: list, display_index: int) -> list:
+    """Set the display to hide information until delay is over.
+
+    :param team_info: Dictionary containing information about the teams
+    :param teams_with_data: List of teams that have data available
+    :param teams_currently_playing: List of teams that are currently playing
+    :param display_index: Index of the team to display
+
+    :return: Updated team_info dictionary hiding team display information
+    """
     for index in range(len(settings.teams)):
         if teams_with_data[index] and teams_currently_playing[index]:
             team_info[index]["top_info"] = "Game Started"

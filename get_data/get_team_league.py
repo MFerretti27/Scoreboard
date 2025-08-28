@@ -165,26 +165,26 @@ DIVISION_TEAMS = {
     "NBA Atlantic Division": NBA_ATLANTIC_DIVISION,
 }
 
-def get_team_league(team__name: str) -> tuple:
+def get_team_league(team_name: str) -> tuple:
     """Get the league and sport name for a given team name.
 
-    :param team__name: The name of the team to search for.
+    :param team_name: The name of the team to search for.
 
     :return: A tuple containing the league and sport name.
     """
-    team__name_capitalized = team__name.strip().upper()
+    team_name_capitalized = team_name.strip().upper()
     best_match = ("", 0.0, "Unknown")
 
     # Find what array team name is in to determine league
     for league, teams in ALL_TEAMS.items():
         upper_teams = [team.upper() for team in teams]
-        _, score, index = process.extractOne(team__name_capitalized, upper_teams, scorer=fuzz.WRatio)
+        _, score, index = process.extractOne(team_name_capitalized, upper_teams, scorer=fuzz.WRatio)
         if score > best_match[1]:
             best_match = (teams[index], score, league)
 
     logger.info(
         "Team Name: %s Best Match: %s, Score: %s, League: %s",
-        team__name, best_match[0], best_match[1], best_match[2],
+        team_name, best_match[0], best_match[1], best_match[2],
     )
 
     if best_match[2].upper() == "NFL":
@@ -200,7 +200,7 @@ def get_team_league(team__name: str) -> tuple:
         return matched_team  # return tuple of league and sport name
 
     # If no match found, raise an error
-    msg = f"Team '{team__name}' not found in any league."
+    msg = f"Team '{team_name}' not found in any league."
     raise ValueError(msg)
 
 
