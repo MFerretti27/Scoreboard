@@ -179,12 +179,12 @@ def get_team_league(team_name: str) -> tuple:
     # Find what array team name is in to determine league
     for league, teams in ALL_TEAMS.items():
         upper_teams = [team.upper() for team in teams]
-        _, score, index = process.extractOne(team_name_capitalized, upper_teams, scorer=fuzz.WRatio)
+        matched = process.extractOne(team_name_capitalized, upper_teams, scorer=fuzz.WRatio)
 
-        if match is None:
+        if matched is None:
             continue  # no matches in this league, skip
 
-        matched_team, score, index = match
+        matched_team, score, index = matched
         if score > best_match[1]:
             best_match = (teams[index], score, league)
 
