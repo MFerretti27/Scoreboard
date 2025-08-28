@@ -16,6 +16,46 @@ from helper_functions.scoreboard_helpers import (
 )
 
 
+def set_delay_display(team_info: list, teams_with_data: list,
+                      teams_currently_playing: list, display_index: int) -> list:
+    """Set the display to hide information until delay is over.
+
+    :param team_info: Dictionary containing information about the teams
+    :param teams_with_data: List of teams that have data available
+    :param teams_currently_playing: List of teams that are currently playing
+    :param display_index: Index of the team to display
+
+    :return: Updated team_info dictionary hiding team display information
+    """
+    for index in range(len(settings.teams)):
+        if teams_with_data[index] and teams_currently_playing[index]:
+            team_info[index]["top_info"] = "Game Started"
+            team_info[index]["bottom_info"] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
+            team_info[index]["home_timeouts"] = ""
+            team_info[index]["away_timeouts"] = ""
+            team_info[index]["home_score"] = "0"
+            team_info[index]["away_score"] = "0"
+            if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
+                team_info[index]["above_score_txt"] = ""
+            team_info[index]["under_score_image"] = ""
+
+            # Ensure score color doesn't display in delay
+            if ("home_possession" in team_info and "away_possession" in team_info
+                and "home_redzone" in team_info and "away_redzone" in team_info):
+                team_info[display_index]["home_redzone"] = False
+                team_info[display_index]["away_redzone"] = False
+                team_info[display_index]["home_possession"] = False
+                team_info[display_index]["away_possession"] = False
+            elif "home_bonus" in team_info and "away_bonus" in team_info:
+                team_info[display_index]["home_bonus"] = False
+                team_info[display_index]["away_bonus"] = False
+            elif "home_power_play" in team_info and "away_power_play" in team_info:
+                team_info[display_index]["home_power_play"] = False
+                team_info[display_index]["away_power_play"] = False
+
+    return team_info
+
+
 def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """Display only games that are currently playing.
 
@@ -26,11 +66,12 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """
     teams_currently_playing: list[bool] = []
     first_time = True
-    delay_over = False
+    delay_over = {}
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
     saved_data = []
     delay_info = []
+    delay_started = []
     display_index = 0
     should_scroll = False
     currently_displaying = {}
@@ -39,8 +80,13 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     display_timer = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     fetch_clock = ticks_ms()  # Start timer for fetching
     fetch_timer = 2 * 1000  # How often to fetch data in seconds
-    delay_clock = ticks_ms()  # Start timer how long to start displaying information
+    delay_clock = []  # Start timer how long to start displaying information
     delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
+
+    for team in settings.teams:
+        delay_over[team[0]] = False
+        delay_clock.append(0)
+        delay_started.append(False)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -53,92 +99,41 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                 teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
 
+                if settings.delay:
+                    # Wait for delay to be over to start displaying data
+                    if ticks_diff(ticks_ms(), delay_clock[fetch_index]) >= delay_timer and delay_started[fetch_index]:
+                        delay_over[teams[fetch_index][0]] = True
+                    elif currently_playing and not delay_started[fetch_index]:
+                            logger.info("Setting delay")
+                            delay_started[fetch_index] = True
+                            delay_clock[fetch_index] = ticks_ms()
+
                 # If delay don't keep updating as to not display latest data
-                if not settings.delay or first_time:
+                if not settings.delay:
                     team_info.append(info)
                 else:
                     delay_info.append(info)
 
+            # if there is a delay save data for after delay
             if settings.delay:
                 last_info = copy.deepcopy(delay_info)
                 delay_info.clear()
-
-            # if there is a delay save data for after delay
-            if settings.delay and not first_time:
                 saved_data.append(copy.deepcopy(last_info))  # Save last_info
 
-                # Wait for delay to be over to start displaying data
-                if ticks_diff(ticks_ms(), delay_clock) >= delay_timer:
-                    delay_over = True
-                    delay_clock = ticks_add(delay_clock, delay_timer)  # Reset Timer
-
-                if delay_over:  # If delay over start displaying everything got before delay, in order
+                if delay_over[teams[display_index][0]]:  # If delay over start displaying everything got before delay, in order
                     team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
 
                     # Ensure currently_play is true until delay catches up
                     index = 0
                     for team_info_temp in team_info:
                         if ("bottom_info" in team_info_temp and teams_with_data[index] and
-                            "FINAL" not in team_info_temp["bottom_info"]):
+                            not any(keyword in str(team_info_temp["bottom_info"]).lower()
+                                for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
                             teams_currently_playing[index] = True
                         index += 1
                 else:
                     team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
-                    index = 0
-                    for _ in team_info:
-                        if teams_with_data[index] and teams_currently_playing[index]:
-                            team_info[index]["top_info"] = "Game Started"
-                            team_info[index]["bottom_info"] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
-                            team_info[index]["home_timeouts"] = ""
-                            team_info[index]["away_timeouts"] = ""
-                            team_info[index]["home_score"] = "0"
-                            team_info[index]["away_score"] = "0"
-                            if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
-                                team_info[index]["above_score_txt"] = ""
-                            team_info[index]["under_score_image"] = ""
-
-                            # Ensure score color doesn't display in delay
-                            if ("home_possession" in team_info and "away_possession" in team_info
-                                and "home_redzone" in team_info and "away_redzone" in team_info):
-                                team_info[display_index]["home_redzone"] = False
-                                team_info[display_index]["away_redzone"] = False
-                                team_info[display_index]["home_possession"] = False
-                                team_info[display_index]["away_possession"] = False
-                            elif "home_bonus" in team_info and "away_bonus" in team_info:
-                                team_info[display_index]["home_bonus"] = False
-                                team_info[display_index]["away_bonus"] = False
-                            elif "home_power_play" in team_info and "away_power_play" in team_info:
-                                team_info[display_index]["home_power_play"] = False
-                                team_info[display_index]["away_power_play"] = False
-
-                        index += 1
-            if settings.delay and first_time:
-                index = 0
-                for _ in team_info:
-                    if teams_with_data[index] and teams_currently_playing[index]:
-                        team_info[index]["top_info"] = "Game Started"
-                        team_info[index]["bottom_info"] = f"Setting delay of {settings.LIVE_DATA_DELAY} seconds"
-                        team_info[index]["home_timeouts"] = ""
-                        team_info[index]["away_timeouts"] = ""
-                        team_info[index]["home_score"] = "0"
-                        team_info[index]["away_score"] = "0"
-                        if "@" not in team_info[index]["above_score_txt"]:  # Remove if text doesn't have team names
-                            team_info[index]["above_score_txt"] = ""
-                        team_info[index]["under_score_image"] = ""
-                        # Ensure score color doesn't display in delay
-                        if ("home_possession" in team_info and "away_possession" in team_info
-                            and "home_redzone" in team_info and "away_redzone" in team_info):
-                            team_info[display_index]["home_redzone"] = False
-                            team_info[display_index]["away_redzone"] = False
-                            team_info[display_index]["home_possession"] = False
-                            team_info[display_index]["away_possession"] = False
-                        elif "home_bonus" in team_info and "away_bonus" in team_info:
-                            team_info[display_index]["home_bonus"] = False
-                            team_info[display_index]["away_bonus"] = False
-                        elif "home_power_play" in team_info and "away_power_play" in team_info:
-                            team_info[display_index]["home_power_play"] = False
-                            team_info[display_index]["away_power_play"] = False
-                    index += 1
+                    team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing, display_index)
 
             fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 
@@ -299,7 +294,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             if temp_delay is not settings.delay:
                 delay_clock = ticks_ms()
                 delay_timer = settings.LIVE_DATA_DELAY * 1000
-                delay_over = False
+                delay_over[teams[display_index][0]] = False
 
             # If button was pressed but team is already set to change, change it back
             if settings.stay_on_team and currently_displaying != team_info[display_index]:

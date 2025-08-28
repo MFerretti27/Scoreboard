@@ -26,11 +26,15 @@ from gui_layouts import (
 )
 from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.main_menu_helpers import (
+    get_new_team_names,
     load_teams_order,
     positive_num,
+    read_teams_from_file,
     save_teams_order,
     setting_keys_booleans,
     settings_to_json,
+    update_new_division,
+    update_new_names,
     update_settings,
     update_teams,
     write_settings_to_py,
@@ -196,6 +200,10 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
             show_view("MAIN", window)
             return window, team_names
 
+        if "Update Names" in event:
+            show_fetch_popup(league)
+            show_view(league, window)
+
         if "Save" in event:
             selected_teams = [team for team, selected in values.items() if selected]
             selected_teams.remove("versions")
@@ -204,6 +212,107 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
             window["teams_removed"].update(value=teams_removed)
             teams = load_teams_order()
             team_names = [team[0] for team in teams]
+
+def show_fetch_popup(league: str) -> None:
+    """Show a popup screen that give user a choice to update team names."""
+    # Common base screen widths
+    common_base_widths = [1366, 1920, 1440, 1280]
+
+    # Find the largest base width that doesn't exceed the window width using `max()`
+    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
+    scale = window_width / base_width
+
+    max_size = 100
+    button_size = min(max_size, max(48, int(50 * scale)))
+    message = min(max_size, max(14, int(20 * scale)))
+    layout = [
+        [Sg.VPush()],
+        [Sg.Push(),
+         Sg.Text("This will fetch new team names", key="top_message",
+                 font=(settings.FONT, message),
+                 ),
+         Sg.Push(),
+         ],
+         [Sg.Push(),
+         Sg.Text("Only do this if a team has changed their name",
+                 key="middle_message", font=(settings.FONT, message, "underline"),
+                 ),
+         Sg.Push(),
+         ],
+         [Sg.Push(),
+         Sg.Text("\nIf Team's are updated logo's will be re-downloaded when starting", key="bottom_message",
+                 font=(settings.FONT, message),
+                 ),
+         Sg.Push(),
+         ],
+         [Sg.Push(),
+         Sg.Text("",
+                 font=(settings.FONT, message),
+                 ),
+         Sg.Push(),
+         ],
+         [Sg.VPush()],
+        [Sg.Push(),
+         Sg.Button("Update", key="update", font=(settings.FONT, button_size), pad=(20)),
+         Sg.Button("Cancel", key="cancel", font=(settings.FONT, button_size), pad=(20)),
+         Sg.Push(),
+        ],
+    ]
+
+    window = Sg.Window(
+        "",
+        layout,
+        modal=True,  # Forces focus until closed
+        keep_on_top=True,
+        size=(int(window_width/2), int(window_height/3)),
+    )
+
+    update = False
+    while True:
+        event, _ = window.read()
+
+        if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
+            window.close()
+            return
+
+        if "update" in event and not update:
+            renamed, new_teams, error_message = get_new_team_names(league)
+            if "Failed" in error_message:
+                window["top_message"].Update(value="")
+                window["bottom_message"].Update(value="")
+                window["middle_message"].Update(value=error_message, font=(settings.FONT, message), text_color="red")
+            elif not renamed:
+                window["top_message"].Update(value="")
+                window["bottom_message"].Update(value="")
+                window["middle_message"].Update(value="No New Team Names Found",
+                                                font=(settings.FONT, message), text_color="black")
+            else:
+                update = True
+                display_renamed = ""
+                for old, new in renamed:
+                    display_renamed += f"{old}  --->  {new}\n"
+
+                window["update"].Update(text="Confirm")
+                window["bottom_message"].Update(value="")
+                window["top_message"].Update(value="Found New Team Names, Press Confirm to Update")
+                window["middle_message"].Update(value=display_renamed,
+                                                font=(settings.FONT, message), text_color="black")
+
+        elif "update" in event and update:
+            update_new_names(league, new_teams, renamed)
+            error_message = update_new_division(league)
+            if "Failed" in error_message:
+                window["top_message"].Update(value="")
+                window["bottom_message"].Update(value="")
+                window["middle_message"].Update(value=error_message, font=(settings.FONT, message), text_color="red")
+            else:
+                settings.always_get_logos = True  # re-download logos when starting
+                window.close()
+                return
+
+        elif "cancel" in event:
+            window.close()
+            return
 
 def settings_screen(window: Sg.Window) -> Sg.Window:
     """Display the settings screen and handle user interactions for updating settings.
@@ -426,6 +535,8 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
+    if is_connected():
+        window["connection_message"].update(value="Already connected to internet", text_color="green")
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:

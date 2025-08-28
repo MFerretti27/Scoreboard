@@ -171,7 +171,7 @@ def resize_text() -> None:
     logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
     logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
-    logger.info("Not playing top txt size:{settings.NOT_PLAYING_TOP_INFO_SIZE}")
+    logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
     logger.info("Signature txt size: %s\n", settings.SIGNATURE_SIZE)
 
