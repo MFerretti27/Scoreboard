@@ -1,5 +1,6 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 import gc
+import platform
 import subprocess
 import sys
 import time
@@ -187,3 +188,28 @@ def convert_paths_to_strings(obj: object) -> object:
         return str(obj)
 
     return obj
+
+
+def scroll(window: Sg.Window, team_info: dict, display_index: int) -> None:
+    """Scroll the display to show the next set of information.
+
+    :param window: The window element to update
+    :param team_info: The team information dictionary
+    :param display_index: The index of the team to update
+    """
+    text = team_info[display_index]["bottom_info"] + "         "
+    for _ in range(2):
+        for _ in range(len(text)):
+            event = window.read(timeout=100)
+            text = text[1:] + text[0]
+            window["bottom_info"].update(value=text)
+            check_events(window, event)
+        time.sleep(5)
+
+def maximize_screen(window: Sg.Window) -> None:
+    """Maximize the window to fullscreen."""
+    # Maximize does not work on MacOS, so we use attributes to set fullscreen
+    if platform.system() == "Darwin":
+        window.TKroot.attributes("-fullscreen", True)  # noqa: FBT003
+    else:
+        window.Maximize()
