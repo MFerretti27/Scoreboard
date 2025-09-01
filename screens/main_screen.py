@@ -366,7 +366,7 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
             else:
                 window["confirmation_message"].update(value="")
 
-        elif "Back" in event:
+        elif event == "Back":
             show_view("MAIN", window)
             return window
 
