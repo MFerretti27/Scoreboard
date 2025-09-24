@@ -226,6 +226,8 @@ def main(data_saved: dict) -> None:
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
                        resizable=True, return_keyboard_events=True).Finalize()
 
+    window.set_cursor("none")  # Hide the mouse cursor
+
     maximize_screen(window)
 
     while True:
