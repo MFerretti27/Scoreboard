@@ -56,7 +56,7 @@ def set_delay_display(team_info: list, teams_with_data: list,
 
     return team_info
 
-def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: any, display_index: int) -> None:
+def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
     """Update the NFL display information for a specific team.
 
     :param window: The window element to update
@@ -74,22 +74,22 @@ def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: any, d
     elif key == "away_timeouts":
         window["away_timeouts"].update(value=value, text_color="yellow")
 
-    if team_info[display_index]["home_possession"] and key == "home_score":
+    if team_info["home_possession"] and key == "home_score":
         window["home_score"].update(value=value, font=(settings.FONT,
                                                         settings.SCORE_TXT_SIZE, "underline"))
-    elif team_info[display_index]["away_possession"] and key == "away_score":
+    elif team_info["away_possession"] and key == "away_score":
         window["away_score"].update(value=value, font=(settings.FONT,
                                                         settings.SCORE_TXT_SIZE, "underline"))
-    if team_info[display_index]["home_redzone"] and key == "home_score":
+    if team_info["home_redzone"] and key == "home_score":
         window["home_score"].update(value=value,
                                     font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
                                     text_color="red")
-    elif team_info[display_index]["away_redzone"] and key == "away_score":
+    elif team_info["away_redzone"] and key == "away_score":
         window["away_score"].update(value=value,
                                     font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
                                     text_color="red")
 
-def display_nba_info(window: sg.Window, team_info: dict, key: str, value: any, display_index: int) -> None:
+def display_nba_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
     """Update the NBA display information for a specific team.
 
     :param window: The window element to update
@@ -112,10 +112,10 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: any, d
                                         text_color="yellow")
 
     # Ensure bonus is in dictionary to not cause key error
-    if "home_bonus" in team_info[display_index] or "away_bonus" in team_info[display_index]:
-        if team_info[display_index]["home_bonus"] and key == "home_score":
+    if "home_bonus" in team_info or "away_bonus" in team_info:
+        if team_info["home_bonus"] and key == "home_score":
             window[key].update(value=value, text_color="orange")
-        if team_info[display_index]["away_bonus"] and key == "away_score":
+        if team_info["away_bonus"] and key == "away_score":
             window[key].update(value=value, text_color="orange")
 
 def display_mlb_info(window: sg.Window, key: str, value: any) -> None:
@@ -136,28 +136,27 @@ def display_mlb_info(window: sg.Window, key: str, value: any) -> None:
     elif key == "above_score_txt" and settings.display_inning:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
-def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: any, display_index: int) -> None:
+def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
     """Update the NHL display information for a specific team.
 
     :param window: The window element to update
     :param team_info: The team information dictionary
     :param key: The key to update
     :param value: The new value to set
-    :param display_index: The index of the team to update
 
     :return: None
     """
     if key == "top_info":
         window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
-    if key == "above_score_txt" and settings.display_nhl_power_play:
+    if key == "above_score_txt" and settings.display_nba_play_by_play:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
     # Ensure power play is in dictionary to not cause key error
-    if "home_power_play" in team_info[display_index] or "away_power_play" in team_info[display_index]:
-        if team_info[display_index]["home_power_play"] and key == "home_score":
+    if "home_power_play" in team_info or "away_power_play" in team_info:
+        if team_info["home_power_play"] and key == "home_score":
             window["home_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
                                         text_color="blue")
-        elif team_info[display_index]["away_power_play"] and key == "away_score":
+        elif team_info["away_power_play"] and key == "away_score":
             window["away_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
                                         text_color="blue")
 
@@ -182,19 +181,19 @@ def update_display(window: sg.Window, team_info: dict, display_index: int, teams
 
         # Football specific display information
         if "NFL" in sport_league.upper() and teams_currently_playing[display_index]:
-            display_nfl_info(window, team_info[display_index])
+            display_nfl_info(window, team_info[display_index], key, value)
 
         # NBA Specific display size for top info
         if "NBA" in sport_league.upper() and teams_currently_playing[display_index]:
-            display_nba_info(window, team_info[display_index], key, value, display_index)
+            display_nba_info(window, team_info[display_index], key, value)
 
         # MLB Specific display size for bottom info
         if "MLB" in sport_league.upper() and teams_currently_playing[display_index]:
-            display_mlb_info(window, team_info[display_index], key, value, display_index)
+            display_mlb_info(window, team_info[display_index], key, value)
 
         # NHL Specific display size for bottom info
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
-            display_nhl_info(window, team_info[display_index], key, value, display_index)
+            display_nhl_info(window, team_info[display_index], key, value)
 
         if settings.no_spoiler_mode:
             set_spoiler_mode(window, team_info[display_index])
@@ -367,12 +366,16 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
                                                                         display_index, teams_with_data)
             display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
 
+        else:
+            display_index = (display_index + 1) % len(teams)
+
         if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
             scroll(window, team_info, display_index)
             should_scroll = False
 
         temp_delay = settings.delay  # store to see if changed
-        check_events(window, event, currently_playing=True)
+        if not first_time:
+            check_events(window, event, currently_playing=True)
         if settings.stay_on_team and sum(teams_currently_playing) == 1:
             window["top_info"].update(value='No longer set to "staying on team"')
             window["bottom_info"].update(value="Only one team playing")
