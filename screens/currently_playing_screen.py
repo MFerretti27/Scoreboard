@@ -189,7 +189,7 @@ def update_display(window: sg.Window, team_info: dict, display_index: int, teams
 
         # MLB Specific display size for bottom info
         if "MLB" in sport_league.upper() and teams_currently_playing[display_index]:
-            display_mlb_info(window, team_info[display_index], key, value)
+            display_mlb_info(window, key, value)
 
         # NHL Specific display size for bottom info
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
