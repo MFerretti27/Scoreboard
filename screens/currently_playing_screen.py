@@ -160,7 +160,8 @@ def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: str) -
             window["away_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
                                         text_color="blue")
 
-def update_display(window: sg.Window, team_info: list[dict], display_index: int, teams_currently_playing: list[bool]) -> None:
+def update_display(window: sg.Window, team_info: list[dict], display_index: int,
+                   teams_currently_playing: list[bool]) -> None:
     """Update the display for a specific team.
 
     :param window: The window element to update

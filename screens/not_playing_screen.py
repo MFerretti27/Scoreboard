@@ -268,7 +268,7 @@ def main(data_saved: dict) -> None:
 
             # Scroll bottom info if text is too long
             if should_scroll and not settings.no_spoiler_mode:
-                scroll(window, team_info[display_index]["bottom_info"])
+                scroll(window, team_info[display_index]["bottom_info"], display_index)
 
             if True not in teams_with_data and not fetch_first_time:  # No data to display
                 logger.info("\nNo Teams with Data Displaying Clock\n")
