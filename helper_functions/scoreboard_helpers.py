@@ -190,7 +190,7 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, team_info: dict, display_index: int) -> None:
+def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update

@@ -160,7 +160,7 @@ def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: str) -
             window["away_score"].update(value=value, font=(settings.FONT, settings.SCORE_TXT_SIZE),
                                         text_color="blue")
 
-def update_display(window: sg.Window, team_info: dict, display_index: int, teams_currently_playing: list[bool]) -> None:
+def update_display(window: sg.Window, team_info: list[dict], display_index: int, teams_currently_playing: list[bool]) -> None:
     """Update the display for a specific team.
 
     :param window: The window element to update
@@ -242,7 +242,7 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
     return display_index, original_index
 
 def get_display_data(display_index: int, delay_started: list[bool],
-                     delay_clock: list[dict], fetch_clock: list[dict], delay_over: dict[str, bool]) -> tuple:
+                     delay_clock: list[int], fetch_clock: int, delay_over: dict[str, bool]) -> tuple:
     """Fetch and update display data for teams.
 
     :param display_index: Index of the team to display
