@@ -148,7 +148,7 @@ def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: any) -
     """
     if key == "top_info":
         window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
-    if key == "above_score_txt" and settings.display_nba_play_by_play:
+    if key == "above_score_txt" and settings.display_nhl_play_by_play:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
     # Ensure power play is in dictionary to not cause key error
