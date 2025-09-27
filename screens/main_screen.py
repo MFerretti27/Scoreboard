@@ -85,7 +85,7 @@ def main(saved_data: dict) -> None:
 
 
 def check_events(window: Sg.Window, team_names: list,
-                 number_of_times_pressed: int, saved_data: dict) -> int:
+                 number_of_times_pressed: int, saved_data: dict) -> tuple[int, list[Any]]:
     """Check and handle events for the main screen.
 
     :param window: The window element
@@ -532,7 +532,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
 
     if settings.LIVE_DATA_DELAY > 0:
         # Automatically set to true if user entered delay more than 0
-        update_settings({"delay": True}, "")
+        update_settings({"delay": True}, [])
 
     # If failed dont start
     if "Failed" in download_logo_msg:

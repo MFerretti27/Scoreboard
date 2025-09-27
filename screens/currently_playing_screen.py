@@ -56,7 +56,7 @@ def set_delay_display(team_info: list, teams_with_data: list,
 
     return team_info
 
-def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
+def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: str) -> None:
     """Update the NFL display information for a specific team.
 
     :param window: The window element to update
@@ -89,7 +89,7 @@ def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: any) -
                                     font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
                                     text_color="red")
 
-def display_nba_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
+def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -> None:
     """Update the NBA display information for a specific team.
 
     :param window: The window element to update
@@ -199,7 +199,7 @@ def update_display(window: sg.Window, team_info: dict, display_index: int, teams
             set_spoiler_mode(window, team_info[display_index])
 
 def find_next_team_to_display(teams: list[list], teams_currently_playing: list[bool],
-                              display_index: int, teams_with_data: list[bool]) -> int:
+                              display_index: int, teams_with_data: list[bool]) -> tuple[int, int]:
     """Find the next team to display.
 
     :param teams: List of teams to display
@@ -209,10 +209,10 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
 
     :return: Index of the next team to display
     """
+    original_index : int = display_index
     # Find next team to display (skip teams not playing)
     # If shift pressed, stay on current team playing
     if not settings.stay_on_team and settings.prioritize_playing_team:
-        original_index = display_index
         for x in range(len(teams) * 2):
             if teams_currently_playing[(original_index + x) % len(teams)] is False:
                 display_index = (display_index + 1) % len(teams)
@@ -222,7 +222,6 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
                     f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
                 break
     elif not settings.stay_on_team and not settings.prioritize_playing_team:
-        original_index = display_index
         for x in range(len(teams) * 2):
             if teams_with_data[(original_index + x) % len(teams)] is False:
                 display_index = (display_index + 1) % len(teams)
@@ -243,7 +242,7 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
     return display_index, original_index
 
 def get_display_data(display_index: int, delay_started: list[bool],
-                     delay_clock: list[dict], fetch_clock: list[dict], delay_over: list[bool]) -> tuple:
+                     delay_clock: list[dict], fetch_clock: list[dict], delay_over: list[str]) -> tuple:
     """Fetch and update display data for teams.
 
     :param display_index: Index of the team to display

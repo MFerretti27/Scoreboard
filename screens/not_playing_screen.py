@@ -116,7 +116,7 @@ def update_display_index(original_index: int, teams_with_data: list) -> int:
 
     return display_index
 
-def get_team_info(window: Sg.Window, teams_with_data: list, team_info: dict) -> tuple[list, list]:
+def get_team_info(window: Sg.Window, teams_with_data: list[bool], team_info: list[dict]) -> tuple[list, list]:
     """Fetch data for each team and update the team information list.
 
     :param window: The window to update.
@@ -125,8 +125,6 @@ def get_team_info(window: Sg.Window, teams_with_data: list, team_info: dict) -> 
     :return: A tuple containing the updated list of teams with data and the team information list.
     """
     fetch_first_time = False
-    team_info: list[dict] = []
-    teams_with_data: list[bool] = []
     for fetch_index in range(len(settings.teams)):
         logger.info(f"\nFetching data for {settings.teams[fetch_index][0]}")
         info, data, currently_playing = get_data(settings.teams[fetch_index])
