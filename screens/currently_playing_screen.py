@@ -118,7 +118,7 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -
         if team_info["away_bonus"] and key == "away_score":
             window[key].update(value=value, text_color="orange")
 
-def display_mlb_info(window: sg.Window, key: str, value: any) -> None:
+def display_mlb_info(window: sg.Window, key: str, value: str) -> None:
     """Update the MLB display information for a specific team.
 
     :param window: The window element to update
@@ -136,7 +136,7 @@ def display_mlb_info(window: sg.Window, key: str, value: any) -> None:
     elif key == "above_score_txt" and settings.display_inning:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
-def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: any) -> None:
+def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: str) -> None:
     """Update the NHL display information for a specific team.
 
     :param window: The window element to update
@@ -242,7 +242,7 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
     return display_index, original_index
 
 def get_display_data(display_index: int, delay_started: list[bool],
-                     delay_clock: list[dict], fetch_clock: list[dict], delay_over: list[str]) -> tuple:
+                     delay_clock: list[dict], fetch_clock: list[dict], delay_over: dict[str, bool]) -> tuple:
     """Fetch and update display data for teams.
 
     :param display_index: Index of the team to display

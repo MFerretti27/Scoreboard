@@ -116,7 +116,8 @@ def update_display_index(original_index: int, teams_with_data: list) -> int:
 
     return display_index
 
-def get_team_info(window: Sg.Window, teams_with_data: list[bool], team_info: list[dict]) -> tuple[list, list]:
+def get_team_info(window: Sg.Window, teams_with_data: list[bool],
+                  team_info: list[dict]) -> tuple[list[bool], list[dict], bool]:
     """Fetch data for each team and update the team information list.
 
     :param window: The window to update.
@@ -164,12 +165,13 @@ def handle_error(window: Sg.Window) -> None:
                                                 font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
             else:
-                return None  # If all data is fetched successfully, break out of loop
+                return  # If all data is fetched successfully, break out of loop
             time.sleep(30)
             time_till_clock = time_till_clock + 1
         if time_till_clock >= 12:  # 6 minutes without data, display clock
             message = "Failed to Get Data, trying again every 3 minutes"
-            return clock(window, message)
+            clock(window, message)
+            return
     else:
         logger.info("Internet connection is active")
 
@@ -186,11 +188,12 @@ def handle_error(window: Sg.Window) -> None:
         if time_till_clock >= 12:  # If no connection within 4 minutes display clock
             message = "No Internet Connection"
             logger.info("\nNo Internet connection Displaying Clock\n")
-            return clock(window, message)
+            clock(window, message)
+            return
 
         time_till_clock = time_till_clock + 1
     window.refresh()
-    return None
+    return
 
 
 ##################################
