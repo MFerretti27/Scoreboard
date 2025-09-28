@@ -45,23 +45,25 @@ def get_network_logos(broadcast: str | list) -> Path | str:
 
     :return file_path: The string location of what logo to display, return black if cannot find
     """
-    # Make broadcast upper (could be list or )
-    if isinstance(broadcast, str):
-        broadcast = broadcast.upper()
-    elif isinstance(broadcast, list):
-        broadcast = [b.upper() for b in broadcast]
+    if settings.display_network:
+        # Make broadcast upper (could be list or )
+        if isinstance(broadcast, str):
+            broadcast = broadcast.upper()
+        elif isinstance(broadcast, list):
+            broadcast = [b.upper() for b in broadcast]
 
-    file_path: Path | str = ""
+        file_path: Path | str = ""
 
-    folder_path = Path.cwd() / "images" / "Networks"
-    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-    for file in file_names:
-        file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
-        if file_no_png in broadcast and broadcast != "":
-            file_path = Path.cwd() / "images" / "Networks" / file
-            break
+        folder_path = Path.cwd() / "images" / "Networks"
+        file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
+        for file in file_names:
+            file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
+            if file_no_png in broadcast and broadcast != "":
+                file_path = Path.cwd() / "images" / "Networks" / file
+                break
 
-    return file_path
+        return file_path
+    return ""
 
 def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_info: dict) -> dict:
     """Get the team logo for the given team name.

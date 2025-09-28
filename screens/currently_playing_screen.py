@@ -335,6 +335,8 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
         delay_clock.append(0)
         delay_started.append(False)
 
+    event = window.read(timeout=100)
+
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
@@ -374,8 +376,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             should_scroll = False
 
         temp_delay = settings.delay  # store to see if changed
-        if not first_time:
-            check_events(window, event, currently_playing=True)
+        check_events(window, event, currently_playing=True)
         if settings.stay_on_team and sum(teams_currently_playing) == 1:
             window["top_info"].update(value='No longer set to "staying on team"')
             window["bottom_info"].update(value="Only one team playing")

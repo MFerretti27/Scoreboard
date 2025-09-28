@@ -5,7 +5,6 @@ import json
 import logging
 import sys
 import time
-import traceback
 from datetime import datetime, timedelta
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
@@ -27,6 +26,8 @@ from helper_functions.scoreboard_helpers import (
 )
 from screens.clock_screen import clock
 from screens.currently_playing_screen import team_currently_playing
+
+logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
 
 
 def save_team_data(info: dict, fetch_index: int, saved_data: dict,
@@ -220,7 +221,6 @@ def main(data_saved: dict) -> None:
     display_first_time: bool = True
     fetch_first_time: bool = True
 
-    logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
     resize_text()  # Resize text to fit screen size
 
     # Create the window
@@ -228,7 +228,6 @@ def main(data_saved: dict) -> None:
                        resizable=True, return_keyboard_events=True).Finalize()
 
     window.set_cursor("none")  # Hide the mouse cursor
-
     maximize_screen(window)
 
     while True:
@@ -258,10 +257,7 @@ def main(data_saved: dict) -> None:
             event = window.read(timeout=1)
             temp_spoiler_mode = settings.no_spoiler_mode  # store to see if button is pressed
             check_events(window, event)  # Check for button presses
-
-            if settings.no_spoiler_mode:
-                set_spoiler_mode(window, team_info=team_info[display_index])
-            elif temp_spoiler_mode is not settings.no_spoiler_mode:  # If turned off get new data instantly
+            if temp_spoiler_mode is not settings.no_spoiler_mode:  # If turned off get new data instantly
                 logger.info("No spoiler mode changed, refreshing data")
                 fetch_first_time = True
                 display_first_time = True
@@ -275,8 +271,7 @@ def main(data_saved: dict) -> None:
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
         except Exception as error:
-            logger.info(f"Error: {error}")
-            traceback.print_exc()  # Prints the full traceback
+            logger.exception(f"Error: {error}")
             handle_error(window)
 
 
