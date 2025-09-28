@@ -253,7 +253,7 @@ def check_double_header(home_team_name: str, away_team_name: str, team_info: dic
 
         return team_info, has_data, currently_playing
 
-    return team_info, has_data, False # No double header
+    return team_info, True, False # No double header
 
 def check_delayed(data: dict, double_header: int, team_info: dict, game_time: str) -> dict[str, Any]:
     """Check if game is delayed/postponed/canceled and update team_info accordingly.
