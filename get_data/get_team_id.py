@@ -1,5 +1,4 @@
 """Get the id of team for API calls."""
-import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
@@ -30,15 +29,12 @@ def get_nhl_game_id(team_name: str) -> int:
 
     :return: integer representing Team ID
     """
-    client = NHLClient(verbose=True)
-    client.teams.teams_info()  # returns id + abbreviation + name of all teams
-    resp = requests.get("https://api.nhle.com/stats/rest/en/team", timeout=5)
-    res = resp.json()
-    for teams in res["data"]:
-        if teams["fullName"].upper() in team_name.upper():
-            abbr = teams["triCode"]
+    client = NHLClient()
+    for team in client.teams.teams():
+        if team["name"] in team_name:
+            abbr = team["abbr"]
 
-    return client.schedule.get_schedule_by_team_by_week(team_abbr=abbr)[0]["id"]
+    return client.schedule.team_weekly_schedule(team_abbr=abbr)[0]["id"]
 
 
 def get_nba_team_id(team_name: str) -> int:

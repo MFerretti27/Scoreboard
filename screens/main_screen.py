@@ -29,7 +29,6 @@ from helper_functions.main_menu_helpers import (
     get_new_team_names,
     load_teams_order,
     positive_num,
-    read_teams_from_file,
     save_teams_order,
     setting_keys_booleans,
     settings_to_json,
@@ -82,47 +81,62 @@ def main(saved_data: dict) -> None:
 
     while True:
         window.Maximize()
-        event, values = window.read()
+        number_of_times_pressed, team_names = check_events(window, team_names, number_of_times_pressed, saved_data)
 
-        if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
-            window.close()
-            sys.exit()
 
-        elif "Add" in event:
-            number_of_times_pressed = 0
-            league = event.split(" ")[1]
-            show_view(league, window)
-            window, team_names = add_team_screen(window, event, team_names)
+def check_events(window: Sg.Window, team_names: list,
+                 number_of_times_pressed: int, saved_data: dict) -> tuple[int, list[Any]]:
+    """Check and handle events for the main screen.
 
-        elif "Connect to Internet" in event:
-            number_of_times_pressed = 0
-            show_view("INTERNET", window)
-            window = internet_connection_screen(window)
+    :param window: The window element
+    :param team_names: The list of team names
+    :param number_of_times_pressed: The number of times the update button has been pressed
+    :param saved_data: The saved data dictionary
 
-        elif "Settings" in event:
-            number_of_times_pressed = 0
-            show_view("SETTINGS", window)
-            window = settings_screen(window)
+    :return: The updated number of times the update button has been pressed
+    """
+    event, values = window.read()
+    if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
+        window.close()
+        sys.exit()
 
-        elif "Set Team Order" in event:
-            number_of_times_pressed = 0
-            show_view("SET_ORDER", window)
-            window = set_team_order_screen(window)
+    elif "Add" in event:
+        number_of_times_pressed = 0
+        league = event.split(" ")[1]
+        show_view(league, window)
+        window, team_names = add_team_screen(window, event, team_names)
 
-        elif "update_button" in event:
-            number_of_times_pressed = handle_update(window, number_of_times_pressed)
+    elif "Connect to Internet" in event:
+        number_of_times_pressed = 0
+        show_view("INTERNET", window)
+        window = internet_connection_screen(window)
 
-        elif "restore_button" in event:
-            number_of_times_pressed = 0
-            handle_restore(window, values)
+    elif "Settings" in event:
+        number_of_times_pressed = 0
+        show_view("SETTINGS", window)
+        window = settings_screen(window)
 
-        elif "Start" in event or "Return" in event:
-            handle_starting_script(window, saved_data)
+    elif "Set Team Order" in event:
+        number_of_times_pressed = 0
+        show_view("SET_ORDER", window)
+        window = set_team_order_screen(window)
 
-        elif "Manual" in event:
-            number_of_times_pressed = 0
-            show_view("MANUAL", window)
-            window = manual_screen(window)
+    elif "update_button" in event:
+        number_of_times_pressed = handle_update(window, number_of_times_pressed)
+
+    elif "restore_button" in event:
+        number_of_times_pressed = 0
+        handle_restore(window, values)
+
+    elif "Start" in event or "Return" in event:
+        handle_starting_script(window, saved_data)
+
+    elif "Manual" in event:
+        number_of_times_pressed = 0
+        show_view("MANUAL", window)
+        window = manual_screen(window)
+
+    return number_of_times_pressed, team_names
 
 def show_view(view_to_show: str, window: Sg.Window) -> None:
     """Switch main screen views.
@@ -515,6 +529,10 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     download_logo_msg = get_team_logos(window, settings.teams)  # Get the team logos
     window["download_message"].update(value=f"{download_logo_msg}")
     window.refresh()
+
+    if settings.LIVE_DATA_DELAY > 0:
+        # Automatically set to true if user entered delay more than 0
+        update_settings({"delay": True}, [])
 
     # If failed dont start
     if "Failed" in download_logo_msg:

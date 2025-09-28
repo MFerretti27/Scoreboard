@@ -217,9 +217,9 @@ def update_settings(selected_items_integers: dict, selected_items_boolean: list)
         contents = file.readlines()
 
     for i, line in enumerate(contents):
-        for key in setting_keys_integers:
+        for key, value in selected_items_integers.items():
             if line.strip().startswith(f"{key} ="):
-                contents[i] = f"{key} = {selected_items_integers[key]}\n"
+                contents[i] = f"{key} = {value}\n"
 
     for key, selected in zip(setting_keys_booleans, selected_items_boolean, strict=False):
         for i, line in enumerate(contents):
@@ -449,20 +449,17 @@ def get_new_team_names(league: str) -> tuple:
     try:
         if league == "MLB":
             teams = statsapi.get("teams", {"sportIds": 1})["teams"]
-            for team in teams:
-                new_list.append(team["name"])
+            new_list.extend([team["name"] for team in teams])
 
         elif league == "NHL":
             client = NHLClient()
-            for team in client.teams.teams():
-                new_list.append(team["name"])
+            new_list.extend([team["name"] for team in client.teams.teams()])
 
         elif league == "NBA":
-            for team in nba_teams.get_teams():
-                new_list.append(team["full_name"])
+            new_list.extend([team["full_name"] for team in nba_teams.get_teams()])
     except Exception:
         logger.exception("Getting new team names failed")
-        return [], [], "Failed to Get New Team Name's"
+        return [], [], "Failed to Get New Team Names"
 
     # normalize inputs but keep original labels for results
     old_norm = [(o, normalize(o)) for o in old_list]

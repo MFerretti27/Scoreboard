@@ -108,20 +108,18 @@ def get_nhl_game_type(team_name: str) -> str:
         home_team_abbr = res["seasonSeries"][0]["homeTeam"]["abbrev"]
 
         # Get the conference of the your team and your team abbreviation
-        client = NHLClient(verbose=True)
-        client.teams.teams_info()  # conference, division, abbreviation, and name of all teams
-        for team in client.teams.teams_info():
-            if team_name in team["name"]:
-                conference = team["conference"]["name"]
+        client = NHLClient()
+        for team in client.teams.teams():
+            if team["name"] == team_name:
                 your_team_abbr = team["abbr"]
-                break
+                conference = team["conference"]["name"]
 
         # Get the current season year
         now = datetime.now(UTC)
         year = now.year
         month = now.month
 
-        if month >= 10:  # Season starts in October
+        if month >= 9:  # Season starts in October
             start_year = year
             end_year = year + 1
         else:
