@@ -4,6 +4,7 @@ import difflib
 import io
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -552,47 +553,47 @@ def get_new_team_names(league: str) -> tuple:
 
     return renamed, new_list, "Getting New Team Name's Successful!"
 
+def format_division(league: str, division_name: str) -> str | None:
+    """Return a standardized division key for a given league."""
+    if league == "MLB":
+        division = (
+            "MLB_"
+            + division_name.replace("American League", "AL")
+            .replace("National League", "NL")
+            .replace(" ", "_")
+        )
+        return division.upper()
+
+    if league == "NHL":
+        return f"NHL_{division_name.replace(' ', '_').upper()}_DIVISION"
+
+    if league == "NBA":
+        return f"NBA_{division_name.replace(' ', '_').upper()}_DIVISION"
+    return None
+
+
 def update_new_division(league: str) -> str:
-    """Find the division a team is in to change their name there.
-
-    :param league: league of which to find divisions and teams in division
-
-    :return: Message if updating was successful
-    """
-    new_team_divisions: dict[str, list] = {}
+    """Update team divisions for a league."""
+    new_team_divisions: dict[str, list[str]] = defaultdict(list)
 
     try:
         if league == "MLB":
             teams = statsapi.get("teams", {"sportIds": 1})["teams"]
             for team in teams:
-                # Ensure key in dictionary matches list name in get_team_league
-                division = "MLB_" + team["division"]["name"]
-                division = division.replace("American League", "AL").replace("National League", "NL").replace(" ", "_")
-                division = division.upper()
-                if division in new_team_divisions:
-                    new_team_divisions[division].append(team["name"])
-                else:
-                    new_team_divisions[division] = []
+                division = format_division("MLB", team["division"]["name"])
+                new_team_divisions[division].append(team["name"])
 
         elif league == "NHL":
             client = NHLClient()
             for team in client.teams.teams():
-                # Ensure key in dictionary matches list name in get_team_league
-                division = "NHL_" + team["division"]["name"].replace(" ", "_").upper() + "_DIVISION"
-                if division in new_team_divisions:
-                    new_team_divisions[division].append(team["name"])
-                else:
-                    new_team_divisions[division] = []
+                division = format_division("NHL", team["division"]["name"])
+                new_team_divisions[division].append(team["name"])
 
         elif league == "NBA":
             nba_stats = leaguestandings.LeagueStandings().get_dict()
             for team in nba_stats["resultSets"][0]["rowSet"]:
-                # Ensure key in dictionary matches list name in get_team_league
-                division = "NBA_" + team[9].replace(" ", "_").upper() + "_DIVISION"
-                if division in new_team_divisions:
-                    new_team_divisions[division].append(team[3] + " " + team[4])
-                else:
-                    new_team_divisions[division] = []
+                division = format_division("NBA", team[9])
+                new_team_divisions[division].append(f"{team[3]} {team[4]}")
 
         logger.info("New Divisions:\n %s\n", new_team_divisions)
 
@@ -601,10 +602,10 @@ def update_new_division(league: str) -> str:
             update_new_names(key, value)
 
     except Exception:
-        logger.exception("Failed Getting writing divisions")
+        logger.exception("Failed getting/writing divisions")
         return "Updating Teams Failed"
 
-    return "Updating Team's Successful!"
+    return "Updating Teams Successful!"
 
 
 def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=None) -> None:

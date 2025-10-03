@@ -316,10 +316,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """
     teams_currently_playing: list[bool] = []
     first_time: bool = True
-    delay_over: dict[str, bool] = {}
+    delay_over: dict[str, bool] = {team[0]: False for team in settings.teams}
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
-    delay_started: list[bool] = []
+    delay_started: list[bool] = [False] * len(settings.teams)
     display_index: int = 0
     should_scroll: bool = False
     currently_displaying: dict = {}
@@ -328,12 +328,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     fetch_clock: int = ticks_ms()  # Start timer for fetching
     fetch_timer: int = 2 * 1000  # How often to fetch data in seconds
-    delay_clock: list[int] = []  # Start timer how long to start displaying information
-
-    for team in settings.teams:
-        delay_over[team[0]] = False
-        delay_clock.append(0)
-        delay_started.append(False)
+    delay_clock: list[int] = [0] * len(settings.teams)  # Start timer how long to start displaying information
 
     event = window.read(timeout=100)
 

@@ -11,6 +11,7 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 from helper_functions.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
+from .get_team_league import MLB_AL_EAST, MLB_AL_WEST, MLB_NL_EAST, MLB_NL_WEST
 
 # NBA only has data for one day so store if it was a championship game to display for longer
 was_finals_game: list[bool | str] = [False, ""]
@@ -78,11 +79,11 @@ def get_mlb_game_type(team_name: str) -> str:
         game_type = games[0].get("game_type")
         if game_type == "WS":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
-        if game_type == "ALCS":
+        if game_type == "L" and team_name in [MLB_AL_EAST, MLB_AL_WEST]:
             return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
-        if game_type == "NLCS":
+        if game_type == "L" and team_name in [MLB_NL_EAST, MLB_NL_WEST]:
             return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
-        if game_type == "P":
+        if game_type in ["F", "D"]:
             return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
 
     except Exception:
