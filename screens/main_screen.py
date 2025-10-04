@@ -73,7 +73,6 @@ def main(saved_data: dict) -> None:
     window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
                        return_keyboard_events=True).Finalize()
 
-    teams = load_teams_order()
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
         window["Connect to Internet"].update(button_color=("white", "red"))
@@ -147,7 +146,7 @@ def show_view(view_to_show: str, window: Sg.Window) -> None:
 
     container = window["VIEW_CONTAINER"]
 
-    for child in list(container.Widget.winfo_children()):
+    for child in container.Widget.winfo_children():
         child.destroy()
 
     # Destroy all widgets from the window

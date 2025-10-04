@@ -380,7 +380,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             settings.stay_on_team = False
 
         if temp_delay is not settings.delay:
-            delay_clock = list[int] = [0] * len(settings.teams)
+            delay_clock = [0] * len(settings.teams)
             delay_over = {team[0]: False for team in settings.teams}
 
         # If button was pressed but team is already set to change, change it back

@@ -499,7 +499,7 @@ def format_division(league: str, division_name: str) -> str | None:
 
 def update_new_division(league: str) -> str:
     """Update team divisions for a league."""
-    new_team_divisions: dict[str, list[str | None]] = defaultdict(list)
+    new_team_divisions: dict[str, list[str]] = defaultdict(list)
 
     try:
         if league == "MLB":
