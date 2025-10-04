@@ -380,14 +380,13 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             settings.stay_on_team = False
 
         if temp_delay is not settings.delay:
-            delay_clock = ticks_ms()
-            delay_over[teams[display_index][0]] = False
+            delay_clock: list[int] = [0] * len(settings.teams)
+            delay_over = {team[0]: False for team in settings.teams}
 
         # If button was pressed but team is already set to change, change it back
         if settings.stay_on_team and currently_displaying != team_info[display_index]:
             display_index = original_index
 
     logger.info("\nNo Team Currently Playing\n")
-    reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info
