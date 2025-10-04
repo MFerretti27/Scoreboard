@@ -690,7 +690,6 @@ def greedy_matching(candidates: list[dict[str, Any]], city_count_new: dict[str, 
                 matched_old.add(o)
                 matched_new.add(n)
                 renamed.append((o, n))
-                continue
 
         # otherwise not confident enough -> skip
     return matched_old, matched_new, renamed

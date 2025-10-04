@@ -74,7 +74,6 @@ def main(saved_data: dict) -> None:
                        return_keyboard_events=True).Finalize()
 
     teams = load_teams_order()
-    team_names = [team[0] for team in teams]
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
         window["Connect to Internet"].update(button_color=("white", "red"))
@@ -152,7 +151,7 @@ def show_view(view_to_show: str, window: Sg.Window) -> None:
         child.destroy()
 
     # Destroy all widgets from the window
-    for element_key, element in list(window.AllKeysDict.items()):
+    for element_key, element in window.AllKeysDict.items():
         if element_key != "VIEW_CONTAINER":  # Don't touch container
             try:
                 element.Widget.destroy()

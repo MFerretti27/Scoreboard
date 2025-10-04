@@ -465,9 +465,6 @@ def get_data(team: list[str]) -> tuple:
             team_info, team_has_data, currently_playing = get_all_nba_data(team_name)
         elif "NHL" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
-        elif "NFL" in team_league.upper():
-            msg = f"Could Not Get {team_name} data"
-            raise RuntimeError(msg) from e
         else:
             msg = f"Could Not Get {team_name} data"
             raise RuntimeError(msg) from e

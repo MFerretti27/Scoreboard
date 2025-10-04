@@ -194,7 +194,6 @@ def handle_error(window: Sg.Window) -> None:
 
         time_till_clock = time_till_clock + 1
     window.refresh()
-    return
 
 
 ##################################
