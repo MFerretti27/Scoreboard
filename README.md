@@ -10,16 +10,17 @@
 
 # Screen Shots
 Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code:<br />
-<img width="175" alt="Screenshot 2025-05-23 at 9 38 34 PM" src="https://github.com/user-attachments/assets/313e5fda-874a-4881-a75f-0e89b1f6cd25" />
+<img width="175" alt="image" src="https://github.com/user-attachments/assets/abb4c1f8-fc19-424f-a004-c1e574debe70" />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/e77fe8b8-caf0-4d1a-86de-6f2760a049b7" />
-<img width="175" alt="Screenshot 2025-07-02 at 5 42 16 PM" src="https://github.com/user-attachments/assets/11a40492-cc17-4dc8-983b-435eebc46bc3" />
+<img width="175" alt="image" src="https://github.com/user-attachments/assets/942fe12b-e1a5-462c-aaec-c7f815821205" />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/0315fde6-bfb0-4af8-82a7-504c2ef353b8" />
 
 Screens when no teams are currently playing but have games scheduled: <br />
 <img width="175" alt="Screenshot 2025-06-19 at 5 05 03 PM" src="https://github.com/user-attachments/assets/752c588a-986f-462b-b354-4b4265d32dbe" />
 <img width="175" alt="Screenshot 2025-05-23 at 7 34 50 PM" src="https://github.com/user-attachments/assets/3e22b6d5-d841-485e-bc24-50bf449109ca" />
 <img width="175" alt="NHL Not Playing" src="https://github.com/user-attachments/assets/3547da83-0236-495d-ae7d-4b494e1c860a" />
-<img width="175" alt="NFL Not Playing" src="https://github.com/user-attachments/assets/0a164789-db49-475a-8928-a6b8be7eb3c8" />
+<img width="175" alt="Screenshot 2025-10-01 at 12 18 53 AM" src="https://github.com/user-attachments/assets/0548349b-7130-4587-8612-94843cb76989" />
+
 
 Screens when teams are currently playing:<br />
 <img width="175" alt="Screenshot 2025-07-02 at 6 59 21 PM" src="https://github.com/user-attachments/assets/8499ffd5-83f5-4f6c-873d-b66a66535c60" />
