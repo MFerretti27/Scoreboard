@@ -506,21 +506,21 @@ def update_new_division(league: str) -> str:
             teams = statsapi.get("teams", {"sportIds": 1})["teams"]
             for team in teams:
                 division_name = team.get("division", {}).get("name", "N/A")
-                division = format_division("MLB", cast("str", division_name))
+                division = format_division("MLB", division_name)
                 new_team_divisions[division].append(team["name"])
 
         elif league == "NHL":
             client = NHLClient()
             for team in client.teams.teams():
                 division_name = team.division.get("name") if hasattr(team, "division") else "N/A"
-                division = format_division("NHL", cast("str", division_name))
+                division = format_division("NHL", division_name)
                 new_team_divisions[division].append(team["name"])
 
         elif league == "NBA":
             nba_stats = leaguestandings.LeagueStandings().get_dict()
             for team in nba_stats["resultSets"][0]["rowSet"]:
                 division_name = team[9] if len(team) > 9 else "N/A"
-                division = format_division("NBA", cast("str", division_name))
+                division = format_division("NBA", division_name)
                 new_team_divisions[division].append(f"{team[3]} {team[4]}")
 
         logger.info("New Divisions:\n %s\n", new_team_divisions)
