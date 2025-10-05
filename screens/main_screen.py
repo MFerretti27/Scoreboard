@@ -16,6 +16,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_team_logos
+from get_data.get_team_names import update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
     main_screen_layout,
@@ -32,8 +33,6 @@ from helper_functions.main_menu_helpers import (
     save_teams_order,
     setting_keys_booleans,
     settings_to_json,
-    update_new_division,
-    update_new_names,
     update_settings,
     update_teams,
     write_settings_to_py,
