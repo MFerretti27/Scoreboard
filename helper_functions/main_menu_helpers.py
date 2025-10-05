@@ -527,7 +527,8 @@ def update_new_division(league: str) -> str:
 
         # Using key (list name) and value (teams in list) update division lists in get_team_league.py
         for key, value in new_team_divisions.items():
-            update_new_names(key, value)
+            str_key = str(key)
+            update_new_names(str_key, value)
 
     except Exception:
         logger.exception("Failed getting/writing divisions")
