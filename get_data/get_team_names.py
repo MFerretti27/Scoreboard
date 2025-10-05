@@ -1,8 +1,6 @@
-"""Get new team names from API's and update lists in get_team_league.py."""
+"""Get new team names and divisions from API's storing results in get_team_league.py."""
 import difflib
-import io
 import re
-import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -322,29 +320,3 @@ def greedy_matching(candidates: list[dict[str, Any]], city_count_new: dict[str, 
 
         # otherwise not confident enough -> skip
     return matched_old, matched_new, renamed
-class RedirectText(io.StringIO):
-    """Redirect print statements to window element."""
-
-    def __init__(self, window: Sg.Window) -> None:
-        """Initialize the RedirectText class.
-
-        :param window: PySimpleGUI window to redirect output to
-        """
-        self.window = window
-        self.original_stdout = sys.stdout  # Save the original stdout
-
-    def write(self, string: str) -> int:
-        """Override the write method to redirect output to the window.
-
-        :param string: string to write to the window
-        """
-        try:
-            if self.window is not None and not self.window.was_closed():
-                current_value = self.window["terminal_output"].get()
-                current_value += string + "\n"  # Append the new string
-                self.window["terminal_output"].update(current_value)
-                self.window["terminal_output"].set_vscroll_position(1)
-        except (KeyError, AttributeError, RuntimeError):
-            logger.exception("Failed to write output to window")
-
-        return len(string)

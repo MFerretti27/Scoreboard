@@ -16,7 +16,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_team_logos
-from get_data.get_team_names import update_new_division, update_new_names
+from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
     main_screen_layout,
@@ -27,7 +27,6 @@ from gui_layouts import (
 )
 from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.main_menu_helpers import (
-    get_new_team_names,
     load_teams_order,
     positive_num,
     save_teams_order,
