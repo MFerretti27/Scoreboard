@@ -5,7 +5,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-import FreeSimpleGUI as Sg  # type: ignore[import]
 import statsapi  # type: ignore[import]
 from nba_api.stats.endpoints import leaguestandings  # type: ignore[import]
 from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
