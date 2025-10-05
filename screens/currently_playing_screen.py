@@ -316,10 +316,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """
     teams_currently_playing: list[bool] = []
     first_time: bool = True
-    delay_over: dict[str, bool] = {}
+    delay_over: dict[str, bool] = {team[0]: False for team in settings.teams}
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
-    delay_started: list[bool] = []
+    delay_started: list[bool] = [False] * len(settings.teams)
     display_index: int = 0
     should_scroll: bool = False
     currently_displaying: dict = {}
@@ -328,12 +328,9 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     fetch_clock: int = ticks_ms()  # Start timer for fetching
     fetch_timer: int = 2 * 1000  # How often to fetch data in seconds
-    delay_clock: list[int] = []  # Start timer how long to start displaying information
+    delay_clock: list[int] = [0] * len(settings.teams)  # Start timer how long to start displaying information
 
-    for team in settings.teams:
-        delay_over[team[0]] = False
-        delay_clock.append(0)
-        delay_started.append(False)
+    event = window.read(timeout=100)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -374,8 +371,7 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             should_scroll = False
 
         temp_delay = settings.delay  # store to see if changed
-        if not first_time:
-            check_events(window, event, currently_playing=True)
+        check_events(window, event, currently_playing=True)
         if settings.stay_on_team and sum(teams_currently_playing) == 1:
             window["top_info"].update(value='No longer set to "staying on team"')
             window["bottom_info"].update(value="Only one team playing")
@@ -384,14 +380,13 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             settings.stay_on_team = False
 
         if temp_delay is not settings.delay:
-            delay_clock = ticks_ms()
-            delay_over[teams[display_index][0]] = False
+            delay_clock = [0] * len(settings.teams)
+            delay_over = {team[0]: False for team in settings.teams}
 
         # If button was pressed but team is already set to change, change it back
         if settings.stay_on_team and currently_displaying != team_info[display_index]:
             display_index = original_index
 
     logger.info("\nNo Team Currently Playing\n")
-    reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info

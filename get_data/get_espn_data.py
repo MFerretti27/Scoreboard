@@ -83,8 +83,7 @@ def get_espn_data(team: list[str], team_info: dict) -> tuple:
             return team_info, False, currently_playing
 
         # Get Network and display logo if possible
-        if settings.display_network:
-            team_info["under_score_image"] = get_network_logos(broadcast)
+        team_info["under_score_image"] = get_network_logos(broadcast)
 
         # Check if Team is Currently Playing
         currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
@@ -466,9 +465,6 @@ def get_data(team: list[str]) -> tuple:
             team_info, team_has_data, currently_playing = get_all_nba_data(team_name)
         elif "NHL" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
-        elif "NFL" in team_league.upper():
-            msg = f"Could Not Get {team_name} data"
-            raise RuntimeError(msg) from e
         else:
             msg = f"Could Not Get {team_name} data"
             raise RuntimeError(msg) from e

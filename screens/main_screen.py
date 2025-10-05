@@ -16,6 +16,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_team_logos
+from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
     main_screen_layout,
@@ -26,14 +27,11 @@ from gui_layouts import (
 )
 from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.main_menu_helpers import (
-    get_new_team_names,
     load_teams_order,
     positive_num,
     save_teams_order,
     setting_keys_booleans,
     settings_to_json,
-    update_new_division,
-    update_new_names,
     update_settings,
     update_teams,
     write_settings_to_py,
@@ -73,8 +71,6 @@ def main(saved_data: dict) -> None:
     window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
                        return_keyboard_events=True).Finalize()
 
-    teams = load_teams_order()
-    team_names = [team[0] for team in teams]
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
         window["Connect to Internet"].update(button_color=("white", "red"))
@@ -148,11 +144,11 @@ def show_view(view_to_show: str, window: Sg.Window) -> None:
 
     container = window["VIEW_CONTAINER"]
 
-    for child in list(container.Widget.winfo_children()):
+    for child in container.Widget.winfo_children():
         child.destroy()
 
     # Destroy all widgets from the window
-    for element_key, element in list(window.AllKeysDict.items()):
+    for element_key, element in window.AllKeysDict.items():
         if element_key != "VIEW_CONTAINER":  # Don't touch container
             try:
                 element.Widget.destroy()

@@ -72,7 +72,7 @@ display_nba_play_by_play = True
 display_nhl_sog = True
 display_nhl_power_play = True
 display_nhl_clock = True
-display_nhl_play_by_play = False
+display_nhl_play_by_play = True
 
 # NFL
 display_nfl_timeouts = True
