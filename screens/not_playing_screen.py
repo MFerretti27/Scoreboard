@@ -6,6 +6,7 @@ import logging
 import sys
 import time
 from datetime import datetime, timedelta
+from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
@@ -19,7 +20,6 @@ from helper_functions.scoreboard_helpers import (
     check_events,
     maximize_screen,
     reset_window_elements,
-    resize_text,
     scroll,
     set_spoiler_mode,
     will_text_fit_on_screen,
@@ -30,8 +30,9 @@ from screens.currently_playing_screen import team_currently_playing
 logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
 
 
-def save_team_data(info: dict, fetch_index: int, saved_data: dict,
-                   team_info: list, teams_with_data: list) -> tuple[list, list]:
+def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str, Any],
+                   team_info: list[dict[str, Any]], teams_with_data: list[bool]) -> tuple[list[dict[str, Any]],
+                                                                                          list[bool]]:
     """Save data for to display longer than data is available (minimum 3 days).
 
     :param info: The information to save.
@@ -42,7 +43,7 @@ def save_team_data(info: dict, fetch_index: int, saved_data: dict,
 
     :return: A tuple containing the updated team_info and teams_with_data lists.
     """
-    if (teams_with_data[fetch_index] is True and "FINAL" in info["bottom_info"] and
+    if (teams_with_data[fetch_index] is True and "FINAL" in info.get("bottom_info", "") and
         settings.teams[fetch_index][0] not in saved_data):
 
         saved_data[settings.teams[fetch_index][0]] = [info, datetime.now()]
@@ -73,7 +74,7 @@ def save_team_data(info: dict, fetch_index: int, saved_data: dict,
 
     return team_info, teams_with_data
 
-def display_team_info(window: Sg.Window, team_info: dict, display_index: int) -> None:
+def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_index: int) -> None:
     """Update the display for a specific team.
 
     :param window: The window to update.
@@ -94,9 +95,9 @@ def display_team_info(window: Sg.Window, team_info: dict, display_index: int) ->
             window[key].update(value=value)
 
     if settings.no_spoiler_mode:
-        set_spoiler_mode(window, team_info=team_info[display_index])
+        set_spoiler_mode(window, team_info)
 
-def update_display_index(original_index: int, teams_with_data: list) -> int:
+def update_display_index(original_index: int, teams_with_data: list[bool]) -> int:
     """Find the next team with available data to display.
 
     :param original_index: The index of the original team.
@@ -118,7 +119,7 @@ def update_display_index(original_index: int, teams_with_data: list) -> int:
     return display_index
 
 def get_team_info(window: Sg.Window, teams_with_data: list[bool],
-                  team_info: list[dict]) -> tuple[list[bool], list[dict], bool]:
+                  team_info: list[dict[str, Any]]) -> tuple[list[bool], list[dict[str, Any]], bool]:
     """Fetch data for each team and update the team information list.
 
     :param window: The window to update.
@@ -137,14 +138,14 @@ def get_team_info(window: Sg.Window, teams_with_data: list[bool],
             team_info = team_currently_playing(window, settings.teams)
             fetch_first_time = True # To force data to be fetched again when game ends
             # Remove team from saved data as too not overwrite new data from game with old data
-            if settings.teams[fetch_index][0] in saved_data:
-                del saved_data[settings.teams[fetch_index][0]]
+            if settings.teams[fetch_index][0] in settings.saved_data:
+                del settings.saved_data[settings.teams[fetch_index][0]]
 
         team_info.append(info)
         teams_with_data.append(data)
 
     # Save data for to display longer than data is available (minimum 3 days)
-    team_info, teams_with_data = save_team_data(info, fetch_index, saved_data, team_info,
+    team_info, teams_with_data = save_team_data(info, fetch_index, settings.saved_data, team_info,
                                                 teams_with_data)
 
     return teams_with_data, team_info, fetch_first_time
@@ -220,7 +221,8 @@ def main(data_saved: dict) -> None:
     display_first_time: bool = True
     fetch_first_time: bool = True
 
-    resize_text()  # Resize text to fit screen size
+    if settings.LIVE_DATA_DELAY > 0:
+        settings.delay = True
 
     # Create the window
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
@@ -243,7 +245,7 @@ def main(data_saved: dict) -> None:
                 if teams_with_data[display_index]:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
-                    should_scroll = will_text_fit_on_screen(team_info[display_index]["bottom_info"])
+                    should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
                     event = window.read(timeout=2000)
 
                     # Find next team to display (skip teams with no data)
@@ -263,7 +265,7 @@ def main(data_saved: dict) -> None:
 
             # Scroll bottom info if text is too long
             if should_scroll and not settings.no_spoiler_mode:
-                scroll(window, team_info[display_index]["bottom_info"], display_index)
+                scroll(window, team_info[display_index]["bottom_info"])
 
             if True not in teams_with_data and not fetch_first_time:  # No data to display
                 logger.info("\nNo Teams with Data Displaying Clock\n")

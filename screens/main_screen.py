@@ -144,11 +144,11 @@ def show_view(view_to_show: str, window: Sg.Window) -> None:
 
     container = window["VIEW_CONTAINER"]
 
-    for child in container.Widget.winfo_children():
+    for child in list(container.Widget.winfo_children()):
         child.destroy()
 
     # Destroy all widgets from the window
-    for element_key, element in window.AllKeysDict.items():
+    for element_key, element in list(window.AllKeysDict.items()):
         if element_key != "VIEW_CONTAINER":  # Don't touch container
             try:
                 element.Widget.destroy()

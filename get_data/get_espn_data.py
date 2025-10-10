@@ -21,7 +21,7 @@ from .get_series_data import get_series
 doubleheader = 0
 
 
-def get_espn_data(team: list[str], team_info: dict) -> tuple:
+def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str, Any], bool, bool]:
     """Get data from ESPN API for a specific team.
 
     :param team: Index of teams array to get data for
@@ -193,23 +193,31 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
         home_3pt_attempt = (competition["competitors"][0]["statistics"][11]["displayValue"])
         home_3pt_made = (competition["competitors"][0]["statistics"][12]["displayValue"])
 
+        home_free_throw_attempt = (competition["competitors"][0]["statistics"][7]["displayValue"])
+        home_free_throw_made = (competition["competitors"][0]["statistics"][8]["displayValue"])
+
         away_field_goal_attempt = (competition["competitors"][1]["statistics"][3]["displayValue"])
         away_field_goal_made = (competition["competitors"][1]["statistics"][4]["displayValue"])
 
         away_3pt_attempt = (competition["competitors"][1]["statistics"][11]["displayValue"])
         away_3pt_made = (competition["competitors"][1]["statistics"][12]["displayValue"])
 
+        away_free_throw_attempt = (competition["competitors"][1]["statistics"][7]["displayValue"])
+        away_free_throw_made = (competition["competitors"][1]["statistics"][8]["displayValue"])
+
         away_stats = (
-            f"FG: {away_field_goal_made}/{away_field_goal_attempt} "
-            f"3PT: {away_3pt_made}/{away_3pt_attempt}"
+            f"FG: {away_field_goal_made}/{away_field_goal_attempt}  "
+            f"3PT: {away_3pt_made}/{away_3pt_attempt}  "
+            f"FT: {away_free_throw_made}/{away_free_throw_attempt}"
         )
 
         home_stats = (
-            f"FG: {home_field_goal_made}/{home_field_goal_attempt} "
-            f"3PT: {home_3pt_made}/{home_3pt_attempt}"
+            f"FG: {home_field_goal_made}/{home_field_goal_attempt}  "
+            f"3PT: {home_3pt_made}/{home_3pt_attempt}  "
+            f"FT: {home_free_throw_made}/{home_free_throw_attempt}"
         )
 
-        team_info["top_info"] = away_stats + "\t\t " + home_stats
+        team_info["top_info"] = away_stats + "\t\t" + home_stats
     # If currently playing, must have bonus information, set here in case api call fails
     team_info["away_bonus"] = False
     team_info["home_bonus"] = False
@@ -435,7 +443,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
 
     return team_info, currently_playing
 
-def get_data(team: list[str]) -> tuple:
+def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
     """Try to get data for a specific team.
 
     Uses the ESPN API to get data for a specific team. If the API call fails, it will

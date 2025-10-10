@@ -190,14 +190,14 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None:
+def scroll(window: Sg.Window, text: str) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
-    :param team_info: The team information dictionary
+    :param text: The text to scroll
     :param display_index: The index of the team to update
     """
-    text = team_info[display_index]["bottom_info"] + "         "
+    text = text + "         "
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
