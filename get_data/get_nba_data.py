@@ -124,8 +124,7 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     saved_team_names = team_info["above_score_txt"]
 
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
-    games = scoreboard.ScoreBoard()
-    data = games.get_dict()
+    data = scoreboard.ScoreBoard().get_dict()
     for game in data["scoreboard"]["games"]:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
 
@@ -146,7 +145,9 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 away_timeouts = game["awayTeam"]["timeoutsRemaining"]
 
                 # When "inBonus" is None timeouts have wrong data store them to display last known good value
-                if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
+                # Unless saved value is None, then just display current value
+                if (game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None and
+                    home_timeouts_saved != 0 and away_timeouts_saved != 0):
                     home_timeouts = home_timeouts_saved
                     away_timeouts = away_timeouts_saved
                 else:
@@ -174,20 +175,28 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 home_3pt_attempt = (box_score["game"]["homeTeam"]["statistics"].get("threePointersAttempted", 0))
                 home_3pt_made= (box_score["game"]["homeTeam"]["statistics"].get("threePointersMade", 0))
 
+                home_free_throw_attempt = (box_score["game"]["homeTeam"]["statistics"].get("freeThrowsAttempted", 0))
+                home_free_throw_made = (box_score["game"]["homeTeam"]["statistics"].get("freeThrowsMade", 0))
+
                 away_field_goal_attempt = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsAttempted", 0))
                 away_field_goal_made = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsMade", 0))
 
                 away_3pt_attempt = (box_score["game"]["awayTeam"]["statistics"].get("threePointersAttempted", 0))
                 away_3pt_made = (box_score["game"]["awayTeam"]["statistics"].get("threePointersMade", 0))
 
+                away_free_throw_attempt = (box_score["game"]["awayTeam"]["statistics"].get("freeThrowsAttempted", 0))
+                away_free_throw_made = (box_score["game"]["awayTeam"]["statistics"].get("freeThrowsMade", 0))
+
                 away_stats = (
-                    f"FG: {away_field_goal_made}/{away_field_goal_attempt} "
-                    f"3PT: {away_3pt_made}/{away_3pt_attempt}"
+                    f"FG:{away_field_goal_made}/{away_field_goal_attempt}  "
+                    f"3PT:{away_3pt_made}/{away_3pt_attempt}  "
+                    f"FT:{away_free_throw_made}/{away_free_throw_attempt}"
                 )
 
                 home_stats = (
-                    f"FG: {home_field_goal_made}/{home_field_goal_attempt} "
-                    f"3PT: {home_3pt_made}/{home_3pt_attempt}"
+                    f"FG:{home_field_goal_made}/{home_field_goal_attempt}  "
+                    f"3PT:{home_3pt_made}/{home_3pt_attempt}  "
+                    f"FT:{home_free_throw_made}/{home_free_throw_attempt}"
                 )
 
                 team_info["top_info"] = away_stats + "\t\t " + home_stats

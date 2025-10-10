@@ -1,4 +1,4 @@
-"""Use the RapidFuzz library to find the best match for the team name.
+"""Store team names and leagues, with a function to get the league for a given team name.
 
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.

@@ -1,6 +1,7 @@
 """Module to display live information when team is currently playing."""
 import copy
 import time
+from typing import Any
 
 import FreeSimpleGUI as sg  # type: ignore[import]
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
@@ -16,6 +17,7 @@ from helper_functions.scoreboard_helpers import (
     will_text_fit_on_screen,
 )
 
+saved_data: list[list[dict[str, Any]]] = []  # Store data for delay display
 
 def set_delay_display(team_info: list, teams_with_data: list,
                       teams_currently_playing: list, display_index: int) -> list:
@@ -41,16 +43,16 @@ def set_delay_display(team_info: list, teams_with_data: list,
             team_info[index]["under_score_image"] = ""
 
             # Ensure score color doesn't display in delay
-            if ("home_possession" in team_info and "away_possession" in team_info
-                and "home_redzone" in team_info and "away_redzone" in team_info):
+            if (("home_possession" in team_info or "away_possession" in team_info)
+                and ("home_redzone" in team_info or "away_redzone" in team_info)):
                 team_info[display_index]["home_redzone"] = False
                 team_info[display_index]["away_redzone"] = False
                 team_info[display_index]["home_possession"] = False
                 team_info[display_index]["away_possession"] = False
-            elif "home_bonus" in team_info and "away_bonus" in team_info:
+            elif "home_bonus" in team_info or "away_bonus" in team_info:
                 team_info[display_index]["home_bonus"] = False
                 team_info[display_index]["away_bonus"] = False
-            elif "home_power_play" in team_info and "away_power_play" in team_info:
+            elif "home_power_play" in team_info or "away_power_play" in team_info:
                 team_info[display_index]["home_power_play"] = False
                 team_info[display_index]["away_power_play"] = False
 
@@ -100,7 +102,7 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -
 
     :return: None
     """
-    if key == "above_score_txt" and settings.display_nba_play_by_play:
+    if key == "above_score_txt" and settings.display_nba_play_by_play and "@" not in team_info["above_score_txt"]:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
     if key == "top_info":
         window["top_info"].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
@@ -148,7 +150,7 @@ def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: str) -
     """
     if key == "top_info":
         window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
-    if key == "above_score_txt" and settings.display_nhl_play_by_play:
+    if key == "above_score_txt" and settings.display_nhl_play_by_play and "@" not in team_info["above_score_txt"]:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 
     # Ensure power play is in dictionary to not cause key error
@@ -257,7 +259,6 @@ def get_display_data(display_index: int, delay_started: list[bool],
     teams_with_data = []
     team_info = []
     teams_currently_playing = []
-    saved_data = []
     delay_info = []
     fetch_timer = 2 * 1000  # How often to fetch data in seconds
     delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
@@ -306,7 +307,7 @@ def get_display_data(display_index: int, delay_started: list[bool],
     return teams_with_data, team_info, teams_currently_playing, delay_clock, fetch_clock, delay_over
 
 
-def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
+def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[dict[str, Any]]:
     """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
@@ -316,10 +317,10 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     """
     teams_currently_playing: list[bool] = []
     first_time: bool = True
-    delay_over: dict[str, bool] = {}
+    delay_over: dict[str, bool] = {team[0]: False for team in settings.teams}
     team_info: list[dict] = []
     teams_with_data: list[bool] = []
-    delay_started: list[bool] = []
+    delay_started: list[bool] = [False] * len(settings.teams)
     display_index: int = 0
     should_scroll: bool = False
     currently_displaying: dict = {}
@@ -328,12 +329,9 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     fetch_clock: int = ticks_ms()  # Start timer for fetching
     fetch_timer: int = 2 * 1000  # How often to fetch data in seconds
-    delay_clock: list[int] = []  # Start timer how long to start displaying information
+    delay_clock: list[int] = [0] * len(settings.teams)  # Start timer how long to start displaying information
 
-    for team in settings.teams:
-        delay_over[team[0]] = False
-        delay_clock.append(0)
-        delay_started.append(False)
+    event = window.read(timeout=100)
 
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -370,12 +368,11 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             display_index = (display_index + 1) % len(teams)
 
         if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
-            scroll(window, team_info, display_index)
+            scroll(window, team_info[display_index].get("bottom_info", ""))
             should_scroll = False
 
         temp_delay = settings.delay  # store to see if changed
-        if not first_time:
-            check_events(window, event, currently_playing=True)
+        check_events(window, event, currently_playing=True)
         if settings.stay_on_team and sum(teams_currently_playing) == 1:
             window["top_info"].update(value='No longer set to "staying on team"')
             window["bottom_info"].update(value="Only one team playing")
@@ -384,14 +381,13 @@ def team_currently_playing(window: sg.Window, teams: list[list]) -> list:
             settings.stay_on_team = False
 
         if temp_delay is not settings.delay:
-            delay_clock = ticks_ms()
-            delay_over[teams[display_index][0]] = False
+            delay_clock = [0] * len(settings.teams)
+            delay_over = {team[0]: False for team in settings.teams}
 
         # If button was pressed but team is already set to change, change it back
         if settings.stay_on_team and currently_displaying != team_info[display_index]:
             display_index = original_index
 
     logger.info("\nNo Team Currently Playing\n")
-    reset_window_elements(window)  # Reset font and color to ensure everything is back to normal
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info
