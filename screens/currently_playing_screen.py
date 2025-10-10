@@ -17,7 +17,7 @@ from helper_functions.scoreboard_helpers import (
     will_text_fit_on_screen,
 )
 
-saved_data: list[dict[str, Any]] = []  # Store data for delay display
+saved_data: list[list[dict[str, Any]]] = []  # Store data for delay display
 
 def set_delay_display(team_info: list, teams_with_data: list,
                       teams_currently_playing: list, display_index: int) -> list:

@@ -526,10 +526,6 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     window["download_message"].update(value=f"{download_logo_msg}")
     window.refresh()
 
-    if settings.LIVE_DATA_DELAY > 0:
-        # Automatically set to true if user entered delay more than 0
-        update_settings({"delay": True}, [])
-
     # If failed dont start
     if "Failed" in download_logo_msg:
         return
