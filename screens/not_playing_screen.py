@@ -53,7 +53,7 @@ def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str,
 
     # If team is already saved dont overwrite it with new date
     elif settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is True:
-        if "FINAL" in info["bottom_info"]:
+        if "FINAL" in info.get("bottom_info", ""):
             info["bottom_info"] = saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
 
     elif settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is False:
@@ -160,18 +160,17 @@ def handle_error(window: Sg.Window) -> None:
             try:
                 for fetch_index in range(len(settings.teams)):
                     get_data(settings.teams[fetch_index])
+                    return
             except Exception as error:
                 logger.info("Could not get data, trying again...")
                 window["top_info"].update(value="Could not get data, trying again...", text_color="red")
                 window["bottom_info"].update(value=f"Error: {error}",
                                                 font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
-            else:
-                return  # If all data is fetched successfully, break out of loop
             time.sleep(30)
             time_till_clock = time_till_clock + 1
         if time_till_clock >= 12:  # 6 minutes without data, display clock
-            message = "Failed to Get Data, trying again every 3 minutes"
+            message = "Failed to Get Data, trying again..."
             clock(window, message)
             return
     else:
@@ -183,6 +182,7 @@ def handle_error(window: Sg.Window) -> None:
         logger.info("Internet connection is down, trying to reconnect...")
         window["top_info"].update(value="Internet connection is down, trying to reconnect...",
                                     font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
+        window["bottom_info"].update(value="")
         event = window.read(timeout=2000)
         reconnect()
         time.sleep(20)  # Check every 20 seconds
@@ -247,6 +247,8 @@ def main(data_saved: dict) -> None:
                     display_team_info(window, team_info[display_index], display_index)
                     should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
                     event = window.read(timeout=2000)
+                    if should_scroll and not settings.no_spoiler_mode:
+                        scroll(window, team_info[display_index]["bottom_info"])
 
                     # Find next team to display (skip teams with no data)
                     display_index = update_display_index(display_index, teams_with_data)
@@ -262,10 +264,6 @@ def main(data_saved: dict) -> None:
                 logger.info("No spoiler mode changed, refreshing data")
                 fetch_first_time = True
                 display_first_time = True
-
-            # Scroll bottom info if text is too long
-            if should_scroll and not settings.no_spoiler_mode:
-                scroll(window, team_info[display_index]["bottom_info"])
 
             if True not in teams_with_data and not fetch_first_time:  # No data to display
                 logger.info("\nNo Teams with Data Displaying Clock\n")

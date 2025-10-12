@@ -216,10 +216,10 @@ def update_settings(selected_items_integers: dict, selected_items_boolean: list)
             if line.strip().startswith(f"{key} ="):
                 contents[i] = f"{key} = {selected!s}\n"
 
-    # Must do this to change settings as module won't get reloaded until scoreboard screen starts
-    settings.always_get_logos = False
-    if key == "always_get_logos" and selected is True:
-        settings.always_get_logos = True
+        # Must do this to change settings as module won't get reloaded until scoreboard screen starts
+        settings.always_get_logos = False
+        if key == "always_get_logos" and selected is True:
+            settings.always_get_logos = True
 
     with file_path.open("w", encoding="utf-8") as file:
         file.writelines(contents)
