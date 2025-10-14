@@ -203,6 +203,7 @@ def update_settings(selected_items_integers: dict, selected_items_boolean: list)
 
     :return: None
     """
+    settings.always_get_logos = False
     with file_path.open(encoding="utf-8") as file:
         contents = file.readlines()
 
@@ -217,7 +218,6 @@ def update_settings(selected_items_integers: dict, selected_items_boolean: list)
                 contents[i] = f"{key} = {selected!s}\n"
 
         # Must do this to change settings as module won't get reloaded until scoreboard screen starts
-        settings.always_get_logos = False
         if key == "always_get_logos" and selected is True:
             settings.always_get_logos = True
 
