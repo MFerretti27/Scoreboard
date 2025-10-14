@@ -43,16 +43,16 @@ def set_delay_display(team_info: list, teams_with_data: list,
             team_info[index]["under_score_image"] = ""
 
             # Ensure score color doesn't display in delay
-            if (("home_possession" in team_info or "away_possession" in team_info)
-                and ("home_redzone" in team_info or "away_redzone" in team_info)):
+            if (("home_possession" in team_info[index] or "away_possession" in team_info[index])
+                and ("home_redzone" in team_info[index] or "away_redzone" in team_info[index])):
                 team_info[display_index]["home_redzone"] = False
                 team_info[display_index]["away_redzone"] = False
                 team_info[display_index]["home_possession"] = False
                 team_info[display_index]["away_possession"] = False
-            elif "home_bonus" in team_info or "away_bonus" in team_info:
+            elif "home_bonus" in team_info[index] or "away_bonus" in team_info[index]:
                 team_info[display_index]["home_bonus"] = False
                 team_info[display_index]["away_bonus"] = False
-            elif "home_power_play" in team_info or "away_power_play" in team_info:
+            elif "home_power_play" in team_info[index] or "away_power_play" in team_info[index]:
                 team_info[display_index]["home_power_play"] = False
                 team_info[display_index]["away_power_play"] = False
 
@@ -244,8 +244,8 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
 
     return display_index, original_index
 
-def get_display_data(display_index: int, delay_started: bool,
-                     delay_clock: int, fetch_clock: int, delay_over: bool) -> tuple:
+def get_display_data(display_index: int, delay_clock: int, fetch_clock: int, *, delay_started: bool,
+                     delay_over: bool) -> tuple:
     """Fetch and update display data for teams.
 
     :param display_index: Index of the team to display
@@ -336,8 +336,10 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
     while True in teams_currently_playing or first_time:
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
-             delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(display_index, delay_started,
-                                                                      delay_clock, fetch_clock, delay_over)
+             delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
+                display_index, delay_clock, fetch_clock,
+                delay_started=delay_started, delay_over=delay_over,
+            )
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
