@@ -144,9 +144,9 @@ def get_team_info(window: Sg.Window, teams_with_data: list[bool],
         team_info.append(info)
         teams_with_data.append(data)
 
-    # Save data for to display longer than data is available (minimum 3 days)
-    team_info, teams_with_data = save_team_data(info, fetch_index, settings.saved_data, team_info,
-                                                teams_with_data)
+        # Save data for to display longer than data is available (minimum 3 days)
+        team_info, teams_with_data = save_team_data(info, fetch_index, settings.saved_data, team_info,
+                                                    teams_with_data)
 
     return teams_with_data, team_info, fetch_first_time
 
