@@ -79,9 +79,9 @@ def get_mlb_game_type(team_name: str) -> str:
         game_type = games[0].get("game_type")
         if game_type == "WS":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
-        if game_type == "L" and team_name in [MLB_AL_EAST, MLB_AL_WEST]:
+        if game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
             return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
-        if game_type == "L" and team_name in [MLB_NL_EAST, MLB_NL_WEST]:
+        if game_type == "L" and team_name in (MLB_NL_EAST + MLB_NL_WEST):
             return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
         if game_type in ["F", "D"]:
             return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
