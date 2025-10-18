@@ -27,6 +27,7 @@ from gui_layouts import (
 )
 from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.main_menu_helpers import (
+    double_check_teams,
     load_teams_order,
     positive_num,
     save_teams_order,
@@ -517,6 +518,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
 
     :param window: window GUI to display
     """
+    double_check_teams()  # Ensure all teams in settings.teams are valid teams
     window["PROGRESS_BAR"].update(visible=True)
     window["PROGRESS_BAR"].update(current_count=0)
     window.refresh()  # Refresh to display text

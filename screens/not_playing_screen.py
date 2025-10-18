@@ -46,9 +46,10 @@ def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str,
     if (teams_with_data[fetch_index] is True and "FINAL" in info.get("bottom_info", "") and
         settings.teams[fetch_index][0] not in saved_data):
 
-        saved_data[settings.teams[fetch_index][0]] = [info, datetime.now()]
         if settings.display_date_ended:
             info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
+
+        saved_data[settings.teams[fetch_index][0]] = [info, datetime.now()]
         logger.info("Saving Data to display longer that its available")
 
     # If team is already saved dont overwrite it with new date
@@ -56,7 +57,8 @@ def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str,
         if "FINAL" in info.get("bottom_info", ""):
             info["bottom_info"] = saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
 
-    elif settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is False:
+        teams_with_data[fetch_index] = False
+    if settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is False:
         logger.info("Data is no longer available, checking if should display")
         current_date = datetime.now()
         saved_date = saved_data[settings.teams[fetch_index][0]][1]
@@ -67,7 +69,7 @@ def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str,
         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
             logger.info(f"It will display, time its been: {date_difference}")
             team_info.append(saved_data[settings.teams[fetch_index][0]][0])
-            teams_with_data.append(True)
+            teams_with_data[fetch_index] = True
             return team_info, teams_with_data
         # If greater than days allowed remove
         del saved_data[settings.teams[fetch_index][0]]
