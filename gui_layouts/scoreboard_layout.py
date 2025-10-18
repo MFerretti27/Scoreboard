@@ -7,6 +7,7 @@ import settings
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_random_logo
 from helper_functions.logger_config import logger
+from helper_functions.scoreboard_helpers import resize_text
 from main import set_screen
 
 
@@ -18,6 +19,7 @@ def create_scoreboard_layout() -> list:
     Sg.theme("black")
     set_screen()  # Set the screen to display on
     append_team_array(settings.teams)  # Get the team league and sport name
+    resize_text()  # Resize text to fit screen size
     files = get_random_logo()
 
     window_width = Sg.Window.get_screen_size()[0]
