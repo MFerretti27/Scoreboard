@@ -30,51 +30,47 @@ from screens.currently_playing_screen import team_currently_playing
 logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
 
 
-def save_team_data(info: dict[str, Any], fetch_index: int, saved_data: dict[str, Any],
-                   team_info: list[dict[str, Any]], teams_with_data: list[bool]) -> tuple[list[dict[str, Any]],
-                                                                                          list[bool]]:
+def save_team_data(info: dict[str, Any], fetch_index: int,
+                   teams_with_data: list[bool]) -> tuple[list[dict[str, Any]], list[bool]]:
     """Save data for to display longer than data is available (minimum 3 days).
 
     :param info: The information to save.
     :param fetch_index: The index of the team being fetched.
-    :param saved_data: The data that has already been saved.
-    :param team_info: The information about the team.
     :param teams_with_data: A list indicating which teams have data available.
 
     :return: A tuple containing the updated team_info and teams_with_data lists.
     """
     if (teams_with_data[fetch_index] is True and "FINAL" in info.get("bottom_info", "") and
-        settings.teams[fetch_index][0] not in saved_data):
+        settings.teams[fetch_index][0] not in settings.saved_data):
 
         if settings.display_date_ended:
             info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
 
-        saved_data[settings.teams[fetch_index][0]] = [info, datetime.now()]
+        settings.saved_data[settings.teams[fetch_index][0]] = [info, datetime.now()]
         logger.info("Saving Data to display longer that its available")
 
     # If team is already saved dont overwrite it with new date
-    elif settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is True:
+    elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is True:
         if "FINAL" in info.get("bottom_info", ""):
-            info["bottom_info"] = saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
+            info["bottom_info"] = settings.saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
 
-        teams_with_data[fetch_index] = False
-    if settings.teams[fetch_index][0] in saved_data and teams_with_data[fetch_index] is False:
+    elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is False:
         logger.info("Data is no longer available, checking if should display")
         current_date = datetime.now()
-        saved_date = saved_data[settings.teams[fetch_index][0]][1]
+        saved_date = settings.saved_data[settings.teams[fetch_index][0]][1]
         saved_datetime = datetime.fromisoformat(saved_date) if isinstance(saved_date, str) else saved_date
 
         date_difference = current_date - saved_datetime
         # Check if 3 days have passed after data is no longer available
         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
             logger.info(f"It will display, time its been: {date_difference}")
-            team_info.append(saved_data[settings.teams[fetch_index][0]][0])
+            info = settings.saved_data[settings.teams[fetch_index][0]][0]
             teams_with_data[fetch_index] = True
-            return team_info, teams_with_data
+            return info, teams_with_data
         # If greater than days allowed remove
-        del saved_data[settings.teams[fetch_index][0]]
+        del settings.saved_data[settings.teams[fetch_index][0]]
 
-    return team_info, teams_with_data
+    return info, teams_with_data
 
 def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_index: int) -> None:
     """Update the display for a specific team.
@@ -143,12 +139,10 @@ def get_team_info(window: Sg.Window, teams_with_data: list[bool],
             if settings.teams[fetch_index][0] in settings.saved_data:
                 del settings.saved_data[settings.teams[fetch_index][0]]
 
+        # Save data for to display longer than data is available (minimum 3 days)
+        info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
         team_info.append(info)
         teams_with_data.append(data)
-
-        # Save data for to display longer than data is available (minimum 3 days)
-        team_info, teams_with_data = save_team_data(info, fetch_index, settings.saved_data, team_info,
-                                                    teams_with_data)
 
     return teams_with_data, team_info, fetch_first_time
 
