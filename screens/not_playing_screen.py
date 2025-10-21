@@ -116,16 +116,16 @@ def update_display_index(original_index: int, teams_with_data: list[bool]) -> in
 
     return display_index
 
-def get_team_info(window: Sg.Window, teams_with_data: list[bool],
-                  team_info: list[dict[str, Any]]) -> tuple[list[bool], list[dict[str, Any]], bool]:
+def get_team_info(window: Sg.Window, team_info: list[dict[str, Any]]) -> tuple[list[bool], list[dict[str, Any]], bool]:
     """Fetch data for each team and update the team information list.
 
     :param window: The window to update.
-    :param teams_with_data: A list indicating which teams have data available.
+    :param team_info: The information about the teams.
 
     :return: A tuple containing the updated list of teams with data and the team information list.
     """
     fetch_first_time = False
+    teams_with_data: list[bool] = [False] * len(settings.teams)
     for fetch_index in range(len(settings.teams)):
         logger.info(f"\nFetching data for {settings.teams[fetch_index][0]}")
         info, data, currently_playing = get_data(settings.teams[fetch_index])
@@ -139,10 +139,10 @@ def get_team_info(window: Sg.Window, teams_with_data: list[bool],
             if settings.teams[fetch_index][0] in settings.saved_data:
                 del settings.saved_data[settings.teams[fetch_index][0]]
 
+        teams_with_data[fetch_index] = data
         # Save data for to display longer than data is available (minimum 3 days)
         info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
         team_info.append(info)
-        teams_with_data.append(data)
 
     return teams_with_data, team_info, fetch_first_time
 
@@ -205,7 +205,6 @@ def main(data_saved: dict) -> None:
     """
     # Initialize variables
     team_info: list[dict] = []
-    teams_with_data: list[bool] = []
     settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
     display_index: int = 0
     should_scroll: bool = False
@@ -213,7 +212,6 @@ def main(data_saved: dict) -> None:
     display_timer: int = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for fetching data
     fetch_timer: int = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
-    teams: list[list[str]] = settings.teams
     display_first_time: bool = True
     fetch_first_time: bool = True
 
@@ -229,9 +227,11 @@ def main(data_saved: dict) -> None:
 
     while True:
         try:
+            event = window.read(timeout=2000)
+
             # Fetch Data
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
-                teams_with_data, team_info, fetch_first_time = get_team_info(window, teams_with_data, team_info)
+                teams_with_data, team_info, fetch_first_time = get_team_info(window, team_info)
                 # Reset timers
                 display_clock = ticks_ms()
                 fetch_clock = ticks_ms()
@@ -242,7 +242,7 @@ def main(data_saved: dict) -> None:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
                     should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
-                    event = window.read(timeout=2000)
+
                     if should_scroll and not settings.no_spoiler_mode:
                         scroll(window, team_info[display_index]["bottom_info"])
 
@@ -250,10 +250,9 @@ def main(data_saved: dict) -> None:
                     display_index = update_display_index(display_index, teams_with_data)
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
                 else:
-                    logger.info(f"\nTeam doesn't have data {teams[display_index][0]}")
-                display_index = (display_index + 1) % len(teams)
+                    logger.info(f"\nTeam doesn't have data {settings.teams[display_index][0]}")
+                display_index = (display_index + 1) % len(settings.teams)
 
-            event = window.read(timeout=1)
             temp_spoiler_mode = settings.no_spoiler_mode  # store to see if button is pressed
             check_events(window, event)  # Check for button presses
             if temp_spoiler_mode is not settings.no_spoiler_mode:  # If turned off get new data instantly
