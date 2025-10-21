@@ -19,14 +19,12 @@ from helper_functions.scoreboard_helpers import (
 
 saved_data: list[list[dict[str, Any]]] = []  # Store data for delay display
 
-def set_delay_display(team_info: list, teams_with_data: list,
-                      teams_currently_playing: list, display_index: int) -> list:
+def set_delay_display(team_info: list, teams_with_data: list, teams_currently_playing: list) -> list:
     """Set the display to hide information until delay is over.
 
     :param team_info: Dictionary containing information about the teams
     :param teams_with_data: List of teams that have data available
     :param teams_currently_playing: List of teams that are currently playing
-    :param display_index: Index of the team to display
 
     :return: Updated team_info dictionary hiding team display information
     """
@@ -45,16 +43,16 @@ def set_delay_display(team_info: list, teams_with_data: list,
             # Ensure score color doesn't display in delay
             if (("home_possession" in team_info[index] or "away_possession" in team_info[index])
                 and ("home_redzone" in team_info[index] or "away_redzone" in team_info[index])):
-                team_info[display_index]["home_redzone"] = False
-                team_info[display_index]["away_redzone"] = False
-                team_info[display_index]["home_possession"] = False
-                team_info[display_index]["away_possession"] = False
+                team_info[index]["home_redzone"] = False
+                team_info[index]["away_redzone"] = False
+                team_info[index]["home_possession"] = False
+                team_info[index]["away_possession"] = False
             elif "home_bonus" in team_info[index] or "away_bonus" in team_info[index]:
-                team_info[display_index]["home_bonus"] = False
-                team_info[display_index]["away_bonus"] = False
+                team_info[index]["home_bonus"] = False
+                team_info[index]["away_bonus"] = False
             elif "home_power_play" in team_info[index] or "away_power_play" in team_info[index]:
-                team_info[display_index]["home_power_play"] = False
-                team_info[display_index]["away_power_play"] = False
+                team_info[index]["home_power_play"] = False
+                team_info[index]["away_power_play"] = False
 
     return team_info
 
@@ -244,8 +242,7 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
 
     return display_index, original_index
 
-def get_display_data(display_index: int, delay_clock: int, fetch_clock: int, *, delay_started: bool,
-                     delay_over: bool) -> tuple:
+def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool, delay_over: bool) -> tuple:
     """Fetch and update display data for teams.
 
     :param display_index: Index of the team to display
@@ -276,6 +273,8 @@ def get_display_data(display_index: int, delay_clock: int, fetch_clock: int, *, 
                     logger.info("Setting delay")
                     delay_started = True
                     delay_clock = ticks_ms()
+            else:
+                logger.info(f"Delay not over {ticks_diff(ticks_ms(), delay_clock)/1000} seconds passed")
 
         # If delay don't keep updating as to not display latest data
         if not settings.delay:
@@ -300,7 +299,7 @@ def get_display_data(display_index: int, delay_clock: int, fetch_clock: int, *, 
                     teams_currently_playing[index] = True
         else:
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
-            team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing, display_index)
+            team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing)
 
     fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
 
@@ -331,14 +330,12 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
     fetch_timer: int = 2 * 1000  # How often to fetch data in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
-    event = window.read(timeout=100)
-
     while True in teams_currently_playing or first_time:
+        event = window.read(timeout=100)
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
              delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
-                display_index, delay_clock, fetch_clock,
-                delay_started=delay_started, delay_over=delay_over,
+                delay_clock, fetch_clock, delay_started=delay_started, delay_over=delay_over,
             )
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
@@ -355,7 +352,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
             update_display(window, team_info, display_index, teams_currently_playing)
 
             currently_displaying = team_info[display_index]
-            event = window.read(timeout=5000)
 
         # Find Next team to display
         if ((ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time) and
