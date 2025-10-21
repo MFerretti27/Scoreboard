@@ -26,15 +26,21 @@ Screens when teams are currently playing:<br />
 <img width="175" alt="Screenshot 2025-07-02 at 6 59 21 PM" src="https://github.com/user-attachments/assets/8499ffd5-83f5-4f6c-873d-b66a66535c60" />
 <img width="175" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
 
+
+
+
 Screen when games are over:<br />
 <img width="175" alt="Screenshot 2025-05-21 at 1 46 33 AM" src="https://github.com/user-attachments/assets/1e87ce4c-3169-449c-b937-4e4ca21a63ef" />
 <img width="175" alt="Screenshot 2025-06-20 at 12 23 38 AM" src="https://github.com/user-attachments/assets/39377230-fc2a-4db8-9d2f-023490d649fd" />
-<img width="1512" height="982" alt="Screenshot 2025-10-13 at 10 58 59 PM" src="https://github.com/user-attachments/assets/8c3f0e05-170a-474e-8562-84c2dc5bca81" />
+<img width="175" alt="Screenshot 2025-10-13 at 10 58 59 PM" src="https://github.com/user-attachments/assets/8b3c5720-20e1-4246-8198-5f5d4fe5b36e" />
+<img width="175" alt="Screenshot 2025-10-20 at 10 45 35 PM" src="https://github.com/user-attachments/assets/699de253-b7b9-429e-86d0-aa788003bc9f" />
 
 
 If game is in a playoffs/champianship game, or in the Bonus/PowerPlay/RedZone it will show something like this:<br />
 <img width="175" alt="Screenshot 2025-06-09 at 10 18 15 PM" src="https://github.com/user-attachments/assets/a9e6693d-10ec-4f2c-943c-5fe9dca71752" />
 <img width="175" alt="Screenshot 2025-06-22 at 10 44 39 PM" src="https://github.com/user-attachments/assets/9fc4de32-c387-4636-913e-88234e92ab23" />
+<img width="175" alt="Screenshot 2025-10-20 at 7 35 43 PM" src="https://github.com/user-attachments/assets/41ed422f-a2d0-4fc4-bc7f-4e8e98a64df0" />
+
 
 
 
