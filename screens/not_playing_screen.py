@@ -31,7 +31,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in 
 
 
 def save_team_data(info: dict[str, Any], fetch_index: int,
-                   teams_with_data: list[bool]) -> tuple[list[dict[str, Any]], list[bool]]:
+                   teams_with_data: list[bool]) -> tuple[dict[str, Any], list[bool]]:
     """Save data for to display longer than data is available (minimum 3 days).
 
     :param info: The information to save.
