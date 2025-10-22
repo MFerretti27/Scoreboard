@@ -52,7 +52,7 @@ def get_nba_game_type(team_name: str) -> str:
         was_finals_game[0] = "NBA Finals" in game_type
         was_finals_game[1] = team_name if was_finals_game[0] else ""
 
-    except (KeyError, IndexError):
+    except Exception:
         logger.exception("Error getting NBA game type")
         if was_finals_game[0] and was_finals_game[1] == team_name:
             return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
