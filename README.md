@@ -71,7 +71,6 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 -	Primary source: ESPN API.
 -	Secondary Source: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
 -	It always tries to grab data from ESPN API first and will grab from both API's when a team is currently playing a game
-<br />
     -	If only primary source fails:
         -   Tries a secondary API based on the sport. All data but Spread/OverUnder will still be displayed so its not very noticable.
         -   A small message will appear in bottom right saying ESPN API failed (Only will be displayed for specfic team that it failed for).
@@ -80,8 +79,8 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
         -   Some details (last pitch thrown, bonus status, shots on goal, play by play, etc) might be missing but most data will still be displayed.
         -   A small message will appear in bottom right saying one of MLB/NBA/NFL/NHL API failed (Only will be displayed for team that it failed for).
     -	If all data fetching fails:
-        -	Shows a clock until connection/data is restored.
-<br />
+        -	Shows a clock until connection/data is restored.<br /><br />
+
 -	Logos are downloaded when running for the first time.
     -	If you need to re-download logos or resize images such as if a team has updated their logo, you can re-download logos and resize by selecting "Download/Resize Images when Starting" in settings.
 
