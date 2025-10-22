@@ -8,12 +8,14 @@
     - [nba_api](https://github.com/swar/nba_api)
     - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
 
+
 # Screen Shots
-Main menu Screen, used for add team, set display order, and change functionality of scoreboard, and updating code:<br />
+Main menu Screen, used to add team, set display order, and change functionality of scoreboard, and updating code:<br />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/abb4c1f8-fc19-424f-a004-c1e574debe70" />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/e77fe8b8-caf0-4d1a-86de-6f2760a049b7" />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/942fe12b-e1a5-462c-aaec-c7f815821205" />
 <img width="175" alt="image" src="https://github.com/user-attachments/assets/0315fde6-bfb0-4af8-82a7-504c2ef353b8" />
+
 
 Screens when no teams are currently playing but have games scheduled: <br />
 <img width="175" alt="Screenshot 2025-06-19 at 5 05 03 PM" src="https://github.com/user-attachments/assets/752c588a-986f-462b-b354-4b4265d32dbe" />
@@ -27,8 +29,6 @@ Screens when teams are currently playing:<br />
 <img width="175" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
 
 
-
-
 Screen when games are over:<br />
 <img width="175" alt="Screenshot 2025-05-21 at 1 46 33 AM" src="https://github.com/user-attachments/assets/1e87ce4c-3169-449c-b937-4e4ca21a63ef" />
 <img width="175" alt="Screenshot 2025-06-20 at 12 23 38 AM" src="https://github.com/user-attachments/assets/39377230-fc2a-4db8-9d2f-023490d649fd" />
@@ -36,12 +36,12 @@ Screen when games are over:<br />
 <img width="175" alt="Screenshot 2025-10-20 at 10 45 35 PM" src="https://github.com/user-attachments/assets/699de253-b7b9-429e-86d0-aa788003bc9f" />
 
 
-If game is in a playoffs/champianship game, or in the Bonus/PowerPlay/RedZone it will show something like this:<br />
+If game is in a playoffs/champianship game a image will apear showing its not the regular seaseon.<br />
+Also if a team in the Bonus their score will go orange, in a powerplay it will go blue, or in the redzone it will go read.<br />
+For football a the team who has possession of the ball will be underlined.<br />
 <img width="175" alt="Screenshot 2025-06-09 at 10 18 15 PM" src="https://github.com/user-attachments/assets/a9e6693d-10ec-4f2c-943c-5fe9dca71752" />
 <img width="175" alt="Screenshot 2025-06-22 at 10 44 39 PM" src="https://github.com/user-attachments/assets/9fc4de32-c387-4636-913e-88234e92ab23" />
 <img width="175" alt="Screenshot 2025-10-20 at 7 35 43 PM" src="https://github.com/user-attachments/assets/41ed422f-a2d0-4fc4-bc7f-4e8e98a64df0" />
-
-
 
 
 
@@ -56,29 +56,36 @@ Left Arrow - Turn off live data delay, this will show live game info as soon as 
 Up Arrow - Enter "No Spoiler Mode," hiding scores, records, and game details.<br />
 Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.<br />
 
+
+
 ## How to Run
 Using Python run the main.py file e.g. ```python main.py``` <br />
-- This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries should already be on your machine)<br />
-- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates of code, change display order of teams, and change overall settings. The settings allow you to change what elements on the scoreboard are displayed, how long to display each team for, adding a delay in displaying live data to not be too fast.<br />
-- Press the Start button on main menu to start displaying teams selected.<br />
-- Press Escape on the keyboard to return to main menu or press escape while at main menu to quit.<br />
+- This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries will be installed with python)<br />
+- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates, change the display order of teams, and change overall settings.<br />
+- Press the Start button or "Return/Enter" on the keyboard on main menu screen to start displaying teams selected.<br />
+- Press Escape on the keyboard to return to main menu or press escape while at main menu to exit.<br />
 
 
 ## How Data is Collected
+- The script uses multiple API's for each sport to increase stability and information avaliable 
 -	Primary source: ESPN API.
 -	Secondary Source: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
--	If only primary source fails:
-    -   Tries backup APIs based on the sport, all data but Spread/OverUnder will still be displayed.
-    -   A small message will appear in bottom right telling ESPN API failed (Only will be displayed for team that it failed for).
--   If only secondary sources fail:
-    -   Displays basic info from ESPN.
-    -   Some details (last pitch thrown, bonus status, shots on goal, play by play, etc) might be missing but most data will still be displayed.
-    -   A small message will appear in bottom right telling MLB/NBA/NFL/NHL API failed (Only will be displayed for team that it failed for).
--	If all data fetching fails:
-    -	Shows a clock until connection/data is restored.
--	Logos are gotten when first running for the first time.
+-	It always tries to grab data from ESPN API first and will grab from both API's when a team is currently playing a game
+<br />
+    -	If only primary source fails:
+        -   Tries a secondary API based on the sport. All data but Spread/OverUnder will still be displayed so its not very noticable.
+        -   A small message will appear in bottom right saying ESPN API failed (Only will be displayed for specfic team that it failed for).
+    -   If only secondary sources fail:
+        -   Displays basic info from ESPN.
+        -   Some details (last pitch thrown, bonus status, shots on goal, play by play, etc) might be missing but most data will still be displayed.
+        -   A small message will appear in bottom right saying one of MLB/NBA/NFL/NHL API failed (Only will be displayed for team that it failed for).
+    -	If all data fetching fails:
+        -	Shows a clock until connection/data is restored.
+<br />
+-	Logos are downloaded when running for the first time.
     -	If you need to re-download logos or resize images such as if a team has updated their logo, you can re-download logos and resize by selecting "Download/Resize Images when Starting" in settings.
--	Any Game information that is more than a month away will not display.
+
+
 
 ## Main Screen
 -	The main screen allows you to:
@@ -87,8 +94,9 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	Restore to previous version.
         - If update went wrong or critical issues arise in newest version you can restore to a previous software version you were on before.
         - Every time you update scoreboard through update button it will save a local copy of older version in the same directory.
-    -	Add teams from MLB, NBA, NHL, and NFL to be follow and display.
-    -	Set the order of teams to be displayed.
+    -   Connect to new wifi (if you are on Linux)
+    -	Add teams from MLB, NBA, NHL, and NFL to follow and display.
+    -	Set the order of teams are displayed in.
     -	Change what is displayed (See Scoreboard screen section below to see what information can be displayed or not displayed on the scoreboard screen).
     -	Change functionality of scoreboard in settings section.
         - You can set a delay for live data so that if watching on TV the scoreboard doesn’t update before TV has.
@@ -96,19 +104,22 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
             - This can be done individually for when currently playing and when no team is playing.
         - How often the scoreboard should update new information.
             - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV).
-        - How long team information should be displayed once game is over.
+        - How long team information should be displayed once game is over (until new information on upcoming game overwrites it).
+
+
 
 ## Scoreboard Screen
 -   Home team will always display on the right.
--	Scoreboard will prioritize games playing meaning if a game is finished/scheduled for later it won't display until no games are currently playing (Can be changed in settings).
+-	Scoreboard will prioritize live games currently playing meaning if a game is finished/scheduled for later it won't display until there are no live games for slected teams (Can be changed in settings).
 -	Scoreboard will always display team logos, score, game time/game status and teams names.
--	Other generic elements below can be displayed or not displayed based of settings:
+-	Generic elements below for all teams can be displayed or not displayed based of settings:
     -	Team season record.
     -	Betting Odds MoneyLine/OverUnder/Spread before the game has started.
     -	Venue of where game is being played before the game has started (stadium name).
     -	Date of when game finished.
     -	Series information for sports play a series of games (MLB, NBA, NHL).
-    -	The broadcast network game is on, only if its national broadcast not local one.
+    -	A broadcast network logo that game is on, only if its national broadcast not local one.
+    -   A image showing that the current game is a playoff/champainship game.
 -	Sports specific elements can be displayed or not displayed based off settings:
     -	MLB
           -	Last pitch thrown.
@@ -135,6 +146,8 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
           -	What team has possession of the ball (What ever team has possession their score will be underlined).
           -	What down and yardage a team is at on the field.
           -	Game Clock and quarter the game is in.
+
+
      
 ## Clock Screen
 -	Displays a clock:
@@ -147,22 +160,14 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	One of selected teams has data to display.
 -	A message on clock screen will appear telling why clock is displaying.
 
+
+
 ## Requirements
 - Python needs to be installed and in your PATH (install [HERE](https://www.python.org/downloads/))<br />
 - pip (usually installed with python) needs to be installed <br />
 - All other requirements are in requirements.txt file and will be installed when you run the main.py file in virtual environment.
 
-Unique Libraries Script needs to be installed to work (these will be installed in virtual environment when running main.py):<br />
-  - adafruit-circuitpython-ticks -- Used to keep track of when to fetch data and switch displaying teams <br />
-  - FreeSimpleGUI -- Used to install Python GUI library  <br />
-  - pillow -- Used to resize logo images without losing quality <br />
-  - requests -- Used for being able to grab data from ESPN API <br />
-  - ruff -- Used for code quality rules for repo <br />
-  - MLB-StatsAPI -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
-  - nba_api -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
-  - nhl-api-py -- Used to get more MLB data and used as a backup if ESPN fetching fails for MLB <br />
-  - rapidfuzz -- Used to find best matches within lists <br />
-  - orjson -- Used to send data between subprocess as JSON <br />
+
 
 ## Hardware Recommended
 - Raspberry PI (3b+ and up, the better the CPU the less lag displaying images)
@@ -178,6 +183,7 @@ Unique Libraries Script needs to be installed to work (these will be installed i
   
 This code has been tested in the following operating systems, Debian (Raspberry Pi), Darwin (Mac) and Windows.<br />
 Text and images should auto size based on the monitor size you are using.<br />
+
 
 ## Future Plans
 - [ ] Support for college sports
