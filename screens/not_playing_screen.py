@@ -61,7 +61,7 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
         saved_datetime = datetime.fromisoformat(saved_date) if isinstance(saved_date, str) else saved_date
 
         date_difference = current_date - saved_datetime
-        # Check if 3 days have passed after data is no longer available
+        # Check if enough days have passed after data is no longer available
         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
             logger.info(f"It will display, time its been: {date_difference}")
             info = settings.saved_data[settings.teams[fetch_index][0]][0]
@@ -140,7 +140,7 @@ def get_team_info(window: Sg.Window, team_info: list[dict[str, Any]]) -> tuple[l
                 del settings.saved_data[settings.teams[fetch_index][0]]
 
         teams_with_data[fetch_index] = data
-        # Save data for to display longer than data is available (minimum 3 days)
+        # Save data for to display longer than data is available
         info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
         team_info.append(info)
 
@@ -227,7 +227,7 @@ def main(data_saved: dict) -> None:
 
     while True:
         try:
-            event = window.read(timeout=2000)
+            event = window.read(timeout=100)
 
             # Fetch Data
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
