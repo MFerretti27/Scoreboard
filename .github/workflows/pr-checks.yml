@@ -90,7 +90,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
         with:
           args: >
             -Dsonar.projectKey=MFerretti27_Scoreboard
