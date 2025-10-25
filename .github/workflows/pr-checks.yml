@@ -70,6 +70,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -84,7 +90,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
         with:
           args: >
             -Dsonar.projectKey=MFerretti27_Scoreboard

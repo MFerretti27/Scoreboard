@@ -156,7 +156,8 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(60, int(63 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(10, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(38, int(40 * scale)))
+    settings.NHL_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
@@ -170,6 +171,7 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
+    logger.info("NHL top txt size: %s", settings.NHL_TOP_INFO_SIZE)
     logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
@@ -190,14 +192,14 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None:
+def scroll(window: Sg.Window, text: str) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
-    :param team_info: The team information dictionary
+    :param text: The text to scroll
     :param display_index: The index of the team to update
     """
-    text = team_info[display_index]["bottom_info"] + "         "
+    text = text + "         "
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
