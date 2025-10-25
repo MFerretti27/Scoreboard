@@ -79,7 +79,7 @@ def resize_image(image_path: str | Path, directory: str | Path, file_name: str) 
 
     # Resize and save the new image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    new_path_png = (Path.cwd() / directory / file_name).with_suffix(".png")
+    new_path_png = Path.cwd() / directory / f"{file_name}.png"
     img_resized.save(new_path_png)
 
 

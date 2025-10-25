@@ -66,6 +66,7 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
             logger.info(f"It will display, time its been: {date_difference}")
             info = settings.saved_data[settings.teams[fetch_index][0]][0]
             teams_with_data[fetch_index] = True
+            print(info)
             return info, teams_with_data
         # If greater than days allowed remove
         del settings.saved_data[settings.teams[fetch_index][0]]
@@ -81,6 +82,7 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
 
     :return: None
     """
+    print(team_info)
     logger.info(f"\nUpdating Display for {settings.teams[display_index][0]}")
     reset_window_elements(window)
 
@@ -222,7 +224,7 @@ def main(data_saved: dict) -> None:
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
                        resizable=True, return_keyboard_events=True).Finalize()
 
-    window.set_cursor("none")  # Hide the mouse cursor
+    # window.set_cursor("none")  # Hide the mouse cursor
     maximize_screen(window)
 
     while True:

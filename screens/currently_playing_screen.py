@@ -112,11 +112,10 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -
                                         text_color="yellow")
 
     # Ensure bonus is in dictionary to not cause key error
-    if "home_bonus" in team_info or "away_bonus" in team_info:
-        if team_info["home_bonus"] and key == "home_score":
-            window[key].update(value=value, text_color="orange")
-        if team_info["away_bonus"] and key == "away_score":
-            window[key].update(value=value, text_color="orange")
+    if "home_bonus" in team_info and team_info["home_bonus"] and key == "home_score":
+        window[key].update(value=value, text_color="orange")
+    if "away_bonus" in team_info and team_info["away_bonus"] and key == "away_score":
+        window[key].update(value=value, text_color="orange")
 
 def display_mlb_info(window: sg.Window, key: str, value: str) -> None:
     """Update the MLB display information for a specific team.
@@ -147,7 +146,7 @@ def display_nhl_info(window: sg.Window, team_info: dict, key: str, value: str) -
     :return: None
     """
     if key == "top_info":
-        window[key].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
+        window[key].update(value=value, font=(settings.FONT, settings.NHL_TOP_INFO_SIZE))
     if key == "above_score_txt" and settings.display_nhl_play_by_play and "@" not in team_info["above_score_txt"]:
         window[key].update(value=value, font=(settings.FONT, settings.TOP_TXT_SIZE))
 

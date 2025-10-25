@@ -77,7 +77,7 @@ def get_mlb_game_type(team_name: str) -> str:
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
         game_type = games[0].get("game_type")
-        if game_type == "WS":
+        if game_type == "W":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
         if game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
             return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
@@ -105,6 +105,9 @@ def get_nhl_game_type(team_name: str) -> str:
         resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
         res = resp.json()
 
+        if res["seasonSeries"][0]["gameType"] == 2:
+            return ""
+
         away_team_abbr = res["seasonSeries"][0]["awayTeam"]["abbrev"]
         home_team_abbr = res["seasonSeries"][0]["homeTeam"]["abbrev"]
 
@@ -120,7 +123,7 @@ def get_nhl_game_type(team_name: str) -> str:
         year = now.year
         month = now.month
 
-        if month >= 9:  # Season starts in October
+        if month >= 10:  # Season starts in October
             start_year = year
             end_year = year + 1
         else:
