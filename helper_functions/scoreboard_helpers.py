@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+from datetime import datetime
 from pathlib import Path
 from tkinter import font as tk_font
 
@@ -13,6 +14,7 @@ import orjson  # type: ignore[import]
 
 import settings
 from helper_functions.logger_config import logger
+from screens.main_screen import handle_update
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -208,6 +210,7 @@ def scroll(window: Sg.Window, text: str) -> None:
             check_events(window, event)
         time.sleep(5)
 
+
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
     # Maximize does not work on MacOS, so we use attributes to set fullscreen
@@ -215,3 +218,11 @@ def maximize_screen(window: Sg.Window) -> None:
         window.TKroot.attributes("-fullscreen", True)  # noqa: FBT003
     else:
         window.Maximize()
+
+
+def auto_update(window: Sg.Window) -> None:
+    """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
+    if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
+                # If Auto Update is on update code at 4:30 AM
+                handle_update(window)
+                logger.info("Clearing saved data at 3 AM to prevent displaying old data")

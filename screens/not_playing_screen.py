@@ -17,6 +17,7 @@ from gui_layouts.scoreboard_layout import create_scoreboard_layout
 from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
+    auto_update,
     check_events,
     maximize_screen,
     reset_window_elements,
@@ -52,6 +53,8 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
     # If team is already saved dont overwrite it with new date
     elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is True:
         if "FINAL" in info.get("bottom_info", ""):
+            print("here")
+            print(settings.saved_data[settings.teams[fetch_index][0]][0]["bottom_info"])
             info["bottom_info"] = settings.saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
 
     elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is False:
@@ -83,6 +86,7 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
     :return: None
     """
     print(team_info)
+    print(display_index)
     logger.info(f"\nUpdating Display for {settings.teams[display_index][0]}")
     reset_window_elements(window)
 
@@ -146,6 +150,8 @@ def get_team_info(window: Sg.Window, team_info: list[dict[str, Any]]) -> tuple[l
         info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
         team_info.append(info)
 
+
+    print(team_info)
     return teams_with_data, team_info, fetch_first_time
 
 def handle_error(window: Sg.Window) -> None:
@@ -265,6 +271,8 @@ def main(data_saved: dict) -> None:
             if True not in teams_with_data and not fetch_first_time:  # No data to display
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
+
+            auto_update(window)  # Check if need to auto update the program
 
         except Exception as error:
             logger.exception(f"Error: {error}")

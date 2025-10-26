@@ -13,7 +13,7 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 import get_data.get_team_league
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import read_teams_from_file, update_teams
+from helper_functions.main_menu_helpers import read_teams_from_file, remove_accents, update_teams
 
 
 def format_teams_block(teams: list[list[str]]) -> str:
@@ -80,6 +80,9 @@ def get_new_team_names(league: str) -> tuple:
 
         elif league == "NBA":
             new_list.extend([team["full_name"] for team in nba_teams.get_teams()])
+
+        # Remove accents for consistent sorting
+        new_list = remove_accents(new_list)
     except Exception:
         logger.exception("Getting new team names failed")
         return [], [], "Failed to Get New Team Names"

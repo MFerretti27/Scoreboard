@@ -1,6 +1,7 @@
 """Helper functions used in main menu."""
 import ast
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -24,11 +25,11 @@ setting_keys_booleans = [
     "display_nfl_timeouts", "display_nfl_redzone",
 
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
-    "display_date_ended", "prioritize_playing_team", "always_get_logos", "prioritize_playoff_championship_image",
+    "display_date_ended", "prioritize_playing_team", "always_get_logos", "Auto_Update",
     "display_playoff_championship_image",
 ]
 
-setting_keys_integers = ["LIVE_DATA_DELAY", "FETCH_DATA_NOT_PLAYING_TIMER", "DISPLAY_NOT_PLAYING_TIMER",
+setting_keys_integers = ["LIVE_DATA_DELAY", "DISPLAY_NOT_PLAYING_TIMER",
                             "DISPLAY_PLAYING_TIMER", "HOW_LONG_TO_DISPLAY_TEAM", "FETCH_DATA_PLAYING_TIMER"]
 
 
@@ -401,3 +402,21 @@ def double_check_teams() -> None:
         if team[0] not in (MLB + NBA + NFL + NHL):
             settings.teams.remove(team)
             logger.info(f"Removed {team} from teams as its not a valid team.")
+
+def remove_accents(team_names: str | list) -> str | list:
+    """Normalize a string by removing accent marks (é → e, ñ → n, etc.).
+
+    :param team_names: string or list of strings to remove accents from
+    :return: string or list of strings with accents removed
+    """
+    if isinstance(team_names, str):
+        normalized = unicodedata.normalize("NFD", team_names)
+        return "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
+
+    cleaned_teams = []
+    # Convert lists (or other iterables) to strings if needed
+    for team in team_names:
+        # Normalize and strip accents
+        normalized = unicodedata.normalize("NFD", team)
+        cleaned_teams.append("".join(ch for ch in normalized if unicodedata.category(ch) != "Mn"))
+    return cleaned_teams
