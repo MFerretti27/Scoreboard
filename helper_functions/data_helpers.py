@@ -80,7 +80,7 @@ def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_in
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
     for file in file_names:
         filename = file.name.upper()
-        filename = remove_accents(filename)
+        filename = str(remove_accents(filename))
         if home_team_name.upper() in filename:
             home_team = filename
         if away_team_name.upper() in filename:

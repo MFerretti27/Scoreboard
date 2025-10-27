@@ -224,5 +224,5 @@ def auto_update(window: Sg.Window) -> None:
     """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
     if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
                 # If Auto Update is on update code at 4:30 AM
-                handle_update(window)
+                handle_update(window, 1)
                 logger.info("Clearing saved data at 3 AM to prevent displaying old data")

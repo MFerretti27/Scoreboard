@@ -82,7 +82,7 @@ def get_new_team_names(league: str) -> tuple:
             new_list.extend([team["full_name"] for team in nba_teams.get_teams()])
 
         # Remove accents for consistent sorting
-        new_list = remove_accents(new_list)
+        new_list = list(remove_accents(new_list))
     except Exception:
         logger.exception("Getting new team names failed")
         return [], [], "Failed to Get New Team Names"
