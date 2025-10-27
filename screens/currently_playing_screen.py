@@ -220,6 +220,7 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
             elif teams_currently_playing[(original_index + x) % len(teams)] is True and x != 0:
                 logger.info(
                     f"Found next team currently playing {teams[(original_index + x) % len(teams)][0]}\n")
+                display_index = (original_index + x) % len(teams)
                 break
     elif not settings.stay_on_team and not settings.prioritize_playing_team:
         for x in range(len(teams) * 2):
@@ -229,12 +230,11 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
             elif teams_with_data[(original_index + x) % len(teams)] is True and x != 0:
                 logger.info(
                     f"Found next team that has data {teams[(original_index + x) % len(teams)][0]}\n")
+                display_index = (original_index + x) % len(teams)
                 break
     else:
         logger.info(
             f"Not Switching teams that are currently playing, staying on {teams[display_index][0]}\n")
-
-    display_index = (display_index + 1) % len(teams)
 
     if settings.stay_on_team:
         display_index = original_index
@@ -353,16 +353,13 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
             currently_displaying = team_info[display_index]
 
         # Find Next team to display
-        if ((ticks_diff(ticks_ms(), display_clock) >= display_timer or first_time) and
-            (teams_currently_playing[display_index] or (teams_with_data[display_index] and
-                                                          not settings.prioritize_playing_team))):
+        if ((ticks_diff(ticks_ms(), display_clock) >= display_timer and teams_currently_playing[display_index]) or
+            (first_time)) or (teams_with_data[display_index] and
+                                                          not settings.prioritize_playing_team):
             first_time = False
             display_index, original_index = find_next_team_to_display(teams, teams_currently_playing,
                                                                         display_index, teams_with_data)
             display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
-
-        else:
-            display_index = (display_index + 1) % len(teams)
 
         if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
             scroll(window, team_info[display_index].get("bottom_info", ""))

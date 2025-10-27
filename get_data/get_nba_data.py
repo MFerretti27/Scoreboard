@@ -118,8 +118,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
     :return team_info: dictionary containing team information to display
     """
-    global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
-
     # Save away @ home to display if quarter End
     saved_team_names = team_info["above_score_txt"]
 
@@ -127,32 +125,16 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
     data = scoreboard.ScoreBoard().get_dict()
     for game in data["scoreboard"]["games"]:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
+            box_score = boxscore.BoxScore(game["gameId"]).get_dict()
 
             # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
-                team_info["home_bonus"] = game["homeTeam"]["inBonus"] == "1"
-                team_info["away_bonus"] = game["awayTeam"]["inBonus"] == "1"
-                # When "inBonus" is not None its a good value to store
-                if game["homeTeam"]["inBonus"] is not None and game["awayTeam"]["inBonus"] is not None:
-                    home_team_bonus = team_info["home_bonus"]
-                    away_team_bonus = team_info["away_bonus"]
-                else:
-                    team_info["home_bonus"] = home_team_bonus
-                    team_info["away_bonus"] = away_team_bonus
+                team_info["home_bonus"] = box_score["game"]["homeTeam"]["inBonus"] == "1"
+                team_info["away_bonus"] = box_score["game"]["awayTeam"]["inBonus"] == "1"
 
             if settings.display_nba_timeouts:
-                home_timeouts = game["homeTeam"]["timeoutsRemaining"]
-                away_timeouts = game["awayTeam"]["timeoutsRemaining"]
-
-                # When "inBonus" is None timeouts have wrong data store them to display last known good value
-                # Unless saved value is None, then just display current value
-                if (game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None and
-                    home_timeouts_saved != 0 and away_timeouts_saved != 0):
-                    home_timeouts = home_timeouts_saved
-                    away_timeouts = away_timeouts_saved
-                else:
-                    home_timeouts_saved = home_timeouts
-                    away_timeouts_saved = away_timeouts
+                home_timeouts = box_score["game"]["homeTeam"]["timeoutsRemaining"]
+                away_timeouts = box_score["game"]["awayTeam"]["timeoutsRemaining"]
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
@@ -168,7 +150,6 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
             if settings.display_nba_shooting:
-                box_score = boxscore.BoxScore(game["gameId"]).get_dict()
                 home_field_goal_attempt = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsAttempted", 0))
                 home_field_goal_made = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsMade", 0))
 

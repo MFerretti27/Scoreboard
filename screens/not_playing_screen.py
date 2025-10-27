@@ -53,8 +53,6 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
     # If team is already saved dont overwrite it with new date
     elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is True:
         if "FINAL" in info.get("bottom_info", ""):
-            print("here")
-            print(settings.saved_data[settings.teams[fetch_index][0]][0]["bottom_info"])
             info["bottom_info"] = settings.saved_data[settings.teams[fetch_index][0]][0]["bottom_info"]
 
     elif settings.teams[fetch_index][0] in settings.saved_data and teams_with_data[fetch_index] is False:
@@ -69,7 +67,6 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
             logger.info(f"It will display, time its been: {date_difference}")
             info = settings.saved_data[settings.teams[fetch_index][0]][0]
             teams_with_data[fetch_index] = True
-            print(info)
             return info, teams_with_data
         # If greater than days allowed remove
         del settings.saved_data[settings.teams[fetch_index][0]]
@@ -85,8 +82,6 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
 
     :return: None
     """
-    print(team_info)
-    print(display_index)
     logger.info(f"\nUpdating Display for {settings.teams[display_index][0]}")
     reset_window_elements(window)
 
@@ -122,15 +117,15 @@ def update_display_index(original_index: int, teams_with_data: list[bool]) -> in
 
     return display_index
 
-def get_team_info(window: Sg.Window, team_info: list[dict[str, Any]]) -> tuple[list[bool], list[dict[str, Any]], bool]:
+def get_team_info(window: Sg.Window) -> tuple[list[bool], list[dict[str, Any]], bool]:
     """Fetch data for each team and update the team information list.
 
     :param window: The window to update.
-    :param team_info: The information about the teams.
 
     :return: A tuple containing the updated list of teams with data and the team information list.
     """
     fetch_first_time = False
+    team_info: list[dict[str, Any]] = []
     teams_with_data: list[bool] = [False] * len(settings.teams)
     for fetch_index in range(len(settings.teams)):
         logger.info(f"\nFetching data for {settings.teams[fetch_index][0]}")
@@ -151,7 +146,6 @@ def get_team_info(window: Sg.Window, team_info: list[dict[str, Any]]) -> tuple[l
         team_info.append(info)
 
 
-    print(team_info)
     return teams_with_data, team_info, fetch_first_time
 
 def handle_error(window: Sg.Window) -> None:
@@ -239,7 +233,7 @@ def main(data_saved: dict) -> None:
 
             # Fetch Data
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
-                teams_with_data, team_info, fetch_first_time = get_team_info(window, team_info)
+                teams_with_data, team_info, fetch_first_time = get_team_info(window)
                 # Reset timers
                 display_clock = ticks_ms()
                 fetch_clock = ticks_ms()
