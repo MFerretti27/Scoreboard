@@ -175,8 +175,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
             window[key].update(filename=value)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
-        elif ("possession" not in key and "redzone" not in key and "bonus" not in key and
-                "power_play" not in key):
+        elif type(value) is str:
             window[key].update(value=value)
 
         # Football specific display information
@@ -195,8 +194,8 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
             display_nhl_info(window, team_info[display_index], key, value)
 
-        if settings.no_spoiler_mode:
-            set_spoiler_mode(window, team_info[display_index])
+    if settings.no_spoiler_mode:
+        set_spoiler_mode(window, team_info[display_index])
 
 def find_next_team_to_display(teams: list[list], teams_currently_playing: list[bool],
                               display_index: int, teams_with_data: list[bool]) -> tuple[int, int]:

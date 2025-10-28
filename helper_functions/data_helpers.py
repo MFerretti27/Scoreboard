@@ -36,7 +36,7 @@ def check_playing_each_other(home_team: str, away_team: str) -> bool:
     return False
 
 
-def get_network_logos(broadcast: str | list) -> Path | str:
+def get_network_logos(broadcast: str | list, league: str) -> Path | str:
     """Get the network logo of the broadcast game is on.
 
     Only supports generic networks and not local networks. All networks supported
@@ -62,6 +62,10 @@ def get_network_logos(broadcast: str | list) -> Path | str:
             if file_no_png in broadcast and broadcast != "":
                 file_path = Path.cwd() / "images" / "Networks" / file
                 break
+
+        # Display Thursday Night Football logo for Prime games if football
+        if "Prime" in str(file_path) and league.upper() == "NFL":
+            file_path = Path.cwd() / "images" / "Networks" / "Prime_TNF.png"
 
         return file_path
     return ""

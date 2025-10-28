@@ -83,7 +83,7 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             return team_info, False, currently_playing
 
         # Get Network and display logo if possible
-        team_info["under_score_image"] = get_network_logos(broadcast)
+        team_info["under_score_image"] = get_network_logos(broadcast, team_league)
 
         # Check if Team is Currently Playing
         currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
