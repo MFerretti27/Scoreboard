@@ -266,8 +266,6 @@ def main(data_saved: dict) -> None:
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
-            auto_update(window)  # Check if need to auto update the program
-
         except Exception as error:
             logger.exception(f"Error: {error}")
             handle_error(window)
