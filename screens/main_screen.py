@@ -60,15 +60,44 @@ def main(saved_data: dict) -> None:
     teams = load_teams_order()
     team_names = [team[0] for team in teams]
 
-    # Create individual layout columns
-    main_column = Sg.Frame("",
-        main_screen_layout.create_main_layout(window_width),
-        key="MAIN",
-        size=(window_width, window_height),
-        border_width=0,
-    )
+    main_column = Sg.Frame("", main_screen_layout.create_main_layout(window_width), key="MAIN", visible=True,
+                           border_width=0, size=(window_width, window_height))
+    mlb_column = Sg.Frame("", team_selection_layout.create_team_selection_layout(window_width, "MLB"), key="MLB",
+                          border_width=0, size=(window_width, window_height), visible=False)
+    nba_column = Sg.Frame("", team_selection_layout.create_team_selection_layout(window_width, "NBA"), key="NBA",
+                          border_width=0, size=(window_width, window_height), visible=False)
+    nhl_column = Sg.Frame("", team_selection_layout.create_team_selection_layout(window_width, "NHL"), key="NHL",
+                          border_width=0, size=(window_width, window_height), visible=False)
+    nfl_column = Sg.Frame("", team_selection_layout.create_team_selection_layout(window_width, "NFL"), key="NFL",
+                          border_width=0, size=(window_width, window_height), visible=False)
+    settings_column = Sg.Frame("", settings_layout.create_settings_layout(window_width), key="SETTINGS", border_width=0,
+                               size=(window_width, window_height), visible=False)
+    internet_column = Sg.Frame("", internet_connection_layout.create_internet_connection_layout(window_width),
+                               key="INTERNET", border_width=0, size=(window_width, window_height), visible=False)
+    order_teams_column = Sg.Frame("", reorder_teams_layout.create_order_teams_layout(window_width), key="SET_ORDER",
+                                  border_width=0, size=(window_width, window_height), visible=False)
+    manual_column = Sg.Frame("", manual_layout.create_instructions_layout(window_width), key="MANUAL",
+                             border_width=0, size=(window_width, window_height), visible=False)
 
-    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
+
+    # Create individual layout columns
+    layout = [[
+    Sg.Column(
+        [[
+            Sg.pin(main_column),
+            mlb_column,
+            nhl_column,
+            nba_column,
+            nfl_column,
+            internet_column,
+            manual_column,
+            order_teams_column,
+            settings_column,
+        ]],
+        key="LAYOUT_COLUMN",
+        size=(window_width, window_height),
+    ),
+]]
     window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
                        return_keyboard_events=True).Finalize()
 
@@ -135,7 +164,29 @@ def check_events(window: Sg.Window, team_names: list,
 
     return number_of_times_pressed, team_names
 
-def show_view(view_to_show: str, window: Sg.Window) -> None:
+def show_view(view_key: str, window: Sg.Window) -> None:
+    """Switch main screen views."""
+    views = ["MAIN", "MLB", "NFL", "NBA", "NHL", "SETTINGS", "INTERNET", "SET_ORDER", "MANUAL"]
+    for view in views:
+        window[view].update(visible=(view == view_key))
+
+    window.refresh()
+
+    # window.UnHide()
+    # window.bring_to_front()
+    # window.reappear()
+    # window.force_focus()
+    # window.bring_to_front()
+
+    for element_key, _ in list(window.AllKeysDict.items()):
+        if element_key != "VIEW_CONTAINER":  # Don't touch container
+            try:
+                window[element_key].set_focus()
+            except Exception:
+                logger.info("Could set focus to element %s", element_key)
+
+
+def show_views(view_to_show: str, window: Sg.Window) -> None:
     """Switch main screen views.
 
     :param view_to_show: Which view to make visible
