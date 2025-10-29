@@ -175,7 +175,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
             window[key].update(filename=value)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
-        elif type(value) is str:
+        elif type(value) is str or type(value) is int:
             window[key].update(value=value)
 
         # Football specific display information
