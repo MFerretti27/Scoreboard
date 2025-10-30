@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+from datetime import datetime
 from pathlib import Path
 from tkinter import font as tk_font
 
@@ -13,6 +14,7 @@ import orjson  # type: ignore[import]
 
 import settings
 from helper_functions.logger_config import logger
+from screens.main_screen import handle_update
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -156,7 +158,8 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(60, int(63 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(10, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(34, int(36 * scale)))
+    settings.NHL_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
@@ -170,6 +173,7 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
+    logger.info("NHL top txt size: %s", settings.NHL_TOP_INFO_SIZE)
     logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
@@ -190,14 +194,14 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None:
+def scroll(window: Sg.Window, text: str) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
-    :param team_info: The team information dictionary
+    :param text: The text to scroll
     :param display_index: The index of the team to update
     """
-    text = team_info[display_index]["bottom_info"] + "         "
+    text = text + "         "
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
@@ -206,6 +210,7 @@ def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None
             check_events(window, event)
         time.sleep(5)
 
+
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
     # Maximize does not work on MacOS, so we use attributes to set fullscreen
@@ -213,3 +218,11 @@ def maximize_screen(window: Sg.Window) -> None:
         window.TKroot.attributes("-fullscreen", True)  # noqa: FBT003
     else:
         window.Maximize()
+
+
+def auto_update(window: Sg.Window) -> None:
+    """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
+    if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
+                # If Auto Update is on update code at 4:30 AM
+                handle_update(window, 1)
+                logger.info("Updating program automatically at 4:30 AM")

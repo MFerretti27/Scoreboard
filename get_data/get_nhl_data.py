@@ -198,12 +198,12 @@ def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> 
     """
     play_by_play = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play", timeout=5)
     play = play_by_play.json()
-    plays = play["plays"][-1]["typeDescKey"]
+    plays = play["plays"][-1]["typeDescKey"].capitalize()
 
     last_play = ""
 
     # Get play and player if shooting play
-    if plays not in ["period-end", "giveaway", "stoppage"]:
+    if plays not in ["Period-end", "Giveaway", "Stoppage"]:
         players = requests.get(f"https://api-web.nhle.com/v1/roster/{home_team_abrr}/current", timeout=5)
         positions = players.json()
         for position in positions:

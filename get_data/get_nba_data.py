@@ -118,40 +118,23 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
     :return team_info: dictionary containing team information to display
     """
-    global home_team_bonus, away_team_bonus, home_timeouts_saved, away_timeouts_saved
-
     # Save away @ home to display if quarter End
     saved_team_names = team_info["above_score_txt"]
 
     # Get timeouts and if team is in bonus from nba_api.live.nba.endpoints
-    games = scoreboard.ScoreBoard()
-    data = games.get_dict()
+    data = scoreboard.ScoreBoard().get_dict()
     for game in data["scoreboard"]["games"]:
         if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
+            box_score = boxscore.BoxScore(game["gameId"]).get_dict()
 
             # Many times bonus is None, store it so when it is None then display last known value
             if settings.display_nba_bonus:
-                team_info["home_bonus"] = game["homeTeam"]["inBonus"] == "1"
-                team_info["away_bonus"] = game["awayTeam"]["inBonus"] == "1"
-                # When "inBonus" is not None its a good value to store
-                if game["homeTeam"]["inBonus"] is not None and game["awayTeam"]["inBonus"] is not None:
-                    home_team_bonus = team_info["home_bonus"]
-                    away_team_bonus = team_info["away_bonus"]
-                else:
-                    team_info["home_bonus"] = home_team_bonus
-                    team_info["away_bonus"] = away_team_bonus
+                team_info["home_bonus"] = box_score["game"]["homeTeam"]["inBonus"] == "1"
+                team_info["away_bonus"] = box_score["game"]["awayTeam"]["inBonus"] == "1"
 
             if settings.display_nba_timeouts:
-                home_timeouts = game["homeTeam"]["timeoutsRemaining"]
-                away_timeouts = game["awayTeam"]["timeoutsRemaining"]
-
-                # When "inBonus" is None timeouts have wrong data store them to display last known good value
-                if game["homeTeam"]["inBonus"] is None and game["awayTeam"]["inBonus"] is None:
-                    home_timeouts = home_timeouts_saved
-                    away_timeouts = away_timeouts_saved
-                else:
-                    home_timeouts_saved = home_timeouts
-                    away_timeouts_saved = away_timeouts
+                home_timeouts = box_score["game"]["homeTeam"]["timeoutsRemaining"]
+                away_timeouts = box_score["game"]["awayTeam"]["timeoutsRemaining"]
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
@@ -167,12 +150,14 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
             if settings.display_nba_shooting:
-                box_score = boxscore.BoxScore(game["gameId"]).get_dict()
                 home_field_goal_attempt = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsAttempted", 0))
                 home_field_goal_made = (box_score["game"]["homeTeam"]["statistics"].get("fieldGoalsMade", 0))
 
                 home_3pt_attempt = (box_score["game"]["homeTeam"]["statistics"].get("threePointersAttempted", 0))
                 home_3pt_made= (box_score["game"]["homeTeam"]["statistics"].get("threePointersMade", 0))
+
+                home_free_throw_attempt = (box_score["game"]["homeTeam"]["statistics"].get("freeThrowsAttempted", 0))
+                home_free_throw_made = (box_score["game"]["homeTeam"]["statistics"].get("freeThrowsMade", 0))
 
                 away_field_goal_attempt = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsAttempted", 0))
                 away_field_goal_made = (box_score["game"]["awayTeam"]["statistics"].get("fieldGoalsMade", 0))
@@ -180,14 +165,19 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 away_3pt_attempt = (box_score["game"]["awayTeam"]["statistics"].get("threePointersAttempted", 0))
                 away_3pt_made = (box_score["game"]["awayTeam"]["statistics"].get("threePointersMade", 0))
 
+                away_free_throw_attempt = (box_score["game"]["awayTeam"]["statistics"].get("freeThrowsAttempted", 0))
+                away_free_throw_made = (box_score["game"]["awayTeam"]["statistics"].get("freeThrowsMade", 0))
+
                 away_stats = (
-                    f"FG: {away_field_goal_made}/{away_field_goal_attempt} "
-                    f"3PT: {away_3pt_made}/{away_3pt_attempt}"
+                    f"FG:{away_field_goal_made}/{away_field_goal_attempt}  "
+                    f"3PT:{away_3pt_made}/{away_3pt_attempt}  "
+                    f"FT:{away_free_throw_made}/{away_free_throw_attempt}"
                 )
 
                 home_stats = (
-                    f"FG: {home_field_goal_made}/{home_field_goal_attempt} "
-                    f"3PT: {home_3pt_made}/{home_3pt_attempt}"
+                    f"FG:{home_field_goal_made}/{home_field_goal_attempt}  "
+                    f"3PT:{home_3pt_made}/{home_3pt_attempt}  "
+                    f"FT:{home_free_throw_made}/{home_free_throw_attempt}"
                 )
 
                 team_info["top_info"] = away_stats + "\t\t " + home_stats

@@ -26,6 +26,7 @@ CLOCK_TXT_SIZE = 204
 HYPHEN_SIZE = 84
 TIMEOUT_SIZE = 34
 NBA_TOP_INFO_SIZE = 56
+NHL_TOP_INFO_SIZE = 56
 MLB_BOTTOM_INFO_SIZE = 80
 PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
@@ -72,7 +73,7 @@ display_nba_play_by_play = True
 display_nhl_sog = True
 display_nhl_power_play = True
 display_nhl_clock = True
-display_nhl_play_by_play = False
+display_nhl_play_by_play = True
 
 # NFL
 display_nfl_timeouts = True
@@ -90,7 +91,7 @@ display_odds = True
 display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
-prioritize_playoff_championship_image = True
+Auto_Update = True
 display_playoff_championship_image = True
 
 ############################################
