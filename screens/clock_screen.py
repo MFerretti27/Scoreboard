@@ -20,7 +20,32 @@ from get_data.get_espn_data import get_data
 from get_data.get_team_logos import get_random_logo
 from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.logger_config import logger
-from helper_functions.scoreboard_helpers import reset_window_elements
+from helper_functions.scoreboard_helpers import reset_window_elements, scroll, will_text_fit_on_screen
+from helper_functions.update import check_for_update
+
+
+def error_handling(window: Sg.Window, error: Exception) -> str:
+    """Handle errors when fetching data fails.
+
+    :param window: Window Element that controls GUI
+    :param error: The exception that was raised
+    """
+    logger.exception("Failed to Get Data")
+    if is_connected():
+        message = f"Failed to Get Data, Error:{error}"
+    elif not is_connected():
+        logger.exception("Internet connection is down, trying to reconnect...")
+        message = "No Internet Connection"
+        reconnect()
+        time.sleep(20)  # Wait 20 seconds for connection
+
+    # If fetching data is failing check to see if there is an update available
+    _, success, latest = check_for_update()
+    if success and not latest:
+        bottom_message = "Update Available! Press Escape to go to main screen and update"
+        window["bottom_info"].update(value=bottom_message, font=(settings.FONT, settings.TOP_TXT_SIZE))
+
+    return message
 
 
 def clock(window: Sg.Window, message: str) -> list:
@@ -40,6 +65,7 @@ def clock(window: Sg.Window, message: str) -> list:
 
     reset_window_elements(window)
     window["under_score_image"].update(filename="")
+    event = window.read(timeout=100)
 
     while True not in teams_with_data:
 
@@ -63,7 +89,10 @@ def clock(window: Sg.Window, message: str) -> list:
         window["bottom_info"].update(value=date, font=(settings.FONT, settings.RECORD_TXT_SIZE))
         window["top_info"].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
 
-        event = window.read(timeout=5000)
+        should_scroll = will_text_fit_on_screen(message)
+        if should_scroll:
+            scroll(window, message)
+
         if event[0] == Sg.WIN_CLOSED or "Escape" in event[0]:
             window.close()
             time.sleep(0.5)  # Give OS time to destroy the window
@@ -85,14 +114,9 @@ def clock(window: Sg.Window, message: str) -> list:
 
         # If fetched failed find out why and display message
         except Exception as error:
-            logger.exception("Failed to Get Data")
-            if is_connected():
-                message = f"Failed to Get Info From ESPN, Error:{error}"
-            if not is_connected():
-                logger.exception("Internet connection is down, trying to reconnect...")
-                message = "No Internet Connection"
-                reconnect()
-                time.sleep(20)  # Wait 20 seconds for connection
+            message = error_handling(window, error)
+
+        event = window.read(timeout=100)
 
     # Reset Text Font Size before returning to main loop
     reset_window_elements(window)

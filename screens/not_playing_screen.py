@@ -6,6 +6,7 @@ import logging
 import sys
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
@@ -16,6 +17,7 @@ from get_data.get_espn_data import get_data
 from gui_layouts.scoreboard_layout import create_scoreboard_layout
 from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.logger_config import logger
+from helper_functions.main_menu_helpers import write_settings_to_py
 from helper_functions.scoreboard_helpers import (
     auto_update,
     check_events,
@@ -266,19 +268,38 @@ def main(data_saved: dict) -> None:
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
+            if settings.Auto_Update:
+                auto_update(window, settings.saved_data)  # Check if need to auto update
+
         except Exception as error:
             logger.exception(f"Error: {error}")
             handle_error(window)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        try:
-            saved_data = json.loads(sys.argv[1])
-        except json.JSONDecodeError as e:
-            logger.info("Invalid JSON argument:", e)
-            saved_data = {}
-    else:
-        logger.info("No argument passed. Using default data.")
+    saved_data = {}
+    settings_saved = None
+
+    # Parse arguments flexibly
+    args = sys.argv[1:]
+    try:
+        if "--settings" in args:
+            idx = args.index("--settings")
+            if idx + 1 < len(args):
+                settings_path = Path(args[idx + 1])
+                with settings_path.open(encoding="utf-8") as f:
+                    settings_saved = json.load(f)
+                    write_settings_to_py(settings_saved)
+                    logger.info("Settings.py updated from JSON.")
+
+        if "--saved-data" in args:
+            idx = args.index("--saved-data")
+            if idx + 1 < len(args):
+                saved_data = json.loads(args[idx + 1])
+
+    except Exception:
+        logger.exception("Error parsing startup arguments")
         saved_data = {}
+
+    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
     main(saved_data)

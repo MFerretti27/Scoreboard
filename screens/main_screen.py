@@ -119,7 +119,7 @@ def check_events(window: Sg.Window, team_names: list,
         window = set_team_order_screen(window)
 
     elif "update_button" in event:
-        number_of_times_pressed = handle_update(window, number_of_times_pressed)
+        number_of_times_pressed = handle_update(window, number_of_times_pressed, saved_data)
 
     elif "restore_button" in event:
         number_of_times_pressed = 0
@@ -438,7 +438,7 @@ def manual_screen(window: Sg.Window) -> Sg.Window:
             show_view("MAIN", window)
             return window
 
-def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
+def handle_update(window: Sg.Window, number_of_times_pressed: int, saved_data: dict[str, Any]) -> int:
     """Update files when user pressed update button.
 
     :param window: window GUI to display
@@ -478,7 +478,13 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
 
             # Relaunch script, passing temp filename as argument
             python = sys.executable
-            os.execl(python, python, "-m", "screens.main_screen", "--settings", tmp_path)
+            os.execl(
+                python,
+                python,
+                "-m", "screens.main_screen",
+                "--settings", tmp_path,
+                "--saved-data", json.dumps(saved_data),
+            )
     else:
         window["update_message"].update(value=message, text_color="red")
 
@@ -544,7 +550,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     gc.collect()  # Clean up memory
     time.sleep(0.5)  # Give OS time to destroy the window
     json_saved_data = json.dumps(saved_data)
-    subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", json_saved_data])
+    subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", "--saved-data", json_saved_data])
     sys.exit()
 
 
@@ -580,23 +586,30 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        try:
-            if "--settings" in sys.argv:
-                idx = sys.argv.index("--settings")
-                saved_data = {}  # If settings pass passed in not saved data dont pass settings to scoreboard.py
-                if idx + 1 < len(sys.argv):
-                    settings_path = Path(sys.argv[idx + 1])  # Convert to Path
-                    with settings_path.open(encoding="utf-8") as f:
-                        settings_saved = json.load(f)
-                        write_settings_to_py(settings_saved)
-                        logger.info("Settings.py updated from JSON.")
-            else:
-                saved_data = json.loads(sys.argv[1])
-        except json.JSONDecodeError:
-            logger.exception("Invalid JSON argument:")
-            saved_data = {}
-    else:
-        logger.info("No argument passed. Using default data.")
+    saved_data = {}
+    settings_saved = None
+
+    # Parse arguments flexibly
+    args = sys.argv[1:]
+    try:
+        if "--settings" in args:
+            idx = args.index("--settings")
+            if idx + 1 < len(args):
+                settings_path = Path(args[idx + 1])
+                with settings_path.open(encoding="utf-8") as f:
+                    settings_saved = json.load(f)
+                    write_settings_to_py(settings_saved)
+                    logger.info("Settings.py updated from JSON.")
+
+        if "--saved-data" in args:
+            idx = args.index("--saved-data")
+            if idx + 1 < len(args):
+                saved_data = json.loads(args[idx + 1])
+
+    except Exception:
+        logger.exception("Error parsing startup arguments")
         saved_data = {}
+
+    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
     main(saved_data)
+
