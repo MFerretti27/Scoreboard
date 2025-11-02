@@ -231,7 +231,8 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
     if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
         logger.info("Updating program automatically at 4:30 AM")
 
-        _, successful, latest = check_for_update()
+        message, successful, latest = check_for_update()
+        logger.info(message)
         if successful and not latest:
             window.read(timeout=100)
             saved_settings = settings_to_json()
@@ -255,7 +256,7 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
                 os.execl(
                     python,
                     python,
-                    "-m", "screens.main_screen",
+                    "-m", "screens.not_playing_screen",
                     "--settings", tmp_path,
                     "--saved-data", json.dumps(saved_data),
                 )

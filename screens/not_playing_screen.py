@@ -1,6 +1,7 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
 
 import copy
+import importlib
 import json
 import logging
 import sys
@@ -280,25 +281,37 @@ if __name__ == "__main__":
     saved_data = {}
     settings_saved = None
 
-    # Parse arguments flexibly
     args = sys.argv[1:]
     try:
         if "--settings" in args:
             idx = args.index("--settings")
             if idx + 1 < len(args):
                 settings_path = Path(args[idx + 1])
-                with settings_path.open(encoding="utf-8") as f:
-                    settings_saved = json.load(f)
+                if settings_path.exists():
+                    with settings_path.open(encoding="utf-8") as f:
+                        settings_saved = json.load(f)
                     write_settings_to_py(settings_saved)
-                    logger.info("Settings.py updated from JSON.")
+
+                    importlib.reload(settings)
+                    logger.info("Settings.py updated and reloaded from JSON: %s", settings_path)
+                else:
+                    logger.warning("Settings file not found: %s", settings_path)
 
         if "--saved-data" in args:
             idx = args.index("--saved-data")
             if idx + 1 < len(args):
-                saved_data = json.loads(args[idx + 1])
+                raw_data = args[idx + 1]
+                if raw_data.strip():  # Make sure it's not empty
+                    try:
+                        saved_data = json.loads(raw_data)
+                    except json.JSONDecodeError as e:
+                        logger.warning("Invalid JSON for --saved-data: %s", e)
+                        saved_data = {}
+                else:
+                    logger.warning("--saved-data argument provided but empty")
 
-    except Exception:
-        logger.exception("Error parsing startup arguments")
+    except Exception as e:
+        logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
 
     logger.info("Launching main_screen with saved_data=%s", bool(saved_data))

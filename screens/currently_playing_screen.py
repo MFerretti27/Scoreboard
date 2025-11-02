@@ -329,7 +329,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
     while True in teams_currently_playing or first_time:
-        event = window.read(timeout=100)
+        event = window.read(timeout=1000)
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
              delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
@@ -344,7 +344,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
             reset_window_elements(window)
 
             # Check if bottom text fits on screen
-            should_scroll = will_text_fit_on_screen(team_info[display_index]["bottom_info"])
+            should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
 
             # Update the display with the current team information
             update_display(window, team_info, display_index, teams_currently_playing)
