@@ -233,7 +233,7 @@ def main(data_saved: dict) -> None:
 
     while True:
         try:
-            event = window.read(timeout=100)
+            event = window.read(timeout=2000)
 
             # Fetch Data
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
