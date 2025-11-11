@@ -308,7 +308,7 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
     return teams_with_data, team_info, teams_currently_playing, delay_clock, fetch_clock, delay_over, delay_started
 
 
-def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[dict[str, Any]]:
+def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[list[dict[str, Any]], list[str]]:
     """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
