@@ -1,11 +1,13 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
 
 import copy
+import importlib
 import json
 import logging
 import sys
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
@@ -16,6 +18,7 @@ from get_data.get_espn_data import get_data
 from gui_layouts.scoreboard_layout import create_scoreboard_layout
 from helper_functions.internet_connection import is_connected, reconnect
 from helper_functions.logger_config import logger
+from helper_functions.main_menu_helpers import write_settings_to_py
 from helper_functions.scoreboard_helpers import (
     auto_update,
     check_events,
@@ -134,11 +137,12 @@ def get_team_info(window: Sg.Window) -> tuple[list[bool], list[dict[str, Any]], 
         # If Game in Play call function to display data differently
         if currently_playing:
             logger.info(f"{settings.teams[fetch_index][0]} Currently Playing")
-            team_info = team_currently_playing(window, settings.teams)
+            team_info, teams_that_played = team_currently_playing(window, settings.teams)
             fetch_first_time = True # To force data to be fetched again when game ends
             # Remove team from saved data as too not overwrite new data from game with old data
-            if settings.teams[fetch_index][0] in settings.saved_data:
-                del settings.saved_data[settings.teams[fetch_index][0]]
+            for team in teams_that_played:
+                if team in settings.saved_data:
+                    del settings.saved_data[team]
 
         teams_with_data[fetch_index] = data
         # Save data for to display longer than data is available
@@ -229,7 +233,7 @@ def main(data_saved: dict) -> None:
 
     while True:
         try:
-            event = window.read(timeout=100)
+            event = window.read(timeout=2000)
 
             # Fetch Data
             if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or fetch_first_time:
@@ -266,19 +270,50 @@ def main(data_saved: dict) -> None:
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
+            if settings.Auto_Update:
+                auto_update(window, settings.saved_data)  # Check if need to auto update
+
         except Exception as error:
             logger.exception(f"Error: {error}")
             handle_error(window)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        try:
-            saved_data = json.loads(sys.argv[1])
-        except json.JSONDecodeError as e:
-            logger.info("Invalid JSON argument:", e)
-            saved_data = {}
-    else:
-        logger.info("No argument passed. Using default data.")
+    saved_data = {}
+    settings_saved = None
+
+    args = sys.argv[1:]
+    try:
+        if "--settings" in args:
+            idx = args.index("--settings")
+            if idx + 1 < len(args):
+                settings_path = Path(args[idx + 1])
+                if settings_path.exists():
+                    with settings_path.open(encoding="utf-8") as f:
+                        settings_saved = json.load(f)
+                    write_settings_to_py(settings_saved)
+
+                    importlib.reload(settings)
+                    logger.info("Settings.py updated and reloaded from JSON: %s", settings_path)
+                else:
+                    logger.warning("Settings file not found: %s", settings_path)
+
+        if "--saved-data" in args:
+            idx = args.index("--saved-data")
+            if idx + 1 < len(args):
+                raw_data = args[idx + 1]
+                if raw_data.strip():  # Make sure it's not empty
+                    try:
+                        saved_data = json.loads(raw_data)
+                    except json.JSONDecodeError as e:
+                        logger.warning("Invalid JSON for --saved-data: %s", e)
+                        saved_data = {}
+                else:
+                    logger.warning("--saved-data argument provided but empty")
+
+    except Exception as e:
+        logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
+
+    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
     main(saved_data)

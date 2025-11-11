@@ -1,20 +1,26 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 import gc
+import json
+import os
 import platform
 import subprocess
 import sys
+import tempfile
 import time
 import tkinter as tk
+import typing
 from datetime import datetime
 from pathlib import Path
 from tkinter import font as tk_font
+from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 import orjson  # type: ignore[import]
 
 import settings
 from helper_functions.logger_config import logger
-from screens.main_screen import handle_update
+from helper_functions.main_menu_helpers import settings_to_json
+from helper_functions.update import check_for_update, update_program
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -73,7 +79,7 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         time.sleep(0.5)  # Give OS time to destroy the window
         json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
         json_saved_data = orjson.dumps(json_ready_data)
-        subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
     elif "Up" in events[0] and not settings.no_spoiler_mode:
@@ -220,9 +226,37 @@ def maximize_screen(window: Sg.Window) -> None:
         window.Maximize()
 
 
-def auto_update(window: Sg.Window) -> None:
+def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
     """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
     if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
-                # If Auto Update is on update code at 4:30 AM
-                handle_update(window, 1)
-                logger.info("Updating program automatically at 4:30 AM")
+        logger.info("Updating program automatically at 4:30 AM")
+
+        message, successful, latest = check_for_update()
+        logger.info(message)
+        if successful and not latest:
+            window.read(timeout=100)
+            saved_settings = settings_to_json()
+            serializable_settings = {
+                k: v for k, v in saved_settings.items()
+                if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
+            }
+
+            settings_json = json.dumps(serializable_settings, indent=2)
+
+            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+                tmp.write(settings_json)
+                tmp_path = tmp.name
+            _, successful = update_program()
+            if successful:
+                window.read(timeout=5)
+                time.sleep(3)
+
+                # Relaunch script, passing temp filename as argument
+                python = sys.executable
+                os.execl(
+                    python,
+                    python,
+                    "-m", "screens.not_playing_screen",
+                    "--settings", tmp_path,
+                    "--saved-data", json.dumps(saved_data),
+                )

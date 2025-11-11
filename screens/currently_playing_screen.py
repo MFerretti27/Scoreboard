@@ -18,6 +18,7 @@ from helper_functions.scoreboard_helpers import (
 )
 
 saved_data: list[list[dict[str, Any]]] = []  # Store data for delay display
+teams_that_played: list[str] = []
 
 def set_delay_display(team_info: list, teams_with_data: list, teams_currently_playing: list) -> list:
     """Set the display to hide information until delay is over.
@@ -263,6 +264,9 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
         teams_with_data.append(data)
         teams_currently_playing.append(currently_playing)
 
+        if currently_playing and settings.teams[fetch_index][0] not in teams_that_played:
+            teams_that_played.append(settings.teams[fetch_index][0])
+
         if settings.delay:
             # Wait for delay to be over to start displaying data
             if ticks_diff(ticks_ms(), delay_clock) >= delay_timer and delay_started:
@@ -304,7 +308,7 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
     return teams_with_data, team_info, teams_currently_playing, delay_clock, fetch_clock, delay_over, delay_started
 
 
-def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[dict[str, Any]]:
+def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[list[dict[str, Any]], list[str]]:
     """Display only games that are currently playing.
 
     :param window: Window Element that controls GUI
@@ -329,7 +333,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
     while True in teams_currently_playing or first_time:
-        event = window.read(timeout=100)
+        event = window.read(timeout=2000)
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
              delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
@@ -344,7 +348,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
             reset_window_elements(window)
 
             # Check if bottom text fits on screen
-            should_scroll = will_text_fit_on_screen(team_info[display_index]["bottom_info"])
+            should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
 
             # Update the display with the current team information
             update_display(window, team_info, display_index, teams_currently_playing)
@@ -383,4 +387,4 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
 
     logger.info("\nNo Team Currently Playing\n")
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
-    return team_info
+    return team_info, teams_that_played
