@@ -18,6 +18,7 @@ from helper_functions.scoreboard_helpers import (
 )
 
 saved_data: list[list[dict[str, Any]]] = []  # Store data for delay display
+teams_that_played: list[str] = []
 
 def set_delay_display(team_info: list, teams_with_data: list, teams_currently_playing: list) -> list:
     """Set the display to hide information until delay is over.
@@ -263,6 +264,9 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
         teams_with_data.append(data)
         teams_currently_playing.append(currently_playing)
 
+        if currently_playing and settings.teams[fetch_index][0] not in teams_that_played:
+            teams_that_played.append(settings.teams[fetch_index][0])
+
         if settings.delay:
             # Wait for delay to be over to start displaying data
             if ticks_diff(ticks_ms(), delay_clock) >= delay_timer and delay_started:
@@ -383,4 +387,4 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> list[di
 
     logger.info("\nNo Team Currently Playing\n")
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
-    return team_info
+    return team_info, teams_that_played

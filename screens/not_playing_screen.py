@@ -137,11 +137,12 @@ def get_team_info(window: Sg.Window) -> tuple[list[bool], list[dict[str, Any]], 
         # If Game in Play call function to display data differently
         if currently_playing:
             logger.info(f"{settings.teams[fetch_index][0]} Currently Playing")
-            team_info = team_currently_playing(window, settings.teams)
+            team_info, teams_that_played = team_currently_playing(window, settings.teams)
             fetch_first_time = True # To force data to be fetched again when game ends
             # Remove team from saved data as too not overwrite new data from game with old data
-            if settings.teams[fetch_index][0] in settings.saved_data:
-                del settings.saved_data[settings.teams[fetch_index][0]]
+            for team in teams_that_played:
+                if team in settings.saved_data:
+                    del settings.saved_data[team]
 
         teams_with_data[fetch_index] = data
         # Save data for to display longer than data is available
