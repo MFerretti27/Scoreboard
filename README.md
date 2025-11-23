@@ -27,6 +27,7 @@ Screens when no teams are currently playing but have games scheduled: <br />
 Screens when teams are currently playing:<br />
 <img width="175" alt="Screenshot 2025-07-02 at 6 59 21 PM" src="https://github.com/user-attachments/assets/8499ffd5-83f5-4f6c-873d-b66a66535c60" />
 <img width="175" alt="Screenshot 2025-05-23 at 8 25 22 PM" src="https://github.com/user-attachments/assets/2231d76b-d3ad-4962-896f-30167ba365d5" />
+<img width="175" alt="Screenshot 2025-11-23 at 2 05 16 PM" src="https://github.com/user-attachments/assets/a60cf163-a549-4b26-82a2-e6ba7cff9751" />
 
 
 Screen when games are over:<br />
