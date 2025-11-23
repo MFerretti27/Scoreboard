@@ -1,4 +1,4 @@
-"""Use the RapidFuzz library to find the best match for the team name.
+"""Store team names and leagues, with a function to get the league for a given team name.
 
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
@@ -38,10 +38,10 @@ NFL = [
 NHL = [
 "Anaheim Ducks", "Boston Bruins", "Buffalo Sabres", "Calgary Flames", "Carolina Hurricanes", "Chicago Blackhawks",
 "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings", "Edmonton Oilers",
-"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montréal Canadiens", "Nashville Predators",
+"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadiens", "Nashville Predators",
 "New Jersey Devils", "New York Islanders", "New York Rangers", "Ottawa Senators", "Philadelphia Flyers",
 "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken", "St. Louis Blues", "Tampa Bay Lightning",
-"Toronto Maple Leafs", "Utah Hockey Club", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
+"Toronto Maple Leafs", "Utah Mammoth", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
 "Winnipeg Jets",
 ]
 

@@ -1,18 +1,26 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 import gc
+import json
+import os
 import platform
 import subprocess
 import sys
+import tempfile
 import time
 import tkinter as tk
+import typing
+from datetime import datetime
 from pathlib import Path
 from tkinter import font as tk_font
+from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 import orjson  # type: ignore[import]
 
 import settings
 from helper_functions.logger_config import logger
+from helper_functions.main_menu_helpers import settings_to_json
+from helper_functions.update import check_for_update, update_program
 
 
 def will_text_fit_on_screen(text: str) -> bool:
@@ -71,7 +79,7 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         time.sleep(0.5)  # Give OS time to destroy the window
         json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
         json_saved_data = orjson.dumps(json_ready_data)
-        subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
     elif "Up" in events[0] and not settings.no_spoiler_mode:
@@ -156,7 +164,8 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(60, int(63 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(10, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(34, int(36 * scale)))
+    settings.NHL_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
@@ -170,6 +179,7 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
+    logger.info("NHL top txt size: %s", settings.NHL_TOP_INFO_SIZE)
     logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
@@ -190,14 +200,14 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None:
+def scroll(window: Sg.Window, text: str) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
-    :param team_info: The team information dictionary
+    :param text: The text to scroll
     :param display_index: The index of the team to update
     """
-    text = team_info[display_index]["bottom_info"] + "         "
+    text = text + "         "
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
@@ -206,6 +216,7 @@ def scroll(window: Sg.Window, team_info: list[dict], display_index: int) -> None
             check_events(window, event)
         time.sleep(5)
 
+
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
     # Maximize does not work on MacOS, so we use attributes to set fullscreen
@@ -213,3 +224,39 @@ def maximize_screen(window: Sg.Window) -> None:
         window.TKroot.attributes("-fullscreen", True)  # noqa: FBT003
     else:
         window.Maximize()
+
+
+def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
+    """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
+    if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
+        logger.info("Updating program automatically at 4:30 AM")
+
+        message, successful, latest = check_for_update()
+        logger.info(message)
+        if successful and not latest:
+            window.read(timeout=100)
+            saved_settings = settings_to_json()
+            serializable_settings = {
+                k: v for k, v in saved_settings.items()
+                if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
+            }
+
+            settings_json = json.dumps(serializable_settings, indent=2)
+
+            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+                tmp.write(settings_json)
+                tmp_path = tmp.name
+            _, successful = update_program()
+            if successful:
+                window.read(timeout=5)
+                time.sleep(3)
+
+                # Relaunch script, passing temp filename as argument
+                python = sys.executable
+                os.execl(
+                    python,
+                    python,
+                    "-m", "screens.not_playing_screen",
+                    "--settings", tmp_path,
+                    "--saved-data", json.dumps(saved_data),
+                )

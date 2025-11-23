@@ -11,6 +11,7 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 from helper_functions.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
+from .get_team_league import MLB_AL_EAST, MLB_AL_WEST, MLB_NL_EAST, MLB_NL_WEST
 
 # NBA only has data for one day so store if it was a championship game to display for longer
 was_finals_game: list[bool | str] = [False, ""]
@@ -51,7 +52,7 @@ def get_nba_game_type(team_name: str) -> str:
         was_finals_game[0] = "NBA Finals" in game_type
         was_finals_game[1] = team_name if was_finals_game[0] else ""
 
-    except (KeyError, IndexError):
+    except Exception:
         logger.exception("Error getting NBA game type")
         if was_finals_game[0] and was_finals_game[1] == team_name:
             return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
@@ -76,13 +77,13 @@ def get_mlb_game_type(team_name: str) -> str:
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
         game_type = games[0].get("game_type")
-        if game_type == "WS":
+        if game_type == "W":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
-        if game_type == "ALCS":
+        if game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
             return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
-        if game_type == "NLCS":
+        if game_type == "L" and team_name in (MLB_NL_EAST + MLB_NL_WEST):
             return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
-        if game_type == "P":
+        if game_type in ["F", "D"]:
             return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
 
     except Exception:
@@ -104,6 +105,9 @@ def get_nhl_game_type(team_name: str) -> str:
         resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
         res = resp.json()
 
+        if res["seasonSeries"][0]["gameType"] == 2:
+            return ""
+
         away_team_abbr = res["seasonSeries"][0]["awayTeam"]["abbrev"]
         home_team_abbr = res["seasonSeries"][0]["homeTeam"]["abbrev"]
 
@@ -119,7 +123,7 @@ def get_nhl_game_type(team_name: str) -> str:
         year = now.year
         month = now.month
 
-        if month >= 9:  # Season starts in October
+        if month >= 10:  # Season starts in October
             start_year = year
             end_year = year + 1
         else:

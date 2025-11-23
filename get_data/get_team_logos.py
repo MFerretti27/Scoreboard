@@ -79,7 +79,7 @@ def resize_image(image_path: str | Path, directory: str | Path, file_name: str) 
 
     # Resize and save the new image
     img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    new_path_png = (Path.cwd() / directory / file_name).with_suffix(".png")
+    new_path_png = Path.cwd() / directory / f"{file_name}.png"
     img_resized.save(new_path_png)
 
 
@@ -120,8 +120,7 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
                 response = requests.get(logo_url, stream=True, timeout=5)
                 with Path(img_path_png).open("wb") as file:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        file.write(chunk)
+                    file.writelines(response.iter_content(chunk_size=1024))
 
                 # Open, resize, and save the image with PIL
                 with Image.open(img_path_png):
