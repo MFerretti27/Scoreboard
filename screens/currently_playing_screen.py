@@ -75,17 +75,17 @@ def display_nfl_info(window: sg.Window, team_info: dict, key: str, value: str) -
     elif key == "away_timeouts":
         window["away_timeouts"].update(value=value, text_color="yellow")
 
-    if team_info["home_possession"] and key == "home_score":
+    if team_info.get("home_possession", False) and key == "home_score":
         window["home_score"].update(value=value, font=(settings.FONT,
                                                         settings.SCORE_TXT_SIZE, "underline"))
-    elif team_info["away_possession"] and key == "away_score":
+    elif team_info.get("away_possession", False) and key == "away_score":
         window["away_score"].update(value=value, font=(settings.FONT,
                                                         settings.SCORE_TXT_SIZE, "underline"))
-    if team_info["home_redzone"] and key == "home_score":
+    if team_info.get("home_redzone", False) and key == "home_score":
         window["home_score"].update(value=value,
                                     font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
                                     text_color="red")
-    elif team_info["away_redzone"] and key == "away_score":
+    elif team_info.get("away_redzone", False) and key == "away_score":
         window["away_score"].update(value=value,
                                     font=(settings.FONT, settings.SCORE_TXT_SIZE, "underline"),
                                     text_color="red")
