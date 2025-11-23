@@ -37,7 +37,7 @@ Screen when games are over:<br />
 <img width="175" alt="Screenshot 2025-10-20 at 10 45 35 PM" src="https://github.com/user-attachments/assets/699de253-b7b9-429e-86d0-aa788003bc9f" />
 
 
-If game is in a playoffs/champianship game a image will apear showing its not the regular seaseon.<br />
+If game is in a playoffs/championship game a image will appear showing its not the regular season.<br />
 Also if a team in the Bonus their score will go orange, in a powerplay it will go blue, or in the redzone it will go read.<br />
 For football a the team who has possession of the ball will be underlined.<br />
 <img width="175" alt="Screenshot 2025-06-09 at 10 18 15 PM" src="https://github.com/user-attachments/assets/a9e6693d-10ec-4f2c-943c-5fe9dca71752" />
@@ -68,13 +68,13 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 
 
 ## How Data is Collected
-- The script uses multiple API's for each sport to increase stability and information avaliable 
+- The script uses multiple API's for each sport to increase stability and information available 
 -	Primary source: ESPN API.
 -	Secondary Source: MLBStats-API (baseball), nba_api (basketball), nhlapi (hockey).
 -	It always tries to grab data from ESPN API first and will grab from both API's when a team is currently playing a game
     -	If only primary source fails:
-        -   Tries a secondary API based on the sport. All data but Spread/OverUnder will still be displayed so its not very noticable.
-        -   A small message will appear in bottom right saying ESPN API failed (Only will be displayed for specfic team that it failed for).
+        -   Tries a secondary API based on the sport. All data but Spread/OverUnder will still be displayed so its not very noticeable.
+        -   A small message will appear in bottom right saying ESPN API failed (Only will be displayed for specific team that it failed for).
     -   If only secondary sources fail:
         -   Displays basic info from ESPN.
         -   Some details (last pitch thrown, bonus status, shots on goal, play by play, etc) might be missing but most data will still be displayed.
@@ -110,7 +110,7 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 
 ## Scoreboard Screen
 -   Home team will always display on the right.
--	Scoreboard will prioritize live games currently playing meaning if a game is finished/scheduled for later it won't display until there are no live games for slected teams (Can be changed in settings).
+-	Scoreboard will prioritize live games currently playing meaning if a game is finished/scheduled for later it won't display until there are no live games for selected teams (Can be changed in settings).
 -	Scoreboard will always display team logos, score, game time/game status and teams names.
 -	Generic elements below for all teams can be displayed or not displayed based of settings:
     -	Team season record.
@@ -119,7 +119,7 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	Date of when game finished.
     -	Series information for sports play a series of games (MLB, NBA, NHL).
     -	A broadcast network logo that game is on, only if its national broadcast not local one.
-    -   A image showing that the current game is a playoff/champainship game.
+    -   A image showing that the current game is a playoff/championship game.
 -	Sports specific elements can be displayed or not displayed based off settings:
     -	MLB
           -	Last pitch thrown.
