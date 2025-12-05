@@ -89,31 +89,23 @@ def create_scoreboard_layout() -> list:
     ]
 
     under_score_image = [
-        [Sg.VPush()],
         [Sg.Image("", key="under_score_image")],
-        [Sg.VPush()],
     ]
 
     home_player_stats = [
-        [Sg.Push(),
-         Sg.Multiline("", key="home_player_stats",
+        [Sg.Multiline("", key="home_player_stats",
                       font=(settings.FONT, 12), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(30, 20), text_color="white"),
-         Sg.Push()],
-        [Sg.VPush()],
+                      size=(30, 20), text_color="white")],
     ]
 
     away_player_stats = [
-        [Sg.Push(),
-         Sg.Multiline("", key="away_player_stats",
+        [Sg.Multiline("", key="away_player_stats",
                       font=(settings.FONT, 12), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(30, 30), text_color="white"),
-         Sg.Push()],
-        [Sg.VPush()],
+                      size=(30, 30), text_color="white")],
     ]
 
     # Info layouts
@@ -153,44 +145,29 @@ def create_scoreboard_layout() -> list:
 
     middle_swap_frame = Sg.Frame(
         "",
-        [[Sg.VPush()],
-            # under-score image (visible first)
-            [Sg.Push(),
-                Sg.Frame("",
-                    under_score_image,
-                    key="under_score_image_content",
-                    visible=True,
-                    expand_x=True,
-                    expand_y=True,
-                    element_justification="center",
-                ),
-            Sg.Push(),
-            ],
-            [Sg.VPush()],
-
-            # player stats (hidden)
-            [
-                Sg.Column(
+        [[
+            Sg.Column(
+                [[Sg.Image("", key="under_score_image")]],
+                key="under_score_image_column",
+                element_justification="center",
+                expand_x=True,
+                expand_y=True,
+                visible=True,
+            ),
+            Sg.Column(
+                [
                     [
-                        [
-                            Sg.Frame("", away_player_stats,
-                                    border_width=0,
-                                    size=(column_width/2, fixed_middle_height),
-                                    element_justification="center"),
-                            Sg.Frame("", home_player_stats,
-                                    border_width=0,
-                                    size=(column_width/2, fixed_middle_height),
-                                    element_justification="center"),
-                        ],
-                    ],
-                    key="player_stats_content",
-                    element_justification="center",
-                    visible=False,
-                    expand_x=True,
-                    expand_y=True,
-                ),
-            ],
-        ],
+                        Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True, element_justification="center"),
+                        Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True, element_justification="center"),
+                    ]
+                ],
+                key="player_stats_content",
+                element_justification="center",
+                expand_x=True,
+                expand_y=True,
+                visible=False,
+            ),
+        ]],
         border_width=0,
         element_justification="center",
         size=(column_width, fixed_middle_height),

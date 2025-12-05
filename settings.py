@@ -7,7 +7,10 @@ from typing import Any
 
 teams = [
     ["Detroit Lions"],
+    ["Detroit Tigers"],
     ["Pittsburgh Steelers"],
+    ["Detroit Red Wings"],
+    ["Detroit Pistons"],
 ]
 
 
