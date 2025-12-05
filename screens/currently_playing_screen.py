@@ -244,13 +244,20 @@ def find_next_team_to_display(teams: list[list], teams_currently_playing: list[b
 def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool, delay_over: bool) -> tuple:
     """Fetch and update display data for teams.
 
-    :param display_index: Index of the team to display
-    :param delay_started: List indicating if delays have started for each team
-    :param delay_clock: List of dictionaries containing delay clocks for each team
-    :param fetch_clock: List of dictionaries containing fetch clocks for each team
-    :param delay_over: List indicating if delays are over for each team
+    :param delay_clock: current delay clock (ms)
+    :param fetch_clock: current fetch clock (ms)
+    :param delay_started: bool indicating if global delay has started
+    :param delay_over: bool indicating if global delay is over
 
-    :return: None
+    :return: tuple (
+        teams_with_data,
+        team_info,
+        teams_currently_playing,
+        delay_clock,
+        fetch_clock,
+        delay_over,
+        delay_started,
+    )
     """
     teams_with_data = []
     team_info = []
@@ -291,7 +298,12 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
         saved_data.append(copy.deepcopy(last_info))  # Save last_info
 
         if delay_over:  # If delay over start displaying delayed info in order
-            team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
+            if saved_data:
+                team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
+            else:
+                # Defensive: saved_data empty but delay expired. Fall back to last_info
+                logger.warning("delay_over is True but saved_data is empty — falling back to last_info")
+                team_info = copy.deepcopy(last_info)
 
             # Ensure currently_playing is true until delay catches up
             for index, team_info_temp in enumerate(team_info):
@@ -299,6 +311,13 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
                     not any(keyword in str(team_info_temp["bottom_info"]).lower()
                         for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
                     teams_currently_playing[index] = True
+
+            # if delay is over, but bottom info has am/pm, set currently playing to false
+            for index, team_info_temp in enumerate(team_info):
+                if ("bottom_info" in team_info_temp and teams_with_data[index] and
+                    any(keyword in str(team_info_temp["bottom_info"]).lower()
+                        for keyword in ["am", "pm"])):
+                    teams_currently_playing[index] = False
         else:
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
             team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing)
@@ -378,7 +397,8 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
             settings.stay_on_team = False
 
         if temp_delay is not settings.delay:
-            delay_clock = 0
+            # Reset delay clock safely to current tick to avoid large tick diffs
+            delay_clock = ticks_ms()
             delay_over = False
 
         # If button was pressed but team is already set to change, change it back

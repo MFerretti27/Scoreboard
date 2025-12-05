@@ -25,8 +25,8 @@ setting_keys_booleans = [
     "display_nfl_timeouts", "display_nfl_redzone",
 
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
-    "display_date_ended", "prioritize_playing_team", "always_get_logos", "Auto_Update",
-    "display_playoff_championship_image",
+    "display_date_ended", "prioritize_playing_team", "always_get_logos", "auto_update",
+    "display_playoff_championship_image", "display_player_stats",
 ]
 
 setting_keys_integers = ["LIVE_DATA_DELAY", "DISPLAY_NOT_PLAYING_TIMER",
@@ -139,6 +139,8 @@ def update_teams(selected_teams: list, league: str, specific_remove: list | None
 
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = list(dict.fromkeys(untouched_teams + selected_teams))  # Remove duplicates
+
+    new_teams = double_check_teams(new_teams)  # Ensure all teams are valid
 
     # If need to remove specific team passed in such as team name no longer exists
     if specific_remove:
@@ -396,12 +398,20 @@ def format_teams_block(teams: list[list[str]]) -> str:
     return f"teams = {teams!s}"
 
 
-def double_check_teams() -> None:
+def double_check_teams(new_teams=None) -> None:
     """Ensure all teams in settings.teams are valid teams."""
+    if new_teams is not None:
+        for team in new_teams:
+            if team not in (MLB + NBA + NFL + NHL):
+                new_teams.remove(team)
+                logger.info(f"Removed '{team}' from teams as its not a valid team.")
+        return new_teams
     for team in settings.teams:
         if team[0] not in (MLB + NBA + NFL + NHL):
             settings.teams.remove(team)
-            logger.info(f"Removed {team} from teams as its not a valid team.")
+            logger.info(f"Removed '{team}' from teams as its not a valid team.")
+    return None
+
 
 def remove_accents(team_names: str | list) -> str | list:
     """Normalize a string by removing accent marks (é → e, ñ → n, etc.).

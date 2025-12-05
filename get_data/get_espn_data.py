@@ -16,6 +16,7 @@ from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
 from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
+from .get_player_stats import get_player_stats
 from .get_series_data import get_series
 
 doubleheader = 0
@@ -59,8 +60,8 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             return team_info, False, False
 
         # Get Score
-        team_info["home_score"] = competition["competitors"][0]["score"]
-        team_info["away_score"] = competition["competitors"][1]["score"]
+        team_info["home_score"] = competition["competitors"][0].get("score", "0")
+        team_info["away_score"] = competition["competitors"][1].get("score", "0")
 
         if settings.display_records:
             team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
@@ -418,6 +419,12 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
             for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):
         currently_playing = False
         team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
+
+        if settings.display_player_stats:
+            home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
+            team_info["home_player_stats"] = home_player_stats
+            team_info["away_player_stats"] = away_player_stats
+            team_info.__delitem__("under_score_image")  # Remove under score image if displaying player stats
 
     # Check if Game hasn't been played yet
     elif not currently_playing:

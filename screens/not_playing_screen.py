@@ -1,6 +1,7 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
 
 import copy
+from curses import window
 import importlib
 import json
 import logging
@@ -76,6 +77,12 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
 
     return info, teams_with_data
 
+def center_multiline(window, key):
+    """Center all text inside a PySimpleGUI Multiline element."""
+    tk_text = window[key].Widget  # underlying tkinter Text widget
+    tk_text.tag_configure("center", justify="center")
+    tk_text.tag_add("center", "1.0", "end-1c")
+
 def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_index: int) -> None:
     """Update the display for a specific team.
 
@@ -89,8 +96,19 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
     reset_window_elements(window)
 
     for key, value in team_info.items():
-        if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
+        if "home_logo" in key or "away_logo" in key:
             window[key].update(filename=value)
+
+        elif key == "under_score_image":
+            window[key].update(filename=value)
+            window["under_score_image_content"].update(visible=True)
+            window["player_stats_content"].update(visible=False)
+
+        elif key in ["home_player_stats", "away_player_stats"]:
+            window[key].update(value=value, visible=True)
+            window["under_score_image_content"].update(visible=False)
+            window["player_stats_content"].update(visible=True)
+
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         else:
@@ -270,7 +288,7 @@ def main(data_saved: dict) -> None:
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
-            if settings.Auto_Update:
+            if settings.auto_update:
                 auto_update(window, settings.saved_data)  # Check if need to auto update
 
         except Exception as error:

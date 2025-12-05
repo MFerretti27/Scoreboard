@@ -7,10 +7,7 @@ from typing import Any
 
 teams = [
     ["Detroit Lions"],
-    ["Detroit Tigers"],
     ["Pittsburgh Steelers"],
-    ["Detroit Red Wings"],
-    ["Detroit Pistons"],
 ]
 
 
@@ -39,11 +36,11 @@ SIGNATURE_SIZE = 8
 #########################################
 
 # Delay in getting live data
-LIVE_DATA_DELAY = 0
+LIVE_DATA_DELAY = 120
 
 FETCH_DATA_NOT_PLAYING_TIMER = 180
 
-DISPLAY_NOT_PLAYING_TIMER = 25
+DISPLAY_NOT_PLAYING_TIMER = 10
 DISPLAY_PLAYING_TIMER = 25
 
 HOW_LONG_TO_DISPLAY_TEAM = 7
@@ -91,8 +88,9 @@ display_odds = True
 display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
-Auto_Update = True
+auto_update = False
 display_playoff_championship_image = True
+display_player_stats = True
 
 ############################################
 # Variables to to keep track of key presses

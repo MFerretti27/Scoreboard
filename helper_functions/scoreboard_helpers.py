@@ -61,6 +61,8 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["away_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
     window["above_score_txt"].update(value="", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
                                      text_color="white")
+    window["home_player_stats"].update(value="", text_color="white")
+    window["away_player_stats"].update(value="", text_color="white")
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
                                text_color="white")
@@ -227,8 +229,8 @@ def maximize_screen(window: Sg.Window) -> None:
 
 
 def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
-    """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
-    if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
+    """Automatically update the program at 4:30 AM if auto_update is enabled."""
+    if settings.auto_update and datetime.now().hour == 4 and datetime.now().minute == 30:
         logger.info("Updating program automatically at 4:30 AM")
 
         message, successful, latest = check_for_update()

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from nba_api.live.nba.endpoints import boxscore, playbyplay, scoreboard  # type: ignore[import]
+from nba_api.live.nba.endpoints import boxscore, odds, playbyplay, scoreboard  # type: ignore[import]
 from nba_api.stats.endpoints import teaminfocommon  # type: ignore[import]
 
 import settings
@@ -102,6 +102,11 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
 
                 # Re-structure clock
                 team_info["bottom_info"] = restructure_clock(game)
+
+            elif settings.display_odds:  # Game has not started yet, get odds if enabled
+                home_team_abbr = game.get("homeTeam", {}).get("teamTricode", "")
+                away_team_abbr = game.get("awayTeam", {}).get("teamTricode", "")
+                team_info["top_info"] = get_nba_odds(game["gameId"], home_team_abbr, away_team_abbr)
 
             if get_game_type("NBA", team_name) != "":
                 # If game type is not empty, then its the Finals, display it
@@ -229,3 +234,73 @@ def get_play_by_play(game_id: int) -> str:
     last_action = actions[-1]
 
     return " " + str(last_action["description"])
+
+
+def get_nba_odds(game_id: int, home_abbr: str, away_abbr: str) -> str:
+    """Get NBA odds information.
+
+    :param game_id: The game ID to get odds for
+    :param home_abbr: The home team abbreviation
+    :param away_abbr: The away team abbreviation
+    :param team_info: The team information dictionary
+
+    :return: string containing betting lines
+    """
+    games_list = odds.Odds().get_dict()["games"]
+    away_spread = None
+    home_spread = None
+    away_moneyline = None
+    home_moneyline = None
+    betting_lines = ""
+
+    for game in games_list:  # wherever your list of games is stored
+        if game.get("gameId") != game_id:
+            continue  # skip all other games
+
+        # Loop through markets
+        for market in game.get("markets", []):
+            if market.get("name") == "spread":
+                for book in market.get("books", []):
+                    if book.get("name") == "FanDuel":  # pick your book
+                        for outcome in book.get("outcomes", []):
+                            if outcome["type"] == "home":
+                                home_spread = float(outcome["spread"])
+                            elif outcome["type"] == "away":
+                                away_spread = float(outcome["spread"])
+
+                if home_spread is not None and away_spread is not None:
+                    if home_spread < away_spread:
+                        betting_lines = f"Spread: {home_abbr} {home_spread} \t "
+                    else:
+                        betting_lines = f"Spread: {away_abbr} {away_spread} \t "
+                else:
+                    betting_lines = "Spread: N/A \t "
+
+            elif market.get("name") == "2way":
+                home_decimal = None
+                away_decimal = None
+
+                for book in market.get("books", []):
+                    if book.get("name") == "FanDuel":  # pick your book
+                        for outcome in book.get("outcomes", []):
+                            if outcome["type"] == "home":
+                                home_decimal = float(outcome["odds"])
+                            elif outcome["type"] == "away":
+                                away_decimal = float(outcome["odds"])
+
+                if home_decimal is not None and away_decimal is not None:
+                    # Convert to American lines
+                    home_moneyline = f"+{int((home_decimal - 1) * 100)}"
+                    away_moneyline = f"-{int((1 / away_decimal - 1) * 100)}"
+
+                    if home_decimal > away_decimal:
+                        betting_lines += f"MoneyLine: {home_abbr} {home_moneyline}".replace("--", "-")
+                    else:
+                        betting_lines += f"MoneyLine: {away_abbr} {away_moneyline}".replace("--", "-")
+
+                else:
+                    betting_lines += "MoneyLine: N/A"
+
+        break  # stop looping once the game is found
+
+    return betting_lines
