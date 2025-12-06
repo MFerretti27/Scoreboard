@@ -88,10 +88,6 @@ def create_scoreboard_layout() -> list:
         ],
     ]
 
-    under_score_image = [
-        [Sg.Image("", key="under_score_image")],
-    ]
-
     home_player_stats = [
         [Sg.Multiline("", key="home_player_stats",
                       font=(settings.FONT, 12), justification="center",
@@ -157,9 +153,11 @@ def create_scoreboard_layout() -> list:
             Sg.Column(
                 [
                     [
-                        Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True, element_justification="center"),
-                        Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True, element_justification="center"),
-                    ]
+                        Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True,
+                                  element_justification="center"),
+                        Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True,
+                                  element_justification="center"),
+                    ],
                 ],
                 key="player_stats_content",
                 element_justification="center",

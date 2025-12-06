@@ -73,7 +73,8 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
 
-        home_player_stats += f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  BLK: {blk},  STL: {stl}\n\n"
+        home_player_stats += (f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  "
+                               f"BLK: {blk},  STL: {stl}\n\n")
 
     for p in get_starting_five(away_players):
         stats = p["statistics"]
@@ -87,7 +88,8 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
 
-        away_player_stats += f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  BLK: {blk},  STL: {stl}\n\n"
+        away_player_stats += (f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  "
+                               f"BLK: {blk},  STL: {stl}\n\n")
 
     return home_player_stats, away_player_stats
 
