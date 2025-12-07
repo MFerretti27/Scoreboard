@@ -173,6 +173,8 @@ def resize_text() -> None:
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(40, int(60 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(8, int(8 * scale)))
+    settings.PLAYER_STAT_SIZE = min(18, max(10, int(14 * scale)))
+    settings.PLAYER_STAT_COLUMN = min(50, max(30, int(14 * scale)))
 
     logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
     logger.info("Info txt size: %s", settings.INFO_TXT_SIZE)
@@ -186,7 +188,9 @@ def resize_text() -> None:
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
-    logger.info("Signature txt size: %s\n", settings.SIGNATURE_SIZE)
+    logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
+    logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
+    logger.info("Player Stat column size: %s\n", settings.PLAYER_STAT_COLUMN)
 
 
 
