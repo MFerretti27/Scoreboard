@@ -295,28 +295,44 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
     if settings.delay:
         last_info = copy.deepcopy(delay_info)
         delay_info.clear()
-        saved_data.append(copy.deepcopy(last_info))  # Save last_info
+        # Only append to saved_data if last_info is not blank for key fields
+        def is_valid(info_list):
+            for team in info_list:
+                if not team:
+                    return False
+                # Check for at least one non-blank key
+                if (team.get("home_score") not in [None, "", "0"] or
+                    team.get("away_score") not in [None, "", "0"] or
+                    team.get("top_info") not in [None, ""] or
+                    team.get("bottom_info") not in [None, ""]):
+                    return True
+            return False
 
-        if delay_over:  # If delay over start displaying delayed info in order
+        if is_valid(last_info):
+            saved_data.append(copy.deepcopy(last_info))  # Save only if valid
+        else:
+            logger.warning("Skipped saving blank or invalid delay info snapshot.")
+
+        if delay_over:
+            # If delay over start displaying delayed info in order
             if saved_data:
                 team_info = copy.deepcopy(saved_data.pop(0))  # get the first thing saved and remove it
             else:
-                # Defensive: saved_data empty but delay expired. Fall back to last_info
-                logger.warning("delay_over is True but saved_data is empty — falling back to last_info")
+                logger.warning("saved_data is empty after delay; falling back to last valid info.")
                 team_info = copy.deepcopy(last_info)
 
             # Ensure currently_playing is true until delay catches up
             for index, team_info_temp in enumerate(team_info):
                 if ("bottom_info" in team_info_temp and teams_with_data[index] and
                     not any(keyword in str(team_info_temp["bottom_info"]).lower()
-                        for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
+                        for keyword in ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm"])):
                     teams_currently_playing[index] = True
 
             # if delay is over, but bottom info has am/pm, set currently playing to false
             for index, team_info_temp in enumerate(team_info):
                 if ("bottom_info" in team_info_temp and teams_with_data[index] and
                     any(keyword in str(team_info_temp["bottom_info"]).lower()
-                        for keyword in ["am", "pm"])):
+                        for keyword in [ " am", " pm "])):
                     teams_currently_playing[index] = False
         else:
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
