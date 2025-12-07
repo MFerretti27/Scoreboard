@@ -185,7 +185,7 @@ def create_scoreboard_layout() -> list:
                 ),
             ],
         ],
-        border_width=1,
+        border_width=0,
         element_justification="center",
         size=(column_width, fixed_middle_height),
     )
@@ -207,10 +207,10 @@ def create_scoreboard_layout() -> list:
 
             # Middle column
             Sg.Column([
-                [Sg.Frame("", above_score_layout, border_width=1,
+                [Sg.Frame("", above_score_layout, border_width=0,
                           size=(column_width, int(column_height * 1 / 4)),
                           element_justification="center")],
-                [Sg.Frame("", score_layout, border_width=1,
+                [Sg.Frame("", score_layout, border_width=0,
                           size=(column_width, int(column_height * 3.1 / 16)),
                           element_justification="center")],
                 [middle_swap_frame],
