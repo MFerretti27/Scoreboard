@@ -218,10 +218,10 @@ def create_scoreboard_layout() -> list:
 
             # Home column
             Sg.Column([
-                [Sg.Frame("", home_logo_layout, border_width=1,
+                [Sg.Frame("", home_logo_layout, border_width=0,
                           size=(column_width, home_logo_height),
                           element_justification="center")],
-                [Sg.Frame("", home_record_layout, border_width=1,
+                [Sg.Frame("", home_record_layout, border_width=0,
                           size=(column_width, home_record_height),
                           element_justification="center")],
             ], pad=(0, 0)),
