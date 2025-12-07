@@ -174,6 +174,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
     for key, value in team_info[display_index].items():
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
             window[key].update(filename=value)
+            window["timeouts_content"].update(visible=True)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         elif type(value) is str or type(value) is int:
@@ -301,8 +302,8 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
                 if not team:
                     return False
                 # Check for at least one non-blank key
-                if (team.get("home_score") not in [None, "", "0"] or
-                    team.get("away_score") not in [None, "", "0"] or
+                if (team.get("home_score") not in [None, ""] or
+                    team.get("away_score") not in [None, ""] or
                     team.get("top_info") not in [None, ""] or
                     team.get("bottom_info") not in [None, ""]):
                     return True

@@ -73,7 +73,7 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
 
-        home_player_stats += (f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  "
+        home_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
                                f"BLK: {blk},  STL: {stl}\n\n")
 
     for p in get_starting_five(away_players):
@@ -88,7 +88,7 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
 
-        away_player_stats += (f"{p['position']} - {p['name'].split()[-1]}\nTS: {shooting_pct}%,  "
+        away_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
                                f"BLK: {blk},  STL: {stl}\n\n")
 
     return home_player_stats, away_player_stats
@@ -139,7 +139,7 @@ def get_nhl_player_stats(team_name: str) -> tuple[str, str]:
             defense_sorted = sorted(defense, key=toi_seconds, reverse=True)[:2]
             starters = forward_starters + defense_sorted
             for p in starters:
-                name = p["name"]["default"].split()[-1]
+                name = " ".join(p["name"]["default"].split()[1:])
                 pos = p.get("position", "")
                 goals = p.get("goals", 0)
                 assists = p.get("assists", 0)
@@ -185,7 +185,7 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
             player = team_players.get(pid_str)
             if not player:
                 continue
-            name = player["person"]["fullName"].split()[1]
+            name = " ".join(player["person"]["fullName"].split()[1:])
             position = player.get("position", {}).get("abbreviation", "-")
             if position == "C":
                 position = position.replace("C", "C ") # Make catcher position two characters for alignment
@@ -274,16 +274,16 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
 
             competition = res["events"][index]["competitions"][0]
             qb = competition.get("leaders", {})[0]["leaders"][0]["displayValue"]
-            qb_name = competition.get("leaders", {})[0]["leaders"][0]["athlete"]["shortName"]
+            qb_name = " ".join(competition.get("leaders", {})[0]["leaders"][0]["athlete"]["shortName"].split()[1:])
 
             rush = competition.get("leaders", {})[1]["leaders"][0]["displayValue"]
-            rush_name = competition.get("leaders", {})[1]["leaders"][0]["athlete"]["shortName"]
+            rush_name = " ".join(competition.get("leaders", {})[1]["leaders"][0]["athlete"]["shortName"].split()[1:])
 
             receiving = competition.get("leaders", {})[2]["leaders"][0]["displayValue"]
-            receiving_name = competition.get("leaders", {})[2]["leaders"][0]["athlete"]["shortName"]
+            receiving_name = " ".join(competition.get("leaders", {})[2]["leaders"][0]["athlete"]["shortName"].split()[1:])
 
-            home_player_stats = f"QB: {qb_name} - {qb}\n\nRushing: {rush_name} - {rush}"
-            away_player_stats = f"Receiving: {receiving_name} - {receiving}"
+            home_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
+            away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
 
             index += 1
 
