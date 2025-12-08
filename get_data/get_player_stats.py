@@ -226,7 +226,7 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
                     "Flyout": "FO",
                     "Lineout": "LO",
                     "Pop Out": "PO",
-                    "Bunt Roundout": "BGO",
+                    "Bunt Groundout": "BGO",
                     "Bunt Pop Out": "BPO",
                     "Foul Out": "FO",
                     "Fielders Choice": "FC",
