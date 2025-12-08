@@ -242,7 +242,6 @@ def get_nba_odds(game_id: int, home_abbr: str, away_abbr: str) -> str:
     :param game_id: The game ID to get odds for
     :param home_abbr: The home team abbreviation
     :param away_abbr: The away team abbreviation
-    :param team_info: The team information dictionary
 
     :return: string containing betting lines
     """
