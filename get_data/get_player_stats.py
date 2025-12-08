@@ -240,15 +240,13 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
                 }
                 # For each play, print only the event code, numbered
                 pa_events = []
-                short = ""
+                pa_events = []
                 for p in plays:
                     if "matchup" in p and "batter" in p["matchup"] and p["matchup"]["batter"]["id"] == pid:
                         event = p["result"].get("event", "")
-                        short = event_map.get(event, event.upper() if event else event)
-                        pa_events.append(short)
-                for event in pa_events:
-                    short += " " + event
-
+                        event_code = event_map.get(event, event.upper() if event else event)
+                        pa_events.append(event_code)
+                short = " ".join(pa_events)
                 if team_type == "home":
                     home_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
                 else:
