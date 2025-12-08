@@ -280,7 +280,8 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
             rush_name = " ".join(competition.get("leaders", {})[1]["leaders"][0]["athlete"]["shortName"].split()[1:])
 
             receiving = competition.get("leaders", {})[2]["leaders"][0]["displayValue"]
-            receiving_name = " ".join(competition.get("leaders", {})[2]["leaders"][0]["athlete"]["shortName"].split()[1:])
+            receiving_name = (" ".join(competition.get("leaders", {})
+                                       [2]["leaders"][0]["athlete"]["shortName"].split()[1:]))
 
             home_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
             away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
