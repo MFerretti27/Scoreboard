@@ -3,7 +3,7 @@ import ast
 import re
 import unicodedata
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import settings
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
@@ -398,19 +398,19 @@ def format_teams_block(teams: list[list[str]]) -> str:
     return f"teams = {teams!s}"
 
 
-def double_check_teams(new_teams=None) -> None:
+def double_check_teams(new_teams: Optional[list[Any]] = None) -> list[Any]:
     """Ensure all teams in settings.teams are valid teams."""
     if new_teams is not None:
-        for team in new_teams:
+        for team in new_teams[:]:
             if team not in (MLB + NBA + NFL + NHL):
                 new_teams.remove(team)
                 logger.info(f"Removed '{team}' from teams as its not a valid team.")
         return new_teams
-    for team in settings.teams:
+    for team in settings.teams[:]:
         if team[0] not in (MLB + NBA + NFL + NHL):
             settings.teams.remove(team)
             logger.info(f"Removed '{team}' from teams as its not a valid team.")
-    return None
+    return settings.teams
 
 
 def remove_accents(team_names: str | list) -> str | list:
