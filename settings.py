@@ -41,11 +41,11 @@ PLAYER_STAT_COLUMN = 30
 #########################################
 
 # Delay in getting live data
-LIVE_DATA_DELAY = 120
+LIVE_DATA_DELAY = 0
 
 FETCH_DATA_NOT_PLAYING_TIMER = 180
 
-DISPLAY_NOT_PLAYING_TIMER = 10
+DISPLAY_NOT_PLAYING_TIMER = 25
 DISPLAY_PLAYING_TIMER = 25
 
 HOW_LONG_TO_DISPLAY_TEAM = 7
@@ -93,7 +93,7 @@ display_odds = True
 display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
-auto_update = False
+auto_update = True
 display_playoff_championship_image = True
 display_player_stats = True
 
