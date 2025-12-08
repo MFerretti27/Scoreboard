@@ -248,6 +248,7 @@ def get_nhl_odds(home_team_abbr: str, away_team_abbr: str, team: str) -> str:
     """
     home_spread = None
     away_spread = None
+    over_under = ""
 
     resp = requests.get("https://api-web.nhle.com/v1/partner-game/US/now", timeout=5)
     res = resp.json()
