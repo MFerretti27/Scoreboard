@@ -424,7 +424,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
             home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
             team_info["home_player_stats"] = home_player_stats
             team_info["away_player_stats"] = away_player_stats
-            team_info.__delitem__("under_score_image")  # Remove under score image if displaying player stats
+            team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
 
     # Check if Game hasn't been played yet
     elif not currently_playing:
