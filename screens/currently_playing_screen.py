@@ -326,14 +326,14 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
             for index, team_info_temp in enumerate(team_info):
                 if ("bottom_info" in team_info_temp and teams_with_data[index] and
                     not any(keyword in str(team_info_temp["bottom_info"]).lower()
-                        for keyword in ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm"])):
+                        for keyword in ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm "])):
                     teams_currently_playing[index] = True
 
             # if delay is over, but bottom info has am/pm, set currently playing to false
             for index, team_info_temp in enumerate(team_info):
                 if ("bottom_info" in team_info_temp and teams_with_data[index] and
                     any(keyword in str(team_info_temp["bottom_info"]).lower()
-                        for keyword in [ " am", " pm "])):
+                        for keyword in [ " am ", " pm "])):
                     teams_currently_playing[index] = False
         else:
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
