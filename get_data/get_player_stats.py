@@ -265,6 +265,8 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
     """
     nfl = requests.get("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", timeout=5)
     index = 0
+    home_player_stats = ""
+    away_player_stats = ""
 
     for res in [nfl.json()]:
         for event in res["events"]:
