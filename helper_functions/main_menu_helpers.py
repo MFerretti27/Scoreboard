@@ -398,14 +398,10 @@ def format_teams_block(teams: list[list[str]]) -> str:
     return f"teams = {teams!s}"
 
 
-def double_check_teams(new_teams: Optional[list[Any]] = None) -> list[Any]:
+def double_check_teams(new_teams: list[Any] | None = None) -> list[Any]:
     """Ensure all teams in settings.teams are valid teams."""
     if new_teams is not None:
-        for team in new_teams[:]:
-            if team not in (MLB + NBA + NFL + NHL):
-                new_teams.remove(team)
-                logger.info(f"Removed '{team}' from teams as its not a valid team.")
-        return new_teams
+        return [team for team in new_teams if team in (MLB + NBA + NFL + NHL)]
     for team in settings.teams[:]:
         if team[0] not in (MLB + NBA + NFL + NHL):
             settings.teams.remove(team)

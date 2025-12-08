@@ -171,9 +171,9 @@ def create_scoreboard_layout() -> list:
                 Sg.Column(
                     [
                         [
-                            Sg.Column(away_player_stats, key="away_player_stats_column", expand_x=True, expand_y=True,
+                            Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True,
                                       element_justification="center"),
-                            Sg.Column(home_player_stats, key="home_player_stats_column", expand_x=True, expand_y=True,
+                            Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True,
                                       element_justification="center"),
                         ],
                     ],

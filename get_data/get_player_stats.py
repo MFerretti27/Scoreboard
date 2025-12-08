@@ -122,7 +122,7 @@ def get_nhl_player_stats(team_name: str) -> tuple[str, str]:
                 return int(parts[0]) * 60 + int(parts[1]) if len(parts) == 2 else 0
 
             # Group forwards by position and get top player by TOI from each position
-            positions_dict = {"C": [], "L": [], "R": []}
+            positions_dict: dict[str, list[dict]] = {"C": [], "L": [], "R": []}
             for f in forwards:
                 pos = f.get("position", "")
                 if pos in positions_dict:
@@ -239,7 +239,7 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
                     "Strikeout Double Play": "KDP",
                 }
                 # For each play, print only the event code, numbered
-                pa_events = []
+                pa_events: list[str] = []
                 pa_events = []
                 for p in plays:
                     if "matchup" in p and "batter" in p["matchup"] and p["matchup"]["batter"]["id"] == pid:
