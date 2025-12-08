@@ -69,7 +69,7 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         three_att = stats.get("threePointersAttempted", 0)
         total_made = fg_made + three_made
         total_att = fg_att + three_att
-        shooting_pct = round(total_made / total_att * 100) if total_att > 0 else None
+        shooting_pct = round(total_made / total_att * 100) if total_att > 0 else "0"
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
 
