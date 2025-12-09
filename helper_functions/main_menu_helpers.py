@@ -3,7 +3,7 @@ import ast
 import re
 import unicodedata
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import settings
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL

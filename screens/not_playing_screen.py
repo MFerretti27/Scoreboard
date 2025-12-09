@@ -5,7 +5,6 @@ import importlib
 import json
 import logging
 import sys
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -26,6 +25,7 @@ from helper_functions.scoreboard_helpers import (
     reset_window_elements,
     scroll,
     set_spoiler_mode,
+    wait,
     will_text_fit_on_screen,
 )
 from screens.clock_screen import clock
@@ -183,14 +183,12 @@ def handle_error(window: Sg.Window) -> None:
                 window["bottom_info"].update(value=f"Error: {error}",
                                                 font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
-            time.sleep(30)
+            wait(window, 30) # Wait 30 seconds before trying again
             time_till_clock = time_till_clock + 1
-        if time_till_clock >= 12:  # 6 minutes without data, display clock
-            message = "Failed to Get Data, trying again..."
-            clock(window, message)
-            return
-    else:
-        logger.info("Internet connection is active")
+
+        message = "Failed to Get Data, trying again..."
+        clock(window, message)
+        return
 
     while not is_connected():
         event = window.read(timeout=5)
@@ -201,7 +199,7 @@ def handle_error(window: Sg.Window) -> None:
         window["bottom_info"].update(value="")
         event = window.read(timeout=2000)
         reconnect()
-        time.sleep(20)  # Check every 20 seconds
+        wait(window, 20) # Wait 20 seconds for connection
 
         if time_till_clock >= 12:  # If no connection within 4 minutes display clock
             message = "No Internet Connection"

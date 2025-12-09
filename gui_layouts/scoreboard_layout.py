@@ -211,7 +211,7 @@ def create_scoreboard_layout() -> list:
                           size=(column_width, int(column_height * 1 / 4)),
                           element_justification="center")],
                 [Sg.Frame("", score_layout, border_width=0,
-                          size=(column_width, int(column_height * 3.1 / 16)),
+                          expand_x=True, expand_y=True,
                           element_justification="center")],
                 [middle_swap_frame],
             ]),

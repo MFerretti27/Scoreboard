@@ -444,6 +444,8 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
     # If game is over try displaying series information if available
     if "FINAL" in team_info["bottom_info"] and settings.display_series:
         team_info["top_info"] = get_series(team_league, team_name)
+        if team_league == "nfl":
+            team_info["top_info"] = competition.get("headlines", [])[0].get("shortLinkText", "")
 
     return team_info, currently_playing
 

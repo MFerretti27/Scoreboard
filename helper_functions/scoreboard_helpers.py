@@ -23,7 +23,7 @@ from helper_functions.main_menu_helpers import settings_to_json
 from helper_functions.update import check_for_update, update_program
 
 
-def will_text_fit_on_screen(text: str) -> bool:
+def will_text_fit_on_screen(text: str, txt_size: int=settings.INFO_TXT_SIZE) -> bool:
     """Check if text will fit on screen.
 
     :param text: str to compare to width of screen
@@ -34,7 +34,7 @@ def will_text_fit_on_screen(text: str) -> bool:
 
     root = tk.Tk()
     root.withdraw()  # Hide the root window
-    font = tk_font.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
+    font = tk_font.Font(family=settings.FONT, size=txt_size)
     width: float = float(font.measure(text))
     width = width * 1.1  # Ensure text fits on screen by adding a buffer
     root.destroy()
@@ -66,6 +66,11 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
                                text_color="white")
+
+    window["under_score_image_column"].update(visible=False)
+    window["player_stats_content"].update(visible=True)
+    window["home_timeouts"].update(visible=False)
+    window["timeouts_content"].update(visible=False)
 
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
@@ -206,19 +211,20 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, text: str) -> None:
+def scroll(window: Sg.Window, text: str, key: str="bottom_info") -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
     :param text: The text to scroll
     :param display_index: The index of the team to update
+    :param key: The key of the window element to update
     """
     text = text + "         "
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
             text = text[1:] + text[0]
-            window["bottom_info"].update(value=text)
+            window[key].update(value=text)
             check_events(window, event)
         time.sleep(5)
 
@@ -266,3 +272,15 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
                     "--settings", tmp_path,
                     "--saved-data", json.dumps(saved_data),
                 )
+
+
+def wait(window: Sg.Window, time_waiting: int) -> None:
+    """Wait for a short period to allow GUI to update.
+
+    :param window: Window Element that controls GUI
+    :param time_waiting: Time to wait in seconds
+    """
+    for _ in range(int(time_waiting / 0.2)):
+        event = window.read(timeout=0.1)
+        check_events(window, event)  # Check for button presses
+        time.sleep(0.1)
