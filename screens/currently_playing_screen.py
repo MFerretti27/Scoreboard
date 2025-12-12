@@ -380,11 +380,11 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     display_clock: int = ticks_ms()  # Start timer for switching display
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     fetch_clock: int = ticks_ms()  # Start timer for fetching
-    fetch_timer: int = 2 * 1000  # How often to fetch data in seconds
+    fetch_timer: int = 5 * 1000  # How often to fetch data in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
     while True in teams_currently_playing or first_time:
-        event = window.read(timeout=2000)
+        event = window.read(timeout=3000)
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
             (teams_with_data, team_info, teams_currently_playing,
              delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
