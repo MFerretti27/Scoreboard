@@ -175,6 +175,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
             window[key].update(filename=value)
             window["timeouts_content"].update(visible=True)
+            window["under_score_image_column"].update(visible=True)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         elif type(value) is str or type(value) is int:
@@ -382,6 +383,10 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     fetch_clock: int = ticks_ms()  # Start timer for fetching
     fetch_timer: int = 5 * 1000  # How often to fetch data in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
+
+    window["player_stats_content"].update(visible=False)
+    window["timeouts_content"].update(visible=True)
+    window["under_score_image_column"].update(visible=True)
 
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)

@@ -67,11 +67,6 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
                                text_color="white")
 
-    window["under_score_image_column"].update(visible=False)
-    window["player_stats_content"].update(visible=True)
-    window["home_timeouts"].update(visible=False)
-    window["timeouts_content"].update(visible=False)
-
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
     """Check for specific key presses.
