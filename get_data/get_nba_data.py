@@ -1,7 +1,6 @@
 """Get NBA from NBA specific API."""
 import re
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from nba_api.live.nba.endpoints import boxscore, odds, playbyplay, scoreboard  # type: ignore[import]
@@ -11,7 +10,7 @@ import settings
 from get_data.get_game_type import get_game_type
 from get_data.get_series_data import get_series
 from get_data.get_team_id import get_nba_team_id
-from helper_functions.data_helpers import check_playing_each_other
+from helper_functions.data_helpers import check_playing_each_other, get_team_logo
 
 home_team_bonus = False
 away_team_bonus = False
@@ -71,21 +70,7 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                                         )
 
             # Get team logos
-            folder_path = Path.cwd() / "images" / "sport_logos" / "NBA"
-            file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-            for file in file_names:
-                filename = file.name.upper()
-                if home_team_name.upper() in filename:
-                    home_team = filename
-                if away_team_name.upper() in filename:
-                    away_team = filename
-
-            team_info["away_logo"] = str(
-                Path.cwd() / "images" / "sport_logos" / "NBA" / away_team.replace("PNG", "png"),
-                )
-            team_info["home_logo"] = str(
-                Path.cwd() / "images" / "sport_logos" / "NBA" / home_team.replace("PNG", "png"),
-                )
+            team_info = get_team_logo(home_team_name, away_team_name, "NBA", team_info)
 
             team_info["home_score"] = game["homeTeam"]["score"]
             team_info["away_score"] = game["awayTeam"]["score"]
