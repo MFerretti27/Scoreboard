@@ -8,6 +8,7 @@ from nba_api.stats.endpoints import teaminfocommon  # type: ignore[import]
 
 import settings
 from get_data.get_game_type import get_game_type
+from get_data.get_player_stats import get_player_stats
 from get_data.get_series_data import get_series
 from get_data.get_team_id import get_nba_team_id
 from helper_functions.data_helpers import check_playing_each_other, get_team_logo
@@ -80,13 +81,22 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                 team_info["bottom_info"] = game["gameStatusText"].rstrip().upper()
                 team_info["top_info"] = get_series("NBA", team_name)
 
+                if settings.display_player_stats:
+                    home_player_stats, away_player_stats = get_player_stats("NBA", team_name)
+                    team_info["home_player_stats"] = home_player_stats
+                    team_info["away_player_stats"] = away_player_stats
+                    team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
+
             # Check if game is currently playing
-            elif "am" not in game["gameStatusText"] or "pm" not in game["gameStatusText"]:
+            elif " am " not in game["gameStatusText"] or " pm " not in game["gameStatusText"]:
                 team_info = append_nba_data(team_info, team_name.split(" ")[-1])
                 currently_playing = True
 
                 # Re-structure clock
-                team_info["bottom_info"] = restructure_clock(game)
+                if settings.display_nba_play_by_play:
+                    team_info["top_info"] = restructure_clock(game)
+                else:
+                    team_info["bottom_info"] = restructure_clock(game)
 
             elif settings.display_odds:  # Game has not started yet, get odds if enabled
                 home_team_abbr = game.get("homeTeam", {}).get("teamTricode", "")

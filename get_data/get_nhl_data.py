@@ -6,6 +6,7 @@ import requests
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
+from get_data.get_player_stats import get_player_stats
 from helper_functions.data_helpers import check_playing_each_other, get_team_logo
 from helper_functions.logger_config import logger
 
@@ -89,6 +90,12 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = get_final_status(box_score["periodDescriptor"]["number"],
                                                     box_score["gameType"])
+
+        if settings.display_player_stats:
+            home_player_stats, away_player_stats = get_player_stats("NBA", team_name)
+            team_info["home_player_stats"] = home_player_stats
+            team_info["away_player_stats"] = away_player_stats
+            team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
 
     # Game has not started yet
     elif settings.display_odds:
