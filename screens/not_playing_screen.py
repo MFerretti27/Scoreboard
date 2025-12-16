@@ -94,15 +94,14 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
 
         elif key == "under_score_image":
             window[key].update(filename=value)
-            window["under_score_image_column"].update(visible=True)
             window["player_stats_content"].update(visible=False)
+            window["under_score_image_column"].update(visible=True)
             window["timeouts_content"].update(visible=True)
 
         elif key in ["home_player_stats", "away_player_stats"]:
             window[key].update(value=value, visible=True)
             window["under_score_image_column"].update(visible=False)
             window["player_stats_content"].update(visible=True)
-            window["home_timeouts"].update(visible=False)
             window["timeouts_content"].update(visible=False)
 
         elif key == "signature":
