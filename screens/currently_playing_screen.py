@@ -274,13 +274,17 @@ def update_playing_flags(team_info: list[dict], teams_with_data: list[bool],
     for index, team_info_temp in enumerate(team_info):
         if ("bottom_info" in team_info_temp and teams_with_data[index] and
             not any(keyword in str(team_info_temp["bottom_info"]).lower()
-                for keyword in ["delayed", "postponed", "final", "canceled", "delay", "am", "pm"])):
+                for keyword in ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm "])):
+            logger.info(f"Setting team {settings.teams[index][0]} currently playing to True")
+            logger.info("Game is over but delay hasn't caught up yet")
             teams_currently_playing[index] = True
     # if delay is over, but bottom info has am/pm, set currently playing to false
     for index, team_info_temp in enumerate(team_info):
         if ("bottom_info" in team_info_temp and teams_with_data[index] and
             any(keyword in str(team_info_temp["bottom_info"]).lower()
-                for keyword in ["am", "pm"])):
+                for keyword in [" am ", " pm "])):
+            logger.info(f"Setting team {settings.teams[index][0]} currently playing to False")
+            logger.info("Game has started but delay doesn't reflect that yet")
             teams_currently_playing[index] = False
 
 def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool, delay_over: bool) -> tuple:
