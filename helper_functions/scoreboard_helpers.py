@@ -208,7 +208,7 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, text: str, key: str="bottom_info") -> None:
+def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
@@ -216,15 +216,17 @@ def scroll(window: Sg.Window, text: str, key: str="bottom_info") -> None:
     :param display_index: The index of the team to update
     :param key: The key of the window element to update
     """
-    text = text + "         "
+    text = original_text + "         "  # Add spaces to end for smooth scrolling
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
             text = text[1:] + text[0]
             window[key].update(value=text)
             check_events(window, event)
-        wait(window, 5)
 
+        window[key].update(value=original_text)
+        event = window.read(timeout=100)
+        wait(window, 5)
 
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
