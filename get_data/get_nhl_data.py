@@ -282,7 +282,7 @@ def get_nhl_odds(home_team_abbr: str, away_team_abbr: str, team: str) -> str:
                 home_val = float(home_spread.replace("+",""))
                 away_val = float(away_spread.replace("+",""))
 
-                if abs(home_val) < abs(away_val):
+                if int(home_val) < int(away_val):
                     spread = f"{home_team_abbr} {home_spread}"
                 else:
                     spread = f"{away_team_abbr} {away_spread}"
@@ -291,6 +291,6 @@ def get_nhl_odds(home_team_abbr: str, away_team_abbr: str, team: str) -> str:
 
             over_under = over_under.replace("O", "").replace("U", "") if over_under else "N/A"
 
-            return f"Spread: {spread} \t OverUnder: {over_under}"
+            return f"Spread: {spread} \t\t OverUnder: {over_under}"
     # If no matching game is found, return default values
     return "Spread: N/A \t OverUnder: N/A"
