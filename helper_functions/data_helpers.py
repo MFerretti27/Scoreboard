@@ -84,13 +84,15 @@ def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_in
     # so check if team exists before trying to get logo
     folder_path = Path.cwd() / "images" / "sport_logos" / league
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-    available_teams = {remove_accents(f.stem).upper() for f in file_names}
+    available_teams = {str(remove_accents(f.stem)).upper() for f in file_names}
 
-    if away_team_name.upper() not in available_teams and not any(away_team_name.upper() in team for team in available_teams):
+    if away_team_name.upper() not in available_teams and not any(away_team_name.upper() in team
+                                                                 for team in available_teams):
         logger.warning("Away team name %s not found in %s folder", away_team_name, league)
         msg = f"Could not find {away_team_name} logo, please re-download logos"
         raise RuntimeError(msg)
-    if home_team_name.upper() not in available_teams and not any(home_team_name.upper() in team for team in available_teams):
+    if home_team_name.upper() not in available_teams and not any(home_team_name.upper() in team
+                                                                 for team in available_teams):
         logger.warning("Home team name %s not found in %s folder", home_team_name, league)
         msg = f"Could not find {home_team_name} logo, please re-download logos"
         raise RuntimeError(msg)
