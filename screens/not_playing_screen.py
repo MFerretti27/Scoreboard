@@ -175,6 +175,7 @@ def handle_error(window: Sg.Window) -> None:
             try:
                 for fetch_index in range(len(settings.teams)):
                     get_data(settings.teams[fetch_index])
+                    logger.info("Successfully got data after error")
                     return
             except Exception as error:
                 logger.info("Could not get data, trying again...")
