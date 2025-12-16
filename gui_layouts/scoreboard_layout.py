@@ -136,18 +136,16 @@ def create_scoreboard_layout() -> list:
         "",
         [
             # Timeouts row (toggle visibility)
-            [
+            [Sg.Push(),
                 Sg.Column(
                     [
-                        [Sg.Push(),
+                        [
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
                                     expand_x=True, expand_y=True, justification="center",
                                     key="away_timeouts"),
-                                    Sg.Push(),
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
                                     expand_x=True, expand_y=True, justification="center",
                                     key="home_timeouts"),
-                                    Sg.Push(),
                         ],
                     ],
                     key="timeouts_content",
@@ -155,7 +153,7 @@ def create_scoreboard_layout() -> list:
                     expand_x=True,
                     expand_y=True,
                     visible=True,
-                ),
+                ),Sg.Push(),
             ],
             # Swap row: under-score image and player stats
             [
