@@ -92,8 +92,7 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
         if "home_logo" in key or "away_logo" in key:
             window[key].update(filename=value)
 
-        elif key == "under_score_image" and not any(dict_key in team_info
-                                                    for dict_key in ["home_player_stats", "away_player_stats"]):
+        elif key == "under_score_image":
             window[key].update(filename=value)
             window["player_stats_content"].update(visible=False)
             window["under_score_image_column"].update(visible=True)
