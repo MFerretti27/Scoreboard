@@ -468,6 +468,9 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
     try:
         team_info, team_has_data, currently_playing = get_espn_data(team, team_info)
 
+        if team_league.lower() == "nhl" or team_league.lower() == "nba":
+            raise Exception("Force using NHL API for testing")
+
     # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
         logger.exception("\n\nError fetching data from ESPN API\n\n")

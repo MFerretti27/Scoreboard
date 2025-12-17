@@ -96,6 +96,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
             team_info["home_player_stats"] = home_player_stats
             team_info["away_player_stats"] = away_player_stats
             team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
+            return team_info, has_data, currently_playing
 
     # Game has not started yet
     elif settings.display_odds:
