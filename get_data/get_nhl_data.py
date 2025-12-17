@@ -92,7 +92,7 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                                                     box_score["gameType"])
 
         if settings.display_player_stats:
-            home_player_stats, away_player_stats = get_player_stats("NBA", team_name)
+            home_player_stats, away_player_stats = get_player_stats("NHL", team_name)
             team_info["home_player_stats"] = home_player_stats
             team_info["away_player_stats"] = away_player_stats
             team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
