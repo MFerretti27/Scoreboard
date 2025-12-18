@@ -2,6 +2,7 @@
 
 import copy
 import gc
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -223,7 +224,15 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
     try:
         team_info = append_nba_data(team_info, team_name)
     except Exception:
-        logger.exception("Failed to get data from NBA API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sNBA API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NBA API"
 
@@ -253,7 +262,15 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
 
     # If call to API fails get MLB specific info just from ESPN
     except Exception:
-        logger.exception("Failed to get data from MLB API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sMLB API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from MLB API"
 
@@ -335,7 +352,15 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
     try:
         team_info = append_nhl_data(team_info, team_name)
     except Exception:
-        logger.exception("Could not get info from NHL API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sNHL API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NHL API"
 
@@ -470,7 +495,16 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
 
     # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
-        logger.exception("\n\nError fetching data from ESPN API\n\n")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sESPN API ERROR:%s\nTeam: %s\nLeague: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            team_league,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
         elif "NBA" in team_league.upper():

@@ -165,22 +165,51 @@ def get_team_info(window: Sg.Window) -> tuple[list[bool], list[dict[str, Any]], 
 
     return teams_with_data, team_info, fetch_first_time
 
-def handle_error(window: Sg.Window) -> None:
+def handle_error(window: Sg.Window, *, error: Exception | None = None,
+                 team_info: list[dict[str, Any]] | None = None) -> None:
     """Handle errors that occur during data fetching."""
+
+    def _snapshot_settings() -> dict[str, str]:
+        snapshot: dict[str, str] = {}
+        for key, value in vars(settings).items():
+            if key.startswith("__"):
+                continue
+            try:
+                snapshot[key] = repr(value)
+            except Exception:
+                snapshot[key] = "<unserializable>"
+        return snapshot
+
+    if error is not None:
+        try:
+            separator = "\n" + "=" * 80 + "\n"
+            logger.error(
+                "%sERROR DETAILS:%s\nError: %s\n\nTeam Info:\n%s\n\nSettings:\n%s\n%s",
+                separator,
+                separator,
+                error,
+                json.dumps(team_info, indent=2, default=str),
+                json.dumps(_snapshot_settings(), indent=2, default=str),
+                "=" * 80,
+                exc_info=(type(error), error, error.__traceback__),
+            )
+        except Exception:
+            logger.exception("Failed to log handle_error details")
+
     time_till_clock = 0
     if is_connected():
         while time_till_clock < 12:
-            event = window.read(timeout=5)
-            check_events(window, event)  # Check for button presses
             try:
+                event = window.read(timeout=5)
+                check_events(window, event)  # Check for button presses
                 for fetch_index in range(len(settings.teams)):
                     get_data(settings.teams[fetch_index])
                     logger.info("Successfully got data after error")
                     return
-            except Exception as error:
+            except Exception as e:
                 logger.info("Could not get data, trying again...")
                 window["top_info"].update(value="Could not get data, trying again...", text_color="red")
-                window["bottom_info"].update(value=f"Error: {error}",
+                window["bottom_info"].update(value=f"Error: {e}",
                                                 font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
             wait(window, 30) # Wait 30 seconds before trying again
@@ -287,7 +316,7 @@ def main(data_saved: dict) -> None:
 
         except Exception as error:
             logger.exception(f"Error: {error}")
-            handle_error(window)
+            handle_error(window, error=error, team_info=team_info)
 
 
 if __name__ == "__main__":
