@@ -272,7 +272,7 @@ def update_playing_flags(team_info: list[dict], teams_with_data: list[bool],
     """
     # Ensure currently_playing is true until delay catches up
     for index, team_info_temp in enumerate(team_info):
-        if ("bottom_info" in team_info_temp and teams_with_data[index] and
+        if ("bottom_info" in team_info_temp and not teams_currently_playing[index] and
             not any(keyword in str(team_info_temp["bottom_info"]).lower()
                 for keyword in ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm "])):
             logger.info(f"Setting team {settings.teams[index][0]} currently playing to True")
@@ -280,7 +280,7 @@ def update_playing_flags(team_info: list[dict], teams_with_data: list[bool],
             teams_currently_playing[index] = True
     # if delay is over, but bottom info has am/pm, set currently playing to false
     for index, team_info_temp in enumerate(team_info):
-        if ("bottom_info" in team_info_temp and teams_with_data[index] and
+        if ("bottom_info" in team_info_temp and teams_currently_playing[index] and
             any(keyword in str(team_info_temp["bottom_info"]).lower()
                 for keyword in [" am ", " pm "])):
             logger.info(f"Setting team {settings.teams[index][0]} currently playing to False")
