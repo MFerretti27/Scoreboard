@@ -141,10 +141,10 @@ def create_scoreboard_layout() -> list:
                     [
                         [
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
-                                    expand_x=True, expand_y=True, justification="center",
+                                    expand_x=True, expand_y=True, justification="left",
                                     key="away_timeouts"),
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
-                                    expand_x=True, expand_y=True, justification="center",
+                                    expand_x=True, expand_y=True, justification="right",
                                     key="home_timeouts"),
                         ],
                     ],
