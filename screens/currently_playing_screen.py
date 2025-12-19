@@ -261,12 +261,10 @@ def is_valid(info_list: list[dict]) -> bool:
             return True
     return False
 
-def update_playing_flags(team_info: list[dict], teams_with_data: list[bool],
-                         teams_currently_playing: list[bool] ) -> None:
+def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bool] ) -> None:
     """Update the currently playing flags based on team information.
 
     :param team_info: List of team information dictionaries
-    :param teams_with_data: List of teams that have data available
     :param teams_currently_playing: List of teams that are currently playing
     :return: None
     """
@@ -354,7 +352,7 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
             else:
                 logger.warning("saved_data is empty after delay; falling back to last valid info.")
                 team_info = copy.deepcopy(last_info)
-            update_playing_flags(team_info, teams_with_data, teams_currently_playing)
+            update_playing_flags(team_info, teams_currently_playing)
         else:
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
             team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing)
