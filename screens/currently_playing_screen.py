@@ -388,10 +388,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     fetch_timer: int = 5 * 1000  # How often to fetch data in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
-    window["player_stats_content"].update(visible=False)
-    window["timeouts_content"].update(visible=True)
-    window["under_score_image_column"].update(visible=True)
-
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)
         if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
@@ -447,5 +443,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
             display_index = original_index
 
     logger.info("\nNo Team Currently Playing\n")
+    logger.info(f"Teams that played: {teams_that_played}\n")
     settings.stay_on_team = False  # Ensure next time function starts, we are not staying on a team
     return team_info, teams_that_played
