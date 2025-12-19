@@ -95,7 +95,7 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
 
                 # Re-structure clock
                 if settings.display_nba_play_by_play:
-                    team_info["top_info"] = restructure_clock(game)
+                    team_info["above_score_txt"] = restructure_clock(game)
                 else:
                     team_info["bottom_info"] = restructure_clock(game)
 
