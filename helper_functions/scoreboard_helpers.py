@@ -84,11 +84,11 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
-    elif "Up" in events[0] and not settings.no_spoiler_mode:
+    elif any(key in events[0] for key in ("Up", "away_score", "home_score")) and not settings.no_spoiler_mode:
         settings.no_spoiler_mode = True
         # Setting window elements will be handled in other functions to continue making sure no spoilers are displayed
 
-    elif "Down" in events[0] and settings.no_spoiler_mode:
+    elif any(key in events[0] for key in ("Down", "away_score", "home_score")) and settings.no_spoiler_mode:
         settings.no_spoiler_mode = False
         window["top_info"].update(value="")
         window["bottom_info"].update(value="Exiting No Spoiler Mode")
@@ -96,27 +96,28 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         time.sleep(2)
 
     if currently_playing:
-        if "Caps_Lock" in events[0] and not settings.stay_on_team:
-            logger.info("Caps Lock key pressed, Staying on team")
+        if any(key in events[0] for key in ("Caps_Lock", "away_logo", "away_record")) and not settings.stay_on_team:
+            logger.info(f"{events[0]} key pressed, Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
-        elif ("Shift_L" in events[0] or "Shift_R" in events[0]) and settings.stay_on_team:
-            logger.info("shift key pressed, Rotating teams")
+        elif (any(key in events[0] for key in ("Shift_L", "Shift_R", "away_logo", "away_record")) and
+              settings.stay_on_team):
+            logger.info(f"{events[0]} key pressed, Rotating teams")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
 
-    if "Left" in events[0] and settings.delay:
-        logger.info("left key pressed, delay off")
+    if any(key in events[0] for key in ("Left", "top_info", "bottom_info")) and settings.delay:
+        logger.info(f"{events[0]} key pressed, delay off")
         settings.delay = False
         window["bottom_info"].update(value="Turning delay OFF")
         window.refresh()
         time.sleep(5)
-    elif "Right" in events[0] and not settings.delay:
-        logger.info("Right key pressed, delay on")
+    elif any(key in events[0] for key in ("Right", "top_info", "bottom_info")) and not settings.delay:
+        logger.info(f"{events[0]} key pressed, delay on")
         settings.delay = True
         window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
         window.refresh()

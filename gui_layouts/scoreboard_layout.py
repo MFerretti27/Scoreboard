@@ -38,7 +38,8 @@ def create_scoreboard_layout() -> list:
     home_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key="home_logo", pad=((0, 0), (0, 0)))],
+        [Sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key="home_logo",
+                  pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
     ]
@@ -46,19 +47,22 @@ def create_scoreboard_layout() -> list:
     away_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key="away_logo", pad=((0, 0), (0, 0)))],
+        [Sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key="away_logo",
+                  pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
     ]
 
     away_record_layout = [
         [Sg.Push()],
-        [Sg.Text("AWAY", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="away_record", pad=((0, 0), (0, 0)))],
+        [Sg.Text("AWAY", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="away_record",
+                 pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.Push()],
     ]
     home_record_layout = [
         [Sg.Push()],
-        [Sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="home_record", pad=((0, 0), (0, 0)))],
+        [Sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="home_record",
+                 pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.Push()],
     ]
 
@@ -74,11 +78,11 @@ def create_scoreboard_layout() -> list:
     score_layout = [
     [
         Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="away_score"),
+            key="away_score", enable_events=True),
         Sg.Text("-", font=(settings.FONT, settings.HYPHEN_SIZE),
-            key="hyphen"),
+            key="hyphen", enable_events=True),
         Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="home_score"),
+            key="home_score", enable_events=True),
     ],
     ]
 
@@ -103,7 +107,7 @@ def create_scoreboard_layout() -> list:
         [Sg.VPush()],
         [Sg.Push(),
          Sg.Text("", font=(settings.FONT, settings.NBA_TOP_INFO_SIZE),
-                 key="top_info"),
+                 key="top_info", enable_events=True),
          Sg.Push()],
     ]
 
@@ -111,7 +115,7 @@ def create_scoreboard_layout() -> list:
         [Sg.VPush()],
         [Sg.Push(),
          Sg.Text("Fetching Data...", font=(settings.FONT, settings.INFO_TXT_SIZE),
-                 key="bottom_info"),
+                 key="bottom_info", enable_events=True),
          Sg.Push()],
         [Sg.VPush()],
         [Sg.Push()],
