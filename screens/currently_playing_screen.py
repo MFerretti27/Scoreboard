@@ -4,7 +4,7 @@ import time
 from typing import Any
 
 import FreeSimpleGUI as sg  # type: ignore[import]
-from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
+from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
@@ -262,7 +262,7 @@ def is_valid(info_list: list[dict]) -> bool:
     return False
 
 def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bool] ) -> None:
-    """Update the currently playing flags based on team information.
+    """Update the currently playing flags based on delay information not current information.
 
     :param team_info: List of team information dictionaries
     :param teams_currently_playing: List of teams that are currently playing
@@ -282,14 +282,14 @@ def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bo
             any(keyword in str(team_info_temp["bottom_info"]).lower()
                 for keyword in [" am ", " pm "])):
             logger.info(f"Setting team {settings.teams[index][0]} currently playing to False")
+            logger.info(f"Determined due to {team_info_temp['bottom_info']}")
             logger.info("Game has started but delay doesn't reflect that yet")
             teams_currently_playing[index] = False
 
-def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool, delay_over: bool) -> tuple:
+def get_display_data(delay_clock: int, *, delay_started: bool, delay_over: bool) -> tuple:
     """Fetch and update display data for teams.
 
     :param delay_clock: current delay clock (ms)
-    :param fetch_clock: current fetch clock (ms)
     :param delay_started: bool indicating if global delay has started
     :param delay_over: bool indicating if global delay is over
 
@@ -298,7 +298,6 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
         team_info,
         teams_currently_playing,
         delay_clock,
-        fetch_clock,
         delay_over,
         delay_started,
     )
@@ -307,7 +306,6 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
     team_info = []
     teams_currently_playing = []
     delay_info = []
-    fetch_timer = 2 * 1000  # How often to fetch data in seconds
     delay_timer = settings.LIVE_DATA_DELAY * 1000  # How long till information is displayed
     for fetch_index in range(len(settings.teams)):
         logger.info(f"\nFetching data for {settings.teams[fetch_index][0]}")
@@ -357,9 +355,7 @@ def get_display_data(delay_clock: int, fetch_clock: int, *, delay_started: bool,
             team_info = copy.deepcopy(last_info)  # if delay is not over continue displaying last thing
             team_info = set_delay_display(team_info, teams_with_data, teams_currently_playing)
 
-    fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer
-
-    return teams_with_data, team_info, teams_currently_playing, delay_clock, fetch_clock, delay_over, delay_started
+    return teams_with_data, team_info, teams_currently_playing, delay_clock, delay_over, delay_started
 
 
 def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[list[dict[str, Any]], list[str]]:
@@ -380,19 +376,18 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     should_scroll: bool = False
     currently_displaying: dict = {}
 
+    teams_that_played.clear() # Clear list of teams that played for this session
+
     display_clock: int = ticks_ms()  # Start timer for switching display
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
-    fetch_clock: int = ticks_ms()  # Start timer for fetching
-    fetch_timer: int = 5 * 1000  # How often to fetch data in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)
-        if ticks_diff(ticks_ms(), fetch_clock) >= fetch_timer or first_time:
-            (teams_with_data, team_info, teams_currently_playing,
-             delay_clock, fetch_clock, delay_over, delay_started) = get_display_data(
-                delay_clock, fetch_clock, delay_started=delay_started, delay_over=delay_over,
-            )
+        (teams_with_data, team_info, teams_currently_playing,
+            delay_clock, delay_over, delay_started) = get_display_data(
+            delay_clock, delay_started=delay_started, delay_over=delay_over,
+        )
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
@@ -416,7 +411,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
             first_time = False
             display_index, original_index = find_next_team_to_display(teams, teams_currently_playing,
                                                                         display_index, teams_with_data)
-            display_clock = ticks_add(display_clock, display_timer)  # Reset Timer
+            display_clock = ticks_ms()  # Reset Timer
 
         if should_scroll and not settings.no_spoiler_mode and currently_displaying == team_info[display_index]:
             scroll(window, team_info[display_index].get("bottom_info", ""))
