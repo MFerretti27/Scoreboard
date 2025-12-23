@@ -27,13 +27,11 @@ def create_scoreboard_layout() -> list:
 
     column_width = window_width / 3
     column_height = window_height * .66
-    info_height = window_height * (1 / 6.75)
-    space_between_score = column_width / 8
+    info_height = window_height * (1 / 8.5)
 
     logger.info("\n\nWindow Width: %d, Window Height: %d", math.ceil(window_width), math.ceil(window_height))
     logger.info("Column Width: %d, Column Height: %d", math.ceil(column_width), math.ceil(column_height))
     logger.info("Info Height: %d", math.ceil(info_height))
-    logger.info("Space Between Score: %d", math.ceil(space_between_score))
 
     home_logo_layout = [
         [Sg.Push()],
@@ -70,7 +68,7 @@ def create_scoreboard_layout() -> list:
         [Sg.VPush()],
         [Sg.Push(),
          Sg.Text("", font=(settings.FONT, settings.TOP_TXT_SIZE), key="above_score_txt",
-                 pad=((0, 0), (space_between_score, 0))),
+                 pad=((0, 0), (0, 0)), enable_events=True),
          Sg.Push()],
         [Sg.VPush()],
     ]
@@ -78,11 +76,11 @@ def create_scoreboard_layout() -> list:
     score_layout = [
     [
         Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="away_score", enable_events=True),
-        Sg.Text("-", font=(settings.FONT, settings.HYPHEN_SIZE),
-            key="hyphen", enable_events=True),
+            key="away_score", enable_events=True, pad=((0, 0), (0, 0))),
+        Sg.Text("", font=(settings.FONT, settings.HYPHEN_SIZE),
+            key="hyphen", enable_events=True, pad=((0, 0), (0, 0))),
         Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="home_score", enable_events=True),
+            key="home_score", enable_events=True, pad=((0, 0), (0, 0))),
     ],
     ]
 
@@ -91,7 +89,7 @@ def create_scoreboard_layout() -> list:
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(30, 30), text_color="white")],
+                      size=(30, 25), text_color="white")],
     ]
 
     away_player_stats = [
@@ -134,11 +132,23 @@ def create_scoreboard_layout() -> list:
     # ----------------------------
     # Middle fixed-size frame (under-score OR stats)
     # ----------------------------
-    fixed_middle_height = int(column_height * (8 / 16))
+    fixed_middle_height = int(column_height * (4 / 5))
 
     middle_swap_frame = Sg.Frame(
         "",
         [
+            [Sg.Push(),
+                Sg.Frame("",
+                    score_layout,
+                    key="score_content",
+                    border_width=0,
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=True,
+                    ),
+                Sg.Push(),
+            ],
             # Timeouts row (toggle visibility)
             [Sg.Push(),
                 Sg.Column(
@@ -204,18 +214,16 @@ def create_scoreboard_layout() -> list:
                 [Sg.Frame("", away_record_layout, border_width=0,
                           size=(column_width, away_record_height),
                           element_justification="center")],
-            ], pad=(0, 0)),
+            ], pad=(0, 0), vertical_alignment="top"),
 
             # Middle column
             Sg.Column([
                 [Sg.Frame("", above_score_layout, border_width=0,
-                          size=(column_width, int(column_height * 1 / 4)),
-                          element_justification="center")],
-                [Sg.Frame("", score_layout, border_width=0,
-                          expand_x=True, expand_y=True,
-                          element_justification="center")],
+                          size=(column_width, int(column_height * 1 / 5)),
+                          element_justification="center", pad=(0, 0))],
+                [Sg.VPush()],
                 [middle_swap_frame],
-            ]),
+            ], pad=(0, 0), vertical_alignment="top"),
 
             # Home column
             Sg.Column([
@@ -225,10 +233,8 @@ def create_scoreboard_layout() -> list:
                 [Sg.Frame("", home_record_layout, border_width=0,
                           size=(column_width, home_record_height),
                           element_justification="center")],
-            ], pad=(0, 0)),
+            ], pad=(0, 0), vertical_alignment="top"),
         ],
-
-        [Sg.VPush()],
 
         [Sg.Frame("", top_info_layout, border_width=0,
                   size=(window_width, int(info_height * 6 / 7)),
@@ -243,6 +249,6 @@ def create_scoreboard_layout() -> list:
                                 font=(settings.FONT, settings.SIGNATURE_SIZE),
                                 key="signature")]],
                   border_width=0,
-                  size=(window_width, int(info_height / 7)),
+                  expand_x=True,
                   element_justification="bottom")],
     ]

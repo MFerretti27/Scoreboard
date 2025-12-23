@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 
+import FreeSimpleGUI as Sg
 import requests  # type: ignore[import]
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import boxscore, scoreboard
@@ -91,7 +92,7 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         away_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
                                f"BLK: {blk},  STL: {stl}\n\n")
 
-    return home_player_stats, away_player_stats
+    return home_player_stats.rstrip(""), away_player_stats.rstrip("")
 
 
 def get_nhl_player_stats(team_name: str) -> tuple[str, str]:
@@ -151,7 +152,7 @@ def get_nhl_player_stats(team_name: str) -> tuple[str, str]:
                 else:
                     away_stats += f"{pos} - {name}\nG:{goals}  A:{assists}  SOG:{sog}  TOI:{toi}\n\n"
 
-    return home_stats, away_stats
+    return home_stats.rstrip("\n"), away_stats.rstrip("\n")
 
 
 def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
@@ -252,7 +253,7 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
                 else:
                     away_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
 
-    return home_player_stats, away_player_stats
+    return home_player_stats.rstrip("\n"), away_player_stats.rstrip("\n")
 
 
 def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
@@ -287,5 +288,9 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
             away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
 
             index += 1
+
+            if Sg.Window.get_screen_size()[0] < 100:
+                home_player_stats += f"\n\n{away_player_stats}"
+                away_player_stats = ""
 
     return home_player_stats, away_player_stats

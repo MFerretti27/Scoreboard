@@ -6,9 +6,7 @@ from typing import Any
 #####################################
 
 teams = [
-    ["Detroit Lions"],
     ["Detroit Tigers"],
-    ["Pittsburgh Steelers"],
     ["Detroit Red Wings"],
     ["Detroit Pistons"],
 ]
@@ -34,6 +32,7 @@ TOP_TXT_SIZE = 80
 SIGNATURE_SIZE = 8
 PLAYER_STAT_SIZE = 14
 PLAYER_STAT_COLUMN = 30
+NBA_TIMEOUT_SIZE = 24
 
 
 #########################################

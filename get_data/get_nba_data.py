@@ -139,12 +139,12 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    4: "\u25CF  \u25CF  \u25CF  \u25CF",
-                    3: "\u25CF  \u25CF  \u25CF",
-                    2: "\u25CF  \u25CF",
-                    1: "\u25CF",
+                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CB",
+                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CB  \u25CB",
+                    4: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CB  \u25CB  \u25CB",
+                    3: "\u25CF  \u25CF  \u25CF  \u25CB  \u25CB  \u25CB  \u25CB",
+                    2: "\u25CF  \u25CF  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB",
+                    1: "\u25CF  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB",
                     0: "",
                 }
                 team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")

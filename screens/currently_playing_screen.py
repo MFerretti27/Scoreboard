@@ -11,6 +11,7 @@ from get_data.get_espn_data import get_data
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
+    increase_text_size,
     reset_window_elements,
     scroll,
     set_spoiler_mode,
@@ -106,10 +107,10 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -
     if key == "top_info":
         window["top_info"].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
     elif key == "home_timeouts":
-        window["home_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+        window["home_timeouts"].update(value=value, font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                         text_color="yellow")
     elif key == "away_timeouts":
-        window["away_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+        window["away_timeouts"].update(value=value, font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                         text_color="yellow")
 
     # Ensure bonus is in dictionary to not cause key error
@@ -196,6 +197,8 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
         # NHL Specific display size for bottom info
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
             display_nhl_info(window, team_info[display_index], key, value)
+
+    increase_text_size(window, team_info[display_index], sport_league.upper())
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info[display_index])

@@ -19,13 +19,13 @@ def create_order_teams_layout(window_width: int) -> list:
     scale = window_width / base_width
 
     max_size = 100
-    title_size = min(max_size, max(60, int(65 * scale)))
-    button_size = min(max_size, max(38, int(40 * scale)))
+    title_size = min(max_size, max(40, int(50 * scale)))
+    button_size = min(max_size, max(22, int(30 * scale)))
     list_box_size_height = min(max_size, max(10, int(15 * scale)))
     list_box_size_width = min(max_size, max(18, int(40 * scale)))
-    list_box_txt_size = min(max_size, max(18, int(22 * scale)))
+    list_box_txt_size = min(max_size, max(16, int(22 * scale)))
     message_size = min(max_size, max(6, int(22 * scale)))
-    move_button_size = min(max_size, max(38, int(20 * scale)))
+    move_button_size = min(max_size, max(12, int(20 * scale)))
 
     teams = load_teams_order()
     team_names = [team[0] for team in teams]
@@ -44,8 +44,8 @@ def create_order_teams_layout(window_width: int) -> list:
          Sg.Push(),
          ],
         [Sg.Push(),
-         Sg.Button("Move Up", font=(settings.FONT, move_button_size), pad=(10, button_size)),
-         Sg.Button("Move Down", font=(settings.FONT, move_button_size), pad=(10, button_size)),
+         Sg.Button("Move Up", font=(settings.FONT, move_button_size)),
+         Sg.Button("Move Down", font=(settings.FONT, move_button_size)),
          Sg.Push(),
          ],
         [Sg.Push(),

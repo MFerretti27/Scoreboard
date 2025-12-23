@@ -21,6 +21,7 @@ from helper_functions.main_menu_helpers import write_settings_to_py
 from helper_functions.scoreboard_helpers import (
     auto_update,
     check_events,
+    increase_text_size,
     maximize_screen,
     reset_window_elements,
     scroll,
@@ -32,6 +33,9 @@ from screens.clock_screen import clock
 from screens.currently_playing_screen import team_currently_playing
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
+
+# Track which player stats to show on small screens (alternates between home and away)
+show_home_stats_next = True
 
 
 def save_team_data(info: dict[str, Any], fetch_index: int,
@@ -99,7 +103,20 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window["timeouts_content"].update(visible=True)
 
         elif key in ["home_player_stats", "away_player_stats"]:
-            window[key].update(value=value)
+            if Sg.Window.get_screen_size()[1] < 800:  # If screen height is small, alternate between home and away
+                    if not show_home_stats_next and key == "home_player_stats":
+                        home_stats = team_info["home_player_stats"]
+                        window["away_player_stats"].update(value=home_stats)
+                        window["home_player_stats"].update(value="")
+                        window["home_player_stats"].update(visible=False)
+
+                    elif show_home_stats_next and key == "away_player_stats":
+                        window["away_player_stats"].update(value=value)
+                        window["home_player_stats"].update(value="")
+                        window["home_player_stats"].update(visible=False)
+            else:
+                window[key].update(value=value)
+
             window["under_score_image_column"].update(visible=False)
             window["timeouts_content"].update(visible=False)
             window["player_stats_content"].update(visible=True)
@@ -108,6 +125,8 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window[key].update(value=value, text_color="red")
         else:
             window[key].update(value=value)
+
+    increase_text_size(window, team_info)
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info)
@@ -256,11 +275,13 @@ def main(data_saved: dict) -> None:
     display_index: int = 0
     should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
+    update_clock = ticks_ms() # Start Timer for updating display
     display_timer: int = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for fetching data
     fetch_timer: int = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
     display_first_time: bool = True
     fetch_first_time: bool = True
+    global show_home_stats_next
 
     if settings.LIVE_DATA_DELAY > 0:
         settings.delay = True
@@ -284,15 +305,22 @@ def main(data_saved: dict) -> None:
                 fetch_clock = ticks_ms()
 
             # Display Team Information
-            if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
+            if ticks_diff(ticks_ms(), update_clock) >= int(display_timer/2) or display_first_time:
                 if teams_with_data[display_index]:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
                     should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
 
+
                     if should_scroll and not settings.no_spoiler_mode:
                         scroll(window, team_info[display_index]["bottom_info"])
 
+                show_home_stats_next = not show_home_stats_next
+                update_clock = ticks_ms()
+
+            # Find next team to display
+            if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
+                if teams_with_data[display_index]:
                     # Find next team to display (skip teams with no data)
                     display_index = update_display_index(display_index, teams_with_data)
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated

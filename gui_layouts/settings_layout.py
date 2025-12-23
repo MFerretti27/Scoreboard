@@ -20,22 +20,71 @@ def create_settings_layout(window_width: int) -> list:
     scale = window_width / base_width
 
     max_size = 100
-    title_size = min(max_size, max(60, int(65 * scale)))
+    title_size = min(max_size, max(40, int(50 * scale)))
     checkbox_width = min(max_size, max(10, int(20 * scale)))
     checkbox_height = min(max_size, max(2, int(2 * scale)))
     message_size = min(max_size, max(6, int(12 * scale)))
-    button_size = min(max_size, max(38, int(40 * scale)))
+    button_size = min(max_size, max(20, int(30 * scale)))
     text_input_size = min(max_size, max(2, int(4 * scale)))
     top_label_size = min(max_size, max(22, int(28 * scale)))
-    bottom_label_size = min(max_size, max(22, int(26 * scale)))
+    bottom_label_size = min(max_size, max(20, int(22 * scale)))
 
     checkbox_size = min(max_size, max(10, int(16 * scale)))
-    text_size = min(max_size, max(12, int(16 * scale)))
+    text_size = min(max_size, max(12, int(6 * scale)))
 
     current_settings = read_settings_from_file()
 
-    general_setting_layout = Sg.Frame(
-        "",
+    # Define checkboxes for general settings
+    checkboxes_per_column = 4  # Number of checkboxes per column
+
+    general_checkboxes = [
+        Sg.Checkbox("Display Records", key="display_records",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_records", False)),
+        Sg.Checkbox("Display Venue", key="display_venue",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_venue", False)),
+        Sg.Checkbox("Display Broadcast", key="display_network",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_network", False)),
+        Sg.Checkbox("Display Odds", key="display_odds",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_odds", False)),
+        Sg.Checkbox("Display Series Info", key="display_series",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_series", False)),
+        Sg.Checkbox("Display Player Stats", key="display_player_stats",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_player_stats", False)),
+        Sg.Checkbox("Display Date Ended", key="display_date_ended",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_date_ended", False)),
+        Sg.Checkbox("Display Playoff/Championship Image", key="display_playoff_championship_image",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("display_playoff_championship_image", False)),
+        Sg.Checkbox("Download/Resize Images when Starting", key="always_get_logos",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("always_get_logos", False)),
+        Sg.Checkbox("Prioritize Playing Team(s)", key="prioritize_playing_team",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("prioritize_playing_team", False)),
+        Sg.Checkbox("Auto Update",
+                    key="auto_update",
+                    font=(settings.FONT, checkbox_size),
+                    default=current_settings.get("auto_update", False)),
+    ]
+
+    # Organize checkboxes into columns
+    columns = [
+        general_checkboxes[i:i + checkboxes_per_column]
+        for i in range(0, len(general_checkboxes), checkboxes_per_column)
+    ]
+
+    column_layouts = [
+        Sg.Column([[cb] for cb in col], pad=(0, 0), element_justification="Center") for col in columns
+    ]
+
+    general_setting_layout = Sg.Column(
         [
             # Row containing "Live Data Delay", Input, Live Data Message, and Delay Text
             [Sg.Push(),
@@ -117,64 +166,13 @@ def create_settings_layout(window_width: int) -> list:
                 Sg.Push(),
             ],
             [Sg.Text("", font=(settings.FONT, bottom_label_size))],
-            [
-                Sg.Checkbox("Display Records", key="display_records",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_records", False)),
-                Sg.Checkbox("Display Venue", key="display_venue",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_venue", False)),
-                Sg.Checkbox("Display Broadcast", key="display_network",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_network", False)),
-                Sg.Checkbox("Display Odds", key="display_odds",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_odds", False)),
-                Sg.Checkbox("Display Series Info", key="display_series",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_series", False)),
-                Sg.Checkbox("Display Player Stats", key="display_player_stats",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_player_stats", False)),
-            ],
-            [
-                Sg.Checkbox("Display Date Ended", key="display_date_ended",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_date_ended", False)),
-                Sg.Checkbox("Display Playoff/Championship Image", key="display_playoff_championship_image",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("display_playoff_championship_image", False)),
-                Sg.Checkbox("Download/Resize Images when Starting", key="always_get_logos",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("always_get_logos", False)),
-                Sg.Checkbox("Prioritize Playing Team(s)", key="prioritize_playing_team",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("prioritize_playing_team", False)),
-                Sg.Checkbox("Auto Update",
-                            key="auto_update",
-                            font=(settings.FONT, text_size),
-                            expand_x=True,
-                            default=current_settings.get("auto_update", False)),
-            ],
+            [Sg.Push(), *column_layouts, Sg.Push()],
         ],
         expand_x=True,
-        relief=Sg.RELIEF_SOLID,
-        border_width=2,
-        pad=(0, button_size),
+        element_justification="center",
     )
 
-    specific_settings_layout = Sg.Frame(
-        "",
+    specific_settings_layout = Sg.Column(
         [
             [Sg.Push(),
              Sg.Column([
@@ -280,15 +278,19 @@ def create_settings_layout(window_width: int) -> list:
              ],
         ],
         expand_x=True,
-        relief=Sg.RELIEF_SOLID,
-        border_width=2,
-        pad=(0, 0),
+        pad=(0, button_size),
     )
 
     return [
         [Sg.Push(), Sg.Text("Settings", font=(settings.FONT, title_size, "underline")), Sg.Push()],
-        [general_setting_layout],
-        [specific_settings_layout],
+        [Sg.Column(
+            [
+                [general_setting_layout],
+                [specific_settings_layout],
+            ],
+            scrollable=True,
+            vertical_scroll_only=True,
+        )],
         [Sg.VPush()],
         [
          Sg.Push(),
@@ -302,6 +304,5 @@ def create_settings_layout(window_width: int) -> list:
          Sg.Button("Back", font=(settings.FONT, button_size)),
          Sg.Push(),
          ],
-         [Sg.VPush()],
          [Sg.VPush()],
     ]
