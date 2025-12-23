@@ -185,7 +185,7 @@ def resize_text() -> None:
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(25 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(35 * scale)))
-    settings.SIGNATURE_SIZE = min(15, max(6, int(9 * scale)))
+    settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
     settings.PLAYER_STAT_COLUMN = min(50, max(12, int(14 * scale)))
     settings.NBA_TIMEOUT_SIZE = min(max_size, max(8, int(16 * scale)))

@@ -25,13 +25,17 @@ def create_scoreboard_layout() -> list:
     # Screen sizes
     window_width, window_height = Sg.Window.get_screen_size()
 
-    column_width = window_width / 3
-    column_height = window_height * .66
-    info_height = window_height * (1 / 8.5)
+    # Account for any potential window decorations or padding issues
+    # Use slightly smaller width to ensure columns fit properly
+    usable_width = window_width - 6  # Small adjustment for any hidden padding
+    column_width = int(usable_width / 3)
+    column_height = int(window_height * .66)
+    info_height = int(window_height * (1 / 7))
 
-    logger.info("\n\nWindow Width: %d, Window Height: %d", math.ceil(window_width), math.ceil(window_height))
-    logger.info("Column Width: %d, Column Height: %d", math.ceil(column_width), math.ceil(column_height))
-    logger.info("Info Height: %d", math.ceil(info_height))
+    logger.info("\n\nWindow Width: %d, Window Height: %d", window_width, window_height)
+    logger.info("Usable Width: %d", usable_width)
+    logger.info("Column Width: %d (total across 3 = %d)", column_width, column_width * 3)
+    logger.info("Column Height: %d, Info Height: %d", column_height, info_height)
 
     home_logo_layout = [
         [Sg.Push()],
@@ -76,20 +80,27 @@ def create_scoreboard_layout() -> list:
     score_layout = [
     [
         Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="away_score", enable_events=True, pad=((0, 0), (0, 0))),
+            key="away_score", enable_events=True, pad=(0, 0)),
         Sg.Text("", font=(settings.FONT, settings.HYPHEN_SIZE),
-            key="hyphen", enable_events=True, pad=((0, 0), (0, 0))),
+            key="hyphen", enable_events=True, pad=(0, 0)),
         Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="home_score", enable_events=True, pad=((0, 0), (0, 0))),
+            key="home_score", enable_events=True, pad=(0, 0)),
     ],
     ]
+
+    if Sg.Window.get_screen_size()[0] > 1000:
+        home_size=[30, 25]
+        away_size=[30, 25]
+    else:
+        home_size=[0, 0]
+        away_size=[60, 25]
 
     home_player_stats = [
         [Sg.Multiline("", key="home_player_stats",
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(30, 25), text_color="white")],
+                      size=(home_size[0], home_size[1]), text_color="white")],
     ]
 
     away_player_stats = [
@@ -97,7 +108,7 @@ def create_scoreboard_layout() -> list:
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(30, 30), text_color="white")],
+                      size=(away_size[0], away_size[1]), text_color="white")],
     ]
 
     # Info layouts
@@ -146,6 +157,7 @@ def create_scoreboard_layout() -> list:
                     expand_x=True,
                     expand_y=True,
                     visible=True,
+                    pad=(0, 0),
                     ),
                 Sg.Push(),
             ],
@@ -156,10 +168,10 @@ def create_scoreboard_layout() -> list:
                         [
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
                                     expand_x=True, expand_y=True, justification="left",
-                                    key="away_timeouts"),
+                                    key="away_timeouts", pad=(0, 0)),
                             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
                                     expand_x=True, expand_y=True, justification="right",
-                                    key="home_timeouts"),
+                                    key="home_timeouts", pad=(0, 0)),
                         ],
                     ],
                     key="timeouts_content",
@@ -167,6 +179,7 @@ def create_scoreboard_layout() -> list:
                     expand_x=True,
                     expand_y=True,
                     visible=True,
+                    pad=(0, 0),
                 ),Sg.Push(),
             ],
             # Swap row: under-score image and player stats
@@ -183,9 +196,9 @@ def create_scoreboard_layout() -> list:
                     [
                         [
                             Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True,
-                                      element_justification="center"),
+                                      element_justification="center", pad=(0, 0)),
                             Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True,
-                                      element_justification="center"),
+                                      element_justification="center", pad=(0, 0)),
                         ],
                     ],
                     key="player_stats_content",
@@ -193,12 +206,14 @@ def create_scoreboard_layout() -> list:
                     expand_x=True,
                     expand_y=True,
                     visible=False,
+                    pad=(0, 0),
                 ),
             ],
         ],
         border_width=0,
         element_justification="center",
         size=(column_width, fixed_middle_height),
+        pad=(0, 0),
     )
 
     # ----------------------------
@@ -210,10 +225,10 @@ def create_scoreboard_layout() -> list:
             Sg.Column([
                 [Sg.Frame("", away_logo_layout, border_width=0,
                           size=(column_width, away_logo_height),
-                          element_justification="center")],
+                          element_justification="center", pad=(0, 0))],
                 [Sg.Frame("", away_record_layout, border_width=0,
                           size=(column_width, away_record_height),
-                          element_justification="center")],
+                          element_justification="center", pad=(0, 0))],
             ], pad=(0, 0), vertical_alignment="top"),
 
             # Middle column
@@ -221,7 +236,6 @@ def create_scoreboard_layout() -> list:
                 [Sg.Frame("", above_score_layout, border_width=0,
                           size=(column_width, int(column_height * 1 / 5)),
                           element_justification="center", pad=(0, 0))],
-                [Sg.VPush()],
                 [middle_swap_frame],
             ], pad=(0, 0), vertical_alignment="top"),
 
@@ -229,20 +243,22 @@ def create_scoreboard_layout() -> list:
             Sg.Column([
                 [Sg.Frame("", home_logo_layout, border_width=0,
                           size=(column_width, home_logo_height),
-                          element_justification="center")],
+                          element_justification="center", pad=(0, 0))],
                 [Sg.Frame("", home_record_layout, border_width=0,
                           size=(column_width, home_record_height),
-                          element_justification="center")],
+                          element_justification="center", pad=(0, 0))],
             ], pad=(0, 0), vertical_alignment="top"),
         ],
 
         [Sg.Frame("", top_info_layout, border_width=0,
                   size=(window_width, int(info_height * 6 / 7)),
-                  element_justification="center")],
+                  element_justification="center",
+                  pad=(0, 0))],
 
         [Sg.Frame("", bottom_info_layout, border_width=0,
                   size=(window_width, info_height),
-                  element_justification="center")],
+                  element_justification="center",
+                  pad=(0, 0))],
 
         [Sg.Frame("", [[Sg.Push(),
                         Sg.Text("Created by: Matthew Ferretti",
@@ -250,5 +266,6 @@ def create_scoreboard_layout() -> list:
                                 key="signature")]],
                   border_width=0,
                   expand_x=True,
-                  element_justification="bottom")],
+                  element_justification="bottom",
+                  pad=(0, 0))],
     ]
