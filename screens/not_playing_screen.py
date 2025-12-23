@@ -5,7 +5,6 @@ import importlib
 import json
 import logging
 import sys
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -26,6 +25,7 @@ from helper_functions.scoreboard_helpers import (
     reset_window_elements,
     scroll,
     set_spoiler_mode,
+    wait,
     will_text_fit_on_screen,
 )
 from screens.clock_screen import clock
@@ -89,8 +89,21 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
     reset_window_elements(window)
 
     for key, value in team_info.items():
-        if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
+        if "home_logo" in key or "away_logo" in key:
             window[key].update(filename=value)
+
+        elif key == "under_score_image":
+            window[key].update(filename=value)
+            window["player_stats_content"].update(visible=False)
+            window["under_score_image_column"].update(visible=True)
+            window["timeouts_content"].update(visible=True)
+
+        elif key in ["home_player_stats", "away_player_stats"]:
+            window[key].update(value=value)
+            window["under_score_image_column"].update(visible=False)
+            window["timeouts_content"].update(visible=False)
+            window["player_stats_content"].update(visible=True)
+
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         else:
@@ -152,31 +165,59 @@ def get_team_info(window: Sg.Window) -> tuple[list[bool], list[dict[str, Any]], 
 
     return teams_with_data, team_info, fetch_first_time
 
-def handle_error(window: Sg.Window) -> None:
+def handle_error(window: Sg.Window, *, error: Exception | None = None,
+                 team_info: list[dict[str, Any]] | None = None) -> None:
     """Handle errors that occur during data fetching."""
+
+    def _snapshot_settings() -> dict[str, str]:
+        snapshot: dict[str, str] = {}
+        for key, value in vars(settings).items():
+            if key.startswith("__"):
+                continue
+            try:
+                snapshot[key] = repr(value)
+            except Exception:
+                snapshot[key] = "<unserializable>"
+        return snapshot
+
+    if error is not None:
+        try:
+            separator = "\n" + "=" * 80 + "\n"
+            logger.error(
+                "%sERROR DETAILS:%s\nError: %s\n\nTeam Info:\n%s\n\nSettings:\n%s\n%s",
+                separator,
+                separator,
+                error,
+                json.dumps(team_info, indent=2, default=str),
+                json.dumps(_snapshot_settings(), indent=2, default=str),
+                "=" * 80,
+                exc_info=(type(error), error, error.__traceback__),
+            )
+        except Exception:
+            logger.exception("Failed to log handle_error details")
+
     time_till_clock = 0
     if is_connected():
         while time_till_clock < 12:
-            event = window.read(timeout=5)
-            check_events(window, event)  # Check for button presses
             try:
+                event = window.read(timeout=5)
+                check_events(window, event)  # Check for button presses
                 for fetch_index in range(len(settings.teams)):
                     get_data(settings.teams[fetch_index])
+                    logger.info("Successfully got data after error")
                     return
-            except Exception as error:
+            except Exception as e:
                 logger.info("Could not get data, trying again...")
                 window["top_info"].update(value="Could not get data, trying again...", text_color="red")
-                window["bottom_info"].update(value=f"Error: {error}",
+                window["bottom_info"].update(value=f"Error: {e}",
                                                 font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
                 event = window.read(timeout=2000)
-            time.sleep(30)
+            wait(window, 30) # Wait 30 seconds before trying again
             time_till_clock = time_till_clock + 1
-        if time_till_clock >= 12:  # 6 minutes without data, display clock
-            message = "Failed to Get Data, trying again..."
-            clock(window, message)
-            return
-    else:
-        logger.info("Internet connection is active")
+
+        message = "Failed to Get Data, trying again..."
+        clock(window, message)
+        return
 
     while not is_connected():
         event = window.read(timeout=5)
@@ -187,7 +228,7 @@ def handle_error(window: Sg.Window) -> None:
         window["bottom_info"].update(value="")
         event = window.read(timeout=2000)
         reconnect()
-        time.sleep(20)  # Check every 20 seconds
+        wait(window, 20) # Wait 20 seconds for connection
 
         if time_till_clock >= 12:  # If no connection within 4 minutes display clock
             message = "No Internet Connection"
@@ -270,12 +311,12 @@ def main(data_saved: dict) -> None:
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
-            if settings.Auto_Update:
+            if settings.auto_update:
                 auto_update(window, settings.saved_data)  # Check if need to auto update
 
         except Exception as error:
             logger.exception(f"Error: {error}")
-            handle_error(window)
+            handle_error(window, error=error, team_info=team_info)
 
 
 if __name__ == "__main__":

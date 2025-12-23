@@ -53,8 +53,11 @@ def get_current_series_mlb(team_name: str) -> str:
         else:
             mlb_series[team_name] = series_summary
 
-    except (IndexError, KeyError):
+    except (IndexError, KeyError, requests.RequestException, ValueError, TypeError):
         logger.exception("Error getting MLB series information")
+        return series_summary
+    except Exception:
+        logger.exception("Unexpected error getting MLB series information")
         return series_summary
 
     return series_summary
@@ -90,8 +93,11 @@ def get_current_series_nhl(team_name: str) -> str:
         elif home_series_wins == away_series_wins:
             series_summary = f"Series Tied {away_series_wins}-{home_series_wins}"
 
-    except KeyError:
+    except (KeyError, requests.RequestException, ValueError, TypeError):
         logger.exception("Error getting NHL series information")
+        return series_summary
+    except Exception:
+        logger.exception("Unexpected error getting NHL series information")
         return series_summary
 
     return series_summary
@@ -105,15 +111,18 @@ def get_current_series_nba(team_name: str) -> str:
     :return series_summary: str telling series information
     """
     series_summary = ""
-    games = scoreboard.ScoreBoard()  # Today's Score Board
-    live = games.get_dict()
     try:
+        games = scoreboard.ScoreBoard()  # Today's Score Board
+        live = games.get_dict()
         for game in live["scoreboard"]["games"]:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
-                series_summary = game["seriesText"]
+                series_summary = game.get("seriesText", "")
 
-    except KeyError:
+    except (KeyError, requests.RequestException, ValueError, TypeError):
         logger.exception("Error getting NBA series information")
+        return series_summary
+    except Exception:
+        logger.exception("Unexpected error getting NBA series information")
         return series_summary
 
     return series_summary

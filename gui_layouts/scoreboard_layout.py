@@ -22,8 +22,8 @@ def create_scoreboard_layout() -> list:
     resize_text()  # Resize text to fit screen size
     files = get_random_logo()
 
-    window_width = Sg.Window.get_screen_size()[0]
-    window_height = Sg.Window.get_screen_size()[1]
+    # Screen sizes
+    window_width, window_height = Sg.Window.get_screen_size()
 
     column_width = window_width / 3
     column_height = window_height * .66
@@ -38,7 +38,8 @@ def create_scoreboard_layout() -> list:
     home_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key="home_logo", pad=((0, 0), (0, 0)))],
+        [Sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key="home_logo",
+                  pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
     ]
@@ -46,19 +47,22 @@ def create_scoreboard_layout() -> list:
     away_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key="away_logo", pad=((0, 0), (0, 0)))],
+        [Sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key="away_logo",
+                  pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
     ]
 
     away_record_layout = [
         [Sg.Push()],
-        [Sg.Text("AWAY", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="away_record", pad=((0, 0), (0, 0)))],
+        [Sg.Text("AWAY", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="away_record",
+                 pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.Push()],
     ]
     home_record_layout = [
         [Sg.Push()],
-        [Sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="home_record", pad=((0, 0), (0, 0)))],
+        [Sg.Text("HOME", font=(settings.FONT, settings.RECORD_TXT_SIZE), key="home_record",
+                 pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.Push()],
     ]
 
@@ -72,74 +76,173 @@ def create_scoreboard_layout() -> list:
     ]
 
     score_layout = [
-        [Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE), key="away_score",
-                 pad=((0, 0), (space_between_score, 0))),
-         Sg.Text("-", font=(settings.FONT, settings.HYPHEN_SIZE), key="hyphen", pad=((0, 0), (space_between_score, 0))),
-         Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE), key="home_score",
-                 pad=((0, 0), (space_between_score, 0)))],
-        [Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE), key="away_timeouts",
-                 pad=((0, 50), (0, 25))),
-         Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE), key="home_timeouts",
-                 pad=((50, 0), (0, 25)))],
+    [
+        Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+            key="away_score", enable_events=True),
+        Sg.Text("-", font=(settings.FONT, settings.HYPHEN_SIZE),
+            key="hyphen", enable_events=True),
+        Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+            key="home_score", enable_events=True),
+    ],
     ]
 
-    below_score_image = [
-        [Sg.VPush()],
-        [Sg.Image("", key="under_score_image")],
-        [Sg.VPush()],
+    home_player_stats = [
+        [Sg.Multiline("", key="home_player_stats",
+                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
+                      no_scrollbar=True, disabled=True, autoscroll=False,
+                      border_width=0, background_color="black",
+                      size=(30, 30), text_color="white")],
     ]
 
-    top_info_layout = [[Sg.VPush()], [Sg.Push(), Sg.Text("", font=(settings.FONT, settings.NBA_TOP_INFO_SIZE),
-                                                         key="top_info"), Sg.Push()]]
-    bottom_info_layout = [[Sg.VPush()],
-                          [Sg.Push(),
-                           Sg.Text("Fetching Data...", font=(settings.FONT, settings.INFO_TXT_SIZE), key="bottom_info"),
-                           Sg.Push()],
-                          [Sg.VPush()],
-                          [Sg.Push()]]
+    away_player_stats = [
+        [Sg.Multiline("", key="away_player_stats",
+                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
+                      no_scrollbar=True, disabled=True, autoscroll=False,
+                      border_width=0, background_color="black",
+                      size=(30, 30), text_color="white")],
+    ]
 
-    # Lower the logo images if the records are not displayed
+    # Info layouts
+    top_info_layout = [
+        [Sg.VPush()],
+        [Sg.Push(),
+         Sg.Text("", font=(settings.FONT, settings.NBA_TOP_INFO_SIZE),
+                 key="top_info", enable_events=True),
+         Sg.Push()],
+    ]
+
+    bottom_info_layout = [
+        [Sg.VPush()],
+        [Sg.Push(),
+         Sg.Text("Fetching Data...", font=(settings.FONT, settings.INFO_TXT_SIZE),
+                 key="bottom_info", enable_events=True),
+         Sg.Push()],
+        [Sg.VPush()],
+        [Sg.Push()],
+    ]
+
+    # record height split
     if settings.display_records:
-        away_logo_height = column_height * (4 / 5)
-        home_logo_height = column_height * (4 / 5)
-        away_record_height = column_height * (1 / 5)
-        home_record_height = column_height * (1 / 5)
+        away_logo_height = int(column_height * 4 / 5)
+        home_logo_height = int(column_height * 4 / 5)
+        away_record_height = int(column_height * 1 / 5)
+        home_record_height = int(column_height * 1 / 5)
     else:
-        away_logo_height = column_height
-        home_logo_height = column_height
-        away_record_height = 0
-        home_record_height = 0
+        away_logo_height = home_logo_height = column_height
+        away_record_height = home_record_height = 0
 
+    # ----------------------------
+    # Middle fixed-size frame (under-score OR stats)
+    # ----------------------------
+    fixed_middle_height = int(column_height * (8 / 16))
+
+    middle_swap_frame = Sg.Frame(
+        "",
+        [
+            # Timeouts row (toggle visibility)
+            [Sg.Push(),
+                Sg.Column(
+                    [
+                        [
+                            Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
+                                    expand_x=True, expand_y=True, justification="left",
+                                    key="away_timeouts"),
+                            Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
+                                    expand_x=True, expand_y=True, justification="right",
+                                    key="home_timeouts"),
+                        ],
+                    ],
+                    key="timeouts_content",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=True,
+                ),Sg.Push(),
+            ],
+            # Swap row: under-score image and player stats
+            [
+                Sg.Column(
+                    [[Sg.Image("", key="under_score_image")]],
+                    key="under_score_image_column",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=True,
+                ),
+                Sg.Column(
+                    [
+                        [
+                            Sg.Column(away_player_stats, key="away_player_stats_col", expand_x=True, expand_y=True,
+                                      element_justification="center"),
+                            Sg.Column(home_player_stats, key="home_player_stats_col", expand_x=True, expand_y=True,
+                                      element_justification="center"),
+                        ],
+                    ],
+                    key="player_stats_content",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=False,
+                ),
+            ],
+        ],
+        border_width=0,
+        element_justification="center",
+        size=(column_width, fixed_middle_height),
+    )
+
+    # ----------------------------
+    # Final layout build
+    # ----------------------------
     return [
         [
-            Sg.Column([  # Vertical stack for away team
-                [Sg.Frame("", away_logo_layout, element_justification="center", border_width=0,
-                          size=(column_width, away_logo_height))],
-                [Sg.Frame("", away_record_layout, element_justification="center", border_width=0,
-                          size=(column_width, away_record_height))],
-            ], element_justification="center", pad=((0, 0), (0, 0))),
-            Sg.Column([  # Vertical score
-                [Sg.Frame("", above_score_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (1 / 4)))],
-                [Sg.Frame("", score_layout, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (7 / 16)))],
-                [Sg.Frame("", below_score_image, element_justification="center", border_width=0,
-                          size=(column_width, column_height * (5 / 16)))],
-            ], element_justification="center", pad=((0, 0), (0, 0))),
-            Sg.Column([  # Vertical stack for home team
-                [Sg.Frame("", home_logo_layout, element_justification="center", border_width=0,
-                          size=(column_width, home_logo_height))],
-                [Sg.Frame("", home_record_layout, element_justification="center", border_width=0,
-                          size=(column_width, home_record_height))],
-            ], element_justification="center", pad=((0, 0), (0, 0))),
+            # Away column
+            Sg.Column([
+                [Sg.Frame("", away_logo_layout, border_width=0,
+                          size=(column_width, away_logo_height),
+                          element_justification="center")],
+                [Sg.Frame("", away_record_layout, border_width=0,
+                          size=(column_width, away_record_height),
+                          element_justification="center")],
+            ], pad=(0, 0)),
+
+            # Middle column
+            Sg.Column([
+                [Sg.Frame("", above_score_layout, border_width=0,
+                          size=(column_width, int(column_height * 1 / 4)),
+                          element_justification="center")],
+                [Sg.Frame("", score_layout, border_width=0,
+                          expand_x=True, expand_y=True,
+                          element_justification="center")],
+                [middle_swap_frame],
+            ]),
+
+            # Home column
+            Sg.Column([
+                [Sg.Frame("", home_logo_layout, border_width=0,
+                          size=(column_width, home_logo_height),
+                          element_justification="center")],
+                [Sg.Frame("", home_record_layout, border_width=0,
+                          size=(column_width, home_record_height),
+                          element_justification="center")],
+            ], pad=(0, 0)),
         ],
+
         [Sg.VPush()],
-        [Sg.Frame("", top_info_layout, element_justification="center", border_width=0,
-                  size=(window_width, info_height * (6 / 7)))],
-        [Sg.Frame("", bottom_info_layout, element_justification="center", border_width=0,
-                  size=(window_width, info_height))],
-        [Sg.Frame("",
-                  [[Sg.Push(), Sg.Text("Created by: Matthew Ferretti", font=(settings.FONT, settings.SIGNATURE_SIZE),
-                                       key="signature")]],
-                  element_justification="bottom", border_width=0, size=(window_width, info_height * (1 / 7)))],
+
+        [Sg.Frame("", top_info_layout, border_width=0,
+                  size=(window_width, int(info_height * 6 / 7)),
+                  element_justification="center")],
+
+        [Sg.Frame("", bottom_info_layout, border_width=0,
+                  size=(window_width, info_height),
+                  element_justification="center")],
+
+        [Sg.Frame("", [[Sg.Push(),
+                        Sg.Text("Created by: Matthew Ferretti",
+                                font=(settings.FONT, settings.SIGNATURE_SIZE),
+                                key="signature")]],
+                  border_width=0,
+                  size=(window_width, int(info_height / 7)),
+                  element_justification="bottom")],
     ]

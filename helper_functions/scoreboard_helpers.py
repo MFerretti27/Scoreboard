@@ -23,7 +23,7 @@ from helper_functions.main_menu_helpers import settings_to_json
 from helper_functions.update import check_for_update, update_program
 
 
-def will_text_fit_on_screen(text: str) -> bool:
+def will_text_fit_on_screen(text: str, txt_size: int=settings.INFO_TXT_SIZE) -> bool:
     """Check if text will fit on screen.
 
     :param text: str to compare to width of screen
@@ -34,7 +34,7 @@ def will_text_fit_on_screen(text: str) -> bool:
 
     root = tk.Tk()
     root.withdraw()  # Hide the root window
-    font = tk_font.Font(family=settings.FONT, size=settings.INFO_TXT_SIZE)
+    font = tk_font.Font(family=settings.FONT, size=txt_size)
     width: float = float(font.measure(text))
     width = width * 1.1  # Ensure text fits on screen by adding a buffer
     root.destroy()
@@ -61,6 +61,8 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["away_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
     window["above_score_txt"].update(value="", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
                                      text_color="white")
+    window["home_player_stats"].update(value="", text_color="white")
+    window["away_player_stats"].update(value="", text_color="white")
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
                                text_color="white")
@@ -73,7 +75,9 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     :param events: key presses that were recorded
     :param currently_playing: current state of scoreboard allowing for more or less key presses
     """
-    if events[0] == Sg.WIN_CLOSED or "Escape" in events[0]:
+    event = events[0].split(":")[0] if ":" in events[0] else events[0]
+
+    if event == Sg.WIN_CLOSED or "Escape" in event:
         window.close()
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
@@ -82,11 +86,13 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
-    elif "Up" in events[0] and not settings.no_spoiler_mode:
+    elif any(key in event for key in ("Up", "away_score", "home_score")) and not settings.no_spoiler_mode:
         settings.no_spoiler_mode = True
-        # Setting window elements will be handled in other functions to continue making sure no spoilers are displayed
+        team_info = {"above_score_txt": ""}
+        window = set_spoiler_mode(window, team_info)
+        window.refresh()
 
-    elif "Down" in events[0] and settings.no_spoiler_mode:
+    elif any(key in event for key in ("Down", "away_score", "home_score")) and settings.no_spoiler_mode:
         settings.no_spoiler_mode = False
         window["top_info"].update(value="")
         window["bottom_info"].update(value="Exiting No Spoiler Mode")
@@ -94,27 +100,28 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         time.sleep(2)
 
     if currently_playing:
-        if "Caps_Lock" in events[0] and not settings.stay_on_team:
-            logger.info("Caps Lock key pressed, Staying on team")
+        if any(key in event for key in ("Caps_Lock", "away_logo", "away_record")) and not settings.stay_on_team:
+            logger.info(f"{event} key pressed, Staying on team")
             settings.stay_on_team = True
             window["bottom_info"].update(value="Staying on Team")
             window.refresh()
             time.sleep(5)
-        elif ("Shift_L" in events[0] or "Shift_R" in events[0]) and settings.stay_on_team:
-            logger.info("shift key pressed, Rotating teams")
+        elif (any(key in event for key in ("Shift_L", "Shift_R", "away_logo", "away_record")) and
+              settings.stay_on_team):
+            logger.info(f"{event} key pressed, Rotating teams")
             settings.stay_on_team = False
             window["bottom_info"].update(value="Rotating Teams")
             window.refresh()
             time.sleep(5)
 
-    if "Left" in events[0] and settings.delay:
-        logger.info("left key pressed, delay off")
+    if any(key in event for key in ("Left", "top_info", "bottom_info")) and settings.delay:
+        logger.info(f"{event} key pressed, delay off")
         settings.delay = False
         window["bottom_info"].update(value="Turning delay OFF")
         window.refresh()
         time.sleep(5)
-    elif "Right" in events[0] and not settings.delay:
-        logger.info("Right key pressed, delay on")
+    elif any(key in event for key in ("Right", "top_info", "bottom_info")) and not settings.delay:
+        logger.info(f"{event} key pressed, delay on")
         settings.delay = True
         window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
         window.refresh()
@@ -141,6 +148,8 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     window["away_timeouts"].update(value="")
     window["home_record"].update(value="")
     window["away_record"].update(value="")
+    window["home_player_stats"].update(value="")
+    window["away_player_stats"].update(value="")
 
     return window
 
@@ -171,6 +180,8 @@ def resize_text() -> None:
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(20, int(34 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(40, int(60 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(8, int(8 * scale)))
+    settings.PLAYER_STAT_SIZE = min(18, max(10, int(14 * scale)))
+    settings.PLAYER_STAT_COLUMN = min(50, max(30, int(14 * scale)))
 
     logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
     logger.info("Info txt size: %s", settings.INFO_TXT_SIZE)
@@ -184,7 +195,9 @@ def resize_text() -> None:
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
-    logger.info("Signature txt size: %s\n", settings.SIGNATURE_SIZE)
+    logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
+    logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
+    logger.info("Player Stat column size: %s\n", settings.PLAYER_STAT_COLUMN)
 
 
 
@@ -200,22 +213,25 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, text: str) -> None:
+def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
     :param text: The text to scroll
     :param display_index: The index of the team to update
+    :param key: The key of the window element to update
     """
-    text = text + "         "
+    text = original_text + "         "  # Add spaces to end for smooth scrolling
     for _ in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
             text = text[1:] + text[0]
-            window["bottom_info"].update(value=text)
+            window[key].update(value=text)
             check_events(window, event)
-        time.sleep(5)
 
+        window[key].update(value=original_text)
+        event = window.read(timeout=100)
+        wait(window, 5)
 
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
@@ -227,8 +243,8 @@ def maximize_screen(window: Sg.Window) -> None:
 
 
 def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
-    """Automatically update the program at 4:30 AM if Auto_Update is enabled."""
-    if settings.Auto_Update and datetime.now().hour == 4 and datetime.now().minute == 30:
+    """Automatically update the program at 4:30 AM if auto_update is enabled."""
+    if settings.auto_update and datetime.now().hour == 4 and datetime.now().minute == 30:
         logger.info("Updating program automatically at 4:30 AM")
 
         message, successful, latest = check_for_update()
@@ -260,3 +276,15 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
                     "--settings", tmp_path,
                     "--saved-data", json.dumps(saved_data),
                 )
+
+
+def wait(window: Sg.Window, time_waiting: int) -> None:
+    """Wait for a short period to allow GUI to update.
+
+    :param window: Window Element that controls GUI
+    :param time_waiting: Time to wait in seconds
+    """
+    for _ in range(int(time_waiting / 0.2)):
+        event = window.read(timeout=0.1)
+        check_events(window, event)  # Check for button presses
+        time.sleep(0.1)

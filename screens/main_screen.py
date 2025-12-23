@@ -1,7 +1,6 @@
 """Functionality for Main screen GUI."""
 import gc
 import json
-import logging
 import os
 import subprocess
 import sys
@@ -19,6 +18,7 @@ from get_data.get_team_logos import get_team_logos
 from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
+    keyboard_layout,
     main_screen_layout,
     manual_layout,
     reorder_teams_layout,
@@ -26,6 +26,7 @@ from gui_layouts import (
     team_selection_layout,
 )
 from helper_functions.internet_connection import connect_to_wifi, is_connected
+from helper_functions.logger_config import logger, rotate_error_log
 from helper_functions.main_menu_helpers import (
     double_check_teams,
     load_teams_order,
@@ -43,13 +44,6 @@ from main import set_screen
 set_screen()
 window_width = Sg.Window.get_screen_size()[0]
 window_height = Sg.Window.get_screen_size()[1]
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-)
-logger = logging.getLogger(__name__)
-
-
 
 def main(saved_data: dict) -> None:
     """Create Main screen GUI functionality.
@@ -569,6 +563,9 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
             window.close()
             sys.exit()
 
+        if "open_keyboard" in event:
+            keyboard_layout.keyboard_layout(window, ["SSID", "password"])
+
         if "Back" in event:
             show_view("MAIN", window)
             return window
@@ -588,6 +585,7 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
 if __name__ == "__main__":
     saved_data = {}
     settings_saved = None
+    rotate_error_log()  # Start fresh log file for this session
 
     # Parse arguments flexibly
     args = sys.argv[1:]

@@ -44,6 +44,8 @@ def create_internet_connection_layout(window_width: int) -> list:
           Sg.Push(),
           ],
           [Sg.VPush()],
+          [Sg.Push(), Sg.Button("Open Keyboard", font=(settings.FONT, button_size), key="open_keyboard"), Sg.Push()],
+          [Sg.VPush()],
          [Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)),
          Sg.Button("Back", font=(settings.FONT, button_size)),

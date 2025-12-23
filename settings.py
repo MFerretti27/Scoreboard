@@ -32,6 +32,8 @@ PLAYING_TOP_INFO_SIZE = 76
 NOT_PLAYING_TOP_INFO_SIZE = 46
 TOP_TXT_SIZE = 80
 SIGNATURE_SIZE = 8
+PLAYER_STAT_SIZE = 14
+PLAYER_STAT_COLUMN = 30
 
 
 #########################################
@@ -91,8 +93,9 @@ display_odds = True
 display_date_ended = True
 always_get_logos = False
 prioritize_playing_team = True
-Auto_Update = True
+auto_update = True
 display_playoff_championship_image = True
+display_player_stats = True
 
 ############################################
 # Variables to to keep track of key presses
