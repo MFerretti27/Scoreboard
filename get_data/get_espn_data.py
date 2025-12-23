@@ -462,7 +462,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
         if settings.display_odds:
             over_under = competition.get("odds", [{}])[0].get("overUnder", "N/A")
             spread = competition.get("odds", [{}])[0].get("details", "N/A")
-            team_info["top_info"] = f"Spread: {spread} \t OverUnder: {over_under}"
+            team_info["top_info"] = f"Spread: {spread} \t\t OverUnder: {over_under}"
             if team_league.upper() in ["NHL", "MLB"]:
                 team_info["top_info"] = f"MoneyLine: {spread} \t OverUnder: {over_under}"
 

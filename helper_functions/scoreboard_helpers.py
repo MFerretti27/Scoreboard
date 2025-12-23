@@ -174,7 +174,7 @@ def resize_text() -> None:
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
-    settings.INFO_TXT_SIZE = min(max_size, max(20, int(45 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(20, int(68 * scale)))
     settings.RECORD_TXT_SIZE = min(max_size, max(35, int(65 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
@@ -183,7 +183,7 @@ def resize_text() -> None:
     settings.NHL_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
-    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(25 * scale)))
+    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(35 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
@@ -304,14 +304,14 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
     :param team_info: The team information dictionary
     :param team_league: The league of the teams playing
     """
-    screen_width = Sg.Window.get_screen_size()[0] / 3  # Get column width
+    screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2  # Get column width
 
     home_score = team_info.get("home_score", "0")
     away_score = team_info.get("away_score", "0")
 
     text = f"{home_score}-{away_score}"
 
-    for i in range(100):
+    for i in range(1000):
         new_txt_size = settings.SCORE_TXT_SIZE + i
         root = tk.Tk()
         root.withdraw()  # Hide the root window
