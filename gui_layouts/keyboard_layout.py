@@ -46,6 +46,8 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
         current_index = 0
 
     while True:
+        window.bring_to_front()
+        window.force_focus()
         event, _ = win.read()
 
         if event == "Enter":

@@ -270,10 +270,13 @@ def show_fetch_popup(league: str) -> None:
         modal=True,  # Forces focus until closed
         keep_on_top=True,
         resizable=True,
+        finalize=True,
     )
 
     update = False
     while True:
+        window.bring_to_front()
+        window.force_focus()
         event, _ = window.read()
 
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
