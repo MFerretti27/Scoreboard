@@ -108,19 +108,41 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
 
     if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
             logger.info(f"{event} key pressed, displaying team info")
+
+            # Determine alignment based on whether currently playing
+            alignment = "center" if currently_playing else "left"
+            elem = window["away_team_stats"]
+            current_text = elem.get()
+            elem.Widget.configure(state="normal")
+            elem.Widget.delete("1.0", "end")
+            elem.Widget.tag_configure(alignment, justify=alignment)
+            elem.Widget.insert("1.0", current_text, alignment)
+            elem.Widget.configure(state="disabled")
+
             window["away_logo_section"].update(visible=False)
             window["away_stats_section"].update(visible=True)
             window.refresh()
-            wait(window, 10)
+            wait(window, 10, currently_playing=currently_playing)
             window["away_logo_section"].update(visible=True)
             window["away_stats_section"].update(visible=False)
 
     if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
             logger.info(f"{event} key pressed, displaying team info")
+
+            # Determine alignment based on whether currently playing
+            alignment = "center" if currently_playing else "left"
+            elem = window["home_team_stats"]
+            current_text = elem.get()
+            elem.Widget.configure(state="normal")
+            elem.Widget.delete("1.0", "end")
+            elem.Widget.tag_configure(alignment, justify=alignment)
+            elem.Widget.insert("1.0", current_text, alignment)
+            elem.Widget.configure(state="disabled")
+
             window["home_logo_section"].update(visible=False)
             window["home_stats_section"].update(visible=True)
             window.refresh()
-            wait(window, 10)
+            wait(window, 10, currently_playing=currently_playing)
             window["home_logo_section"].update(visible=True)
             window["home_stats_section"].update(visible=False)
 
@@ -308,15 +330,16 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
                 )
 
 
-def wait(window: Sg.Window, time_waiting: int) -> None:
+def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = False) -> None:
     """Wait for a short period to allow GUI to update.
 
     :param window: Window Element that controls GUI
     :param time_waiting: Time to wait in seconds
+    :param currently_playing: current state of scoreboard allowing for more or less key presses
     """
     for _ in range(int(time_waiting / 0.2)):
         event = window.read(timeout=0.1)
-        check_events(window, event)  # Check for button presses
+        check_events(window, event, currently_playing=currently_playing)  # Check for button presses
         time.sleep(0.1)
 
 def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = "") -> None:
