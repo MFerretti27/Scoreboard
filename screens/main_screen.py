@@ -228,7 +228,7 @@ def show_fetch_popup(league: str) -> None:
     scale = window_width / base_width
 
     max_size = 100
-    button_size = min(max_size, max(48, int(50 * scale)))
+    button_size = min(max_size, max(14, int(50 * scale)))
     message = min(max_size, max(14, int(20 * scale)))
     layout = [
         [Sg.VPush()],
@@ -265,11 +265,10 @@ def show_fetch_popup(league: str) -> None:
     ]
 
     window = Sg.Window(
-        "",
+        "Warning",
         layout,
         modal=True,  # Forces focus until closed
         keep_on_top=True,
-        size=(int(window_width/2), int(window_height/3)),
         resizable=True,
     )
 

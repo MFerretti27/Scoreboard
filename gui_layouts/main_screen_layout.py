@@ -14,7 +14,7 @@ def create_main_layout(window_width: int) -> list:
     """
     Sg.theme("LightBlue6")  # Set theme for main screen
     text_size = max(12, window_width // 20)
-    button_size = max(12, window_width // 50)
+    button_size = max(12, window_width // 45)
     update_button_size = max(12, window_width // 80)
     message_size = max(12, window_width // 60)
     count = int(len(MLB) + len(NFL) + len(NBA) + len(NHL))

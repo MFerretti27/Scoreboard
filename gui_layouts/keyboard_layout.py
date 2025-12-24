@@ -11,12 +11,12 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
     param target_key: The key of the element to update text for
     """
     layout = [
-        [Sg.Button(c) for c in "QWERTYUIOP"],
-        [Sg.Button(c) for c in "ASDFGHJKL"],
-        [Sg.Button(c) for c in "ZXCVBNM"],
+        [Sg.Button(c, size=(3,1)) for c in "QWERTYUIOP"],
+        [Sg.Button(c, size=(3,1)) for c in "ASDFGHJKL"],
+        [Sg.Button(c, size=(3,1)) for c in "ZXCVBNM"],
         [
-            Sg.Button("Space"),
-            Sg.Button("Back"),
+            Sg.Button("Space", size=(6,1)),
+            Sg.Button("Back", size=(6,1)),
             Sg.Button("Enter"),
         ],
         [Sg.Text("Press Enter to confirm input")],
@@ -26,8 +26,9 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
         f"Enter Text for {target_key} box",
         layout,
         keep_on_top=True,
+        modal=True,
         finalize=True,
-        resizable=True,
+        return_keyboard_events=True,
         element_justification="center",
     )
 
@@ -64,6 +65,8 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
             text += " "
         elif event == "Back":
             text = text[:-1]
+        elif len(event) > 1:
+            continue
         else:
             text += event
 
