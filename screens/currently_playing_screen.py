@@ -175,7 +175,6 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
     for key, value in team_info[display_index].items():
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
             window[key].update(filename=value)
-            window["timeouts_content"].update(visible=True)
             window["under_score_image_column"].update(visible=True)
         elif key == "signature":
             window[key].update(value=value, text_color="red")

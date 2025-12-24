@@ -100,7 +100,6 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window[key].update(filename=value)
             window["player_stats_content"].update(visible=False)
             window["under_score_image_column"].update(visible=True)
-            window["timeouts_content"].update(visible=True)
 
         elif key in ["home_player_stats", "away_player_stats"]:
             if Sg.Window.get_screen_size()[0] < 1000:  # If screen height is small, alternate between home and away
@@ -120,7 +119,6 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
                 window[key].update(value=value)
 
             window["under_score_image_column"].update(visible=False)
-            window["timeouts_content"].update(visible=False)
             window["player_stats_content"].update(visible=True)
 
         elif key == "signature":

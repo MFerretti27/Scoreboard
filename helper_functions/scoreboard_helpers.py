@@ -218,11 +218,11 @@ def resize_text() -> None:
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
     settings.INFO_TXT_SIZE = min(max_size, max(20, int(68 * scale)))
-    settings.RECORD_TXT_SIZE = min(max_size, max(35, int(65 * scale)))
+    settings.RECORD_TXT_SIZE = min(max_size, max(35, int(72 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(15, int(30 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(32 * scale)))
     settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
@@ -367,7 +367,7 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
 
     try:
         log_entries = []
-        screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
+        screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
         home_score = team_info.get("home_score", "0")
@@ -385,6 +385,7 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
 
         # Update timeouts text if present
         if "home_timeouts" in team_info:
+            screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
             size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
             timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
                             if team_league == "NBA" else "\u25CF  \u25CF  \u25CF")
