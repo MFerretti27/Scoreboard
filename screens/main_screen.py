@@ -271,6 +271,8 @@ def show_fetch_popup(league: str) -> None:
         keep_on_top=True,
         resizable=True,
         finalize=True,
+        auto_close=True,
+        auto_close_duration=60,
     )
 
     update = False

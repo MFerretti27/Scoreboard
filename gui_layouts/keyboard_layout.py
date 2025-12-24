@@ -30,6 +30,8 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
         finalize=True,
         return_keyboard_events=True,
         element_justification="center",
+        auto_close=True,
+        auto_close_duration=60,
     )
 
     text = ""
@@ -46,9 +48,9 @@ def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
         current_index = 0
 
     while True:
-        window.bring_to_front()
-        window.force_focus()
-        event, _ = win.read()
+        win.bring_to_front()
+        win.force_focus()
+        event, _ = win.read(timeout=100)
 
         if event == "Enter":
             if current_index < list_len - 1:
