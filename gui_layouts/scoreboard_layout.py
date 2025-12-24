@@ -112,6 +112,23 @@ def create_scoreboard_layout() -> list:
                       size=(away_size[0], away_size[1]), text_color="white")],
     ]
 
+
+    home_team_stats = [
+        [Sg.Multiline("", key="home_team_stats",
+                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
+                      no_scrollbar=True, disabled=True, autoscroll=False,
+                      border_width=1, background_color="black",
+                      size=(60, 30), text_color="white", enable_events=True)],
+    ]
+
+    away_team_stats = [
+        [Sg.Multiline("", key="away_team_stats",
+                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
+                      no_scrollbar=True, disabled=True, autoscroll=False,
+                      border_width=1, background_color="black",
+                      size=(60, 30), text_color="white", enable_events=True)],
+    ]
+
     # Info layouts
     top_info_layout = [
         [Sg.VPush()],
@@ -140,6 +157,85 @@ def create_scoreboard_layout() -> list:
     else:
         away_logo_height = home_logo_height = column_height
         away_record_height = home_record_height = 0
+
+
+    away_logo_swap_frame = Sg.Frame(
+        "",
+        [
+            [Sg.pin(Sg.Column(
+                [
+                    [Sg.Frame("", away_logo_layout, border_width=1,
+                                size=(column_width, away_logo_height),
+                                element_justification="center", pad=(0, 0))],
+                    [Sg.Frame("", away_record_layout, border_width=1,
+                                size=(column_width, away_record_height),
+                                element_justification="center", pad=(0, 0))],
+                ],
+                    key="away_logo_section",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=True,
+                    pad=(0, 0),
+                ))],
+                [Sg.pin(Sg.Column(
+                    [
+                        [Sg.Column(away_team_stats, key="away_team_stats_col", expand_x=True, expand_y=True,
+                                    element_justification="center", pad=(0, 0)),
+                        ],
+                    ],
+                    key="away_stats_section",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=False,
+                    pad=(0, 0),
+                ))],
+        ],
+        border_width=1,
+        element_justification="center",
+        size=(column_width, column_height),
+        pad=(0, 0),
+    )
+
+    home_logo_swap_frame = Sg.Frame(
+        "",
+        [
+            [Sg.pin(Sg.Column(
+                [
+                    [Sg.Frame("", home_logo_layout, border_width=1,
+                                size=(column_width, home_logo_height),
+                                element_justification="center", pad=(0, 0))],
+                    [Sg.Frame("", home_record_layout, border_width=1,
+                                size=(column_width, home_record_height),
+                                element_justification="center", pad=(0, 0))],
+                ],
+                    key="home_logo_section",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=True,
+                    pad=(0, 0),
+                ))],
+                [Sg.pin(Sg.Column(
+                    [
+                        [Sg.Column(home_team_stats, expand_x=True, expand_y=True,
+                                    element_justification="center", pad=(0, 0)),
+                        ],
+                    ],
+                    key="home_stats_section",
+                    element_justification="center",
+                    expand_x=True,
+                    expand_y=True,
+                    visible=False,
+                    pad=(0, 0),
+                ))],
+        ],
+        border_width=1,
+        element_justification="center",
+        size=(column_width, column_height),
+        pad=(0, 0),
+    )
 
     # ----------------------------
     # Middle fixed-size frame (under-score OR stats)
@@ -199,11 +295,15 @@ def create_scoreboard_layout() -> list:
             [
                 Sg.pin(
                     Sg.Column(
-                        [[Sg.Image("", key="under_score_image")]],
+                        [
+                            [Sg.Image("", key="under_score_image")],
+                            [Sg.VPush()],  # push remaining space below to keep image at top
+                        ],
                         key="under_score_image_column",
                         element_justification="center",
+                        vertical_alignment="top",
                         expand_x=True,
-                        expand_y=True,
+                        expand_y=False,
                         visible=True,
                     ),
                 ),
@@ -240,12 +340,7 @@ def create_scoreboard_layout() -> list:
         [
             # Away column
             Sg.Column([
-                [Sg.Frame("", away_logo_layout, border_width=1,
-                          size=(column_width, away_logo_height),
-                          element_justification="center", pad=(0, 0))],
-                [Sg.Frame("", away_record_layout, border_width=1,
-                          size=(column_width, away_record_height),
-                          element_justification="center", pad=(0, 0))],
+                [away_logo_swap_frame],
             ], pad=(0, 0), vertical_alignment="top"),
 
             # Middle column
@@ -258,12 +353,7 @@ def create_scoreboard_layout() -> list:
 
             # Home column
             Sg.Column([
-                [Sg.Frame("", home_logo_layout, border_width=1,
-                          size=(column_width, home_logo_height),
-                          element_justification="center", pad=(0, 0))],
-                [Sg.Frame("", home_record_layout, border_width=1,
-                          size=(column_width, home_record_height),
-                          element_justification="center", pad=(0, 0))],
+                [home_logo_swap_frame],
             ], pad=(0, 0), vertical_alignment="top"),
         ],
 

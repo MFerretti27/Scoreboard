@@ -103,17 +103,19 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window["timeouts_content"].update(visible=True)
 
         elif key in ["home_player_stats", "away_player_stats"]:
-            if Sg.Window.get_screen_size()[1] < 800:  # If screen height is small, alternate between home and away
-                    if not show_home_stats_next and key == "home_player_stats":
+            if Sg.Window.get_screen_size()[0] < 1000:  # If screen height is small, alternate between home and away
+                    if show_home_stats_next and key == "home_player_stats":
                         home_stats = team_info["home_player_stats"]
                         window["away_player_stats"].update(value=home_stats)
                         window["home_player_stats"].update(value="")
                         window["home_player_stats"].update(visible=False)
 
-                    elif show_home_stats_next and key == "away_player_stats":
+                    elif not show_home_stats_next and key == "away_player_stats" and settings.teams[display_index][1] != "NFL":
                         window["away_player_stats"].update(value=value)
                         window["home_player_stats"].update(value="")
                         window["home_player_stats"].update(visible=False)
+                    else:
+                        window["away_player_stats"].update(value=team_info.get("home_player_stats", ""))
             else:
                 window[key].update(value=value)
 

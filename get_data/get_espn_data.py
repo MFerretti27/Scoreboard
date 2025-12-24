@@ -19,6 +19,7 @@ from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
 from .get_player_stats import get_player_stats
 from .get_series_data import get_series
+from .get_team_stats import get_team_stats
 
 doubleheader = 0
 
@@ -410,24 +411,30 @@ def handle_doubleheader(info: dict, league: str, name: str, events: list, comp: 
     return not still_playing
 
 
-def get_live_game_data(league: str, name: str, info: dict, comp: dict) -> dict:
+def get_live_game_data(team_league: str, team_name: str, info: dict, comp: dict) -> dict:
     """Get live game data for a specific league.
 
-    param league: Name of the league (e.g., "NFL", "NBA", "MLB", "NHL")
-    param name: Name of the team
+    param team_league: Name of the league (e.g., "NFL", "NBA", "MLB", "NHL")
+    param team_name: Name of the team
     param info: Dictionary containing team information
     param comp: Dictionary containing competition information
 
     return: Updated info with live game data for the specified league
     """
-    if "NFL" in league.upper():
+    if settings.display_player_stats:
+        home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
+        info["home_team_stats"] = home_player_stats
+        info["away_team_stats"] = away_player_stats
+
+    if "NFL" in team_league.upper():
         return get_currently_playing_nfl_data(info, comp, comp["competitors"][0]["id"], comp["competitors"][1]["id"])
-    if "NBA" in league.upper():
-        return get_currently_playing_nba_data(name, info, comp)
-    if "MLB" in league.upper():
-        return get_currently_playing_mlb_data(name, info, comp)
-    if "NHL" in league.upper():
-        return get_currently_playing_nhl_data(name, info)
+    if "NBA" in team_league.upper():
+        return get_currently_playing_nba_data(team_name, info, comp)
+    if "MLB" in team_league.upper():
+        return get_currently_playing_mlb_data(team_name, info, comp)
+    if "NHL" in team_league.upper():
+        return get_currently_playing_nhl_data(team_name, info)
+
     return info
 
 def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
@@ -439,6 +446,13 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
 
     return: Updated info with live game data for the specified league
     """
+    # Get Team Stats if not currently playing
+    away_team_name = team_info["above_score_txt"].split(" @ ")[0]
+    home_team_name = team_info["above_score_txt"].split(" @ ")[1]
+    away_team_stats, home_team_stats = get_team_stats(team_league.upper(), home_team_name, away_team_name)
+    team_info["away_team_stats"] = away_team_stats
+    team_info["home_team_stats"] = home_team_stats
+
     # Check if Team is Done Playing
     if any(keyword in str(team_info["bottom_info"])
             for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):

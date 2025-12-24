@@ -1,0 +1,177 @@
+"""Get player statistics for various sports leagues."""
+
+import requests  # type: ignore[import]
+from nba_api.stats.endpoints import leaguedashteamstats, leaguestandingsv3
+
+
+def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
+    """Get the player statistics for a specific game.
+
+    :param team_league: The league of the team (e.g., MLB, NHL, NBA, NFL)
+    :param home_team_name: The name of the home team
+
+    :param away_team_name: The name of the away team
+
+    :return: Tuple containing player statistics strings
+    """
+    try:
+        if "MLB" in team_league.upper():
+            return "", ""
+        if "NHL" in team_league.upper():
+            return get_nhl_team_stats(home_team_name, away_team_name)
+        if "NBA" in team_league.upper():
+            return get_nba_team_stats(home_team_name, away_team_name)
+        if "NFL" in team_league.upper():
+            return "", ""
+    except Exception:
+        return "", ""
+    return "", ""
+
+def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | None:
+    """Get NBA team stats for the current season including shooting and foul percentages."""
+    standings = leaguestandingsv3.LeagueStandingsV3().get_dict()
+
+    home_stats = {}
+    away_stats = {}
+
+    for team_name in [home_team_name, away_team_name]:
+    # Get detailed team stats including shooting percentages
+        team_stats_data = leaguedashteamstats.LeagueDashTeamStats(
+            measure_type_detailed_defense="Base",
+            per_mode_detailed="PerGame",
+            season_type_all_star="Regular Season",
+        ).get_dict()
+
+        team_stats = []
+        for team in standings["resultSets"][0]["rowSet"]:
+            team_id = team[2]
+
+            # Find matching team in detailed stats
+            detailed_stats = None
+            for stats_team in team_stats_data["resultSets"][0]["rowSet"]:
+                if stats_team[0] == team_id:
+                    detailed_stats = stats_team
+                    break
+
+            team_stat = {
+                "team_id": team[2],
+                "team_name": team[3] + " " + team[4],
+                "conference": team[6],
+                "conference_record": team[7],
+                "playoff_rank": team[8],
+                "division": team[10],
+                "division_record": team[11],
+                "division_rank": team[12],
+                "wins": team[13],
+                "losses": team[14],
+                "win_pct": team[15],
+                "home_record": team[18],
+                "road_record": team[19],
+            }
+
+            # Add detailed stats if available
+            if detailed_stats:
+                team_stat.update({
+                    "games_played": detailed_stats[3],
+                    "points_per_game": detailed_stats[26],
+                    "rebounds_per_game": detailed_stats[18],
+                    "assists_per_game": detailed_stats[19],
+                    "turnovers_per_game": detailed_stats[20],
+                    "steals_per_game": detailed_stats[21],
+                    "blocks_per_game": detailed_stats[22],
+                    "field_goals_made": detailed_stats[7],
+                    "field_goals_attempted": detailed_stats[8],
+                    "three_pointers_made": detailed_stats[10],
+                    "three_pointers_attempted": detailed_stats[11],
+                    "free_throws_made": detailed_stats[13],
+                    "free_throws_attempted": detailed_stats[14],
+                    "offensive_rebounds": detailed_stats[16],
+                    "defensive_rebounds": detailed_stats[17],
+                    "personal_fouls": detailed_stats[23],
+                })
+
+            team_stats.append(team_stat)
+
+        team_name_lower = str(team_name).lower()
+        for team_stat in team_stats:
+            if (team_name_lower in team_stat["team_name"].lower() or
+                str(team_stat["team_id"]) == str(team_name)):
+                if team_name.lower() == home_team_name.lower():
+                    home_stats = team_stat
+                else:
+                    away_stats = team_stat
+
+    home_stats.pop("team_id", None)
+    away_stats.pop("team_id", None)
+
+    away_stats_str = f"{away_team_name} Season Stats:\n\n"
+    home_stats_str = f"{home_team_name} Season Stats:\n\n"
+    if home_stats or away_stats:
+        for key, value in home_stats.items():
+            home_stats_str += f"{key.replace('_', ' ').title()}: {value}\n"
+
+        for key, value in away_stats.items():
+            away_stats_str += f"{key.replace('_', ' ').title()}: {value}\n"
+
+    return home_stats_str, away_stats_str
+
+
+
+def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> dict | list[dict] | None:
+    """Get NHL team stats for the current season including shooting and efficiency stats.
+
+    :param home_team_name: The name of the home team
+    :param away_team_name: The name of the away team
+
+    :return: Tuple containing player statistics strings
+    """
+    # Get standings data
+    record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=10)
+    standings = record_data.json()
+
+    team_stats = []
+    for team_name in [home_team_name, away_team_name]:
+        for team in standings["standings"]:
+            team_name_full = team["teamName"]["default"]
+
+            team_stat = {
+                "team_name": team_name_full,
+                "wins": team.get("wins", 0),
+                "losses": team.get("losses", 0),
+                "goals_for": team.get("goalFor", 0),
+                "goals_against": team.get("goalAgainst", 0),
+                "goal_diff": team.get("goalDifferential", 0),
+                "points": team.get("points", 0),
+                "wins_in_ot": team.get("otLosses", 0),
+                "division": team.get("divisionName", ""),
+                "conference": team.get("conferenceName", ""),
+                "home_record": f"{team.get('homeWins', 0)}-{team.get('homeLosses', 0)}-{team.get('homeTies', 0)}",
+                "road_record": f"{team.get('roadWins', 0)}-{team.get('roadLosses', 0)}-{team.get('roadTies', 0)}",
+                "streak": f"{team.get('streakCode', '')}{team.get('streakCount', 0)}",
+            }
+
+            team_stats.append(team_stat)
+
+        # If team_name is provided, filter for that specific team
+        team_name_lower = str(team_name).lower()
+        for team_stat in team_stats:
+            if team_name_lower in team_stat["team_name"].lower():
+                if team_name == home_team_name:
+                    home_stats = team_stat
+                else:
+                    away_stats = team_stat
+
+    away_stats_str = f"{away_team_name} Season Stats:\n\n"
+    home_stats_str = f"{home_team_name} Season Stats:\n\n"
+
+    home_stats.pop("team_name", None)
+    away_stats.pop("team_name", None)
+    if home_stats or away_stats:
+        for key, value in home_stats.items():
+            home_stats_str += f"{key.replace('_', ' ').title()}: {value}\n\n"
+
+        for key, value in away_stats.items():
+            away_stats_str += f"{key.replace('_', ' ').title()}: {value}\n\n"
+
+    return home_stats_str, away_stats_str
+

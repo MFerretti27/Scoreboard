@@ -289,7 +289,7 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
 
             index += 1
 
-            if Sg.Window.get_screen_size()[0] < 100:
+            if Sg.Window.get_screen_size()[0] < 1000:
                 home_player_stats += f"\n\n{away_player_stats}"
                 away_player_stats = ""
 

@@ -43,7 +43,7 @@ def will_text_fit_on_screen(text: str, txt_size: int | None = None) -> bool:
     root.destroy()
 
     if txt_width >= screen_width:
-        logger.info("Bottom Text will scroll, text size: %s, screen size: %s", txt_width, screen_width)
+        logger.info("Bottom Text will scroll, text size: %s, screen size: %s", int(txt_width), screen_width)
         return True
 
     return False
@@ -70,6 +70,9 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
                                text_color="white")
+
+    window["home_team_stats"].update(value="", text_color="white")
+    window["away_team_stats"].update(value="", text_color="white")
 
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
@@ -103,20 +106,38 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         window.refresh()
         time.sleep(2)
 
-    if currently_playing:
-        if any(key in event for key in ("Caps_Lock", "away_logo", "away_record")) and not settings.stay_on_team:
-            logger.info(f"{event} key pressed, Staying on team")
-            settings.stay_on_team = True
-            window["bottom_info"].update(value="Staying on Team")
+    if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
+            logger.info(f"{event} key pressed, displaying team info")
+            window["away_logo_section"].update(visible=False)
+            window["away_stats_section"].update(visible=True)
             window.refresh()
-            time.sleep(5)
-        elif (any(key in event for key in ("Shift_L", "Shift_R", "away_logo", "away_record")) and
-              settings.stay_on_team):
-            logger.info(f"{event} key pressed, Rotating teams")
-            settings.stay_on_team = False
-            window["bottom_info"].update(value="Rotating Teams")
+            wait(window, 10)
+            window["away_logo_section"].update(visible=True)
+            window["away_stats_section"].update(visible=False)
+
+    if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
+            logger.info(f"{event} key pressed, displaying team info")
+            window["home_logo_section"].update(visible=False)
+            window["home_stats_section"].update(visible=True)
             window.refresh()
-            time.sleep(5)
+            wait(window, 10)
+            window["home_logo_section"].update(visible=True)
+            window["home_stats_section"].update(visible=False)
+
+    # if currently_playing:
+    #     if any(key in event for key in ("Caps_Lock", "away_logo", "away_record")) and not settings.stay_on_team:
+    #         logger.info(f"{event} key pressed, Staying on team")
+    #         settings.stay_on_team = True
+    #         window["bottom_info"].update(value="Staying on Team")
+    #         window.refresh()
+    #         time.sleep(5)
+    #     elif (any(key in event for key in ("Shift_L", "Shift_R", "away_logo", "away_record")) and
+    #           settings.stay_on_team):
+    #         logger.info(f"{event} key pressed, Rotating teams")
+    #         settings.stay_on_team = False
+    #         window["bottom_info"].update(value="Rotating Teams")
+    #         window.refresh()
+    #         time.sleep(5)
 
     if any(key in event for key in ("Left", "top_info", "bottom_info")) and settings.delay:
         logger.info(f"{event} key pressed, delay off")
@@ -180,7 +201,7 @@ def resize_text() -> None:
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(26 * scale)))
     settings.NBA_TOP_INFO_SIZE = min(max_size, max(15, int(30 * scale)))
-    settings.NHL_TOP_INFO_SIZE = min(max_size, max(40, int(42 * scale)))
+    settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
@@ -230,16 +251,17 @@ def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> Non
     :param key: The key of the window element to update
     """
     text = original_text + "         "  # Add spaces to end for smooth scrolling
-    for _ in range(2):
+    for i in range(2):
         for _ in range(len(text)):
             event = window.read(timeout=100)
             text = text[1:] + text[0]
             window[key].update(value=text)
             check_events(window, event)
 
-        window[key].update(value=original_text)
-        event = window.read(timeout=100)
-        wait(window, 5)
+        if i == 0:
+            window[key].update(value=original_text)
+            event = window.read(timeout=100)
+            wait(window, 5)
 
 def maximize_screen(window: Sg.Window) -> None:
     """Maximize the window to fullscreen."""
@@ -304,76 +326,68 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
     :param team_info: The team information dictionary
     :param team_league: The league of the teams playing
     """
-    screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2  # Get column width
+    # Create root window once for font measurements (major performance improvement)
+    root = tk.Tk()
+    root.withdraw()
 
-    home_score = team_info.get("home_score", "0")
-    away_score = team_info.get("away_score", "0")
-
-    text = f"{home_score}-{away_score}"
-
-    for i in range(1000):
-        new_txt_size = settings.SCORE_TXT_SIZE + i
-        root = tk.Tk()
-        root.withdraw()  # Hide the root window
-        font = tk_font.Font(family=settings.FONT, size=new_txt_size)
-        txt_width: float = float(font.measure(text))
-        txt_width = txt_width * 1.1  # Ensure text fits on screen by adding a buffer
-        root.destroy()
-
-        if txt_width > screen_width:
-            logger.info("Increasing score text size to: %s from %s", new_txt_size - 1, settings.SCORE_TXT_SIZE)
-            logger.info("Increasing hyphen text size to: %s from %s", settings.HYPHEN_SIZE + (i - 10),
-                        settings.HYPHEN_SIZE)
-            window["home_score"].update(font=(settings.FONT, new_txt_size - 1))
-            window["away_score"].update(font=(settings.FONT, new_txt_size - 1))
-            window["hyphen"].update(font=(settings.FONT, settings.HYPHEN_SIZE + (i - 10)))
-            break
-
-    if "home_timeouts" in team_info:
-        screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2  # Get column width
-
-        size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
-
-        nba_max_timeouts_size = "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
-        nfl_max_timeouts_size = "\u25CF  \u25CF  \u25CF"
-        text = nba_max_timeouts_size if team_league == "NBA" else nfl_max_timeouts_size
-
-        for i in range(100):
-            new_txt_size = size + i
-            root = tk.Tk()
-            root.withdraw()  # Hide the root window
+    def find_max_font_size(text: str, base_size: int, screen_width: float,
+                           max_iterations: int = 100, buffer: float = 1.1) -> int:
+        """Find the maximum font size that fits within screen width."""
+        for i in range(max_iterations):
+            new_txt_size = base_size + i
             font = tk_font.Font(family=settings.FONT, size=new_txt_size)
-            txt_width: float = float(font.measure(text))
-            txt_width = txt_width * 1.4  # Ensure text fits on screen by adding a buffer
-            root.destroy()
+            txt_width = float(font.measure(text)) * buffer
 
             if txt_width > screen_width:
-                logger.info("Increasing timeouts text size to: %s from %s", new_txt_size - 2, settings.TIMEOUT_SIZE)
-                window["home_timeouts"].update(font=(settings.FONT, new_txt_size - 2))
-                window["away_timeouts"].update(font=(settings.FONT, new_txt_size - 2))
-                break
+                return new_txt_size - 1 if i > 0 else base_size
+        return base_size + max_iterations - 1
 
-    if "above_score_txt" in team_info:
+    try:
+        log_entries = []
+        screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
+
+        # Update score text
+        home_score = team_info.get("home_score", "0")
+        away_score = team_info.get("away_score", "0")
+        score_text = f"{home_score}-{away_score}"
+        new_score_size = find_max_font_size(score_text, settings.SCORE_TXT_SIZE, screen_width,
+                                            max_iterations=100)
+        new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
+
+        window["home_score"].update(font=(settings.FONT, new_score_size))
+        window["away_score"].update(font=(settings.FONT, new_score_size))
+        window["hyphen"].update(font=(settings.FONT, new_hyphen_size))
+        log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
+                           f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
+
+        # Update timeouts text if present
+        if "home_timeouts" in team_info:
+            size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
+            timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
+                            if team_league == "NBA" else "\u25CF  \u25CF  \u25CF")
+            new_timeout_size = find_max_font_size(timeout_text, size, screen_width, max_iterations=50, buffer=1.4)
+
+            window["home_timeouts"].update(font=(settings.FONT, new_timeout_size))
+            window["away_timeouts"].update(font=(settings.FONT, new_timeout_size))
+            log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
+
+        # Update above score text if present
+        if "above_score_txt" in team_info:
             text = team_info.get("above_score_txt", "")
+            if text:
+                if "@" in text:
+                    screen_width = Sg.Window.get_screen_size()[0] / 4
+                    size = settings.NOT_PLAYING_TOP_INFO_SIZE
+                else:
+                    screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
+                    size = settings.TOP_TXT_SIZE
 
-            if "@" in text:
-                screen_width = (Sg.Window.get_screen_size()[0] / 4)
-                size = settings.NOT_PLAYING_TOP_INFO_SIZE
-            else:
-                screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-                size = settings.TOP_TXT_SIZE
+                new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
+                window["above_score_txt"].update(font=(settings.FONT, new_size))
+                log_entries.append(f"above_score_txt: {size}->{new_size}")
 
-            for i in range(100):
-                new_txt_size = size + i
-                root = tk.Tk()
-                root.withdraw()  # Hide the root window
-                font = tk_font.Font(family=settings.FONT, size=new_txt_size)
-                txt_width: float = float(font.measure(team_info["above_score_txt"]))
-                txt_width = txt_width * 1.1  # Ensure text fits on screen by adding a buffer
-                root.destroy()
+        if log_entries:
+            logger.info("Increased Size: %s", ", ".join(log_entries))
 
-                if txt_width > screen_width:
-                    logger.info("Increasing above score text size to: %s from %s", new_txt_size - 1, size)
-                    window["above_score_txt"].update(font=(settings.FONT, new_txt_size - 1))
-                    break
-
+    finally:
+        root.destroy()
