@@ -155,7 +155,8 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
         })
 
     if settings.display_nfl_timeouts and home_timeouts is not None and away_timeouts is not None:
-        timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
+        timeout_map = ({3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF  \u25CB",
+                        1: "\u25CF  \u25CB  \u25CB", 0: "\u25CB  \u25CB  \u25CB"})
 
         team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
         team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
