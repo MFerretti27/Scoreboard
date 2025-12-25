@@ -450,7 +450,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
     # Get Team Stats if not currently playing
     away_team_name = team_info["above_score_txt"].split(" @ ")[0]
     home_team_name = team_info["above_score_txt"].split(" @ ")[1]
-    away_team_stats, home_team_stats = get_team_stats(team_league.upper(), home_team_name, away_team_name)
+    home_team_stats, away_team_stats = get_team_stats(team_league.upper(), home_team_name, away_team_name)
     team_info["away_team_stats"] = away_team_stats
     team_info["home_team_stats"] = home_team_stats
 

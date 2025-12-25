@@ -62,7 +62,7 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["away_record"].update(value="", font=(settings.FONT, settings.RECORD_TXT_SIZE), text_color="white")
     window["home_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
     window["away_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
-    window["above_score_txt"].update(value="", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+    window["above_score_txt"].update(value="", font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                      text_color="white")
     if Sg.Window.get_screen_size()[1] < 1000:
         window["home_player_stats"].update(value="", text_color="white")
@@ -184,10 +184,10 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
 
     :return window: element updates for window to change
     """
-    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
-    window["bottom_info"].update(value="No Spoiler Mode On", font=(settings.FONT, settings.MLB_BOTTOM_INFO_SIZE))
+    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+    window["bottom_info"].update(value="No Spoiler Mode On", font=(settings.FONT, settings.INFO_TXT_SIZE))
     window["under_score_image"].update(filename="")
-    if "@" not in team_info["above_score_txt"]:  # Only remove if text doesn't contain team names
+    if "@" not in team_info.get("above_score_txt", ""):  # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value="")
     window["home_score"].update(value="0", text_color="white")
     window["away_score"].update(value="0", text_color="white")
@@ -277,8 +277,13 @@ def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> Non
         for _ in range(len(text)):
             event = window.read(timeout=100)
             text = text[1:] + text[0]
-            window[key].update(value=text)
             check_events(window, event)
+            if settings.no_spoiler_mode:
+                set_spoiler_mode(window, {})
+                window.refresh()
+                break
+
+            window[key].update(value=text)
 
         if i == 0:
             window[key].update(value=original_text)
@@ -400,8 +405,8 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
             text = team_info.get("above_score_txt", "")
             if text:
                 if "@" in text:
-                    screen_width = Sg.Window.get_screen_size()[0] / 4
-                    size = settings.NOT_PLAYING_TOP_INFO_SIZE
+                    screen_width = Sg.Window.get_screen_size()[0] / 3
+                    size = settings.NBA_TIMEOUT_SIZE
                 else:
                     screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
                     size = settings.TOP_TXT_SIZE

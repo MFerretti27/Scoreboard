@@ -136,8 +136,6 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
 
             team_stat = {
                 "team_name": team_name_full,
-                "wins": team.get("wins", 0),
-                "losses": team.get("losses", 0),
                 "goals_for": team.get("goalFor", 0),
                 "goals_against": team.get("goalAgainst", 0),
                 "goal_diff": team.get("goalDifferential", 0),
