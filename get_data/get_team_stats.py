@@ -62,9 +62,6 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
                 "division": team[10],
                 "division_record": team[11],
                 "division_rank": team[12],
-                "wins": team[13],
-                "losses": team[14],
-                "win_pct": team[15],
                 "home_record": team[18],
                 "road_record": team[19],
             }
@@ -72,7 +69,6 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
             # Add detailed stats if available
             if detailed_stats:
                 team_stat.update({
-                    "games_played": detailed_stats[3],
                     "points_per_game": detailed_stats[26],
                     "rebounds_per_game": detailed_stats[18],
                     "assists_per_game": detailed_stats[19],
@@ -98,14 +94,16 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
                 str(team_stat["team_id"]) == str(team_name)):
                 if team_name.lower() == home_team_name.lower():
                     home_stats = team_stat
+                    home_stats_str = f"{team_stat.get('team_name', '')} Season Stats:\n\n"
                 else:
                     away_stats = team_stat
+                    away_stats_str = f"{team_stat.get('team_name', '')} Season Stats:\n\n"
 
     home_stats.pop("team_id", None)
     away_stats.pop("team_id", None)
+    home_stats.pop("team_name", None)
+    away_stats.pop("team_name", None)
 
-    away_stats_str = f"{away_team_name} Season Stats:\n\n"
-    home_stats_str = f"{home_team_name} Season Stats:\n\n"
     if home_stats or away_stats:
         for key, value in home_stats.items():
             home_stats_str += f"{key.replace('_', ' ').title()}: {value}\n"
