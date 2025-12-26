@@ -77,24 +77,22 @@ def create_scoreboard_layout() -> list:
     ]
 
     score_layout = [
-        [Sg.VPush()],
-    [
-        Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="away_score", enable_events=True, pad=(0, 0)),
-        Sg.Text("", font=(settings.FONT, settings.HYPHEN_SIZE),
-            key="hyphen", enable_events=True, pad=(0, 0)),
-        Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
-            key="home_score", enable_events=True, pad=(0, 0)),
-    ],
-    [
-        Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
-                expand_x=True, expand_y=True, justification="left",
-                key="away_timeouts", pad=(0, 0)),
-        Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
-                expand_x=True, expand_y=True, justification="right",
-                key="home_timeouts", pad=(0, 0)),
-    ],
-    [Sg.VPush()],
+        [
+            Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                    key="away_score", enable_events=True, pad=(0, 0)),
+            Sg.Text("", font=(settings.FONT, settings.HYPHEN_SIZE),
+                    key="hyphen", enable_events=True, pad=(0, 0)),
+            Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+                    key="home_score", enable_events=True, pad=(0, 0)),
+        ],
+        [
+            Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
+                    expand_x=True, justification="left",
+                    key="away_timeouts", enable_events=True, pad=(0, 0)),
+            Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
+                    expand_x=True, justification="right",
+                    key="home_timeouts", enable_events=True, pad=(0, 0)),
+        ],
     ]
 
     if Sg.Window.get_screen_size()[0] > 1000:
@@ -108,7 +106,7 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key="home_player_stats",
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=0, background_color="black",
+                      border_width=1, background_color="black",
                       size=(home_size[0], home_size[1]), text_color="white")],
     ]
 
@@ -116,7 +114,7 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key="away_player_stats",
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=0, background_color="black",
+                      border_width=1, background_color="black",
                       size=(away_size[0], away_size[1]), text_color="white")],
     ]
 
@@ -125,7 +123,7 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key="home_team_stats",
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=0, background_color="black",
+                      border_width=1, background_color="black",
                       size=(60, 30), text_color="white", enable_events=True)],
     ]
 
@@ -133,7 +131,7 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key="away_team_stats",
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=0, background_color="black",
+                      border_width=1, background_color="black",
                       size=(60, 30), text_color="white", enable_events=True)],
     ]
 
@@ -172,10 +170,10 @@ def create_scoreboard_layout() -> list:
         [
             [Sg.pin(Sg.Column(
                 [
-                    [Sg.Frame("", away_logo_layout, border_width=0,
+                    [Sg.Frame("", away_logo_layout, border_width=1,
                                 size=(column_width, away_logo_height),
                                 element_justification="center", pad=(0, 0))],
-                    [Sg.Frame("", away_record_layout, border_width=0,
+                    [Sg.Frame("", away_record_layout, border_width=1,
                                 size=(column_width, away_record_height),
                                 element_justification="center", pad=(0, 0))],
                 ],
@@ -200,7 +198,7 @@ def create_scoreboard_layout() -> list:
                     pad=(0, 0),
                 ))],
         ],
-        border_width=0,
+        border_width=1,
         element_justification="center",
         size=(column_width, column_height),
         pad=(0, 0),
@@ -211,10 +209,10 @@ def create_scoreboard_layout() -> list:
         [
             [Sg.pin(Sg.Column(
                 [
-                    [Sg.Frame("", home_logo_layout, border_width=0,
+                    [Sg.Frame("", home_logo_layout, border_width=1,
                                 size=(column_width, home_logo_height),
                                 element_justification="center", pad=(0, 0))],
-                    [Sg.Frame("", home_record_layout, border_width=0,
+                    [Sg.Frame("", home_record_layout, border_width=1,
                                 size=(column_width, home_record_height),
                                 element_justification="center", pad=(0, 0))],
                 ],
@@ -239,7 +237,7 @@ def create_scoreboard_layout() -> list:
                     pad=(0, 0),
                 ))],
         ],
-        border_width=0,
+        border_width=1,
         element_justification="center",
         size=(column_width, column_height),
         pad=(0, 0),
@@ -259,18 +257,18 @@ def create_scoreboard_layout() -> list:
                         "",
                         score_layout,
                         key="score_content",
-                         border_width=0,
+                        border_width=1,
                         element_justification="center",
                         vertical_alignment="center",
+                        size=(column_width, int(fixed_middle_height / 1.7)),
                         expand_x=True,
                         expand_y=True,
-                        visible=True,
                         pad=(0, 0),
                     )],
                 ],
                 key="score_section",
                 expand_x=True,
-                expand_y=True,
+                expand_y=False,
                 element_justification="center",
                 vertical_alignment="center",
                 pad=(0, 0),
@@ -281,16 +279,16 @@ def create_scoreboard_layout() -> list:
                 Sg.pin(
                     Sg.Column(
                         [
-                            [Sg.Image("", key="under_score_image")],
-                            [Sg.VPush()],  # push remaining space below to keep image at top
+                            [Sg.Image("", key="under_score_image", pad=(0, 0))],
                         ],
                         key="under_score_image_column",
                         element_justification="center",
                         vertical_alignment="top",
                         expand_x=True,
-                        expand_y=False,
+                        expand_y=True,
                         visible=True,
                     ),
+                    
                 ),
                 Sg.pin(
                     Sg.Column(
@@ -312,8 +310,7 @@ def create_scoreboard_layout() -> list:
                 ),
             ],
         ],
-        border_width=0,
-        element_justification="center",
+        border_width=1,
         size=(column_width, fixed_middle_height),
         pad=(0, 0),
     )
@@ -330,7 +327,7 @@ def create_scoreboard_layout() -> list:
 
             # Middle column
             Sg.Column([
-                [Sg.Frame("", above_score_layout, border_width=0,
+                [Sg.Frame("", above_score_layout, border_width=1,
                           size=(column_width, int(column_height * 1 / 5)),
                           element_justification="center", pad=(0, 0))],
                 [middle_swap_frame],
@@ -342,12 +339,13 @@ def create_scoreboard_layout() -> list:
             ], pad=(0, 0), vertical_alignment="top"),
         ],
 
-        [Sg.Frame("", top_info_layout, border_width=0,
+        [Sg.VPush()],
+        [Sg.Frame("", top_info_layout, border_width=1,
                   size=(window_width, int(info_height * 6 / 7)),
                   element_justification="center",
                   pad=(0, 0))],
 
-        [Sg.Frame("", bottom_info_layout, border_width=0,
+        [Sg.Frame("", bottom_info_layout, border_width=1,
                   size=(window_width, info_height),
                   element_justification="center",
                   pad=(0, 0))],
@@ -356,7 +354,7 @@ def create_scoreboard_layout() -> list:
                         Sg.Text("Created by: Matthew Ferretti",
                                 font=(settings.FONT, settings.SIGNATURE_SIZE),
                                 key="signature")]],
-                  border_width=0,
+                  border_width=1,
                   expand_x=True,
                   element_justification="bottom",
                   pad=(0, 0))],
