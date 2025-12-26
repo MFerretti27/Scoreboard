@@ -225,7 +225,7 @@ def resize_text() -> None:
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(26 * scale)))
     settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(32 * scale)))
     settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
-    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(60, int(60 * scale)))
+    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(20, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(35 * scale)))
