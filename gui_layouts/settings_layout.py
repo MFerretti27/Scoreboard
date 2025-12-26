@@ -31,12 +31,8 @@ def create_settings_layout(window_width: int) -> list:
     top_label_size = min(max_size, max(18, int(28 * scale)))
     bottom_label_size = min(max_size, max(15, int(32 * scale)))
 
-    print(title_size, checkbox_width, checkbox_height, message_size, button_size, text_input_size,
-          top_label_size, bottom_label_size)
-
     checkbox_size = min(max_size, max(10, int(20 * scale)))
     text_size = min(max_size, max(12, int(24 * scale)))
-    print(checkbox_size, text_size)
 
     current_settings = read_settings_from_file()
 
@@ -210,49 +206,64 @@ def create_settings_layout(window_width: int) -> list:
     general_display_layout = Sg.Frame("",
         [
             [
-                Sg.Text("Change Display of Scoreboard:", font=(settings.FONT, bottom_label_size, "underline"),
+                Sg.Text("Choose What Gets Displayed:", font=(settings.FONT, bottom_label_size, "underline"),
                         background_color=color,
                         pad=(0, button_size)),
                 Sg.Push(background_color=color),
             ],
             [Sg.Column([
-                [  Sg.Checkbox("Display Records", key="display_records",
+                [ Sg.Checkbox("Teams Win-Loss Records", key="display_records",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
                             default=current_settings.get("display_records", False)),
                 ],
                 [
-                Sg.Checkbox("Display Venue", key="display_venue",
+                Sg.Checkbox("Game Venue", key="display_venue",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
                             default=current_settings.get("display_venue", False)),
                 ],
+                [Sg.Text("\tDisplayed only before game starts",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
                 [
-                Sg.Checkbox("Display Odds", key="display_odds",
+                Sg.Checkbox("Gambling Odds", key="display_odds",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
                             default=current_settings.get("display_odds", False)),
                 ],
+                [Sg.Text("\tDisplayed only before game starts",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
                 ],
                     element_justification="left",
                     background_color=color,
                 ),
                 Sg.Column([
-                    [Sg.Checkbox("Display Series Info", key="display_series",
+                    [Sg.Checkbox("Series Info", key="display_series",
                                 font=(settings.FONT, top_label_size),
                                 background_color=color,
                                 default=current_settings.get("display_series", False)),
                     ],
+                    [Sg.Text("\tDisplayed only after game ends, and applicable",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
                     [Sg.Checkbox("Display Player Stats", key="display_player_stats",
                                 font=(settings.FONT, top_label_size),
                                 background_color=color,
                                 default=current_settings.get("display_player_stats", False)),
                     ],
-                    [Sg.Checkbox("Display Date Ended", key="display_date_ended",
+                    [Sg.Text("\tDisplayed only after game ends",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
+                    [Sg.Checkbox("Date Ended", key="display_date_ended",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
                             default=current_settings.get("display_date_ended", False)),
                     ],
+                    [Sg.Text("\tDisplayed only after game ends",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
                 ],
                     element_justification="left",
                     background_color=color,
