@@ -412,7 +412,7 @@ def create_settings_layout(window_width: int) -> list:
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size),
                               default=current_settings.get("display_nfl_down", False))],
-                 [Sg.Checkbox("Clock", key="display_nfl_clock",
+                 [Sg.Checkbox("Game Clock", key="display_nfl_clock",
                               background_color=color,
                               size=(checkbox_width, checkbox_height),
                               font=(settings.FONT, checkbox_size),
