@@ -1,5 +1,6 @@
 """Module to display live information when team is currently playing."""
 import copy
+import threading
 import time
 from typing import Any
 
@@ -384,8 +385,14 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
+    check_events_stop = threading.Event()
+    events_list = [""]
+    check_events_1 = threading.Thread(target=check_events, args=(window, events_list), kwargs={"check_events_stop": check_events_stop}, daemon=True)
+    check_events_1.start()
+
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)
+        check_events(window, event, currently_playing=True)
         (teams_with_data, team_info, teams_currently_playing,
             delay_clock, delay_over, delay_started) = get_display_data(
             delay_clock, delay_started=delay_started, delay_over=delay_over,
