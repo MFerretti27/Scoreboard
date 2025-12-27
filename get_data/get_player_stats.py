@@ -73,9 +73,10 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         shooting_pct = round(total_made / total_att * 100) if total_att > 0 else "0"
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
+        assists = stats.get("assists", None)
 
         home_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
-                               f"BLK: {blk},  STL: {stl}\n\n")
+                               f"AST: {assists}, BLK: {blk},  STL: {stl}\n\n")
 
     for p in get_starting_five(away_players):
         stats = p["statistics"]
@@ -88,9 +89,10 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         shooting_pct = round(total_made / total_att * 100) if total_att > 0 else "0"
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
+        assists = stats.get("assists", None)
 
         away_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
-                               f"BLK: {blk},  STL: {stl}\n\n")
+                               f"AST: {assists}, BLK: {blk},  STL: {stl}\n\n")
 
     return home_player_stats.rstrip(""), away_player_stats.rstrip("")
 
