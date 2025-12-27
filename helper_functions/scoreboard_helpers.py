@@ -185,7 +185,8 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
 
     :return window: element updates for window to change
     """
-    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT,
+                                                                        settings.NOT_PLAYING_TOP_INFO_SIZE))
     window["bottom_info"].update(value="No Spoiler Mode On", font=(settings.FONT, settings.INFO_TXT_SIZE))
     window["under_score_image"].update(filename="")
     if "@" not in team_info.get("above_score_txt", ""):  # Only remove if text doesn't contain team names
@@ -386,8 +387,9 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
         window["home_score"].update(font=(settings.FONT, new_score_size))
         window["away_score"].update(font=(settings.FONT, new_score_size))
         window["hyphen"].update(font=(settings.FONT, new_hyphen_size))
-        log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
-                           f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
+        if new_score_size != settings.SCORE_TXT_SIZE or new_hyphen_size != settings.HYPHEN_SIZE:
+            log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
+                             f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
 
         # Update timeouts text if present
         if "home_timeouts" in team_info:
@@ -399,7 +401,8 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
 
             window["home_timeouts"].update(font=(settings.FONT, new_timeout_size))
             window["away_timeouts"].update(font=(settings.FONT, new_timeout_size))
-            log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
+            if new_timeout_size != size:
+                log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
 
         # Update above score text if present
         if "above_score_txt" in team_info:
@@ -414,10 +417,54 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
 
                 new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
                 window["above_score_txt"].update(font=(settings.FONT, new_size))
-                log_entries.append(f"above_score_txt: {size}->{new_size}")
+                if new_size != size:
+                    log_entries.append(f"above_score_txt: {size}->{new_size}")
+
+    finally:
+        root.destroy()
+
+
+def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> None:
+    """Decrease the size of the text to fit on the screen.
+
+    :param window: The window element to update
+    :param target_key: The key or list of keys of the window element(s) to update
+    """
+    root = tk.Tk()
+    root.withdraw()
+
+    def find_min_font_size(text: str, base_size: int, screen_width: float,
+                        max_iterations: int = 100, buffer: float = 1.1) -> int:
+        size = base_size
+        for _ in range(max_iterations):
+            txt_width = tk_font.Font(family=settings.FONT, size=size).measure(text) * buffer
+            if txt_width <= screen_width:
+                return size
+            size = max(1, size - 1)  # step down
+        return size  # smallest tried (or 1)
+
+    try:
+        log_entries = []
+        screen_width = Sg.Window.get_screen_size()[0]
+
+        # Update score text
+        top_info = team_info.get("top_info", "")
+
+        if team_league == "NBA":
+            size = settings.NBA_TOP_INFO_SIZE
+        elif team_league == "NHL":
+            size = settings.NHL_TOP_INFO_SIZE
+        else:
+            size = settings.PLAYING_TOP_INFO_SIZE
+
+        new_top_info_size = find_min_font_size(top_info, size, screen_width, max_iterations=100)
+
+        window["top_info"].update(font=(settings.FONT, new_top_info_size))
+        if new_top_info_size != size:
+            log_entries.append(f"top_info: {size}->{new_top_info_size}")
 
         if log_entries:
-            logger.info("Increased Size: %s", ", ".join(log_entries))
+            logger.info("Decreased Size: %s", ", ".join(log_entries))
 
     finally:
         root.destroy()

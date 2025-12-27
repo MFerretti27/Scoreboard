@@ -11,6 +11,7 @@ from get_data.get_espn_data import get_data
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
+    decrease_text_size,
     increase_text_size,
     reset_window_elements,
     scroll,
@@ -199,6 +200,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
             display_nhl_info(window, team_info[display_index], key, value)
 
     increase_text_size(window, team_info[display_index], sport_league.upper())
+    decrease_text_size(window, team_info[display_index], sport_league.upper())
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info[display_index])

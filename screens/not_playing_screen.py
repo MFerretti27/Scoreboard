@@ -109,10 +109,13 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
                         window["home_player_stats"].update(value="")
                         window["home_player_stats"].update(visible=False)
 
-                    elif not show_home_stats_next and key == "away_player_stats" and settings.teams[display_index][1] != "NFL":
+                    elif (not show_home_stats_next and key == "away_player_stats"
+                          and settings.teams[display_index][1] != "NFL"):
                         window["away_player_stats"].update(value=value)
                         window["home_player_stats"].update(value="")
                         window["home_player_stats"].update(visible=False)
+
+                    # NFL just have game stats not player so display on one column
                     else:
                         window["away_player_stats"].update(value=team_info.get("home_player_stats", ""))
             else:
@@ -290,7 +293,6 @@ def main(data_saved: dict) -> None:
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
                        resizable=True, return_keyboard_events=True).Finalize()
 
-    # window.set_cursor("none")  # Hide the mouse cursor
     maximize_screen(window)
 
     while True:
@@ -310,7 +312,6 @@ def main(data_saved: dict) -> None:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
                     should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
-
 
                     if should_scroll and not settings.no_spoiler_mode:
                         scroll(window, team_info[display_index]["bottom_info"])
