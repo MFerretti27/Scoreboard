@@ -224,7 +224,7 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(32 * scale)))
+    settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(38 * scale)))
     settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(20, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
@@ -434,10 +434,12 @@ def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> 
     root.withdraw()
 
     def find_min_font_size(text: str, base_size: int, screen_width: float,
-                        max_iterations: int = 100, buffer: float = 1.1) -> int:
+                        max_iterations: int = 100, buffer: float = 1.2) -> int:
+        # Replace tabs with spaces for accurate measurement
+        measured_text = text.replace("\t", "    ")
         size = base_size
         for _ in range(max_iterations):
-            txt_width = tk_font.Font(family=settings.FONT, size=size).measure(text) * buffer
+            txt_width = tk_font.Font(family=settings.FONT, size=size).measure(measured_text) * buffer
             if txt_width <= screen_width:
                 return size
             size = max(1, size - 1)  # step down
