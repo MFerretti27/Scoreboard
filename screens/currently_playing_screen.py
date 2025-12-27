@@ -1,6 +1,5 @@
 """Module to display live information when team is currently playing."""
 import copy
-import threading
 import time
 from typing import Any
 
@@ -172,6 +171,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
 
     :return: None
     """
+    logger.info(f"\n{settings.teams[display_index][0]} is currently playing, updating display")
     sport_league = settings.teams[display_index][1]
     for key, value in team_info[display_index].items():
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
@@ -385,11 +385,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
     display_timer: int = settings.DISPLAY_PLAYING_TIMER * 1000  # How often the display should update in seconds
     delay_clock: int = ticks_ms()  # Start timer how long to start displaying information
 
-    check_events_stop = threading.Event()
-    events_list = [""]
-    check_events_1 = threading.Thread(target=check_events, args=(window, events_list), kwargs={"check_events_stop": check_events_stop}, daemon=True)
-    check_events_1.start()
-
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)
         check_events(window, event, currently_playing=True)
@@ -400,7 +395,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
-            logger.info(f"\n{teams[display_index][0]} is currently playing, updating display")
 
             # Reset text color, underline and timeouts, for new display
             reset_window_elements(window)
