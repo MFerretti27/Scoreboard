@@ -22,7 +22,7 @@ def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = 
         if "NBA" in team_league.upper():
             return get_nba_team_stats(home_team_name, away_team_name)
         if "NFL" in team_league.upper():
-            return "", ""
+            return get_nfl_team_stats(home_team_name, away_team_name)
     except Exception:
         return "", ""
     return "", ""
@@ -171,3 +171,80 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
 
     return home_stats_str, away_stats_str
 
+
+def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> dict | None:
+    """Get comprehensive team stats from ESPN teams API.
+
+    team_abbr: Team abbreviation (e.g., 'DET', 'MIN')
+    team_info: Dictionary to populate with team data
+    """
+    try:
+        for team_abbr in [home_abbr, away_abbr]:
+            team_url = f"http://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
+            team_resp = requests.get(team_url, timeout=10)
+            team_data = team_resp.json()
+
+            team_name = team_data.get("team", {}).get("displayName", "")
+            team_stat = f"{team_name} Season Stats:\n\n"
+
+            # Basic team info
+            team = team_data.get("team", {})
+
+            # Records with home/road splits
+            record_items = team.get("record", {}).get("items", [])
+            for record in record_items:
+                record_type = record.get("type", "")
+                summary = record.get("summary", "")
+
+                if record_type == "total":
+
+                    # Extract detailed stats from total record
+                    stats = record.get("stats", [])
+                    for stat in stats:
+                        stat_name = stat.get("name", "")
+                        stat_value = stat.get("value", "")
+
+                        # Add relevant stats
+                        if stat_name == "avgPointsAgainst":
+                            team_stat += "AvgPointsAgainst: " + str(stat_value) + "\n\n"
+                        elif stat_name == "avgPointsFor":
+                            team_stat += "AvgPointsFor: " + str(stat_value) + "\n\n"
+                        elif stat_name == "divisionWinPercent":
+                            team_stat += "DivisionWinPercent: " + str(stat_value) + "\n\n"
+                        elif stat_name == "playoffSeed":
+                            team_stat += "PlayoffSeed: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "pointsAgainst":
+                            team_stat += "PointsAgainst: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "pointsFor":
+                            team_stat += "PointsFor: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "streak":
+                            team_stat += "Streak: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "divisionWins":
+                            team_stat += "DivisionWins: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "divisionLosses":
+                            team_stat += "DivisionLosses: " + str(int(stat_value)) + "\n\n"
+                        elif stat_name == "divisionTies":
+                            team_stat += "DivisionTies: " + str(int(stat_value)) + "\n\n"
+                elif record_type == "home":
+                    team_stat += "Home Record: " + summary + "\n\n"
+                elif record_type == "road":
+                    team_stat += "Road Record: " + summary + "\n\n"
+            # Standing summary
+            team_stat += team_data.get("standingSummary", "")
+
+            # Next event info
+            next_events = team_data.get("nextEvent", [])
+            if next_events:
+                next_game = next_events[0]
+                team_stat += next_game.get("shortName", "")
+                team_stat += next_game.get("date", "")
+
+            if team_abbr == home_abbr:
+                home_team_stats = team_stat
+            else:
+                away_team_stats = team_stat
+
+    except Exception:
+        return "", ""
+
+    return home_team_stats, away_team_stats
