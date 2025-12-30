@@ -30,6 +30,9 @@ def will_text_fit_on_screen(text: str, txt_size: int | None = None) -> bool:
 
     :return bool: boolean value representing if string will fit on screen
     """
+    if settings.no_spoiler_mode:
+        return False
+
     if txt_size is None:
         txt_size = settings.INFO_TXT_SIZE
 
@@ -75,6 +78,33 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["away_team_stats"].update(value="", text_color="white")
 
 
+def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool, event: str) -> None:
+    """Toggle team stats display visibility.
+
+    :param window: The window element to update
+    :param team: Either 'home' or 'away'
+    :param currently_playing: Whether game is currently playing
+    :param event: The event that triggered this
+    """
+    logger.info(f"{event} key pressed, displaying team info")
+
+    alignment = "center" if currently_playing else "left"
+    elem = window[f"{team}_team_stats"]
+    current_text = elem.get()
+    elem.Widget.configure(state="normal")
+    elem.Widget.delete("1.0", "end")
+    elem.Widget.tag_configure(alignment, justify=alignment)
+    elem.Widget.insert("1.0", current_text, alignment)
+    elem.Widget.configure(state="disabled")
+
+    window[f"{team}_logo_section"].update(visible=False)
+    window[f"{team}_stats_section"].update(visible=True)
+    window.refresh()
+    wait(window, 10, currently_playing=currently_playing)
+    window[f"{team}_logo_section"].update(visible=True)
+    window[f"{team}_stats_section"].update(visible=False)
+
+
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
     """Check for specific key presses.
 
@@ -84,6 +114,7 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     """
     event = events[0].split(":")[0] if ":" in events[0] else events[0]
 
+    # Exit/close handling
     if event == Sg.WIN_CLOSED or "Escape" in event or "above_score_txt" in event:
         window.close()
         gc.collect()  # Clean up memory
@@ -93,85 +124,35 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
-    elif any(key in event for key in ("Up", "away_score", "home_score")) and not settings.no_spoiler_mode:
+    # Spoiler mode toggle
+    spoiler_triggers = ("Up", "away_score", "home_score")
+    if any(key in event for key in spoiler_triggers) and not settings.no_spoiler_mode:
         settings.no_spoiler_mode = True
-        team_info = {"above_score_txt": ""}
-        window = set_spoiler_mode(window, team_info)
+        window = set_spoiler_mode(window, {"above_score_txt": ""})
         window.refresh()
-
-    elif any(key in event for key in ("Down", "away_score", "home_score",
-                                      "away_timeouts", "home_timeouts")) and settings.no_spoiler_mode:
+    elif any(
+        key in event for key in (*spoiler_triggers,"Down", "away_timeouts", "home_timeouts")
+             )and settings.no_spoiler_mode:
         settings.no_spoiler_mode = False
         window["top_info"].update(value="")
         window["bottom_info"].update(value="Exiting No Spoiler Mode")
         window.refresh()
         time.sleep(2)
 
+    # Team stats display
     if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
-            logger.info(f"{event} key pressed, displaying team info")
-
-            # Determine alignment based on whether currently playing
-            alignment = "center" if currently_playing else "left"
-            elem = window["away_team_stats"]
-            current_text = elem.get()
-            elem.Widget.configure(state="normal")
-            elem.Widget.delete("1.0", "end")
-            elem.Widget.tag_configure(alignment, justify=alignment)
-            elem.Widget.insert("1.0", current_text, alignment)
-            elem.Widget.configure(state="disabled")
-
-            window["away_logo_section"].update(visible=False)
-            window["away_stats_section"].update(visible=True)
-            window.refresh()
-            wait(window, 10, currently_playing=currently_playing)
-            window["away_logo_section"].update(visible=True)
-            window["away_stats_section"].update(visible=False)
+        _toggle_team_stats(window, "away", currently_playing=currently_playing, event=event)
 
     if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
-            logger.info(f"{event} key pressed, displaying team info")
+        _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
 
-            # Determine alignment based on whether currently playing
-            alignment = "center" if currently_playing else "left"
-            elem = window["home_team_stats"]
-            current_text = elem.get()
-            elem.Widget.configure(state="normal")
-            elem.Widget.delete("1.0", "end")
-            elem.Widget.tag_configure(alignment, justify=alignment)
-            elem.Widget.insert("1.0", current_text, alignment)
-            elem.Widget.configure(state="disabled")
-
-            window["home_logo_section"].update(visible=False)
-            window["home_stats_section"].update(visible=True)
-            window.refresh()
-            wait(window, 10, currently_playing=currently_playing)
-            window["home_logo_section"].update(visible=True)
-            window["home_stats_section"].update(visible=False)
-
-    # if currently_playing:
-    #     if any(key in event for key in ("Caps_Lock", "away_logo", "away_record")) and not settings.stay_on_team:
-    #         logger.info(f"{event} key pressed, Staying on team")
-    #         settings.stay_on_team = True
-    #         window["bottom_info"].update(value="Staying on Team")
-    #         window.refresh()
-    #         time.sleep(5)
-    #     elif (any(key in event for key in ("Shift_L", "Shift_R", "away_logo", "away_record")) and
-    #           settings.stay_on_team):
-    #         logger.info(f"{event} key pressed, Rotating teams")
-    #         settings.stay_on_team = False
-    #         window["bottom_info"].update(value="Rotating Teams")
-    #         window.refresh()
-    #         time.sleep(5)
-
-    if any(key in event for key in ("Left", "top_info", "bottom_info")) and settings.delay:
+    # Delay toggle
+    delay_triggers = ("Left", "Right", "top_info", "bottom_info")
+    if any(key in event for key in delay_triggers):
         logger.info(f"{event} key pressed, delay off")
-        settings.delay = False
-        window["bottom_info"].update(value="Turning delay OFF")
-        window.refresh()
-        time.sleep(5)
-    elif any(key in event for key in ("Right", "top_info", "bottom_info")) and not settings.delay:
-        logger.info(f"{event} key pressed, delay on")
-        settings.delay = True
-        window["bottom_info"].update(value=f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)")
+        settings.delay = not settings.delay
+        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+        window["bottom_info"].update(value=msg)
         window.refresh()
         time.sleep(5)
 
@@ -349,7 +330,8 @@ def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = Fals
         check_events(window, event, currently_playing=currently_playing)  # Check for button presses
         time.sleep(0.1)
 
-def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = "") -> None:
+def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
+                       ,*, currently_playing: bool = False) -> None:
     """Increase the size of the score text and timeouts text if there is more room on the screen.
 
     :param window: The window element to update
@@ -377,9 +359,15 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
         screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
-        home_score = team_info.get("home_score", "0")
-        away_score = team_info.get("away_score", "0")
-        score_text = f"{home_score}-{away_score}"
+        if (Sg.Window.get_screen_size()[0] < 1000 and "FINAL" in team_info.get("bottom_info", "").upper() and
+            settings.display_player_stats and team_league == "NHL"):
+            # if small screen and game is final and player stats are displayed, limit score size so stats fit
+            score_text = "888-888"
+        else:
+            home_score = team_info.get("home_score", "0")
+            away_score = team_info.get("away_score", "0")
+            score_text = f"{home_score}-{away_score}"
+
         new_score_size = find_max_font_size(score_text, settings.SCORE_TXT_SIZE, screen_width,
                                             max_iterations=100)
         new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
@@ -392,7 +380,7 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
                              f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
 
         # Update timeouts text if present
-        if "home_timeouts" in team_info:
+        if currently_playing:
             screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
             size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
             timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"

@@ -129,7 +129,7 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
         else:
             window[key].update(value=value)
 
-    increase_text_size(window, team_info)
+    increase_text_size(window, team_info, settings.teams[display_index][1].upper())
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info)
@@ -267,16 +267,11 @@ def handle_error(window: Sg.Window, *, error: Exception | None = None,
 #        Main Event Loop         #
 #                                #
 ##################################
-def main(data_saved: dict) -> None:
-    """Create Main function to run the scoreboard application.
-
-    :param saved_data: Dictionary containing saved data for teams
-    """
+def main() -> None:
+    """Create Main function to run the scoreboard application."""
     # Initialize variables
     team_info: list[dict] = []
-    settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
     display_index: int = 0
-    should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
     update_clock = ticks_ms() # Start Timer for updating display
     display_timer: int = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
@@ -285,9 +280,6 @@ def main(data_saved: dict) -> None:
     display_first_time: bool = True
     fetch_first_time: bool = True
     global show_home_stats_next
-
-    if settings.LIVE_DATA_DELAY > 0:
-        settings.delay = True
 
     # Create the window
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
@@ -311,9 +303,8 @@ def main(data_saved: dict) -> None:
                 if teams_with_data[display_index]:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
-                    should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
 
-                    if should_scroll and not settings.no_spoiler_mode:
+                    if will_text_fit_on_screen(team_info[display_index].get("bottom_info", "")):
                         scroll(window, team_info[display_index]["bottom_info"])
 
                 show_home_stats_next = not show_home_stats_next
@@ -344,7 +335,7 @@ def main(data_saved: dict) -> None:
                 auto_update(window, settings.saved_data)  # Check if need to auto update
 
         except Exception as error:
-            logger.exception(f"Error: {error}")
+            logger.info(f"Error: {error}")
             handle_error(window, error=error, team_info=team_info)
 
 
@@ -381,9 +372,10 @@ if __name__ == "__main__":
                 else:
                     logger.warning("--saved-data argument provided but empty")
 
+        settings.saved_data = copy.deepcopy(saved_data)  # Load saved data from command line argument
     except Exception as e:
         logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
 
     logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
-    main(saved_data)
+    main()
