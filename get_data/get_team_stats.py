@@ -38,6 +38,9 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     home_stats = {}
     away_stats = {}
 
+    away_stats_str = ""
+    home_stats_str = ""
+
     for team_name in [home_team_name, away_team_name]:
     # Get detailed team stats including shooting percentages
         team_stats_data = leaguedashteamstats.LeagueDashTeamStats(
@@ -107,9 +110,6 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     away_stats.pop("team_id", None)
     home_stats.pop("team_name", None)
     away_stats.pop("team_name", None)
-
-    away_stats_str = ""
-    home_stats_str = ""
 
     if home_stats or away_stats:
         for key, value in home_stats.items():
