@@ -186,7 +186,7 @@ def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
     team_info: Dictionary to populate with team data
     """
     home_team_stats = ""
-    home_team_stats = ""
+    away_team_stats = ""
 
     for team_abbr in [home_abbr, away_abbr]:
         team_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
