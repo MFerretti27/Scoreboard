@@ -189,7 +189,7 @@ def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> dict | None:
     home_team_stats = ""
 
     for team_abbr in [home_abbr, away_abbr]:
-        team_url = f"http://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
+        team_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
         team_resp = requests.get(team_url, timeout=10)
         team_data = team_resp.json()
 
