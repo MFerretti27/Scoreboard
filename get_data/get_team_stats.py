@@ -182,8 +182,9 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
 def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
     """Get comprehensive team stats from ESPN teams API.
 
-    team_abbr: Team abbreviation (e.g., 'DET', 'MIN')
-    team_info: Dictionary to populate with team data
+    :param home_abbr: Home team abbreviation (e.g., 'DET', 'MIN')
+    :param away_abbr: Away team abbreviation (e.g., 'DET', 'MIN')
+    :return: Tuple containing home and away team stats strings.
     """
     home_team_stats = ""
     away_team_stats = ""
