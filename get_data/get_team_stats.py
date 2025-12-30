@@ -108,6 +108,9 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     home_stats.pop("team_name", None)
     away_stats.pop("team_name", None)
 
+    away_stats_str = ""
+    home_stats_str = ""
+
     if home_stats or away_stats:
         for key, value in home_stats.items():
             home_stats_str += f"{key.replace('_', ' ').title()}: {value}\n"
