@@ -7,14 +7,13 @@ from helper_functions.logger_config import logger
 
 
 def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
-    """Get the player statistics for a specific game.
+    """Get the team statistics for the current season.
 
     :param team_league: The league of the team (e.g., MLB, NHL, NBA, NFL)
     :param home_team_name: The name of the home team
-
     :param away_team_name: The name of the away team
 
-    :return: Tuple containing player statistics strings
+    :return: Tuple containing team statistics strings
     """
     try:
         if "MLB" in team_league.upper():
