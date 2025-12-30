@@ -270,7 +270,6 @@ def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> Non
 
         if i == 0:
             window[key].update(value=original_text)
-            event = window.read(timeout=100)
             wait(window, 5)
 
 def maximize_screen(window: Sg.Window) -> None:
