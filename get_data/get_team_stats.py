@@ -141,27 +141,30 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     home_stats = {}
     away_stats = {}
 
+    # Build full team_stats list once from standings
+    for team in standings["standings"]:
+        team_name_full = team["teamName"]["default"]
+
+        team_stat = {
+            "team_name": team_name_full,
+            "goals_for": team.get("goalFor", 0),
+            "goals_against": team.get("goalAgainst", 0),
+            "goal_diff": team.get("goalDifferential", 0),
+            "points": team.get("points", 0),
+            "wins_in_ot": team.get("otLosses", 0),
+            "division": team.get("divisionName", ""),
+            "conference": team.get("conferenceName", ""),
+            "home_record": f"{team.get('homeWins', 0)}-{team.get('homeLosses', 0)}-{team.get('homeTies', 0)}",
+            "road_record": f"{team.get('roadWins', 0)}-{team.get('roadLosses', 0)}-{team.get('roadTies', 0)}",
+            "streak": f"{team.get('streakCode', '')}{team.get('streakCount', 0)}",
+        }
+
+        team_stats.append(team_stat)
+
+    # Filter for the requested home and away teams using the prebuilt team_stats list
     for team_name in [home_team_name, away_team_name]:
-        for team in standings["standings"]:
-            team_name_full = team["teamName"]["default"]
-
-            team_stat = {
-                "team_name": team_name_full,
-                "goals_for": team.get("goalFor", 0),
-                "goals_against": team.get("goalAgainst", 0),
-                "goal_diff": team.get("goalDifferential", 0),
-                "points": team.get("points", 0),
-                "wins_in_ot": team.get("otLosses", 0),
-                "division": team.get("divisionName", ""),
-                "conference": team.get("conferenceName", ""),
-                "home_record": f"{team.get('homeWins', 0)}-{team.get('homeLosses', 0)}-{team.get('homeTies', 0)}",
-                "road_record": f"{team.get('roadWins', 0)}-{team.get('roadLosses', 0)}-{team.get('roadTies', 0)}",
-                "streak": f"{team.get('streakCode', '')}{team.get('streakCount', 0)}",
-            }
-
-            team_stats.append(team_stat)
-
-        # If team_name is provided, filter for that specific team
+        if not team_name:
+            continue
         team_name_lower = str(team_name).lower()
         for team_stat in team_stats:
             if team_name_lower in team_stat["team_name"].lower():
