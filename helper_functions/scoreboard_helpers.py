@@ -131,8 +131,8 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         window = set_spoiler_mode(window, {"above_score_txt": ""})
         window.refresh()
     elif any(
-        key in event for key in (*spoiler_triggers,"Down", "away_timeouts", "home_timeouts")
-             )and settings.no_spoiler_mode:
+        key in event for key in (*spoiler_triggers, "Down", "away_timeouts", "home_timeouts")
+    ) and settings.no_spoiler_mode:
         settings.no_spoiler_mode = False
         window["top_info"].update(value="")
         window["bottom_info"].update(value="Exiting No Spoiler Mode")
