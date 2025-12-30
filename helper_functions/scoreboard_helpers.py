@@ -394,7 +394,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         # Update above score text if present
         if "above_score_txt" in team_info:
             text = team_info.get("above_score_txt", "")
-            if "@" in text:
+            if "@" not in text:
                 screen_width = Sg.Window.get_screen_size()[0] / 3
                 size = settings.NBA_TIMEOUT_SIZE
             else:
