@@ -40,60 +40,64 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     away_stats_str = ""
     home_stats_str = ""
 
+    # Get detailed team stats including shooting percentages once
+    team_stats_data = leaguedashteamstats.LeagueDashTeamStats(
+        measure_type_detailed_defense="Base",
+        per_mode_detailed="PerGame",
+        season_type_all_star="Regular Season",
+    ).get_dict()
+
+    # Build the full list of team stats once
+    team_stats = []
+    for team in standings["resultSets"][0]["rowSet"]:
+        team_id = team[2]
+
+        # Find matching team in detailed stats
+        detailed_stats = None
+        for stats_team in team_stats_data["resultSets"][0]["rowSet"]:
+            if stats_team[0] == team_id:
+                detailed_stats = stats_team
+                break
+
+        team_stat = {
+            "team_id": team[2],
+            "team_name": team[3] + " " + team[4],
+            "conference": team[6],
+            "conference_record": team[7],
+            "playoff_rank": team[8],
+            "division": team[10],
+            "division_record": team[11],
+            "division_rank": team[12],
+            "home_record": team[18],
+            "road_record": team[19],
+        }
+
+        # Add detailed stats if available
+        if detailed_stats:
+            team_stat.update({
+                "points_per_game": detailed_stats[26],
+                "rebounds_per_game": detailed_stats[18],
+                "assists_per_game": detailed_stats[19],
+                "turnovers_per_game": detailed_stats[20],
+                "steals_per_game": detailed_stats[21],
+                "blocks_per_game": detailed_stats[22],
+                "field_goals_made": detailed_stats[7],
+                "field_goals_attempted": detailed_stats[8],
+                "three_pointers_made": detailed_stats[10],
+                "three_pointers_attempted": detailed_stats[11],
+                "free_throws_made": detailed_stats[13],
+                "free_throws_attempted": detailed_stats[14],
+                "offensive_rebounds": detailed_stats[16],
+                "defensive_rebounds": detailed_stats[17],
+                "personal_fouls": detailed_stats[23],
+            })
+
+        team_stats.append(team_stat)
+
+    # Look up stats for the requested teams using the prebuilt list
     for team_name in [home_team_name, away_team_name]:
-    # Get detailed team stats including shooting percentages
-        team_stats_data = leaguedashteamstats.LeagueDashTeamStats(
-            measure_type_detailed_defense="Base",
-            per_mode_detailed="PerGame",
-            season_type_all_star="Regular Season",
-        ).get_dict()
-
-        team_stats = []
-        for team in standings["resultSets"][0]["rowSet"]:
-            team_id = team[2]
-
-            # Find matching team in detailed stats
-            detailed_stats = None
-            for stats_team in team_stats_data["resultSets"][0]["rowSet"]:
-                if stats_team[0] == team_id:
-                    detailed_stats = stats_team
-                    break
-
-            team_stat = {
-                "team_id": team[2],
-                "team_name": team[3] + " " + team[4],
-                "conference": team[6],
-                "conference_record": team[7],
-                "playoff_rank": team[8],
-                "division": team[10],
-                "division_record": team[11],
-                "division_rank": team[12],
-                "home_record": team[18],
-                "road_record": team[19],
-            }
-
-            # Add detailed stats if available
-            if detailed_stats:
-                team_stat.update({
-                    "points_per_game": detailed_stats[26],
-                    "rebounds_per_game": detailed_stats[18],
-                    "assists_per_game": detailed_stats[19],
-                    "turnovers_per_game": detailed_stats[20],
-                    "steals_per_game": detailed_stats[21],
-                    "blocks_per_game": detailed_stats[22],
-                    "field_goals_made": detailed_stats[7],
-                    "field_goals_attempted": detailed_stats[8],
-                    "three_pointers_made": detailed_stats[10],
-                    "three_pointers_attempted": detailed_stats[11],
-                    "free_throws_made": detailed_stats[13],
-                    "free_throws_attempted": detailed_stats[14],
-                    "offensive_rebounds": detailed_stats[16],
-                    "defensive_rebounds": detailed_stats[17],
-                    "personal_fouls": detailed_stats[23],
-                })
-
-            team_stats.append(team_stat)
-
+        if not team_name:
+            continue
         team_name_lower = str(team_name).lower()
         for team_stat in team_stats:
             if (team_name_lower in team_stat["team_name"].lower() or
