@@ -162,7 +162,7 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
         team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
     # Swap top and bottom info for NFL (I think it looks better displayed this way)
-    if "halftime" not in team_info["bottom_info"].lower() or "end" in team_info["bottom_info"].lower():
+    if "halftime" not in team_info["bottom_info"].lower() and "end" in team_info["bottom_info"].lower():
         temp = str(team_info["bottom_info"])
         team_info["bottom_info"] = str(team_info["top_info"])
         team_info["top_info"] = temp
