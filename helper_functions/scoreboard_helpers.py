@@ -415,7 +415,6 @@ def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> 
     """Decrease the size of the text to fit on the screen.
 
     :param window: The window element to update
-    :param target_key: The key or list of keys of the window element(s) to update
     """
     root = tk.Tk()
     root.withdraw()
