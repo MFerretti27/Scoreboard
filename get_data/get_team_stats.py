@@ -179,7 +179,7 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     return home_stats_str, away_stats_str
 
 
-def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> dict | None:
+def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
     """Get comprehensive team stats from ESPN teams API.
 
     team_abbr: Team abbreviation (e.g., 'DET', 'MIN')
