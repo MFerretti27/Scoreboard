@@ -135,6 +135,9 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     standings = record_data.json()
 
     team_stats = []
+    home_stats = {}
+    away_stats = {}
+
     for team_name in [home_team_name, away_team_name]:
         for team in standings["standings"]:
             team_name_full = team["teamName"]["default"]
