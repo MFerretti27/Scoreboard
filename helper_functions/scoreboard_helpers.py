@@ -336,6 +336,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
     :param window: The window element to update
     :param team_info: The team information dictionary
     :param team_league: The league of the teams playing
+    :param currently_playing: Whether a game is currently in progress; defaults to False.
     """
     # Create root window once for font measurements (major performance improvement)
     root = tk.Tk()
