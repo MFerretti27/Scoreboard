@@ -31,7 +31,7 @@ def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = 
         return "", ""
     return "", ""
 
-def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | None:
+def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
     """Get NBA team stats for the current season including shooting and foul percentages."""
     standings = leaguestandingsv3.LeagueStandingsV3().get_dict()
 
@@ -119,7 +119,7 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> dict | 
 
 
 
-def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> dict | list[dict] | None:
+def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
     """Get NHL team stats for the current season including shooting and efficiency stats.
 
     :param home_team_name: The name of the home team
