@@ -365,14 +365,15 @@ if __name__ == "__main__":
                 raw_data = args[idx + 1]
                 if raw_data.strip():  # Make sure it's not empty
                     try:
+                        # Load saved data from command line argument
                         saved_data = json.loads(raw_data)
+                        settings.saved_data = copy.deepcopy(saved_data)
                     except json.JSONDecodeError as e:
                         logger.warning("Invalid JSON for --saved-data: %s", e)
                         saved_data = {}
                 else:
                     logger.warning("--saved-data argument provided but empty")
 
-        settings.saved_data = copy.deepcopy(saved_data)  # Load saved data from command line argument
     except Exception as e:
         logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
