@@ -23,10 +23,10 @@ def create_settings_layout(window_width: int) -> list:
 
     max_size = 100
     title_size = min(max_size, max(40, int(50 * scale)))
-    checkbox_width = min(max_size, max(10, int(24 * scale)))
+    checkbox_width = min(max_size, max(10, int(20 * scale)))
     checkbox_height = min(max_size, max(2, int(2 * scale)))
     message_size = min(max_size, max(8, int(16 * scale)))
-    button_size = min(max_size, max(20, int(30 * scale)))
+    button_size = min(max_size, max(20, int(40 * scale)))
     text_input_size = min(max_size, max(4, int(6 * scale)))
     top_label_size = min(max_size, max(18, int(28 * scale)))
     bottom_label_size = min(max_size, max(15, int(32 * scale)))
@@ -217,6 +217,9 @@ def create_settings_layout(window_width: int) -> list:
                             background_color=color,
                             default=current_settings.get("display_records", False)),
                 ],
+                [Sg.Text("\tDisplayed always if enabled",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
                 [
                 Sg.Checkbox("Game Venue", key="display_venue",
                             font=(settings.FONT, top_label_size),
@@ -233,6 +236,14 @@ def create_settings_layout(window_width: int) -> list:
                             default=current_settings.get("display_odds", False)),
                 ],
                 [Sg.Text("\tDisplayed only before game starts",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
+                [ Sg.Checkbox("Display Playoff/Championship Image", key="display_playoff_championship_image",
+                            font=(settings.FONT, text_size),
+                            background_color=color,
+                            default=current_settings.get("display_playoff_championship_image", False)),
+                    ],
+                    [Sg.Text("\tDisplay special image if the game is playoff/championship",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 ],
@@ -262,6 +273,14 @@ def create_settings_layout(window_width: int) -> list:
                             default=current_settings.get("display_date_ended", False)),
                     ],
                     [Sg.Text("\tDisplayed only after game ends",
+                        font=(settings.FONT, message_size), background_color=color),
+                        ],
+                    [Sg.Checkbox("Display Broadcast", key="display_network",
+                            font=(settings.FONT, top_label_size),
+                            background_color=color,
+                            default=current_settings.get("display_network", False)),
+                    ],
+                    [Sg.Text("\tDisplayed only if applicable",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 ],
@@ -424,7 +443,7 @@ def create_settings_layout(window_width: int) -> list:
         border_width=0,
         element_justification="center",
         expand_x=True,
-        size=(window_width * 0.9, Sg.Window.get_screen_size()[1] / 2),
+        size=(window_width * 0.99, Sg.Window.get_screen_size()[1] * 0.7),
         background_color=color,
     )
 
@@ -442,7 +461,7 @@ def create_settings_layout(window_width: int) -> list:
                     vertical_scroll_only=True,
                     element_justification="center",
                     background_color=color,
-                    size=(window_width - 20, int(Sg.Window.get_screen_size()[1] / 2)),
+                    size=(window_width, int(Sg.Window.get_screen_size()[1] / 2)),
                 )],
             ],
             border_width=2,
