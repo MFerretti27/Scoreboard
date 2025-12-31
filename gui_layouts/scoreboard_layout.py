@@ -257,7 +257,7 @@ def create_scoreboard_layout() -> list:
 
     middle_swap_frame = Sg.Frame(
         "",
-        [
+        [[Sg.VPush()],
             [Sg.Column(
                 [
                     [Sg.Frame(
