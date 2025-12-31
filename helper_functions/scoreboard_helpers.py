@@ -447,7 +447,7 @@ def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> 
         else:
             size = settings.PLAYING_TOP_INFO_SIZE
 
-        new_top_info_size = find_min_font_size(top_info, size, screen_width, max_iterations=100)
+        new_top_info_size = find_min_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
 
         window["top_info"].update(font=(settings.FONT, new_top_info_size))
         if new_top_info_size != size:
