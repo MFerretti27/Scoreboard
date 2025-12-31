@@ -199,7 +199,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
             display_nhl_info(window, team_info[display_index], key, value)
 
-    increase_text_size(window, team_info[display_index], sport_league.upper())
+    increase_text_size(window, team_info[display_index], sport_league.upper(), currently_playing=True)
     decrease_text_size(window, team_info[display_index], sport_league.upper())
 
     if settings.no_spoiler_mode:

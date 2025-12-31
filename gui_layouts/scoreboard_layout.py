@@ -28,7 +28,7 @@ def create_scoreboard_layout() -> list:
     # Use slightly smaller width to ensure columns fit properly
     usable_width = window_width - 6  # Small adjustment for any hidden padding
     column_width = int(usable_width / 3)
-    column_height = int(window_height * .66)
+    column_height = int(window_height * .68)
     info_height = int(window_height * (1 / 7))
 
     logger.info("\n\nWindow Width: %d, Window Height: %d", window_width, window_height)
@@ -85,12 +85,15 @@ def create_scoreboard_layout() -> list:
             Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
                     key="home_score", enable_events=True, pad=(0, 0)),
         ],
+    ]
+
+    timeout_layout =[
         [
             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
                     expand_x=True, justification="left",
                     key="away_timeouts", enable_events=True, pad=(0, 0)),
             Sg.Text("", font=(settings.FONT, settings.TIMEOUT_SIZE),
-                    expand_x=True, justification="right", 
+                    expand_x=True, justification="right",
                     key="home_timeouts", enable_events=True, pad=(0, 0)),
         ],
     ]
@@ -263,10 +266,8 @@ def create_scoreboard_layout() -> list:
                         key="score_content",
                         border_width=0,
                         element_justification="center",
-                        vertical_alignment="center",
-                        size=(column_width, int(fixed_middle_height / 1.7)),
                         expand_x=True,
-                        expand_y=True,
+                        expand_y=False,
                         pad=(0, 0),
                     )],
                 ],
@@ -274,17 +275,34 @@ def create_scoreboard_layout() -> list:
                 expand_x=True,
                 expand_y=False,
                 element_justification="center",
-                vertical_alignment="center",
                 pad=(0, 0),
             )],
-
+            [
+                Sg.Column(
+                    [
+                        [
+                            Sg.Frame(
+                                "",
+                                timeout_layout,
+                                border_width=0,
+                                expand_x=True,
+                                expand_y=True,
+                                pad=(0, 0),
+                            ),
+                        ],
+                    ],
+                    key="timeouts_content",
+                    expand_x=True,
+                    pad=(0, 0),
+            )],
+            [Sg.VPush()],
             # Swap row: under-score image and player stats
             [
                 Sg.pin(
                     Sg.Column(
                         [
                             [
-                                Sg.Frame("", below_score_image, 
+                                Sg.Frame("", below_score_image,
                                     expand_x=True, expand_y=True,
                                     element_justification="center",
                                     border_width=0,
@@ -293,12 +311,12 @@ def create_scoreboard_layout() -> list:
                         ],
                         key="under_score_image_column",
                         element_justification="center",
-                        vertical_alignment="top",
+                        vertical_alignment="center",
                         expand_x=True,
                         expand_y=True,
                         visible=False,
                         pad=(0, 0),
-                    )
+                    ),
                 ),
                 Sg.pin(
                     Sg.Column(
@@ -321,6 +339,7 @@ def create_scoreboard_layout() -> list:
             ],
         ],
         border_width=0,
+        expand_y=True,
         element_justification="center",
         size=(column_width, fixed_middle_height),
         pad=(0, 0),
@@ -350,7 +369,6 @@ def create_scoreboard_layout() -> list:
             ], pad=(0, 0), vertical_alignment="top"),
         ],
 
-        [Sg.VPush()],
         [Sg.Frame("", top_info_layout, border_width=0,
                   size=(window_width, int(info_height * 6 / 7)),
                   element_justification="center",
