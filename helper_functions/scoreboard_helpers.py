@@ -364,6 +364,9 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
             settings.display_player_stats and team_league == "NHL"):
             # if small screen and game is final and player stats are displayed, limit score size so stats fit
             score_text = "888-888"
+        elif Sg.Window.get_screen_size()[0] < 1000 and (" am " in team_info.get("bottom_info", "") or " pm " in
+                                                          team_info.get("bottom_info", "")):
+            score_text = "88-88"
         else:
             score_text = f"{team_info.get('home_score', '0')}-{team_info.get('away_score', '0')}"
 

@@ -174,6 +174,7 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
     """
     logger.info(f"\n{settings.teams[display_index][0]} is currently playing, updating display")
     sport_league = settings.teams[display_index][1]
+    window["timeouts_content"].update(visible=True)
     for key, value in team_info[display_index].items():
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
             window[key].update(filename=value)

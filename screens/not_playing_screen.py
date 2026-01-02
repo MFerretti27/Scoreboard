@@ -130,6 +130,7 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window[key].update(value=value)
 
     increase_text_size(window, team_info, settings.teams[display_index][1].upper())
+    window["timeouts_content"].update(visible=False)
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info)
@@ -373,10 +374,12 @@ if __name__ == "__main__":
                         saved_data = {}
                 else:
                     logger.warning("--saved-data argument provided but empty")
+                    settings.saved_data = {}
 
     except Exception as e:
         logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
+        settings.saved_data = {}
 
-    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
+    logger.info("Launching not_playing_screen with saved_data=%s", bool(saved_data))
     main()
