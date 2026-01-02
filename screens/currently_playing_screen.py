@@ -11,6 +11,8 @@ from get_data.get_espn_data import get_data
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
+    decrease_text_size,
+    increase_text_size,
     reset_window_elements,
     scroll,
     set_spoiler_mode,
@@ -106,10 +108,10 @@ def display_nba_info(window: sg.Window, team_info: dict, key: str, value: str) -
     if key == "top_info":
         window["top_info"].update(value=value, font=(settings.FONT, settings.NBA_TOP_INFO_SIZE))
     elif key == "home_timeouts":
-        window["home_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+        window["home_timeouts"].update(value=value, font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                         text_color="yellow")
     elif key == "away_timeouts":
-        window["away_timeouts"].update(value=value, font=(settings.FONT, settings.TIMEOUT_SIZE - 10),
+        window["away_timeouts"].update(value=value, font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                         text_color="yellow")
 
     # Ensure bonus is in dictionary to not cause key error
@@ -170,11 +172,12 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
 
     :return: None
     """
+    logger.info(f"\n{settings.teams[display_index][0]} is currently playing, updating display")
     sport_league = settings.teams[display_index][1]
+    window["timeouts_content"].update(visible=True)
     for key, value in team_info[display_index].items():
         if "home_logo" in key or "away_logo" in key or "under_score_image" in key:
             window[key].update(filename=value)
-            window["timeouts_content"].update(visible=True)
             window["under_score_image_column"].update(visible=True)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
@@ -196,6 +199,9 @@ def update_display(window: sg.Window, team_info: list[dict], display_index: int,
         # NHL Specific display size for bottom info
         if "NHL" in sport_league.upper() and teams_currently_playing[display_index]:
             display_nhl_info(window, team_info[display_index], key, value)
+
+    increase_text_size(window, team_info[display_index], sport_league.upper(), currently_playing=True)
+    decrease_text_size(window, team_info[display_index], sport_league.upper())
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info[display_index])
@@ -384,6 +390,7 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
 
     while True in teams_currently_playing or first_time:
         event = window.read(timeout=3000)
+        check_events(window, event, currently_playing=True)
         (teams_with_data, team_info, teams_currently_playing,
             delay_clock, delay_over, delay_started) = get_display_data(
             delay_clock, delay_started=delay_started, delay_over=delay_over,
@@ -391,7 +398,6 @@ def team_currently_playing(window: sg.Window, teams: list[list[str]]) -> tuple[l
 
         if teams_with_data[display_index] and (teams_currently_playing[display_index] or
                                                not settings.prioritize_playing_team):
-            logger.info(f"\n{teams[display_index][0]} is currently playing, updating display")
 
             # Reset text color, underline and timeouts, for new display
             reset_window_elements(window)

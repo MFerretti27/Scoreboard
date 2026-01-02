@@ -21,6 +21,7 @@ from helper_functions.main_menu_helpers import write_settings_to_py
 from helper_functions.scoreboard_helpers import (
     auto_update,
     check_events,
+    increase_text_size,
     maximize_screen,
     reset_window_elements,
     scroll,
@@ -32,6 +33,9 @@ from screens.clock_screen import clock
 from screens.currently_playing_screen import team_currently_playing
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
+
+# Track which player stats to show on small screens (alternates between home and away)
+show_home_stats_next = True
 
 
 def save_team_data(info: dict[str, Any], fetch_index: int,
@@ -96,18 +100,37 @@ def display_team_info(window: Sg.Window, team_info: dict[str, Any], display_inde
             window[key].update(filename=value)
             window["player_stats_content"].update(visible=False)
             window["under_score_image_column"].update(visible=True)
-            window["timeouts_content"].update(visible=True)
 
         elif key in ["home_player_stats", "away_player_stats"]:
-            window[key].update(value=value)
+            if Sg.Window.get_screen_size()[0] < 1000:  # If screen height is small, alternate between home and away
+                    if show_home_stats_next and key == "home_player_stats":
+                        home_stats = team_info["home_player_stats"]
+                        window["away_player_stats"].update(value=home_stats)
+                        window["home_player_stats"].update(value="")
+                        window["home_player_stats"].update(visible=False)
+
+                    elif (not show_home_stats_next and key == "away_player_stats"
+                          and settings.teams[display_index][1] != "NFL"):
+                        window["away_player_stats"].update(value=value)
+                        window["home_player_stats"].update(value="")
+                        window["home_player_stats"].update(visible=False)
+
+                    # NFL just have game stats not player so display on one column
+                    else:
+                        window["away_player_stats"].update(value=team_info.get("home_player_stats", ""))
+            else:
+                window[key].update(value=value)
+
             window["under_score_image_column"].update(visible=False)
-            window["timeouts_content"].update(visible=False)
             window["player_stats_content"].update(visible=True)
 
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         else:
             window[key].update(value=value)
+
+    increase_text_size(window, team_info, settings.teams[display_index][1].upper())
+    window["timeouts_content"].update(visible=False)
 
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, team_info)
@@ -245,31 +268,24 @@ def handle_error(window: Sg.Window, *, error: Exception | None = None,
 #        Main Event Loop         #
 #                                #
 ##################################
-def main(data_saved: dict) -> None:
-    """Create Main function to run the scoreboard application.
-
-    :param saved_data: Dictionary containing saved data for teams
-    """
+def main() -> None:
+    """Create Main function to run the scoreboard application."""
     # Initialize variables
     team_info: list[dict] = []
-    settings.saved_data = copy.deepcopy(data_saved)  # Load saved data from command line argument
     display_index: int = 0
-    should_scroll: bool = False
     display_clock = ticks_ms()  # Start Timer for Switching Display
+    update_clock = ticks_ms() # Start Timer for updating display
     display_timer: int = settings.DISPLAY_NOT_PLAYING_TIMER * 1000  # how often the display should update in seconds
     fetch_clock = ticks_ms()  # Start Timer for fetching data
     fetch_timer: int = settings.FETCH_DATA_NOT_PLAYING_TIMER * 1000  # how often to fetch data
     display_first_time: bool = True
     fetch_first_time: bool = True
-
-    if settings.LIVE_DATA_DELAY > 0:
-        settings.delay = True
+    global show_home_stats_next
 
     # Create the window
     window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
                        resizable=True, return_keyboard_events=True).Finalize()
 
-    window.set_cursor("none")  # Hide the mouse cursor
     maximize_screen(window)
 
     while True:
@@ -284,15 +300,20 @@ def main(data_saved: dict) -> None:
                 fetch_clock = ticks_ms()
 
             # Display Team Information
-            if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
+            if ticks_diff(ticks_ms(), update_clock) >= int(display_timer/2) or display_first_time:
                 if teams_with_data[display_index]:
                     display_first_time = False
                     display_team_info(window, team_info[display_index], display_index)
-                    should_scroll = will_text_fit_on_screen(team_info[display_index].get("bottom_info", ""))
 
-                    if should_scroll and not settings.no_spoiler_mode:
+                    if will_text_fit_on_screen(team_info[display_index].get("bottom_info", "")):
                         scroll(window, team_info[display_index]["bottom_info"])
 
+                show_home_stats_next = not show_home_stats_next
+                update_clock = ticks_ms()
+
+            # Find next team to display
+            if ticks_diff(ticks_ms(), display_clock) >= display_timer or display_first_time:
+                if teams_with_data[display_index]:
                     # Find next team to display (skip teams with no data)
                     display_index = update_display_index(display_index, teams_with_data)
                     display_clock = ticks_add(display_clock, display_timer)  # Reset Timer if display updated
@@ -315,7 +336,7 @@ def main(data_saved: dict) -> None:
                 auto_update(window, settings.saved_data)  # Check if need to auto update
 
         except Exception as error:
-            logger.exception(f"Error: {error}")
+            logger.info(f"Error: {error}")
             handle_error(window, error=error, team_info=team_info)
 
 
@@ -345,16 +366,20 @@ if __name__ == "__main__":
                 raw_data = args[idx + 1]
                 if raw_data.strip():  # Make sure it's not empty
                     try:
+                        # Load saved data from command line argument
                         saved_data = json.loads(raw_data)
+                        settings.saved_data = copy.deepcopy(saved_data)
                     except json.JSONDecodeError as e:
                         logger.warning("Invalid JSON for --saved-data: %s", e)
                         saved_data = {}
                 else:
                     logger.warning("--saved-data argument provided but empty")
+                    settings.saved_data = {}
 
     except Exception as e:
         logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
+        settings.saved_data = {}
 
-    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
-    main(saved_data)
+    logger.info("Launching not_playing_screen with saved_data=%s", bool(saved_data))
+    main()
