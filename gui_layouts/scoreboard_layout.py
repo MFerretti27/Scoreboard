@@ -295,7 +295,6 @@ def create_scoreboard_layout() -> list:
                     expand_x=True,
                     pad=(0, 0),
             )],
-            [Sg.VPush()],
             # Swap row: under-score image and player stats
             [
                 Sg.pin(
@@ -305,13 +304,14 @@ def create_scoreboard_layout() -> list:
                                 Sg.Frame("", below_score_image,
                                     expand_x=True, expand_y=True,
                                     element_justification="center",
+                                    vertical_alignment="top",
                                     border_width=0,
                                     pad=(0, 0)),
                             ],
                         ],
                         key="under_score_image_column",
                         element_justification="center",
-                        vertical_alignment="center",
+                        vertical_alignment="top",
                         expand_x=True,
                         expand_y=True,
                         visible=False,
@@ -337,6 +337,7 @@ def create_scoreboard_layout() -> list:
                     ),
                 ),
             ],
+            [Sg.VPush()],
         ],
         border_width=0,
         expand_y=True,
@@ -385,6 +386,7 @@ def create_scoreboard_layout() -> list:
                                 key="signature")]],
                   border_width=0,
                   expand_x=True,
+                  expand_y=True,
                   element_justification="bottom",
                   pad=(0, 0))],
     ]

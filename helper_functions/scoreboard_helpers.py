@@ -395,19 +395,18 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
                 log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
 
         # Update above score text if present
-        if "above_score_txt" in team_info:
-            text = team_info.get("above_score_txt", "")
-            if "@" not in text:
-                screen_width = Sg.Window.get_screen_size()[0] / 3
-                size = settings.NBA_TIMEOUT_SIZE
-            else:
-                screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-                size = settings.TOP_TXT_SIZE
+        text = team_info.get("above_score_txt", "")
+        if "@" not in text:
+            screen_width = Sg.Window.get_screen_size()[0] / 3
+            size = settings.NBA_TIMEOUT_SIZE
+        else:
+            screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
+            size = settings.TOP_TXT_SIZE
 
-            new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
-            window["above_score_txt"].update(font=(settings.FONT, new_size))
-            if new_size != size:
-                log_entries.append(f"above_score_txt: {size}->{new_size}")
+        new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
+        window["above_score_txt"].update(font=(settings.FONT, new_size))
+        if new_size != size:
+            log_entries.append(f"above_score_txt: {size}->{new_size}")
 
         if log_entries:
             logger.info("Increased Size: %s", ", ".join(log_entries))
