@@ -6,7 +6,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import typing
 from pathlib import Path
 from typing import Any
 
@@ -29,14 +28,11 @@ from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.logger_config import logger, rotate_error_log
 from helper_functions.main_menu_helpers import (
     double_check_teams,
-    load_teams_order,
     positive_num,
     save_teams_order,
     setting_keys_booleans,
-    settings_to_json,
     update_settings,
     update_teams,
-    write_settings_to_py,
 )
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
@@ -51,7 +47,7 @@ def main(saved_data: dict) -> None:
     :param saved_data: dictionary of save team information as to not lose it going to main screen
     """
     number_of_times_pressed = 0
-    teams = load_teams_order()
+    teams = settings.read_settings().get("teams", [])
     team_names = [team[0] for team in teams]
 
     # Create individual layout columns
@@ -215,7 +211,7 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
             teams_added, teams_removed = update_teams(selected_teams, league)
             window["teams_added"].update(value=teams_added)
             window["teams_removed"].update(value=teams_removed)
-            teams = load_teams_order()
+            teams = settings.read_settings().get("teams", [])
             team_names = [team[0] for team in teams]
 
 def show_fetch_popup(league: str) -> None:
@@ -396,7 +392,7 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
             window.close()
             sys.exit()
 
-        teams = load_teams_order()
+        teams = settings.read_settings().get("teams", [])
         team_names = [team[0] for team in teams]
         selected = values["TEAM_ORDER"]
         if selected:
@@ -455,13 +451,8 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int, saved_data: d
     elif successful and number_of_times_pressed == 1:
         window["update_message"].update(value="Updating...", text_color="green")
         window.read(timeout=100)
-        settings = settings_to_json()
-        serializable_settings = {
-            k: v for k, v in settings.items()
-            if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
-        }
-
-        settings_json = json.dumps(serializable_settings, indent=2)
+        settings_dict = settings.read_settings()
+        settings_json = json.dumps(settings_dict, indent=2)
 
         with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
             tmp.write(settings_json)
@@ -507,8 +498,8 @@ def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
         message, successful = restore_backup(selected_version)
         if successful:
             window["update_message"].update(value=message, text_color="green")
-            settings = settings_to_json()
-            settings_json = json.dumps(settings, indent=2)
+            settings_dict = settings.read_settings()
+            settings_json = json.dumps(settings_dict, indent=2)
 
             time.sleep(5)
             with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
@@ -548,7 +539,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     gc.collect()  # Clean up memory
     time.sleep(0.5)  # Give OS time to destroy the window
     json_saved_data = json.dumps(saved_data)
-    subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", "--saved-data", json_saved_data])
+    subprocess.Popen([sys.executable, "-m", "screens.scoreboard_screen", "--saved-data", json_saved_data])
     sys.exit()
 
 
@@ -591,6 +582,11 @@ if __name__ == "__main__":
     settings_saved = None
     rotate_error_log()  # Start fresh log file for this session
 
+    # Load saved_data from settings.json first (backup from last session)
+    persisted = settings.read_settings().get("saved_data", {})
+    if persisted:
+        saved_data = persisted
+
     # Parse arguments flexibly
     args = sys.argv[1:]
     try:
@@ -600,8 +596,8 @@ if __name__ == "__main__":
                 settings_path = Path(args[idx + 1])
                 with settings_path.open(encoding="utf-8") as f:
                     settings_saved = json.load(f)
-                    write_settings_to_py(settings_saved)
-                    logger.info("Settings.py updated from JSON.")
+                    settings.write_settings(settings_saved)
+                    logger.info("settings.json updated from JSON.")
 
         if "--saved-data" in args:
             idx = args.index("--saved-data")

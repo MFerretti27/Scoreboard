@@ -3,7 +3,6 @@
 import FreeSimpleGUI as Sg  # ignore
 
 import settings
-from helper_functions.main_menu_helpers import read_settings_from_file
 
 
 def create_settings_layout(window_width: int) -> list:
@@ -34,7 +33,7 @@ def create_settings_layout(window_width: int) -> list:
     checkbox_size = min(max_size, max(10, int(20 * scale)))
     text_size = min(max_size, max(12, int(24 * scale)))
 
-    current_settings = read_settings_from_file()
+    current_settings = settings.read_settings()
 
     general_setting_layout = Sg.Frame("",
         [
