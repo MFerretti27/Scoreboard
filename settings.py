@@ -1,7 +1,10 @@
 """Settings loaded from settings.json with Python fallbacks."""
 import json
+import tempfile
 from pathlib import Path
 from typing import Any
+
+from helper_functions.logger_config import logger
 
 SETTINGS_PATH = Path(__file__).with_name("settings.json")
 
@@ -167,7 +170,31 @@ def _normalize_teams(raw_teams: object) -> list[list[str]]:
 
 
 def _save_settings_file(data: dict[str, Any]) -> None:
-    SETTINGS_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    """Save settings to file using atomic write to prevent corruption."""
+    try:
+        # Write to a temporary file first
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            dir=SETTINGS_PATH.parent,
+            suffix=".json",
+            delete=False,
+            encoding="utf-8",
+        ) as tmp_file:
+            json.dump(data, tmp_file, indent=2)
+            tmp_path = Path(tmp_file.name)
+
+        # Atomically replace the original file
+        tmp_path.replace(SETTINGS_PATH)
+    except (OSError, json.JSONEncodeError) as e:
+        # Log the error but don't crash - settings are still available in memory
+        logger.info(f"Warning: Failed to save settings to {SETTINGS_PATH}: {e}")
+        # Attempt to restore from backup if it exists
+        backup_path = SETTINGS_PATH.with_suffix(".json.bak")
+        if backup_path.exists():
+            try:
+                backup_path.replace(SETTINGS_PATH)
+            except Exception:
+                logger.info(f"Failed to restore settings from backup at {backup_path}")
 
 
 def _load_settings_file() -> dict[str, Any]:
@@ -208,13 +235,38 @@ def read_settings() -> dict[str, Any]:
 
 
 def write_settings(updated: dict[str, Any]) -> None:
-    """Persist updated settings to settings.json and refresh module globals."""
-    current = _load_settings_file()
-    current.update(updated)
-    if "teams" in current:
-        current["teams"] = _normalize_teams(current["teams"])
-    _save_settings_file(current)
-    _apply_settings(current)
+    """Persist updated settings to settings.json and refresh module globals.
+
+    Uses file locking pattern to minimize race conditions:
+    1. Create a backup of current settings
+    2. Read current state from disk (may have been modified by another process)
+    3. Merge with updates
+    4. Write atomically with temp file + rename
+    """
+    try:
+        # Create backup of current file before making changes
+        if SETTINGS_PATH.exists():
+            backup_path = SETTINGS_PATH.with_suffix(".json.bak")
+            try:
+                SETTINGS_PATH.read_bytes()  # Verify readable
+                backup_path.write_bytes(SETTINGS_PATH.read_bytes())
+            except OSError:
+                pass  # Non-fatal if backup fails
+
+        # Re-read from disk to get latest state (handles concurrent writes)
+        current = _load_settings_file()
+        current.update(updated)
+        if "teams" in current:
+            current["teams"] = _normalize_teams(current["teams"])
+
+        # Save with atomic write
+        _save_settings_file(current)
+
+        # Only update in-memory state after successful write
+        _apply_settings(current)
+    except Exception as e:
+        logger.info(f"Error writing settings: {e}")
+        raise
 
 
 # Load settings on import

@@ -35,7 +35,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in 
 # Constants
 MILLISECONDS_PER_SECOND = 1000
 PLAYING_GAME_FETCH_INTERVAL_MS = 3000
-SMALL_SCREEN_WIDTH_THRESHOLD = 1000
+SMALL_SCREEN_WIDTH_THRESHOLD = 1300
 READ_TIMEOUT_MS = 2000
 SCORE_STATE_STYLES = [
     ("power_play", {"text_color": "blue"}),
@@ -302,8 +302,11 @@ def _update_visibility(window: Sg.Window, current_team: dict, *,
     :param current_team: The current team information dictionary
     :param currently_playing: Whether the team is currently playing
     """
-    if settings.display_player_stats and (current_team.get("home_player_stats", "") and
-                                          current_team.get("away_player_stats", "")):
+    has_home_stats = bool(current_team.get("home_player_stats", ""))
+    has_away_stats = bool(current_team.get("away_player_stats", ""))
+    show_stats = has_home_stats or has_away_stats
+
+    if settings.display_player_stats and show_stats:
         window["under_score_image_column"].update(visible=False)
         window["player_stats_content"].update(visible=True)
     else:
@@ -323,7 +326,8 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     :return: None
     """
     global show_home_stats_next
-    logger.info(f"\n{settings.teams[display_index][0]} is currently playing, updating display")
+    filter_desc = "is currently playing" if currently_playing else "has data"
+    logger.info(f"\n{settings.teams[display_index][0]} {filter_desc}, updating display")
     sport_league = settings.teams[display_index][1]
     current_team = team_info[display_index]
     reset_window_elements(window)

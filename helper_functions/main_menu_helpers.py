@@ -102,12 +102,8 @@ def update_teams(selected_teams: list, league: str, specific_remove: list | None
 def update_settings(selected_items_integers: dict, selected_items_boolean: list) -> None:
     """Update settings.py with new values.
 
-    :param live_data_delay: delay for live data in seconds
-    :param fetch_timer: timer for fetching data in seconds
-    :param display_timer: timer for displaying data in seconds
-    :param display_time: time to display team in seconds
-    :param display_timer_live: timer for displaying live data in seconds
     :param selected_items: list of selected items to update in settings
+    :param selected_items_boolean: list of boolean selected items to update in settings
 
     :return: None
     """

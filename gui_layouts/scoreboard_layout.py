@@ -28,8 +28,8 @@ def create_scoreboard_layout() -> list:
     # Use slightly smaller width to ensure columns fit properly
     usable_width = window_width - 6  # Small adjustment for any hidden padding
     column_width = int(usable_width / 3)
-    column_height = int(window_height * .68)
-    info_height = int(window_height * (1 / 7))
+    column_height = int(window_height * .75)
+    info_height = int(window_height * (1 / 9))
 
     logger.info("\n\nWindow Width: %d, Window Height: %d", window_width, window_height)
     logger.info("Usable Width: %d", usable_width)
@@ -78,11 +78,11 @@ def create_scoreboard_layout() -> list:
 
     score_layout = [
         [
-            Sg.Text("SCO", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+            Sg.Text("", font=(settings.FONT, settings.SCORE_TXT_SIZE),
                     key="away_score", enable_events=True, pad=(0, 0)),
             Sg.Text("", font=(settings.FONT, settings.HYPHEN_SIZE),
                     key="hyphen", enable_events=True, pad=(0, 0)),
-            Sg.Text("RE", font=(settings.FONT, settings.SCORE_TXT_SIZE),
+            Sg.Text("", font=(settings.FONT, settings.SCORE_TXT_SIZE),
                     key="home_score", enable_events=True, pad=(0, 0)),
         ],
     ]
@@ -98,7 +98,7 @@ def create_scoreboard_layout() -> list:
         ],
     ]
 
-    if Sg.Window.get_screen_size()[0] > 1000:
+    if Sg.Window.get_screen_size()[0] > 1300:
         home_size=[30, 25]
         away_size=[30, 25]
     else:

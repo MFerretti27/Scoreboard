@@ -208,7 +208,7 @@ def resize_text() -> None:
     settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(20, int(60 * scale)))
     settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
-    settings.TOP_TXT_SIZE = min(max_size, max(10, int(35 * scale)))
+    settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
     settings.PLAYER_STAT_COLUMN = min(50, max(12, int(14 * scale)))
@@ -323,7 +323,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
-        if (Sg.Window.get_screen_size()[0] < 1000 and "FINAL" in team_info.get("bottom_info", "").upper() and
+        if (Sg.Window.get_screen_size()[0] < 1300 and "FINAL" in team_info.get("bottom_info", "").upper() and
             settings.display_player_stats and team_league == "NHL"):
             # if small screen and game is final and player stats are displayed, limit score size so stats fit
             score_text = "888-888"
@@ -364,7 +364,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
                 screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
                 size = settings.TOP_TXT_SIZE
 
-            new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
+            new_size = find_max_font_size(text, size, screen_width, max_iterations=50, buffer=1.3)
             window["above_score_txt"].update(font=(settings.FONT, new_size))
             if new_size != size:
                 log_entries.append(f"above_score_txt: {size}->{new_size}")

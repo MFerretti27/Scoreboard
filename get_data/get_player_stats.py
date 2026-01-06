@@ -7,6 +7,8 @@ import requests  # type: ignore[import]
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import boxscore, scoreboard
 
+from helper_functions.logger_config import logger
+
 from .get_mlb_data import API_FIELDS
 from .get_team_id import get_mlb_team_id, get_nhl_game_id  # type: ignore[import]
 
@@ -29,6 +31,7 @@ def get_player_stats(team_league: str, team_name: str) -> tuple[str, str]:
         if "NFL" in team_league.upper():
             return (get_nfl_player_stats(team_name))
     except Exception:
+        logger.exception("Error getting player stats for %s in league %s", team_name, team_league)
         return "", ""
     return "", ""
 
@@ -38,17 +41,20 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
     :param team_name: The name of the team
     :return: Tuple containing home and away player statistics strings
     """
-    home_player_stats = ""
-    away_player_stats = ""
     games = scoreboard.ScoreBoard().get_dict()
     game_id = ""
     for game in games["scoreboard"]["games"]:
-        if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
+        home_team_name = game["homeTeam"]["teamName"]
+        away_team_name = game["awayTeam"]["teamName"]
+        if home_team_name in team_name or away_team_name in team_name:
             game_id = game["gameId"]
+            break
 
     box_score = boxscore.BoxScore(game_id).get_dict()
     home_players = box_score["game"]["homeTeam"]["players"]
     away_players = box_score["game"]["awayTeam"]["players"]
+    home_player_stats = f"{home_team_name} Players Stats:\n\n"
+    away_player_stats = f"{away_team_name} Players Stats:\n\n"
 
     def get_starting_five(players: list) -> list:
         """Get the starting five players from the list.
@@ -65,33 +71,25 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
     for p in get_starting_five(home_players):
         stats = p["statistics"]
         fg_made = stats.get("fieldGoalsMade", 0)
-        fg_att = stats.get("fieldGoalsAttempted", 0)
         three_made = stats.get("threePointersMade", 0)
-        three_att = stats.get("threePointersAttempted", 0)
-        total_made = fg_made + three_made
-        total_att = fg_att + three_att
-        shooting_pct = round(total_made / total_att * 100) if total_att > 0 else "0"
+        total_points = (fg_made * 2) + (three_made * 3) + stats.get("freeThrowsMade", 0)
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
         assists = stats.get("assists", None)
 
-        home_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
+        home_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nPTS: {total_points},  "
                                f"AST: {assists}, BLK: {blk},  STL: {stl}\n\n")
 
     for p in get_starting_five(away_players):
         stats = p["statistics"]
         fg_made = stats.get("fieldGoalsMade", 0)
-        fg_att = stats.get("fieldGoalsAttempted", 0)
         three_made = stats.get("threePointersMade", 0)
-        three_att = stats.get("threePointersAttempted", 0)
-        total_made = fg_made + three_made
-        total_att = fg_att + three_att
-        shooting_pct = round(total_made / total_att * 100) if total_att > 0 else "0"
+        total_points = (fg_made * 2) + (three_made * 3) + stats.get("freeThrowsMade", 0)
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
         assists = stats.get("assists", None)
 
-        away_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nTS: {shooting_pct}%,  "
+        away_player_stats += (f"{p['position']} - {' '.join(p['name'].split()[1:])}\nPTS: {total_points},  "
                                f"AST: {assists}, BLK: {blk},  STL: {stl}\n\n")
 
     return home_player_stats.rstrip(""), away_player_stats.rstrip("")
@@ -289,9 +287,7 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
             home_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
             away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
 
-            index += 1
-
-            if Sg.Window.get_screen_size()[0] < 1000:
+            if Sg.Window.get_screen_size()[0] < 1300:
                 home_player_stats += f"\n\n{away_player_stats}"
                 away_player_stats = ""
 
