@@ -26,11 +26,11 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     division_names = ALL_DIVISIONS.get(league, [])
 
     division_checkboxes_per_column: int = {
-        "MLB": 3,
+        "MLB": 2,
         "NHL": 2,
-        "NBA": 3,
-        "NFL": 4,
-    }.get(league, 4)
+        "NBA": 2,
+        "NFL": 2,
+    }.get(league, 2)
 
     # Common base screen widths
     common_base_widths = [1366, 1920, 1440, 1280]
@@ -40,11 +40,13 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     scale = window_width / base_width
 
     max_size = 100
-    text_size = min(max_size, max(60, int(65 * scale)))
-    checkbox_width = min(max_size, max(10, int(20 * scale)))
+    text_size = min(max_size, max(30, int(50 * scale)))
+    bottom_title_txt_size = min(max_size, max(20, int(40 * scale)))
+    checkbox_width = min(max_size, max(20, int(20 * scale)))
     checkbox_height = min(max_size, max(2, int(2 * scale)))
-    checkbox_txt_size = min(max_size, max(20, int(22 * scale)))
-    button_size = min(max_size, max(48, int(50 * scale)))
+    checkbox_txt_size = min(max_size, max(8, int(16 * scale)))
+    button_size = min(max_size, max(22, int(30 * scale)))
+    update_names_button_size = min(max_size, max(10, int(18 * scale)))
     confirmation_txt_size = min(max_size, max(10, int(24 * scale)))
 
     team_checkboxes = [
@@ -88,7 +90,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     return [
         [Sg.Push(), Sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), Sg.Push()],
          [Sg.Push(),
-          Sg.Button("Update Names", font=(settings.FONT, confirmation_txt_size)),
+          Sg.Button("Update Names", font=(settings.FONT, update_names_button_size)),
          Sg.Push(),
          ],
         [Sg.VPush()],
@@ -96,7 +98,10 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
          Sg.Push(), *column_layouts, Sg.Push(),
          ],
         [Sg.VPush()],
-        [Sg.Push(), Sg.Text("Select Division to Add", font=(settings.FONT, text_size-20, "underline")), Sg.Push()],
+        [Sg.Push(),
+         Sg.Text("Select Division to Add", font=(settings.FONT, bottom_title_txt_size, "underline")),
+         Sg.Push(),
+         ],
         [
          Sg.Push(), *division_column_layouts, Sg.Push(),
         ],

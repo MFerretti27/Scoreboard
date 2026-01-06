@@ -63,7 +63,7 @@ class SpacedErrorFormatter(logging.Formatter):
 class InfoLogHandler(logging.FileHandler):
     """File handler that maintains only the last 1000 lines of info logs."""
 
-    MAX_LINES = 1000
+    MAX_LINES = 5000
 
     def emit(self, record: logging.LogRecord) -> None:
         """Emit a log record and trim file to max lines."""

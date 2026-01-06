@@ -177,7 +177,7 @@ def update_teams(selected_teams: list, league: str, specific_remove: list | None
         with file_path.open("w", encoding="utf-8") as file:
             file.writelines(contents)
 
-        added_teams = [team for team in selected_teams if team not in existing_teams]
+        added_teams = [team for team in new_teams if team not in existing_teams]
         removed_teams += \
             [team for team in available_checkbox_teams if team in existing_teams and team not in selected_teams]
 

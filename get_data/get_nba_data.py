@@ -139,13 +139,13 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
 
                 timeout_map = {
                     7: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF",
-                    4: "\u25CF  \u25CF  \u25CF  \u25CF",
-                    3: "\u25CF  \u25CF  \u25CF",
-                    2: "\u25CF  \u25CF",
-                    1: "\u25CF",
-                    0: "",
+                    6: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CB",
+                    5: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CB  \u25CB",
+                    4: "\u25CF  \u25CF  \u25CF  \u25CF  \u25CB  \u25CB  \u25CB",
+                    3: "\u25CF  \u25CF  \u25CF  \u25CB  \u25CB  \u25CB  \u25CB",
+                    2: "\u25CF  \u25CF  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB",
+                    1: "\u25CF  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB",
+                    0: "\u25CB  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB  \u25CB",
                 }
                 team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
                 team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
@@ -170,15 +170,15 @@ def append_nba_data(team_info: dict, team_name: str) -> dict:
                 away_free_throw_made = (box_score["game"]["awayTeam"]["statistics"].get("freeThrowsMade", 0))
 
                 away_stats = (
-                    f"FG:{away_field_goal_made}/{away_field_goal_attempt}  "
-                    f"3PT:{away_3pt_made}/{away_3pt_attempt}  "
-                    f"FT:{away_free_throw_made}/{away_free_throw_attempt}"
+                    f"FG: {away_field_goal_made}/{away_field_goal_attempt}  "
+                    f"3PT: {away_3pt_made}/{away_3pt_attempt}  "
+                    f"FT: {away_free_throw_made}/{away_free_throw_attempt}"
                 )
 
                 home_stats = (
-                    f"FG:{home_field_goal_made}/{home_field_goal_attempt}  "
-                    f"3PT:{home_3pt_made}/{home_3pt_attempt}  "
-                    f"FT:{home_free_throw_made}/{home_free_throw_attempt}"
+                    f"FG: {home_field_goal_made}/{home_field_goal_attempt}  "
+                    f"3PT: {home_3pt_made}/{home_3pt_attempt}  "
+                    f"FT: {home_free_throw_made}/{home_free_throw_attempt}"
                 )
 
                 team_info["top_info"] = away_stats + "\t\t " + home_stats
