@@ -208,7 +208,6 @@ def find_next_team_to_display(teams_currently_playing: list[bool],
                               display_index: int, teams_with_data: list[bool]) -> tuple[int, int]:
     """Find the next team to display.
 
-    :param teams: List of teams to display
     :param teams_currently_playing: List of currently playing teams
     :param display_index: Index of the team to display
     :param teams_with_data: List of teams with data
