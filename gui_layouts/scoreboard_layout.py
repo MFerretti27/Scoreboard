@@ -250,6 +250,7 @@ def create_scoreboard_layout() -> list:
     # Middle fixed-size frame (under-score OR stats)
     # ----------------------------
     fixed_middle_height = int(column_height * (4 / 5))
+    timeout_height = int(max(settings.TIMEOUT_SIZE, settings.NBA_TIMEOUT_SIZE) * 2.2)
 
     below_score_image = [
         [Sg.Image("", key="under_score_image", expand_x=True)],
@@ -278,23 +279,29 @@ def create_scoreboard_layout() -> list:
                 pad=(0, 0),
             )],
             [
-                Sg.Column(
-                    [
+                Sg.pin(
+                    Sg.Column(
                         [
-                            Sg.Frame(
-                                "",
-                                timeout_layout,
-                                border_width=0,
-                                expand_x=True,
-                                expand_y=True,
-                                pad=(0, 0),
-                            ),
+                            [
+                                Sg.Frame(
+                                    "",
+                                    timeout_layout,
+                                    border_width=0,
+                                    expand_x=True,
+                                    expand_y=False,
+                                    size=(column_width, timeout_height),
+                                    pad=(0, 0),
+                                ),
+                            ],
                         ],
-                    ],
-                    key="timeouts_content",
-                    expand_x=True,
-                    pad=(0, 0),
-            )],
+                        key="timeouts_content",
+                        expand_x=True,
+                        element_justification="center",
+                        size=(column_width, timeout_height),
+                        pad=(0, 0),
+                    ),
+                ),
+            ],
             # Swap row: under-score image and player stats
             [
                 Sg.pin(
