@@ -94,7 +94,7 @@ def save_team_data(info: dict[str, Any], fetch_index: int,
             info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
 
         settings.saved_data[team_name] = [info, datetime.now()]
-        logger.info("Saving Data to display longer that its available")
+        logger.info("Saving Data to display longer than it's available")
         return info, teams_with_data
 
     # Team is already saved - don't overwrite with new date
