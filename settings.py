@@ -5,6 +5,68 @@ from typing import Any
 
 SETTINGS_PATH = Path(__file__).with_name("settings.json")
 
+# Module-level variable declarations for type checking
+# These will be populated by _apply_settings() at module import time
+teams: list[list[str]]
+FONT: str
+SCORE_TXT_SIZE: int
+INFO_TXT_SIZE: int
+RECORD_TXT_SIZE: int
+CLOCK_TXT_SIZE: int
+HYPHEN_SIZE: int
+TIMEOUT_SIZE: int
+NBA_TOP_INFO_SIZE: int
+NHL_TOP_INFO_SIZE: int
+MLB_BOTTOM_INFO_SIZE: int
+PLAYING_TOP_INFO_SIZE: int
+NOT_PLAYING_TOP_INFO_SIZE: int
+TOP_TXT_SIZE: int
+SIGNATURE_SIZE: int
+PLAYER_STAT_SIZE: int
+PLAYER_STAT_COLUMN: int
+NBA_TIMEOUT_SIZE: int
+LIVE_DATA_DELAY: int
+FETCH_DATA_NOT_PLAYING_TIMER: int
+DISPLAY_NOT_PLAYING_TIMER: int
+DISPLAY_PLAYING_TIMER: int
+HOW_LONG_TO_DISPLAY_TEAM: int
+display_last_pitch: bool
+display_play_description: bool
+display_bases: bool
+display_balls_strikes: bool
+display_hits_errors: bool
+display_pitcher_batter: bool
+display_inning: bool
+display_outs: bool
+display_nba_timeouts: bool
+display_nba_bonus: bool
+display_nba_clock: bool
+display_nba_shooting: bool
+display_nba_play_by_play: bool
+display_nhl_sog: bool
+display_nhl_power_play: bool
+display_nhl_clock: bool
+display_nhl_play_by_play: bool
+display_nfl_timeouts: bool
+display_nfl_redzone: bool
+display_nfl_clock: bool
+display_nfl_down: bool
+display_nfl_possession: bool
+display_records: bool
+display_venue: bool
+display_network: bool
+display_series: bool
+display_odds: bool
+display_date_ended: bool
+always_get_logos: bool
+prioritize_playing_team: bool
+auto_update: bool
+display_playoff_championship_image: bool
+display_player_stats: bool
+no_spoiler_mode: bool
+stay_on_team: bool
+delay: bool
+
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
     "teams": [
