@@ -282,7 +282,7 @@ def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
                 os.execl(
                     python,
                     python,
-                    "-m", "screens.not_playing_screen",
+                    "-m", "screens.scoreboard_screen",
                     "--settings", tmp_path,
                     "--saved-data", json.dumps(saved_data),
                 )
