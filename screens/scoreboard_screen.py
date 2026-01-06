@@ -478,7 +478,7 @@ def _handle_rotation_cycle(
             teams_currently_playing, state.display_index, teams_with_data)
         state.display_clock = ticks_ms()
     else:
-        logger.info(f"\\nTeam doesn't have data {settings.teams[state.display_index][0]}")
+        logger.info(f"\nTeam doesn't have data {settings.teams[state.display_index][0]}")
         state.display_index = (state.display_index + 1) % len(settings.teams)
 
 
