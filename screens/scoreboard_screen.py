@@ -533,7 +533,7 @@ def main() -> None:
                 state.display_first_time = True
 
             if not state.fetch_first_time and not any(teams_with_data):
-                logger.info("\\nNo Teams with Data Displaying Clock\\n")
+                logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
             if settings.auto_update:
