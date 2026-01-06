@@ -104,7 +104,12 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     :param events: key presses that were recorded
     :param currently_playing: current state of scoreboard allowing for more or less key presses
     """
-    event_raw = events[0] if events else ""
+    if isinstance(events, (list, tuple)) and events:
+        event_raw = str(events[0])
+    elif isinstance(events, str):
+        event_raw = events
+    else:
+        event_raw = ""
     event = event_raw.split(":")[0] if ":" in event_raw else event_raw
 
     # Exit/close handling
