@@ -14,4 +14,8 @@ venv/
 __pycache__/
 *.py[cod]
 
+# Ignore log files
 /logs*
+
+# Ignore JSON configuration files
+*.json*
