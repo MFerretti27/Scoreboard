@@ -185,7 +185,7 @@ def _save_settings_file(data: dict[str, Any]) -> None:
 
         # Atomically replace the original file
         tmp_path.replace(SETTINGS_PATH)
-    except (OSError, json.JSONEncodeError) as e:
+    except (OSError, TypeError) as e:
         # Log the error but don't crash - settings are still available in memory
         logger.info(f"Warning: Failed to save settings to {SETTINGS_PATH}: {e}")
         # Attempt to restore from backup if it exists

@@ -432,7 +432,7 @@ def _should_rotate_team(state: DisplayState, display_timer: int) -> bool:
     return ticks_diff(ticks_ms(), state.display_clock) >= display_timer or state.display_first_time
 
 
-def _handle_fetch_cycle(state: DisplayState, fetch_timer: int) -> tuple[list[bool], list[dict], list[bool], int]:
+def _handle_fetch_cycle(state: DisplayState) -> tuple[list[bool], list[dict], list[bool], int]:
     """Execute data fetch cycle and return results.
 
     :return: tuple (teams_with_data, team_info, teams_currently_playing, fetch_timer)
@@ -519,8 +519,7 @@ def main() -> None:
 
             # Fetch Data
             if _should_fetch_data(state, fetch_timer):
-                teams_with_data, team_info, teams_currently_playing, fetch_timer = _handle_fetch_cycle(
-                    state, fetch_timer)
+                teams_with_data, team_info, teams_currently_playing, fetch_timer = _handle_fetch_cycle(state)
 
             # Display Team Information
             if _should_update_display(state, display_timer):
