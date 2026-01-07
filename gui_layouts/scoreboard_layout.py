@@ -124,18 +124,18 @@ def create_scoreboard_layout() -> list:
 
     home_team_stats = [
         [Sg.Multiline("", key="home_team_stats",
-                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
+                      font=(settings.FONT, settings.TEAM_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(60, 30), text_color="white", enable_events=True)],
+                      size=(60, 50), text_color="white", enable_events=True)],
     ]
 
     away_team_stats = [
         [Sg.Multiline("", key="away_team_stats",
-                      font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="left",
+                      font=(settings.FONT, settings.TEAM_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
                       border_width=0, background_color="black",
-                      size=(60, 30), text_color="white", enable_events=True)],
+                      size=(60, 50), text_color="white", enable_events=True)],
     ]
 
     # Info layouts

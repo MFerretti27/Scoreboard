@@ -210,7 +210,7 @@ def resize_text() -> None:
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
     settings.INFO_TXT_SIZE = min(max_size, max(20, int(68 * scale)))
-    settings.RECORD_TXT_SIZE = min(max_size, max(35, int(72 * scale)))
+    settings.RECORD_TXT_SIZE = min(max_size, max(35, int(78 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
@@ -222,6 +222,7 @@ def resize_text() -> None:
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
+    settings.TEAM_STAT_SIZE = min(18, max(4, int(18 * scale)))
     settings.PLAYER_STAT_COLUMN = min(50, max(12, int(14 * scale)))
     settings.NBA_TIMEOUT_SIZE = min(max_size, max(8, int(16 * scale)))
 
@@ -239,6 +240,7 @@ def resize_text() -> None:
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
     logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
+    logger.info("Team Stat txt size: %s", settings.TEAM_STAT_SIZE)
     logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
     logger.info("Player Stat column size: %s\n", settings.PLAYER_STAT_COLUMN)
 

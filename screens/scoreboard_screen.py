@@ -297,13 +297,13 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
 
 
     # Change the height of the player stats box based on number of lines
-    home_lines = count_lines(home_stats)
-    away_lines = count_lines(away_stats)
+    home_lines = count_lines(home_stats) + 1
+    away_lines = count_lines(away_stats) + 1
 
     stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
 
-    window["home_player_stats"].set_size(size=(stats_width, max(home_lines, 15)))
-    window["away_player_stats"].set_size(size=(stats_width, max(away_lines, 15)))
+    window["home_player_stats"].set_size(size=(stats_width, home_lines))
+    window["away_player_stats"].set_size(size=(stats_width, away_lines))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
