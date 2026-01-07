@@ -16,6 +16,17 @@ import settings
 from helper_functions.logger_config import logger
 
 
+def count_lines(text: str) -> int:
+    """Count how many lines a string takes up based on newline characters.
+
+    :param text: The string to count lines for
+    :return: Number of lines the string occupies
+    """
+    if not text:
+        return 0
+    return text.count("\n") + 1
+
+
 def will_text_fit_on_screen(text: str, txt_size: int | None = None) -> bool:
     """Check if text will fit on screen.
 

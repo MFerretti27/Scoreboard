@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 
-import FreeSimpleGUI as Sg
 import requests  # type: ignore[import]
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import boxscore, scoreboard
@@ -290,8 +289,7 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
             home_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
             away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
 
-            if Sg.Window.get_screen_size()[0] < 1300:
-                home_player_stats += f"\n\n{away_player_stats}"
-                away_player_stats = ""
+            away_player_stats = f"{home_player_stats}\n\n{away_player_stats}"
+            home_player_stats = ""
 
     return home_player_stats, away_player_stats

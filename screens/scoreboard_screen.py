@@ -19,6 +19,7 @@ from helper_functions.handle_error import handle_error
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
+    count_lines,
     decrease_text_size,
     increase_text_size,
     maximize_screen,
@@ -284,15 +285,25 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     :param display_index: The index of the team to update
     :param show_home: Whether to show home stats next
     """
+    home_stats = current_team.get("home_player_stats", "")
+    away_stats = current_team.get("away_player_stats", "")
     if Sg.Window.get_screen_size()[0] < SMALL_SCREEN_WIDTH_THRESHOLD:
-        home_stats = current_team.get("home_player_stats", "")
-        away_stats = current_team.get("away_player_stats", "")
         if show_home:
             window["away_player_stats"].update(value=home_stats)
         elif settings.teams[display_index][1] != "NFL":
             window["away_player_stats"].update(value=away_stats)
         else:  # NFL has game stats only; show on one column
             window["away_player_stats"].update(value=home_stats)
+
+
+    # Change the height of the player stats box based on number of lines
+    home_lines = count_lines(home_stats)
+    away_lines = count_lines(away_stats)
+
+    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
+
+    window["home_player_stats"].set_size(size=(stats_width, max(home_lines, 15)))
+    window["away_player_stats"].set_size(size=(stats_width, max(away_lines, 15)))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
