@@ -105,8 +105,11 @@ def get_nhl_player_stats(team_name: str) -> tuple[str, str]:
     live_data = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
     live = live_data.json()
 
-    home_stats = ""
-    away_stats = ""
+    away_team_name = live.get("awayTeam", {}).get("commonName", {}).get("default", "")
+    home_team_name = live.get("homeTeam", {}).get("commonName", {}).get("default", "")
+
+    home_stats = f"{home_team_name} Players Stats:\n\n"
+    away_stats = f"{away_team_name} Players Stats:\n\n"
 
     if "homeTeam" in live and "awayTeam" in live and "playerByGameStats" in live:
         home_team_stats = live["playerByGameStats"]["homeTeam"]

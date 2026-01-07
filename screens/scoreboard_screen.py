@@ -144,13 +144,14 @@ def get_display_data(state: DisplayState) -> tuple:
         info, data, currently_playing = get_data(settings.teams[fetch_index])
         teams_with_data.append(data)
         teams_currently_playing.append(currently_playing)
-        team_info.append(info)
 
         if currently_playing and settings.teams[fetch_index][0] in settings.saved_data:
             logger.info("Removing saved data for team that is currently playing")
             del settings.saved_data[settings.teams[fetch_index][0]]
 
         info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
+
+        team_info.append(info)
 
     if settings.delay and any(teams_currently_playing):
         team_info = _handle_delay_logic(
@@ -443,6 +444,10 @@ def _handle_fetch_cycle(state: DisplayState, fetch_timer: int) -> tuple[list[boo
 
     if any(teams_currently_playing):
         fetch_timer = PLAYING_GAME_FETCH_INTERVAL_MS
+    else:
+        state.delay_started = False
+        state.delay_over = False
+        fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
 
     return teams_with_data, team_info, teams_currently_playing, fetch_timer
 

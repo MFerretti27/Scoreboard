@@ -148,9 +148,9 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     # Delay toggle
     delay_triggers = ("Left", "Right", "top_info", "bottom_info")
     if any(key in event for key in delay_triggers):
-        logger.info(f"{event} key pressed, delay off")
         settings.delay = not settings.delay
         msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+        logger.info(f"{event} key pressed, {msg}")
         window["bottom_info"].update(value=msg)
         window.refresh()
         time.sleep(5)
