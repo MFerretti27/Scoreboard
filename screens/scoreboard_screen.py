@@ -354,6 +354,9 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     _update_player_stats(window, current_team, display_index, show_home=show_home_stats_next)
     _update_visibility(window, current_team, currently_playing=currently_playing)
 
+    if currently_playing:
+        window["top_info"].update(font=(settings.FONT, settings.PLAYING_TOP_INFO_SIZE))
+
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, current_team)
 
