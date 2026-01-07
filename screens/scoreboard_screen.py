@@ -288,22 +288,21 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     home_stats = current_team.get("home_player_stats", "")
     away_stats = current_team.get("away_player_stats", "")
     if Sg.Window.get_screen_size()[0] < SMALL_SCREEN_WIDTH_THRESHOLD:
-        if show_home:
+        if show_home and settings.teams[display_index][1] != "NFL":
             window["away_player_stats"].update(value=home_stats)
-        elif settings.teams[display_index][1] != "NFL":
+        else:
             window["away_player_stats"].update(value=away_stats)
-        else:  # NFL has game stats only; show on one column
-            window["away_player_stats"].update(value=home_stats)
 
+    else:
+        # Change the height of the player stats box based on number of lines
+        home_lines = count_lines(home_stats) + 1
+        away_lines = count_lines(away_stats) + 1
 
-    # Change the height of the player stats box based on number of lines
-    home_lines = count_lines(home_stats) + 1
-    away_lines = count_lines(away_stats) + 1
+        # NFL stats only have one column, so it can take up whole width
+        stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
 
-    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
-
-    window["home_player_stats"].set_size(size=(stats_width, home_lines))
-    window["away_player_stats"].set_size(size=(stats_width, away_lines))
+        window["home_player_stats"].set_size(size=(stats_width, home_lines))
+        window["away_player_stats"].set_size(size=(stats_width, away_lines))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
