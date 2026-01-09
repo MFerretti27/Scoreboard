@@ -42,7 +42,8 @@ def handle_error(window: Sg.Window, *, error: Exception | None = None,
                 logger.info("Could not get data, trying again...")
                 window["top_info"].update(value="Could not get data, trying again...", text_color="red")
                 window["bottom_info"].update(value=f"Error: {e}",
-                                                font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
+                                                font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+                                                text_color="red")
             wait(window, 30) # Wait 30 seconds before trying again
             time_till_clock = time_till_clock + 1
 
@@ -53,7 +54,7 @@ def handle_error(window: Sg.Window, *, error: Exception | None = None,
     while not is_connected():
         logger.info("Internet connection is down, trying to reconnect...")
         window["top_info"].update(value="Internet connection is down, trying to reconnect...",
-                                    font=(settings.FONT, settings.NBA_TOP_INFO_SIZE), text_color="red")
+                                    font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color="red")
         window["bottom_info"].update(value="")
         event = window.read(timeout=1000)
         check_events(window, event)  # Check for button presses

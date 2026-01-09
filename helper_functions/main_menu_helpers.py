@@ -24,14 +24,6 @@ setting_keys_booleans = [
     "display_playoff_championship_image", "display_player_stats",
 ]
 
-setting_keys_integers = [
-    "LIVE_DATA_DELAY",
-    "DISPLAY_NOT_PLAYING_TIMER",
-    "DISPLAY_PLAYING_TIMER",
-    "HOW_LONG_TO_DISPLAY_TEAM",
-    "FETCH_DATA_PLAYING_TIMER",
-]
-
 
 def positive_num(input_str: str) -> bool:
     """Check if string is a positive integer.
@@ -116,19 +108,6 @@ def update_settings(selected_items_integers: dict, selected_items_boolean: list)
             settings.always_get_logos = True
 
     settings.write_settings(updates)
-
-
-def save_teams_order(new_ordered_teams: list) -> None:
-    """Replace the existing teams array with a newly ordered array.
-
-    :param new_ordered_teams: teams in settings array to reorder
-
-    :return: None
-    """
-    flattened_teams = ([team[0] for team in new_ordered_teams] if
-                       isinstance(new_ordered_teams[0], list) else new_ordered_teams)
-    settings.write_settings({"teams": [[team] for team in flattened_teams]})
-    logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
 
 
 def update_division(league: str, selected_teams: list, existing_teams: list, removed_teams: list,

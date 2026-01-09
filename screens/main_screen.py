@@ -29,7 +29,6 @@ from helper_functions.logger_config import logger, rotate_error_log
 from helper_functions.main_menu_helpers import (
     double_check_teams,
     positive_num,
-    save_teams_order,
     setting_keys_booleans,
     update_settings,
     update_teams,
@@ -386,29 +385,37 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
+    # Read teams once at the start
+    teams = settings.read_settings().get("teams", [])
+    team_names = [team[0] for team in teams]
+
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        teams = settings.read_settings().get("teams", [])
-        team_names = [team[0] for team in teams]
         selected = values["TEAM_ORDER"]
-        if selected:
+
+        if "Move Up" in event and selected:
             index = team_names.index(selected[0])
+            if index > 0:
+                team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
+                window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
 
-        if "Move Up" in event and index > 0:
-            team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
-            window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
-
-        elif "Move Down" in event and index < len(team_names) - 1:
-            team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
-            window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
+        elif "Move Down" in event and selected:
+            index = team_names.index(selected[0])
+            if index < len(team_names) - 1:
+                team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
+                window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
 
         elif "Save" in event:
             new_teams = [[name] for name in team_names]
-            save_teams_order(new_teams)
+            flattened_teams = ([team[0] for team in new_teams] if
+                       isinstance(new_teams[0], list) else new_teams)
+            settings.write_settings({"teams": [[team] for team in flattened_teams]})
+            logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
+
             window["order_message"].update(value="Order Saved Successfully!")
 
         if "Back" in event:

@@ -214,16 +214,12 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(38 * scale)))
-    settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
-    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(20, int(60 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
+    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(28 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(24 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
     settings.TEAM_STAT_SIZE = min(18, max(4, int(16 * scale)))
-    settings.PLAYER_STAT_COLUMN = min(50, max(12, int(14 * scale)))
     settings.NBA_TIMEOUT_SIZE = min(max_size, max(8, int(16 * scale)))
 
     logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
@@ -233,16 +229,12 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA timeouts txt size: %s", settings.NBA_TIMEOUT_SIZE)
-    logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
-    logger.info("NHL top txt size: %s", settings.NHL_TOP_INFO_SIZE)
-    logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
     logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
     logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
     logger.info("Team Stat txt size: %s", settings.TEAM_STAT_SIZE)
     logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
-    logger.info("Player Stat column size: %s\n", settings.PLAYER_STAT_COLUMN)
 
 
 
@@ -389,7 +381,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         root.destroy()
 
 
-def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> None:
+def decrease_text_size(window: Sg.Window, team_info: dict) -> None:
     """Decrease the size of the text to fit on the screen.
 
     :param window: The window element to update
@@ -415,13 +407,7 @@ def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> 
 
         # Update score text
         top_info = team_info.get("top_info", "")
-
-        if team_league == "NBA":
-            size = settings.NBA_TOP_INFO_SIZE
-        elif team_league == "NHL":
-            size = settings.NHL_TOP_INFO_SIZE
-        else:
-            size = settings.PLAYING_TOP_INFO_SIZE
+        size = settings.PLAYING_TOP_INFO_SIZE
 
         new_top_info_size = find_min_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
 

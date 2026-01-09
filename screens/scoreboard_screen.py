@@ -349,7 +349,7 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     _update_score_states(window, current_team)
 
     increase_text_size(window, current_team, sport_league.upper(), currently_playing=True)
-    decrease_text_size(window, current_team, sport_league.upper())
+    decrease_text_size(window, current_team)
 
     _update_player_stats(window, current_team, display_index, show_home=show_home_stats_next)
     _update_visibility(window, current_team, currently_playing=currently_playing)

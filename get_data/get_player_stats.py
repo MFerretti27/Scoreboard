@@ -286,10 +286,8 @@ def get_nfl_player_stats(team_name: str) -> tuple[str, str]:
             receiving_name = (" ".join(competition.get("leaders", {})
                                        [2]["leaders"][0]["athlete"]["shortName"].split()[1:]))
 
-            home_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
-            away_player_stats = f"Receiving Leader\n{receiving_name}: {receiving}"
-
-            away_player_stats = f"{home_player_stats}\n\n{away_player_stats}"
-            home_player_stats = ""
+            # There is only one set of leaders for the entire game, only put in one column
+            away_player_stats = f"Passing Leader\n {qb_name}: {qb}\n\nRushing Leader\n{rush_name}: {rush}"
+            away_player_stats += "\n\n" + f"Receiving Leader\n{receiving_name}: {receiving}"
 
     return home_player_stats, away_player_stats

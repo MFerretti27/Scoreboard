@@ -29,7 +29,7 @@ def create_scoreboard_layout() -> list:
     usable_width = window_width - 6  # Small adjustment for any hidden padding
     column_width = int(usable_width / 3)
     column_height = int(window_height * .75)
-    info_height = int(window_height * (1 / 9))
+    info_height = int(window_height * (1 / 7))
 
     logger.info("\n\nWindow Width: %d, Window Height: %d", window_width, window_height)
     logger.info("Usable Width: %d", usable_width)
@@ -99,11 +99,11 @@ def create_scoreboard_layout() -> list:
     ]
 
     if Sg.Window.get_screen_size()[0] > 1300:
-        home_size=[30, 25]
-        away_size=[30, 25]
+        home_size=[30, 50]
+        away_size=[30, 50]
     else:
         home_size=[0, 0]
-        away_size=[60, 25]
+        away_size=[80, 50]
 
     home_player_stats = [
         [Sg.Multiline("", key="home_player_stats",
@@ -142,7 +142,7 @@ def create_scoreboard_layout() -> list:
     top_info_layout = [
         [Sg.VPush()],
         [Sg.Push(),
-         Sg.Text("", font=(settings.FONT, settings.NBA_TOP_INFO_SIZE),
+         Sg.Text("", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
                  key="top_info", enable_events=True),
          Sg.Push()],
     ]
@@ -249,7 +249,6 @@ def create_scoreboard_layout() -> list:
     # ----------------------------
     # Middle fixed-size frame (under-score OR stats)
     # ----------------------------
-    fixed_middle_height = int(column_height * (4 / 5))
     timeout_height = int(max(settings.TIMEOUT_SIZE, settings.NBA_TIMEOUT_SIZE) * 2.2)
 
     below_score_image = [
@@ -258,7 +257,18 @@ def create_scoreboard_layout() -> list:
 
     middle_swap_frame = Sg.Frame(
         "",
-        [[Sg.VPush()],
+        [
+            [Sg.Frame(
+                "",
+                above_score_layout,
+                border_width=0,
+                element_justification="center",
+                expand_x=True,
+                expand_y=False,
+                pad=(0, 0),
+            ),
+            ],
+            [Sg.VPush()],
             [Sg.Column(
                 [
                     [Sg.Frame(
@@ -349,7 +359,7 @@ def create_scoreboard_layout() -> list:
         border_width=0,
         expand_y=True,
         element_justification="center",
-        size=(column_width, fixed_middle_height),
+        size=(column_width, column_height),
         pad=(0, 0),
     )
 
@@ -365,9 +375,6 @@ def create_scoreboard_layout() -> list:
 
             # Middle column
             Sg.Column([
-                [Sg.Frame("", above_score_layout, border_width=0,
-                          size=(column_width, int(column_height * 1 / 5)),
-                          element_justification="center", pad=(0, 0))],
                 [middle_swap_frame],
             ], pad=(0, 0), vertical_alignment="top"),
 
@@ -378,7 +385,7 @@ def create_scoreboard_layout() -> list:
         ],
 
         [Sg.Frame("", top_info_layout, border_width=0,
-                  size=(window_width, int(info_height * 6 / 7)),
+                  size=(window_width, int(info_height * 5 / 7)),
                   element_justification="center",
                   pad=(0, 0))],
 
