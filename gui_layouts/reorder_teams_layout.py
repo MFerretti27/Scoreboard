@@ -2,7 +2,6 @@
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
-from helper_functions.main_menu_helpers import load_teams_order
 
 
 def create_order_teams_layout(window_width: int) -> list:
@@ -27,7 +26,7 @@ def create_order_teams_layout(window_width: int) -> list:
     message_size = min(max_size, max(6, int(22 * scale)))
     move_button_size = min(max_size, max(12, int(20 * scale)))
 
-    teams = load_teams_order()
+    teams = settings.read_settings().get("teams", [])
     team_names = [team[0] for team in teams]
 
     return [
