@@ -104,9 +104,10 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                 away_team_abbr = game.get("awayTeam", {}).get("teamTricode", "")
                 team_info["top_info"] = get_nba_odds(game["gameId"], home_team_abbr, away_team_abbr)
 
-            if get_game_type("NBA", team_name) != "":
-                # If game type is not empty, then its the Finals, display it
-                team_info["under_score_image"] = get_game_type("NBA", team_name)
+            # Check for NBA Finals/championship (call once and reuse result)
+            nba_game_type_image = get_game_type("NBA", team_name)
+            if nba_game_type_image != "":
+                team_info["under_score_image"] = nba_game_type_image
 
     return team_info, has_data, currently_playing
 

@@ -104,10 +104,10 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         if currently_playing:
             team_info = get_live_game_data(team_league, team_name, team_info, competition)
 
-        # Check if game is a championship game, if so display its championship game
-        if get_game_type(team_league, team_name) != "":
-            # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
-            team_info["under_score_image"] = get_game_type(team_league, team_name)
+        # Check if game is a championship game (call once and reuse result)
+        game_type_image = get_game_type(team_league, team_name)
+        if game_type_image != "":
+            team_info["under_score_image"] = game_type_image
 
         # Check for MLB doubleheader
         if handle_doubleheader(team_info, team_league, team_name, response_as_json["events"], competition):

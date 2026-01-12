@@ -34,6 +34,8 @@ def get_game_type(team_league: str, team_name: str) -> str:
         return (get_nhl_game_type(team_name))
     if "NBA" in team_league.upper():
         return (get_nba_game_type(team_name))
+    if "NFL" in team_league.upper():
+        return (get_nfl_game_type(team_name))
 
     return ""
 
@@ -153,5 +155,55 @@ def get_nhl_game_type(team_name: str) -> str:
     except Exception:
         logger.exception("Error getting NHL game type")
         return ""
+
+    return path
+
+
+def get_nfl_game_type(team_name: str) -> str:
+    """Return a concise stage label for a game.
+
+    Uses ESPN's season.type and optional notes/week to distinguish:
+    - preseason, regular-season, playoffs (wild card/divisional/conference championship/super bowl)
+    """
+    # Fetch NFL scoreboard and find the event for this team
+    resp = requests.get("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", timeout=5)
+    data = resp.json()
+    events = data.get("events", [])
+    event = next((e for e in events if team_name in e.get("name", "")), None)
+    if not event:
+        logger.info("Game type: team not found in scoreboard")
+        return ""
+
+    season_type = event.get("season", {}).get("type")  # 1=preseason, 2=regular, 3=post-season
+
+    # Default mapping by season type
+    if season_type in (1, 2):
+        label = "preseason" if season_type == 1 else "regular-season"
+        logger.info("Game type: %s", label)
+        return label
+    if season_type != 3:
+        logger.info("Game type: unknown season type")
+        return ""
+
+    # Postseason: refine using notes headline or week number
+    headline = "".join(n.get("headline", "") for n in event.get("notes", [])).lower()
+    week_num = event.get("week", {}).get("number")
+
+    # Check headline first, then fall back to week number
+    if "super bowl" in headline or week_num == 4:
+        logger.info("Game type: playoffs - super bowl")
+        path = str(Path.cwd() / "images" / "championship_images" / "super_bowl.png")
+    elif "conference championship" in headline or week_num == 3:
+        logger.info("Game type: playoffs - conference championship")
+        if week_num == 3:  # Use AFC-specific image when available
+            path = str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png")
+        path = str(Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png")
+    elif "wild card" in headline or week_num == 1:
+        logger.info("Game type: playoffs - wild card")
+        path = str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png")
+    else:
+        # Generic playoffs for week 2 (divisional) or unknown playoff games
+        logger.info("Game type: playoffs - divisional/other")
+        path = str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png")
 
     return path
