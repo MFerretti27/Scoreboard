@@ -19,7 +19,6 @@ from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
     count_lines,
-    decrease_text_size,
     increase_text_size,
     reset_window_elements,
     scroll,
@@ -251,7 +250,6 @@ def _update_team_elements(window: Sg.Window, current_team: dict, score_state_fie
     for key, value in current_team.items():
         if key in ("home_logo", "away_logo", "under_score_image"):
             window[key].update(filename=value)
-            window["under_score_image_column"].update(visible=True)
         elif key == "signature":
             window[key].update(value=value, text_color="red")
         elif ("home_timeouts" in key or "away_timeouts" in key) and (settings.teams[display_index][1] != "MLB"):
@@ -321,7 +319,7 @@ def _update_visibility(window: Sg.Window, current_team: dict, *,
 
     if settings.display_player_stats and show_stats:
         window["player_stats_content"].update(visible=True)
-    elif current_team.get("under_score_image_column", ""):
+    elif current_team.get("under_score_image", ""):
         window["under_score_image_column"].update(visible=True)
 
     window["timeouts_content"].update(visible=currently_playing)
@@ -348,19 +346,13 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     _update_team_elements(window, current_team, score_state_fields, display_index)
     _update_score_states(window, current_team)
 
-    increase_text_size(window, current_team, sport_league.upper(), currently_playing=currently_playing)
-    decrease_text_size(window, current_team)
-
     _update_player_stats(window, current_team, display_index, show_home=show_home_stats_next)
     _update_visibility(window, current_team, currently_playing=currently_playing)
 
-    if currently_playing and settings.teams[display_index][1] != "NFL":
-        window["top_info"].update(font=(settings.FONT, settings.PLAYING_TOP_INFO_SIZE))
-    else:
-        window["top_info"].update(font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-
     if settings.no_spoiler_mode:
         set_spoiler_mode(window, current_team)
+
+    increase_text_size(window, current_team, sport_league.upper(), currently_playing=currently_playing)
 
     show_home_stats_next = not show_home_stats_next
 

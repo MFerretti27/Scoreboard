@@ -215,7 +215,7 @@ def resize_text() -> None:
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
-    settings.INFO_TXT_SIZE = min(max_size, max(20, int(65 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(20, int(62 * scale)))
     settings.RECORD_TXT_SIZE = min(max_size, max(35, int(72 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
@@ -305,6 +305,20 @@ def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = Fals
         check_events(window, event, currently_playing=currently_playing)  # Check for button presses
         time.sleep(0.1)
 
+
+def find_max_font_size(text: str, base_size: int, screen_width: float,
+                        max_iterations: int = 100, buffer: float = 1.1) -> int:
+    """Find the maximum font size that fits within screen width."""
+    for i in range(max_iterations):
+        new_txt_size = base_size + i
+        font = tk_font.Font(family=settings.FONT, size=new_txt_size)
+        txt_width = float(font.measure(text)) * buffer
+
+        if txt_width > screen_width:
+            return new_txt_size - 1 if i > 0 else base_size
+    return base_size + max_iterations - 1
+
+
 def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
                        ,*, currently_playing: bool = False) -> None:
     """Increase the size of the score text and timeouts text if there is more room on the screen.
@@ -319,25 +333,13 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
     root = tk.Tk()
     root.withdraw()
 
-    def find_max_font_size(text: str, base_size: int, screen_width: float,
-                           max_iterations: int = 100, buffer: float = 1.1) -> int:
-        """Find the maximum font size that fits within screen width."""
-        for i in range(max_iterations):
-            new_txt_size = base_size + i
-            font = tk_font.Font(family=settings.FONT, size=new_txt_size)
-            txt_width = float(font.measure(text)) * buffer
-
-            if txt_width > screen_width:
-                return new_txt_size - 1 if i > 0 else base_size
-        return base_size + max_iterations - 1
-
     try:
         log_entries = []
         screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
         if (Sg.Window.get_screen_size()[0] < 1300 and "FINAL" in team_info.get("bottom_info", "").upper() and
-            settings.display_player_stats and team_league == "NHL"):
+            settings.display_player_stats):
             # if small screen and game is final and player stats are displayed, limit score size so stats fit
             score_text = "88-88"
         else:
@@ -367,6 +369,16 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
             if new_timeout_size != size:
                 log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
 
+            # Update score text
+            top_info = team_info.get("top_info", "")
+            size = settings.PLAYING_TOP_INFO_SIZE
+
+            new_top_info_size = find_max_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
+
+            window["top_info"].update(font=(settings.FONT, new_top_info_size))
+            if new_top_info_size != size:
+                log_entries.append(f"top_info: {size}->{new_top_info_size}")
+
         # Update above score text if present
         if "above_score_txt" in team_info:
             text = team_info.get("above_score_txt", "")
@@ -384,47 +396,6 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
 
         if log_entries:
             logger.info("Increased Size: %s", ", ".join(log_entries))
-
-    finally:
-        root.destroy()
-
-
-def decrease_text_size(window: Sg.Window, team_info: dict) -> None:
-    """Decrease the size of the text to fit on the screen.
-
-    :param window: The window element to update
-    """
-    root = tk.Tk()
-    root.withdraw()
-
-    def find_min_font_size(text: str, base_size: int, screen_width: float,
-                        max_iterations: int = 100, buffer: float = 1.2) -> int:
-        # Replace tabs with spaces for accurate measurement
-        measured_text = text.replace("\t", "    ")
-        size = base_size
-        for _ in range(max_iterations):
-            txt_width = tk_font.Font(family=settings.FONT, size=size).measure(measured_text) * buffer
-            if txt_width <= screen_width:
-                return size
-            size = max(1, size - 1)  # step down
-        return size  # smallest tried (or 1)
-
-    try:
-        log_entries = []
-        screen_width = Sg.Window.get_screen_size()[0]
-
-        # Update score text
-        top_info = team_info.get("top_info", "")
-        size = settings.PLAYING_TOP_INFO_SIZE
-
-        new_top_info_size = find_min_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
-
-        window["top_info"].update(font=(settings.FONT, new_top_info_size))
-        if new_top_info_size != size:
-            log_entries.append(f"top_info: {size}->{new_top_info_size}")
-
-        if log_entries:
-            logger.info("Decreased Size: %s", ", ".join(log_entries))
 
     finally:
         root.destroy()
