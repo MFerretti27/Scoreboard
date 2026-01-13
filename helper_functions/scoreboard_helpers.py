@@ -215,12 +215,12 @@ def resize_text() -> None:
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
-    settings.INFO_TXT_SIZE = min(max_size, max(20, int(68 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(20, int(65 * scale)))
     settings.RECORD_TXT_SIZE = min(max_size, max(35, int(72 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(58 * scale)))
+    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(50 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(24 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
