@@ -14,7 +14,6 @@ from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
-from gui_layouts.scoreboard_layout import create_scoreboard_layout
 from helper_functions.handle_error import handle_error
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
@@ -22,7 +21,6 @@ from helper_functions.scoreboard_helpers import (
     count_lines,
     decrease_text_size,
     increase_text_size,
-    maximize_screen,
     reset_window_elements,
     scroll,
     set_spoiler_mode,
@@ -72,7 +70,6 @@ class DisplayState:
         self.update_clock = current_time
         self.fetch_clock = current_time
         self.delay_clock = current_time
-
 
 def save_team_data(info: dict[str, Any], fetch_index: int,
                    teams_with_data: list[bool]) -> tuple[dict[str, Any], list[bool]]:
@@ -287,22 +284,24 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     """
     home_stats = current_team.get("home_player_stats", "")
     away_stats = current_team.get("away_player_stats", "")
+    # NFL stats only have one column, so it can take up whole width
+    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
+
     if Sg.Window.get_screen_size()[0] < SMALL_SCREEN_WIDTH_THRESHOLD:
         if show_home and settings.teams[display_index][1] != "NFL":
             window["away_player_stats"].update(value=home_stats)
         else:
             window["away_player_stats"].update(value=away_stats)
 
-    else:
-        # Change the height of the player stats box based on number of lines
-        home_lines = count_lines(home_stats) + 1
-        away_lines = count_lines(away_stats) + 1
+        stats_width = 60  # Small screens only have one column
 
-        # NFL stats only have one column, so it can take up whole width
-        stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
+    # Change the height of the player stats box based on number of lines
+    home_lines = count_lines(home_stats) + 1
+    away_lines = count_lines(away_stats) + 1
 
-        window["home_player_stats"].set_size(size=(stats_width, home_lines))
-        window["away_player_stats"].set_size(size=(stats_width, away_lines))
+    window["home_player_stats"].set_size(size=(stats_width, home_lines))
+    window["away_player_stats"].set_size(size=(stats_width, away_lines))
+    window["away_player_stats"].set_size(size=(stats_width, away_lines))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
@@ -348,7 +347,7 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     _update_team_elements(window, current_team, score_state_fields, display_index)
     _update_score_states(window, current_team)
 
-    increase_text_size(window, current_team, sport_league.upper(), currently_playing=True)
+    increase_text_size(window, current_team, sport_league.upper(), currently_playing=currently_playing)
     decrease_text_size(window, current_team)
 
     _update_player_stats(window, current_team, display_index, show_home=show_home_stats_next)
@@ -509,7 +508,7 @@ def _handle_rotation_cycle(
 #        Main Event Loop         #
 #                                #
 ##################################
-def main() -> None:
+def main(window: Sg.Window) -> None:
     """Create Main function to run the scoreboard application."""
     # Initialize state
     state = DisplayState()
@@ -520,11 +519,6 @@ def main() -> None:
 
     display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
     fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
-
-    # Create the window
-    window = Sg.Window("Scoreboard", create_scoreboard_layout(), no_titlebar=False,
-                       resizable=True, return_keyboard_events=True).Finalize()
-    maximize_screen(window)
 
     while True:
         try:

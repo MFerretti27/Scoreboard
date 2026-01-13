@@ -2,7 +2,6 @@
 import gc
 import json
 import os
-import subprocess
 import sys
 import tempfile
 import time
@@ -21,6 +20,7 @@ from gui_layouts import (
     main_screen_layout,
     manual_layout,
     reorder_teams_layout,
+    scoreboard_layout,
     settings_layout,
     team_selection_layout,
 )
@@ -33,8 +33,10 @@ from helper_functions.main_menu_helpers import (
     update_settings,
     update_teams,
 )
+from helper_functions.scoreboard_helpers import fade_window_parallel, maximize_screen
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
+from screens import scoreboard_screen
 
 set_screen()
 window_width = Sg.Window.get_screen_size()[0]
@@ -520,7 +522,7 @@ def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
             window["update_message"].update(value=message, text_color="red")
 
 def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> None:
-    """Run the script to display live team data in a new process.
+    """Run the script to display live team data by calling scoreboard screen directly.
 
     :param window: window GUI to display
     """
@@ -542,11 +544,21 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     if "Failed" in download_logo_msg:
         return
 
+    # Update saved_data in settings before launching scoreboard
+    settings.saved_data.update(saved_data)
+
+    # Create the window with initial alpha of 0 for fade-in effect
+    new_window = Sg.Window("Scoreboard", scoreboard_layout.create_scoreboard_layout(), no_titlebar=False,
+                       resizable=True, return_keyboard_events=True, alpha_channel=0).Finalize()
+    maximize_screen(new_window)
+
+    # Fade out main window and fade in scoreboard window simultaneously
+    fade_window_parallel(window, new_window)
     window.close()
     gc.collect()  # Clean up memory
-    time.sleep(0.5)  # Give OS time to destroy the window
-    json_saved_data = json.dumps(saved_data)
-    subprocess.Popen([sys.executable, "-m", "screens.scoreboard_screen", "--saved-data", json_saved_data])
+
+    # Call scoreboard screen directly instead of subprocess
+    scoreboard_screen.main(new_window)
     sys.exit()
 
 

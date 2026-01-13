@@ -79,6 +79,7 @@ def reset_window_elements(window: Sg.Window) -> None:
 
     window["home_team_stats"].update(value="", text_color="white")
     window["away_team_stats"].update(value="", text_color="white")
+    window["under_score_image"].update(filename="")
 
 
 def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool, event: str) -> None:
@@ -182,8 +183,9 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     window["under_score_image"].update(filename="")
     if "@" not in team_info.get("above_score_txt", ""):  # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value="")
-    window["home_score"].update(value="0", text_color="white")
-    window["away_score"].update(value="0", text_color="white")
+    window["home_score"].update(value=" ", text_color="white")
+    window["away_score"].update(value=" ", text_color="white")
+    window["hyphen"].update(value="", text_color="white")
     window["home_timeouts"].update(value="")
     window["away_timeouts"].update(value="")
     window["home_record"].update(value="")
@@ -191,6 +193,10 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
 
     window["home_player_stats"].update(value="")
     window["away_player_stats"].update(value="")
+
+    window["player_stats_content"].update(visible=False)
+    window["under_score_image_column"].update(visible=False)
+    window["timeouts_content"].update(visible=False)
 
     return window
 
@@ -214,13 +220,14 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(28 * scale)))
+    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(58 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(24 * scale)))
     settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
     settings.TEAM_STAT_SIZE = min(18, max(4, int(16 * scale)))
     settings.NBA_TIMEOUT_SIZE = min(max_size, max(8, int(16 * scale)))
+    settings.TIMEOUT_HEIGHT =  min(max_size, max(20, int(65 * scale)))
 
     logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
     logger.info("Info txt size: %s", settings.INFO_TXT_SIZE)
@@ -235,6 +242,7 @@ def resize_text() -> None:
     logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
     logger.info("Team Stat txt size: %s", settings.TEAM_STAT_SIZE)
     logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
+    logger.info("Timeout height size: %s\n", settings.TIMEOUT_HEIGHT)
 
 
 
@@ -331,7 +339,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         if (Sg.Window.get_screen_size()[0] < 1300 and "FINAL" in team_info.get("bottom_info", "").upper() and
             settings.display_player_stats and team_league == "NHL"):
             # if small screen and game is final and player stats are displayed, limit score size so stats fit
-            score_text = "888-888"
+            score_text = "88-88"
         else:
             score_text = f"{team_info.get('home_score', '0')}-{team_info.get('away_score', '0')}"
 
@@ -420,3 +428,27 @@ def decrease_text_size(window: Sg.Window, team_info: dict) -> None:
 
     finally:
         root.destroy()
+
+
+def fade_window_parallel(window_out: Sg.Window, window_in: Sg.Window, steps: int = 20, duration_ms: int = 300) -> None:
+    """Fade out one window and fade in another simultaneously.
+
+    :param window_out: The window to fade out
+    :param window_in: The window to fade in
+    :param steps: Number of steps in the fade animation
+    :param duration_ms: Total duration of the fade in milliseconds
+    """
+    try:
+        step_duration = duration_ms / steps
+        for i in range(steps + 1):
+            alpha_out = 1.0 - (i / steps)
+            alpha_in = i / steps
+            window_out.set_alpha(alpha_out)
+            window_in.set_alpha(alpha_in)
+            window_out.refresh()
+            window_in.refresh()
+            time.sleep(step_duration / 1000)
+    except Exception as e:
+        logger.info(f"Fade animation not supported on this platform: {e}")
+        window_out.set_alpha(0.0)
+        window_in.set_alpha(1.0)

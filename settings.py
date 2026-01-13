@@ -34,6 +34,7 @@ DISPLAY_NOT_PLAYING_TIMER: int
 DISPLAY_PLAYING_TIMER: int
 HOW_LONG_TO_DISPLAY_TEAM: int
 TEAM_STAT_SIZE: int
+TIMEOUT_HEIGHT: int
 display_last_pitch: bool
 display_play_description: bool
 display_bases: bool
@@ -100,6 +101,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "PLAYER_STAT_COLUMN": 30,
     "NBA_TIMEOUT_SIZE": 24,
     "TEAM_STAT_SIZE": 14,
+    "TIMEOUT_HEIGHT": 14,
 
     # Timers
     "LIVE_DATA_DELAY": 0,

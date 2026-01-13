@@ -10,7 +10,7 @@ import requests  # type: ignore[import]
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
-from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other, get_network_logos
+from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other
 from helper_functions.logger_config import logger
 
 from .get_game_type import get_game_type
@@ -74,7 +74,6 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         # Data only used in this function
         home_name = competition["competitors"][0]["team"]["displayName"]
         away_name = competition["competitors"][1]["team"]["displayName"]
-        broadcast = competition["broadcast"]
         home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
         away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
@@ -84,9 +83,6 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         # Check if two of your teams are playing each other to not display same data twice
         if check_playing_each_other(home_name, away_name):
             return team_info, False, currently_playing
-
-        # Get Network and display logo if possible
-        team_info["under_score_image"] = get_network_logos(broadcast, team_league)
 
         # Check if Team is Currently Playing
         currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
@@ -162,10 +158,8 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
         team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
     # Swap top and bottom info for NFL (I think it looks better displayed this way)
-    if "halftime" not in team_info["bottom_info"].lower() and "end" in team_info["bottom_info"].lower():
-        temp = str(team_info["bottom_info"])
-        team_info["bottom_info"] = str(team_info["top_info"])
-        team_info["top_info"] = temp
+    if "halftime" not in team_info["bottom_info"].lower() and "end" not in team_info["bottom_info"].lower():
+        team_info["top_info"], team_info["bottom_info"] = team_info["bottom_info"], team_info["top_info"]
 
     if ("1st" in team_info["bottom_info"] or "2nd" in team_info["bottom_info"]
         or "3rd" in team_info["bottom_info"] or "4th" in team_info["bottom_info"]):
