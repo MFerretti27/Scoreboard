@@ -22,12 +22,12 @@ def create_settings_layout(window_width: int) -> list:
 
     max_size = 100
     title_size = min(max_size, max(40, int(50 * scale)))
-    checkbox_width = min(max_size, max(10, int(20 * scale)))
+    checkbox_width = min(max_size, max(10, int(30 * scale)))
     checkbox_height = min(max_size, max(2, int(2 * scale)))
-    message_size = min(max_size, max(8, int(16 * scale)))
+    message_size = min(max_size, max(8, int(14 * scale)))
     button_size = min(max_size, max(20, int(40 * scale)))
     text_input_size = min(max_size, max(4, int(6 * scale)))
-    top_label_size = min(max_size, max(18, int(28 * scale)))
+    top_label_size = min(max_size, max(14, int(28 * scale)))
     bottom_label_size = min(max_size, max(15, int(32 * scale)))
 
     checkbox_size = min(max_size, max(10, int(20 * scale)))
@@ -47,25 +47,25 @@ def create_settings_layout(window_width: int) -> list:
             [Sg.Push(background_color=color),
                 Sg.Column(
                     [
-                        [Sg.Text("Live Data Delay:", font=(settings.FONT, top_label_size),
-                                 background_color=color),
-                         Sg.Spin([str(i) for i in range(1000)], key="LIVE_DATA_DELAY", enable_events=True,
-                                 size=(text_input_size, 600),
+                        [Sg.Text("Display Timer:", font=(settings.FONT, top_label_size), background_color=color),
+                         Sg.Spin([str(i) for i in range(1000)], key="DISPLAY_NOT_PLAYING_TIMER", enable_events=True,
+                                 size=(text_input_size, 1),
                                  font=("Arial", text_size),
-                                 initial_value=str(current_settings.get("LIVE_DATA_DELAY", 0))),
+                                 initial_value=str(current_settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
                          Sg.Text("seconds", font=(settings.FONT, message_size), pad=(0, 0),
                                  background_color=color),
                          ],
                         [
                             Sg.Push(background_color=color),
-                            Sg.Text("Delay to display live data", key="LIVE_DATA_DELAY_MESSAGE",
+                            Sg.Text("How often to Display each team when no team is playing",
+                                    key="DISPLAY_NOT_PLAYING_TIMER_MESSAGE",
                                     font=(settings.FONT, message_size, "italic"),
                                     background_color=color),
                             Sg.Push(background_color=color),
                         ],
                     ],
                     background_color=color,
-            ),
+                ),
                 Sg.Column(
                     [
                         [Sg.Text("Display Timer (LIVE):", font=(settings.FONT, top_label_size),
@@ -87,25 +87,25 @@ def create_settings_layout(window_width: int) -> list:
                         ],
                     ],
                     background_color=color,
-            ),
+                ),
                 Sg.Push(background_color=color),
             ],
             [
                 Sg.Push(background_color=color),
-                Sg.Column(
+                     Sg.Column(
                     [
-                        [Sg.Text("Display Timer:", font=(settings.FONT, top_label_size), background_color=color),
-                         Sg.Spin([str(i) for i in range(1000)], key="DISPLAY_NOT_PLAYING_TIMER", enable_events=True,
-                                 size=(text_input_size, 1),
+                        [Sg.Text("Live Data Delay:", font=(settings.FONT, top_label_size),
+                                 background_color=color),
+                         Sg.Spin([str(i) for i in range(1000)], key="LIVE_DATA_DELAY", enable_events=True,
+                                 size=(text_input_size, 600),
                                  font=("Arial", text_size),
-                                 initial_value=str(current_settings.get("DISPLAY_NOT_PLAYING_TIMER", 0))),
+                                 initial_value=str(current_settings.get("LIVE_DATA_DELAY", 0))),
                          Sg.Text("seconds", font=(settings.FONT, message_size), pad=(0, 0),
                                  background_color=color),
                          ],
                         [
                             Sg.Push(background_color=color),
-                            Sg.Text("How often to Display each team when no team is playing",
-                                    key="DISPLAY_NOT_PLAYING_TIMER_MESSAGE",
+                            Sg.Text("Delay to display live data", key="LIVE_DATA_DELAY_MESSAGE",
                                     font=(settings.FONT, message_size, "italic"),
                                     background_color=color),
                             Sg.Push(background_color=color),
@@ -138,14 +138,14 @@ def create_settings_layout(window_width: int) -> list:
             [Sg.Text("", font=(settings.FONT, bottom_label_size), background_color=color)],
             [Sg.Column(
                     [
-                        [Sg.Checkbox("Download/Resize Images when Starting", key="always_get_logos",
+                        [Sg.Checkbox("Re-Download Images when Starting", key="always_get_logos",
                                     font=(settings.FONT, top_label_size),
                                     background_color=color,
                                     default=current_settings.get("always_get_logos", False)),
                         ],
                         [
-                            Sg.Text("\tDo this only if team logos have changed and you need to update them "
-                                    "or if logo isn't sized correctly\n", font=(settings.FONT, message_size),
+                            Sg.Text("\tOnly do this only if a team's logo has changed\n",
+                                    font=(settings.FONT, message_size),
                                     background_color=color),
                         ],
                     ],
@@ -161,11 +161,11 @@ def create_settings_layout(window_width: int) -> list:
                             default=current_settings.get("prioritize_playing_team", False)),
                         ],
                         [
-                            Sg.Text("\tEnabling this means if any of the selected teams are start playing, ",
+                            Sg.Text("\tWhen enabled, displays only teams with live games.",
                                     font=(settings.FONT, message_size), background_color=color),
                         ],
                         [
-                            Sg.Text("\tonly they will display until there are no more live games\n",
+                            Sg.Text("\tOther teams will display once all live games are finished.\n",
                                     font=(settings.FONT, message_size), background_color=color),
                         ],
                     ],
@@ -216,16 +216,17 @@ def create_settings_layout(window_width: int) -> list:
                             background_color=color,
                             default=current_settings.get("display_records", False)),
                 ],
-                [Sg.Text("\tDisplayed always if enabled",
+                [Sg.Text("\tDisplays always if enabled",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 [
                 Sg.Checkbox("Game Venue", key="display_venue",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
-                            default=current_settings.get("display_venue", False)),
+                            default=current_settings.get("display_venue", False),
+                            checkbox_color=("blue")),
                 ],
-                [Sg.Text("\tDisplayed only before game starts",
+                [Sg.Text("\tDisplays only before game starts",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 [
@@ -234,15 +235,15 @@ def create_settings_layout(window_width: int) -> list:
                             background_color=color,
                             default=current_settings.get("display_odds", False)),
                 ],
-                [Sg.Text("\tDisplayed only before game starts",
+                [Sg.Text("\tDisplays only before game starts",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
-                [ Sg.Checkbox("Display Playoff/Championship Image", key="display_playoff_championship_image",
+                [ Sg.Checkbox("Playoff/Championship Image", key="display_playoff_championship_image",
                             font=(settings.FONT, text_size),
                             background_color=color,
                             default=current_settings.get("display_playoff_championship_image", False)),
                     ],
-                    [Sg.Text("\tDisplay special image if the game is playoff/championship",
+                    [Sg.Text("\tDisplays special image if the game is playoff/championship",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 ],
@@ -255,23 +256,23 @@ def create_settings_layout(window_width: int) -> list:
                                 background_color=color,
                                 default=current_settings.get("display_series", False)),
                     ],
-                    [Sg.Text("\tDisplayed only after game ends, and applicable",
+                    [Sg.Text("\tDisplays only if applicable and after game ends",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
-                    [Sg.Checkbox("Display Player Stats", key="display_player_stats",
+                    [Sg.Checkbox("Player's Game Stats", key="display_player_stats",
                                 font=(settings.FONT, top_label_size),
                                 background_color=color,
                                 default=current_settings.get("display_player_stats", False)),
                     ],
-                    [Sg.Text("\tDisplayed only after game ends",
+                    [Sg.Text("\tDisplays only after game ends",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
-                    [Sg.Checkbox("Date Ended", key="display_date_ended",
+                    [Sg.Checkbox("Date Game Ended", key="display_date_ended",
                             font=(settings.FONT, top_label_size),
                             background_color=color,
                             default=current_settings.get("display_date_ended", False)),
                     ],
-                    [Sg.Text("\tDisplayed only after game ends",
+                    [Sg.Text("\tDisplays only after game ends",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                     [Sg.Checkbox("Display Broadcast", key="display_network",
@@ -279,7 +280,7 @@ def create_settings_layout(window_width: int) -> list:
                             background_color=color,
                             default=current_settings.get("display_network", False)),
                     ],
-                    [Sg.Text("\tDisplayed only if applicable",
+                    [Sg.Text("\tDisplays only if applicable",
                         font=(settings.FONT, message_size), background_color=color),
                         ],
                 ],
@@ -448,6 +449,7 @@ def create_settings_layout(window_width: int) -> list:
 
     return [
         [Sg.Push(), Sg.Text("Settings", font=(settings.FONT, title_size, "underline")), Sg.Push()],
+        [Sg.VPush()],
         [Sg.Frame("",
             [
                 [Sg.Column(

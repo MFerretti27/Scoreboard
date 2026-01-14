@@ -220,9 +220,8 @@ def resize_text() -> None:
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
     settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(50 * scale)))
     settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(24 * scale)))
-    settings.TOP_TXT_SIZE = min(max_size, max(10, int(32 * scale)))
+    settings.TOP_TXT_SIZE = min(max_size, max(10, int(30 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
     settings.TEAM_STAT_SIZE = min(18, max(4, int(16 * scale)))
@@ -236,7 +235,6 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA timeouts txt size: %s", settings.NBA_TIMEOUT_SIZE)
-    logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
     logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
@@ -369,11 +367,12 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
             if new_timeout_size != size:
                 log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
 
-            # Update score text
+            # Update top text
             top_info = team_info.get("top_info", "")
-            size = settings.PLAYING_TOP_INFO_SIZE
+            size = settings.NOT_PLAYING_TOP_INFO_SIZE
+            screen_width = Sg.Window.get_screen_size()[0]
 
-            new_top_info_size = find_max_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
+            new_top_info_size = find_max_font_size(top_info, size, screen_width, buffer=1.5, max_iterations=100)
 
             window["top_info"].update(font=(settings.FONT, new_top_info_size))
             if new_top_info_size != size:
@@ -389,7 +388,7 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
                 screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
                 size = settings.TOP_TXT_SIZE
 
-            new_size = find_max_font_size(text, size, screen_width, max_iterations=50, buffer=1.3)
+            new_size = find_max_font_size(text, size, screen_width, max_iterations=50, buffer=1.5)
             window["above_score_txt"].update(font=(settings.FONT, new_size))
             if new_size != size:
                 log_entries.append(f"above_score_txt: {size}->{new_size}")
