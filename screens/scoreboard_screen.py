@@ -14,12 +14,14 @@ from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from get_data.get_espn_data import get_data
+from gui_layouts import scoreboard_layout
 from helper_functions.handle_error import handle_error
 from helper_functions.logger_config import logger
 from helper_functions.scoreboard_helpers import (
     check_events,
     count_lines,
     increase_text_size,
+    maximize_screen,
     reset_window_elements,
     scroll,
     set_spoiler_mode,
@@ -598,5 +600,9 @@ if __name__ == "__main__":
         logger.exception("Error parsing startup arguments: %s", e)
         saved_data = {}
 
+    # Create the window with initial alpha of 0 for fade-in effect
+    window = Sg.Window("Scoreboard", scoreboard_layout.create_scoreboard_layout(), no_titlebar=False,
+                       resizable=True, return_keyboard_events=True, alpha_channel=0).Finalize()
+    maximize_screen(window)
     logger.info("Launching scoreboard with saved_data=%s", bool(saved_data))
-    main()
+    main(window)
