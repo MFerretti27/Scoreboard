@@ -194,7 +194,7 @@ def get_nfl_game_type(team_name: str) -> str:
         "super_bowl": str(Path.cwd() / "images" / "championship_images" / "super_bowl.png"),
         "afc_championship": str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png"),
         "nfl_conference": str(
-            Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png"
+            Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png",
         ),
         "playoffs": str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png"),
     }
