@@ -174,7 +174,7 @@ def get_nfl_game_type(team_name: str) -> str:
         logger.info("Game type: team not found in scoreboard")
         return ""
 
-    season_type = event.get("season", {}).get("type")  # 1=preseason, 2=regular, 3=post-season
+    season_type = event.get("season", {}).get("type")  # 1->preseason, 2->regular, 3->post-season
 
     # Default mapping by season type
     if season_type in (1, 2):
@@ -189,21 +189,26 @@ def get_nfl_game_type(team_name: str) -> str:
     headline = "".join(n.get("headline", "") for n in event.get("notes", [])).lower()
     week_num = event.get("week", {}).get("number")
 
-    # Check headline first, then fall back to week number
+    # Map playoff rounds to image paths
+    playoff_images = {
+        "super_bowl": str(Path.cwd() / "images" / "championship_images" / "super_bowl.png"),
+        "afc_championship": str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png"),
+        "nfl_conference": str(
+            Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png"
+        ),
+        "playoffs": str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png"),
+    }
+
+    # Determine playoff stage and return appropriate image
     if "super bowl" in headline or week_num == 4:
         logger.info("Game type: playoffs - super bowl")
-        path = str(Path.cwd() / "images" / "championship_images" / "super_bowl.png")
-    elif "conference championship" in headline or week_num == 3:
+        return playoff_images["super_bowl"]
+    if "conference championship" in headline or week_num == 3:
         logger.info("Game type: playoffs - conference championship")
-        if week_num == 3:  # Use AFC-specific image when available
-            path = str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png")
-        path = str(Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png")
-    elif "wild card" in headline or week_num == 1:
-        logger.info("Game type: playoffs - wild card")
-        path = str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png")
-    else:
-        # Generic playoffs for week 2 (divisional) or unknown playoff games
-        logger.info("Game type: playoffs - divisional/other")
-        path = str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png")
+        return playoff_images["afc_championship"] if week_num == 3 else playoff_images["nfl_conference"]
 
-    return path
+    # Wild card (week 1), divisional (week 2), or generic playoffs
+    stage = "wild card" if ("wild card" in headline or week_num == 1) else "divisional/other"
+    logger.info("Game type: playoffs - %s", stage)
+    return playoff_images["playoffs"]
+
