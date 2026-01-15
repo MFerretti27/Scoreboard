@@ -13,6 +13,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import orjson  # type: ignore[import]
 
 import settings
+from gui_layouts.change_functionality_popup import show_scoreboard_popup
 from helper_functions.logger_config import logger
 
 
@@ -108,6 +109,47 @@ def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool,
     window[f"{team}_logo_section"].update(visible=True)
     window[f"{team}_stats_section"].update(visible=False)
 
+def check_keyboard_events(window: Sg.Window, event: str) -> None:
+    """Check for specific key presses.
+
+    :param window: element that can be updated for displaying information
+    :param events: key presses that were recorded
+    """
+    # Exit/close handling
+    if event == Sg.WIN_CLOSED or "Escape" in event:
+        window.close()
+        gc.collect()  # Clean up memory
+        time.sleep(0.5)  # Give OS time to destroy the window
+        json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
+        settings.write_settings({"saved_data": json_ready_data})  # Persist to settings.json
+        json_saved_data = orjson.dumps(json_ready_data).decode("utf-8")  # Ensure string not bytes
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
+        sys.exit()
+
+    # Delay toggle
+    delay_triggers = ("Left", "Right")
+    if any(key in event for key in delay_triggers):
+        settings.delay = not settings.delay
+        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+        logger.info(f"{event} key pressed, {msg}")
+        window["bottom_info"].update(value=msg)
+        window.refresh()
+        time.sleep(5)
+
+    # Spoiler mode toggle
+    spoiler_triggers = ("Up", "Down")
+    if any(key in event for key in spoiler_triggers):
+        settings.no_spoiler_mode = not settings.no_spoiler_mode
+        msg = "Entering No Spoiler Mode" if settings.no_spoiler_mode else "Exiting No Spoiler Mode"
+        logger.info(f"{event} key pressed, {msg}")
+        if settings.no_spoiler_mode:
+            window = set_spoiler_mode(window, {})
+        else:
+            window["top_info"].update(value="")
+            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+        window.refresh()
+        time.sleep(5)
+
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
     """Check for specific key presses.
@@ -136,19 +178,23 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         sys.exit()
 
     # Spoiler mode toggle
-    spoiler_triggers = ("Up", "away_score", "home_score")
-    if any(key in event for key in spoiler_triggers) and not settings.no_spoiler_mode:
-        settings.no_spoiler_mode = True
-        window = set_spoiler_mode(window, {"above_score_txt": ""})
+    spoiler_triggers = ("away_score", "home_score", "away_timeouts", "home_timeouts")
+    if any(key in event for key in spoiler_triggers):
+        temp_spoiler = settings.no_spoiler_mode
+        temp_delay = settings.delay
+        show_scoreboard_popup()
+        if settings.no_spoiler_mode:
+            logger.info("Entering No Spoiler Mode")
+            window = set_spoiler_mode(window, {})
+        elif temp_spoiler != settings.no_spoiler_mode:
+            logger.info("Exiting No Spoiler Mode")
+            window["top_info"].update(value="")
+            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+        if temp_delay != settings.delay:
+            logger.info("Toggling Delay Mode")
+            msg = f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)" if settings.delay else "Turning delay OFF"
+            window["top_info"].update(value=msg)
         window.refresh()
-    elif any(
-        key in event for key in (*spoiler_triggers, "Down", "away_timeouts", "home_timeouts")
-    ) and settings.no_spoiler_mode:
-        settings.no_spoiler_mode = False
-        window["top_info"].update(value="")
-        window["bottom_info"].update(value="Exiting No Spoiler Mode")
-        window.refresh()
-        time.sleep(2)
 
     # Team stats display
     if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
@@ -157,15 +203,18 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
         _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
 
-    # Delay toggle
-    delay_triggers = ("Left", "Right", "top_info", "bottom_info")
-    if any(key in event for key in delay_triggers):
-        settings.delay = not settings.delay
-        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+    # Stay on team
+    stay_on_team_triggers = ("top_info", "bottom_info")
+    if any(key in event for key in stay_on_team_triggers):
+        settings.stay_on_team = not settings.stay_on_team
+        rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
+        msg = "Staying on current Team" if settings.stay_on_team else f"Rotating Teams every {rotating_time} seconds"
         logger.info(f"{event} key pressed, {msg}")
         window["bottom_info"].update(value=msg)
         window.refresh()
         time.sleep(5)
+
+    check_keyboard_events(window, event)
 
 
 def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:

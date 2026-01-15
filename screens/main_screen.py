@@ -33,7 +33,6 @@ from helper_functions.main_menu_helpers import (
     update_settings,
     update_teams,
 )
-from helper_functions.scoreboard_helpers import fade_window_parallel, maximize_screen
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
 from screens import scoreboard_screen
@@ -42,7 +41,7 @@ set_screen()
 window_width = Sg.Window.get_screen_size()[0]
 window_height = Sg.Window.get_screen_size()[1]
 
-def main(saved_data: dict) -> None:
+def main(window: Sg.Window, saved_data: dict) -> None:
     """Create Main screen GUI functionality.
 
     :param saved_data: dictionary of save team information as to not lose it going to main screen
@@ -50,18 +49,6 @@ def main(saved_data: dict) -> None:
     number_of_times_pressed = 0
     teams = settings.read_settings().get("teams", [])
     team_names = [team[0] for team in teams]
-
-    # Create individual layout columns
-    main_column = Sg.Frame("",
-        main_screen_layout.create_main_layout(window_width),
-        key="MAIN",
-        size=(window_width, window_height),
-        border_width=0,
-    )
-
-    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
-    window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
-                       return_keyboard_events=True).Finalize()
 
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
@@ -549,11 +536,8 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
 
     # Create the window with initial alpha of 0 for fade-in effect
     new_window = Sg.Window("Scoreboard", scoreboard_layout.create_scoreboard_layout(), no_titlebar=False,
-                       resizable=True, return_keyboard_events=True, alpha_channel=0).Finalize()
-    maximize_screen(new_window)
+                       resizable=True, return_keyboard_events=True).Finalize()
 
-    # Fade out main window and fade in scoreboard window simultaneously
-    fade_window_parallel(window, new_window)
     window.close()
     gc.collect()  # Clean up memory
 
@@ -627,6 +611,16 @@ if __name__ == "__main__":
         logger.exception("Error parsing startup arguments")
         saved_data = {}
 
-    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
-    main(saved_data)
+    main_column = Sg.Frame("",
+        main_screen_layout.create_main_layout(window_width),
+        key="MAIN",
+        size=(window_width, window_height),
+        border_width=0,
+    )
 
+    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
+    window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
+                       return_keyboard_events=True).Finalize()
+
+    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
+    main(window, saved_data)

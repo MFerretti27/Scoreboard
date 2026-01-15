@@ -517,6 +517,8 @@ def main(window: Sg.Window) -> None:
     display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
     fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
 
+    maximize_screen(window)
+
     while True:
         try:
             event = window.read(timeout=READ_TIMEOUT_MS)
