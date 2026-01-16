@@ -71,7 +71,8 @@ def get_nba_player_stats(team_name: str) -> tuple[str, str]:
         stats = p["statistics"]
         fg_made = stats.get("fieldGoalsMade", 0)
         three_made = stats.get("threePointersMade", 0)
-        total_points = (fg_made * 2) + (three_made * 3) + stats.get("freeThrowsMade", 0)
+        two_pt_made = fg_made - three_made
+        total_points = (two_pt_made * 2) + (three_made * 3) + stats.get("freeThrowsMade", 0)
         blk = stats.get("blocks", None)
         stl = stats.get("steals", None)
         assists = stats.get("assists", None)
