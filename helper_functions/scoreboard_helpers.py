@@ -366,9 +366,17 @@ def find_max_font_size(text: str, base_size: int, screen_width: float,
     return base_size + max_iterations - 1
 
 
-def _update_font_size(window: Sg.Window, window_key: str, text: str, base_size: int,
+def _update_font_size(window: Sg.Window, window_key: str, text: str, base_size: int,  # noqa: PLR0913
                       screen_width: float, max_iterations: int = 100, buffer: float = 1.1) -> tuple[int, bool]:
-    """Helper to update window element font size and return new size and if it changed.
+    """Update window element font size and return new size and if it changed.
+
+    :param window: The window element to update
+    :param window_key: The key of the window element to update
+    :param text: The text to fit
+    :param base_size: The base font size to start from
+    :param screen_width: The width of the screen to fit within
+    :param max_iterations: Maximum iterations to try increasing font size
+    :param buffer: Buffer multiplier to ensure text fits comfortably
 
     :return: Tuple of (new_size, size_changed)
     """
@@ -398,7 +406,8 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
         home_score_str = str(team_info.get("home_score", "0"))
         away_score_str = str(team_info.get("away_score", "0"))
         score_digits = sum(ch.isdigit() for ch in home_score_str + away_score_str)
-        score_text = "88-88" if score_digits <= 3 and settings.display_player_stats else f"{home_score_str}-{away_score_str}"
+        score_text = ("88-88" if score_digits <= 3 and settings.display_player_stats
+                      else f"{home_score_str}-{away_score_str}")
 
         new_score_size, score_changed = _update_font_size(window, "home_score", score_text,
                                                            settings.SCORE_TXT_SIZE, screen_width, max_iterations=100)
@@ -418,7 +427,8 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
             timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
                             if team_league == "NBA" else "\u25CF  \u25CF  \u25CF")
             new_timeout_size, timeout_changed = _update_font_size(window, "home_timeouts", timeout_text,
-                                                                   timeout_size, timeout_width, max_iterations=50, buffer=1.4)
+                                                                   timeout_size, timeout_width, max_iterations=50,
+                                                                   buffer=1.4)
             window["away_timeouts"].update(font=(settings.FONT, new_timeout_size))
             if timeout_changed:
                 log_entries.append(f"timeouts_txt: {timeout_size}->{new_timeout_size}")
@@ -426,7 +436,8 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
             # Update top text
             new_top_size, top_changed = _update_font_size(window, "top_info", team_info.get("top_info", ""),
                                                           settings.NOT_PLAYING_TOP_INFO_SIZE,
-                                                          Sg.Window.get_screen_size()[0], buffer=1.5, max_iterations=100)
+                                                          Sg.Window.get_screen_size()[0], buffer=1.5,
+                                                          max_iterations=100)
             if top_changed:
                 log_entries.append(f"top_info: {settings.NOT_PLAYING_TOP_INFO_SIZE}->{new_top_size}")
 
