@@ -237,7 +237,8 @@ def create_settings_layout(window_width: int) -> list:
                 [
                 Sg.Checkbox("Gambling Odds", key="display_odds",
                             font=(settings.FONT, top_label_size),
-                            background_color=color,                            checkbox_color=checkbox_color,                            default=current_settings.get("display_odds", False)),
+                            background_color=color, checkbox_color=checkbox_color,
+                            default=current_settings.get("display_odds", False)),                         
                 ],
                 [Sg.Text("\tDisplays only before game starts",
                         font=(settings.FONT, message_size), background_color=color),
