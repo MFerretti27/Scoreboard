@@ -366,8 +366,19 @@ def find_max_font_size(text: str, base_size: int, screen_width: float,
     return base_size + max_iterations - 1
 
 
-def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
-                       ,*, currently_playing: bool = False) -> None:
+def _update_font_size(window: Sg.Window, window_key: str, text: str, base_size: int,
+                      screen_width: float, max_iterations: int = 100, buffer: float = 1.1) -> tuple[int, bool]:
+    """Helper to update window element font size and return new size and if it changed.
+
+    :return: Tuple of (new_size, size_changed)
+    """
+    new_size = find_max_font_size(text, base_size, screen_width, max_iterations, buffer)
+    window[window_key].update(font=(settings.FONT, new_size))
+    return new_size, new_size != base_size
+
+
+def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = "",
+                       *, currently_playing: bool = False) -> None:
     """Increase the size of the score text and timeouts text if there is more room on the screen.
 
     :param window: The window element to update
@@ -376,75 +387,59 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
     :param currently_playing: Whether a game is currently in progress; defaults to False.
     :return: None
     """
-    # Create root window once for font measurements (major performance improvement)
     root = tk.Tk()
     root.withdraw()
 
     try:
         log_entries = []
-        screen_width = (Sg.Window.get_screen_size()[0] / 3)
+        screen_width = Sg.Window.get_screen_size()[0] / 3
 
         # Update score text
         home_score_str = str(team_info.get("home_score", "0"))
         away_score_str = str(team_info.get("away_score", "0"))
         score_digits = sum(ch.isdigit() for ch in home_score_str + away_score_str)
+        score_text = "88-88" if score_digits <= 3 and settings.display_player_stats else f"{home_score_str}-{away_score_str}"
 
-        # If score has 3 or fewer digits and player stats are displayed
-        # use larger placeholder score to ensure player stats fit
-        if score_digits <= 3 and settings.display_player_stats:
-            score_text = "88-88"
-        else:
-            score_text = f"{home_score_str}-{away_score_str}"
-
-        new_score_size = find_max_font_size(score_text, settings.SCORE_TXT_SIZE, screen_width,
-                                            max_iterations=100)
-        new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
-
-        window["home_score"].update(font=(settings.FONT, new_score_size))
+        new_score_size, score_changed = _update_font_size(window, "home_score", score_text,
+                                                           settings.SCORE_TXT_SIZE, screen_width, max_iterations=100)
         window["away_score"].update(font=(settings.FONT, new_score_size))
+
+        new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
         window["hyphen"].update(font=(settings.FONT, new_hyphen_size))
-        if new_score_size != settings.SCORE_TXT_SIZE or new_hyphen_size != settings.HYPHEN_SIZE:
+
+        if score_changed or new_hyphen_size != settings.HYPHEN_SIZE:
             log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
                              f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
 
-        # Update timeouts text if present
         if currently_playing:
-            screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-            size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
+            # Update timeouts
+            timeout_width = screen_width / 2
+            timeout_size = settings.NBA_TIMEOUT_SIZE if team_league == "NBA" else settings.TIMEOUT_SIZE
             timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
                             if team_league == "NBA" else "\u25CF  \u25CF  \u25CF")
-            new_timeout_size = find_max_font_size(timeout_text, size, screen_width, max_iterations=50, buffer=1.4)
-
-            window["home_timeouts"].update(font=(settings.FONT, new_timeout_size))
+            new_timeout_size, timeout_changed = _update_font_size(window, "home_timeouts", timeout_text,
+                                                                   timeout_size, timeout_width, max_iterations=50, buffer=1.4)
             window["away_timeouts"].update(font=(settings.FONT, new_timeout_size))
-            if new_timeout_size != size:
-                log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
+            if timeout_changed:
+                log_entries.append(f"timeouts_txt: {timeout_size}->{new_timeout_size}")
 
             # Update top text
-            top_info = team_info.get("top_info", "")
-            size = settings.NOT_PLAYING_TOP_INFO_SIZE
-            screen_width = Sg.Window.get_screen_size()[0]
-
-            new_top_info_size = find_max_font_size(top_info, size, screen_width, buffer=1.5, max_iterations=100)
-
-            window["top_info"].update(font=(settings.FONT, new_top_info_size))
-            if new_top_info_size != size:
-                log_entries.append(f"top_info: {size}->{new_top_info_size}")
+            new_top_size, top_changed = _update_font_size(window, "top_info", team_info.get("top_info", ""),
+                                                          settings.NOT_PLAYING_TOP_INFO_SIZE,
+                                                          Sg.Window.get_screen_size()[0], buffer=1.5, max_iterations=100)
+            if top_changed:
+                log_entries.append(f"top_info: {settings.NOT_PLAYING_TOP_INFO_SIZE}->{new_top_size}")
 
         # Update above score text if present
         if "above_score_txt" in team_info:
             text = team_info.get("above_score_txt", "")
-            if "@" not in text:
-                screen_width = Sg.Window.get_screen_size()[0] / 3
-                size = settings.NBA_TIMEOUT_SIZE
-            else:
-                screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-                size = settings.TOP_TXT_SIZE
-
-            new_size = find_max_font_size(text, size, screen_width, max_iterations=50, buffer=1.5)
-            window["above_score_txt"].update(font=(settings.FONT, new_size))
-            if new_size != size:
-                log_entries.append(f"above_score_txt: {size}->{new_size}")
+            has_team_names = "@" in text
+            above_width = screen_width / 2 if has_team_names else screen_width
+            above_size = settings.TOP_TXT_SIZE if has_team_names else settings.NBA_TIMEOUT_SIZE
+            new_above_size, above_changed = _update_font_size(window, "above_score_txt", text,
+                                                               above_size, above_width, max_iterations=50, buffer=1.5)
+            if above_changed:
+                log_entries.append(f"above_score_txt: {above_size}->{new_above_size}")
 
         if log_entries:
             logger.info("Increased Size: %s", ", ".join(log_entries))
