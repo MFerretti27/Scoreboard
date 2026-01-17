@@ -6,6 +6,7 @@ import requests
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
+from get_data.get_player_stats import get_player_stats
 from helper_functions.data_helpers import check_playing_each_other, get_team_logo
 from helper_functions.logger_config import logger
 
@@ -89,6 +90,18 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
         team_info["top_info"] = get_current_series_nhl(team_name)
         team_info["bottom_info"] = get_final_status(box_score["periodDescriptor"]["number"],
                                                     box_score["gameType"])
+
+        if settings.display_player_stats:
+            home_player_stats, away_player_stats = get_player_stats("NHL", team_name)
+            team_info["home_player_stats"] = home_player_stats
+            team_info["away_player_stats"] = away_player_stats
+            team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
+            return team_info, has_data, currently_playing
+
+    # Game has not started yet
+    elif settings.display_odds:
+        team_info["top_info"] = get_nhl_odds(box_score["homeTeam"]["abbrev"],
+                                            box_score["awayTeam"]["abbrev"], team_name)
 
     # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
     team_info["under_score_image"] = get_game_type("NHL", team_name)
@@ -198,7 +211,11 @@ def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> 
     """
     play_by_play = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play", timeout=5)
     play = play_by_play.json()
-    plays = play["plays"][-1]["typeDescKey"].capitalize()
+
+    try:
+        plays = play["plays"][-1]["typeDescKey"].capitalize()
+    except IndexError:
+        return ""
 
     last_play = ""
 
@@ -226,3 +243,55 @@ def get_play_by_play(game_id: int, home_team_abrr: str, away_team_abbr: str) -> 
                     last_play = plays.replace("-", " ")
 
     return last_play
+
+
+def get_nhl_odds(home_team_abbr: str, away_team_abbr: str, team: str) -> str:
+    """Get NHL odds for the game.
+
+    :param home_team_abbr: The abbreviation of the home team
+    :param away_team_abbr: The abbreviation of the away team
+    :param team: The team name to get odds for
+
+    :return str: The spread and over/under for the game
+    """
+    home_spread = None
+    away_spread = None
+    over_under = ""
+
+    resp = requests.get("https://api-web.nhle.com/v1/partner-game/US/now", timeout=5)
+    res = resp.json()
+    for game in res["games"]:
+        if game["homeTeam"]["name"]["default"] in team or game["awayTeam"]["name"]["default"] in team:
+            for item in game["homeTeam"]["odds"]:
+                desc = item["description"]
+                qual = item["qualifier"]
+
+                if desc == "PUCK_LINE":
+                    home_spread = qual
+
+                elif desc == "OVER_UNDER" and qual.startswith(("O", "U")):
+                    over_under = qual
+
+            for item in game["awayTeam"]["odds"]:
+                desc = item["description"]
+                qual = item["qualifier"]
+
+                if desc == "PUCK_LINE":
+                    away_spread = qual
+
+            if home_spread and away_spread:
+                home_val = float(home_spread.replace("+",""))
+                away_val = float(away_spread.replace("+",""))
+
+                if int(home_val) < int(away_val):
+                    spread = f"{home_team_abbr} {home_spread}"
+                else:
+                    spread = f"{away_team_abbr} {away_spread}"
+            else:
+                spread = "N/A"
+
+            over_under = over_under.replace("O", "").replace("U", "") if over_under else "N/A"
+
+            return f"Spread: {spread} \t\t OverUnder: {over_under}"
+    # If no matching game is found, return default values
+    return "Spread: N/A \t OverUnder: N/A"

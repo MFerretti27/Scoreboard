@@ -2,6 +2,7 @@
 
 import copy
 import gc
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -9,14 +10,16 @@ import requests  # type: ignore[import]
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
-from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other, get_network_logos
+from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other
 from helper_functions.logger_config import logger
 
 from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
 from .get_nba_data import append_nba_data, get_all_nba_data
 from .get_nhl_data import append_nhl_data, get_all_nhl_data
+from .get_player_stats import get_player_stats
 from .get_series_data import get_series
+from .get_team_stats import get_team_stats
 
 doubleheader = 0
 
@@ -59,8 +62,8 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             return team_info, False, False
 
         # Get Score
-        team_info["home_score"] = competition["competitors"][0]["score"]
-        team_info["away_score"] = competition["competitors"][1]["score"]
+        team_info["home_score"] = competition["competitors"][0].get("score", "0")
+        team_info["away_score"] = competition["competitors"][1].get("score", "0")
 
         if settings.display_records:
             team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
@@ -71,7 +74,6 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         # Data only used in this function
         home_name = competition["competitors"][0]["team"]["displayName"]
         away_name = competition["competitors"][1]["team"]["displayName"]
-        broadcast = competition["broadcast"]
         home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
         away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
@@ -81,9 +83,6 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         # Check if two of your teams are playing each other to not display same data twice
         if check_playing_each_other(home_name, away_name):
             return team_info, False, currently_playing
-
-        # Get Network and display logo if possible
-        team_info["under_score_image"] = get_network_logos(broadcast, team_league)
 
         # Check if Team is Currently Playing
         currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
@@ -101,10 +100,10 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         if currently_playing:
             team_info = get_live_game_data(team_league, team_name, team_info, competition)
 
-        # Check if game is a championship game, if so display its championship game
-        if get_game_type(team_league, team_name) != "":
-            # If str returned is not empty, then it Finals/Stanley Cup/World Series, so display championship png
-            team_info["under_score_image"] = get_game_type(team_league, team_name)
+        # Check if game is a championship game (call once and reuse result)
+        game_type_image = get_game_type(team_league, team_name)
+        if game_type_image != "":
+            team_info["under_score_image"] = game_type_image
 
         # Check for MLB doubleheader
         if handle_doubleheader(team_info, team_league, team_name, response_as_json["events"], competition):
@@ -152,19 +151,19 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
         })
 
     if settings.display_nfl_timeouts and home_timeouts is not None and away_timeouts is not None:
-        timeout_map = {3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF", 1: "\u25CF", 0: ""}
+        timeout_map = ({3: "\u25CF  \u25CF  \u25CF", 2: "\u25CF  \u25CF  \u25CB",
+                        1: "\u25CF  \u25CB  \u25CB", 0: "\u25CB  \u25CB  \u25CB"})
 
         team_info["away_timeouts"] = timeout_map.get(away_timeouts, "")
         team_info["home_timeouts"] = timeout_map.get(home_timeouts, "")
 
     # Swap top and bottom info for NFL (I think it looks better displayed this way)
-    temp = str(team_info["bottom_info"])
-    team_info["bottom_info"] = str(team_info["top_info"])
-    team_info["top_info"] = temp
+    if "halftime" not in team_info["bottom_info"].lower() and "end" not in team_info["bottom_info"].lower():
+        team_info["top_info"], team_info["bottom_info"] = team_info["bottom_info"], team_info["top_info"]
 
-    if ("1st" in team_info["top_info"] or "2nd" in team_info["top_info"]
-        or "3rd" in team_info["top_info"]or "4th" in team_info["top_info"]):
-        team_info["top_info"] = team_info["top_info"] + " Quarter"
+    if ("1st" in team_info["bottom_info"] or "2nd" in team_info["bottom_info"]
+        or "3rd" in team_info["bottom_info"] or "4th" in team_info["bottom_info"]):
+        team_info["bottom_info"] = team_info["bottom_info"] + " Quarter"
 
     return team_info
 
@@ -222,7 +221,15 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
     try:
         team_info = append_nba_data(team_info, team_name)
     except Exception:
-        logger.exception("Failed to get data from NBA API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sNBA API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NBA API"
 
@@ -252,7 +259,15 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
 
     # If call to API fails get MLB specific info just from ESPN
     except Exception:
-        logger.exception("Failed to get data from MLB API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sMLB API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from MLB API"
 
@@ -334,7 +349,15 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
     try:
         team_info = append_nhl_data(team_info, team_name)
     except Exception:
-        logger.exception("Could not get info from NHL API")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sNHL API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NHL API"
 
@@ -384,24 +407,30 @@ def handle_doubleheader(info: dict, league: str, name: str, events: list, comp: 
     return not still_playing
 
 
-def get_live_game_data(league: str, name: str, info: dict, comp: dict) -> dict:
+def get_live_game_data(team_league: str, team_name: str, info: dict, comp: dict) -> dict:
     """Get live game data for a specific league.
 
-    param league: Name of the league (e.g., "NFL", "NBA", "MLB", "NHL")
-    param name: Name of the team
+    param team_league: Name of the league (e.g., "NFL", "NBA", "MLB", "NHL")
+    param team_name: Name of the team
     param info: Dictionary containing team information
     param comp: Dictionary containing competition information
 
     return: Updated info with live game data for the specified league
     """
-    if "NFL" in league.upper():
+    if settings.display_player_stats:
+        home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
+        info["home_team_stats"] = home_player_stats
+        info["away_team_stats"] = away_player_stats
+
+    if "NFL" in team_league.upper():
         return get_currently_playing_nfl_data(info, comp, comp["competitors"][0]["id"], comp["competitors"][1]["id"])
-    if "NBA" in league.upper():
-        return get_currently_playing_nba_data(name, info, comp)
-    if "MLB" in league.upper():
-        return get_currently_playing_mlb_data(name, info, comp)
-    if "NHL" in league.upper():
-        return get_currently_playing_nhl_data(name, info)
+    if "NBA" in team_league.upper():
+        return get_currently_playing_nba_data(team_name, info, comp)
+    if "MLB" in team_league.upper():
+        return get_currently_playing_mlb_data(team_name, info, comp)
+    if "NHL" in team_league.upper():
+        return get_currently_playing_nhl_data(team_name, info)
+
     return info
 
 def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
@@ -413,11 +442,27 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
 
     return: Updated info with live game data for the specified league
     """
+    # Get Team Stats if not currently playing
+    away_team_name = team_info["above_score_txt"].split(" @ ")[0]
+    home_team_name = team_info["above_score_txt"].split(" @ ")[1]
+    if team_league == "nfl":
+        home_team_name = competition["competitors"][0]["team"]["abbreviation"]
+        away_team_name = competition["competitors"][1]["team"]["abbreviation"]
+    home_team_stats, away_team_stats = get_team_stats(team_league.upper(), home_team_name, away_team_name)
+    team_info["away_team_stats"] = away_team_stats
+    team_info["home_team_stats"] = home_team_stats
+
     # Check if Team is Done Playing
     if any(keyword in str(team_info["bottom_info"])
             for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):
         currently_playing = False
         team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
+
+        if settings.display_player_stats:
+            home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
+            team_info["home_player_stats"] = home_player_stats
+            team_info["away_player_stats"] = away_player_stats
+            team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
 
     # Check if Game hasn't been played yet
     elif not currently_playing:
@@ -430,7 +475,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
         if settings.display_odds:
             over_under = competition.get("odds", [{}])[0].get("overUnder", "N/A")
             spread = competition.get("odds", [{}])[0].get("details", "N/A")
-            team_info["top_info"] = f"Spread: {spread} \t OverUnder: {over_under}"
+            team_info["top_info"] = f"Spread: {spread} \t\t OverUnder: {over_under}"
             if team_league.upper() in ["NHL", "MLB"]:
                 team_info["top_info"] = f"MoneyLine: {spread} \t OverUnder: {over_under}"
 
@@ -463,7 +508,16 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
 
     # If call to ESPN fails use another API corresponding to the sport
     except Exception as e:
-        logger.exception("\n\nError fetching data from ESPN API\n\n")
+        separator = "\n" + "=" * 80 + "\n"
+        logger.exception(
+            "%sESPN API ERROR:%s\nTeam: %s\nLeague: %s\n\nTeam Info:\n%s\n%s",
+            separator,
+            separator,
+            team_name,
+            team_league,
+            json.dumps(team_info, indent=2, default=str),
+            "=" * 80,
+        )
         if "MLB" in team_league.upper():
             team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
         elif "NBA" in team_league.upper():

@@ -32,7 +32,7 @@ def error_handling(window: Sg.Window, error: Exception) -> str:
     """
     logger.exception("Failed to Get Data")
     if is_connected():
-        message = f"Failed to Get Data, Error:{error}"
+        message = f"Failed to Get Data, Error: {error}"
     elif not is_connected():
         logger.exception("Internet connection is down, trying to reconnect...")
         message = "No Internet Connection"
@@ -43,7 +43,7 @@ def error_handling(window: Sg.Window, error: Exception) -> str:
     _, success, latest = check_for_update()
     if success and not latest:
         bottom_message = "Update Available! Press Escape to go to main screen and update"
-        window["bottom_info"].update(value=bottom_message, font=(settings.FONT, settings.TOP_TXT_SIZE))
+        window["bottom_info"].update(value=bottom_message, font=(settings.FONT, settings.INFO_TXT_SIZE))
 
     return message
 
@@ -89,9 +89,9 @@ def clock(window: Sg.Window, message: str) -> list:
         window["bottom_info"].update(value=date, font=(settings.FONT, settings.RECORD_TXT_SIZE))
         window["top_info"].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
 
-        should_scroll = will_text_fit_on_screen(message)
+        should_scroll = will_text_fit_on_screen(message, txt_size=settings.TIMEOUT_SIZE)
         if should_scroll:
-            scroll(window, message)
+            scroll(window, message, key="top_info")
 
         if event[0] == Sg.WIN_CLOSED or "Escape" in event[0]:
             window.close()

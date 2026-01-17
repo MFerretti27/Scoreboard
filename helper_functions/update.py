@@ -1,12 +1,19 @@
 """Functions to connect to GitHub and update files."""
+import json
 import os
 import re
 import shutil
+import sys
+import tempfile
+from datetime import datetime
 from pathlib import Path
 from shutil import ignore_patterns
+from typing import Any
 
+import FreeSimpleGUI as Sg  # type: ignore[import]
 import requests  # type: ignore[import]
 
+import settings
 from helper_functions.logger_config import logger
 
 # Path to local version.txt
@@ -250,3 +257,32 @@ def update_program() -> tuple[str, bool]:
     except Exception as e:
         return f"Error during update: {e}", False
     return "Update complete. Restarting application....", True
+
+
+def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
+    """Automatically update the program at 4:30 AM if auto_update is enabled."""
+    if settings.auto_update and datetime.now().hour == 4 and datetime.now().minute == 30:
+        logger.info("Updating program automatically at 4:30 AM")
+
+        message, successful, latest = check_for_update()
+        logger.info(message)
+        if successful and not latest:
+            window.read(timeout=100)
+            settings_json = json.dumps(settings.read_settings(), indent=2)
+
+            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
+                tmp.write(settings_json)
+                tmp_path = tmp.name
+            _, successful = update_program()
+            if successful:
+                window.read(timeout=5)
+
+                # Relaunch script, passing temp filename as argument
+                python = sys.executable
+                os.execl(
+                    python,
+                    python,
+                    "-m", "screens.scoreboard_screen",
+                    "--settings", tmp_path,
+                    "--saved-data", json.dumps(saved_data),
+                )

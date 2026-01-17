@@ -15,10 +15,10 @@ def create_instructions_layout(window_width: int) -> list:
     base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
     scale = window_width / base_width
     max_size = 100
-    title_size = min(max_size, max(60, int(65 * scale)))
+    title_size = min(max_size, max(40, int(65 * scale)))
     text_size = min(max_size, max(20, int(25 * scale)))
-    button_size = min(max_size, max(48, int(50 * scale)))
-    instructions_size = min(max_size, max(25, int(20 * scale)))
+    button_size = min(max_size, max(22, int(30 * scale)))
+    instructions_size = min(max_size, max(10, int(20 * scale)))
     return [
         [Sg.Text("Manual", font=(settings.FONT, title_size, "underline"), justification="center", expand_x=True)],
         [Sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
