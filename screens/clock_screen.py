@@ -43,7 +43,7 @@ def error_handling(window: Sg.Window, error: Exception) -> str:
     _, success, latest = check_for_update()
     if success and not latest:
         bottom_message = "Update Available! Press Escape to go to main screen and update"
-        window["bottom_info"].update(value=bottom_message, font=(settings.FONT, settings.TOP_TXT_SIZE))
+        window["bottom_info"].update(value=bottom_message, font=(settings.FONT, settings.INFO_TXT_SIZE))
 
     return message
 

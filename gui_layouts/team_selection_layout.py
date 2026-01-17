@@ -3,7 +3,6 @@ import FreeSimpleGUI as Sg  # ignore
 
 import settings
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
-from helper_functions.main_menu_helpers import read_teams_from_file
 
 
 def create_team_selection_layout(window_width: int, league: str) -> list:
@@ -14,7 +13,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     :return layout: List of elements and how the should be displayed
     """
     checkboxes_per_column = 8
-    selected_teams = read_teams_from_file()
+    selected_teams = [team[0] for team in settings.read_settings().get("teams", [])]
 
     team_names = {
         "MLB": MLB,

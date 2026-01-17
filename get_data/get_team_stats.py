@@ -62,14 +62,14 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
         team_stat = {
             "team_id": team[2],
             "team_name": team[3] + " " + team[4],
-            "conference": team[6],
-            "conference_record": team[7],
-            "playoff_rank": team[8],
             "division": team[10],
-            "division_record": team[11],
-            "division_rank": team[12],
+            "conference": team[6],
             "home_record": team[18],
             "road_record": team[19],
+            "conference_record": team[7],
+            "playoff_rank": team[8],
+            "division_record": team[11],
+            "division_rank": team[12],
         }
 
         # Add detailed stats if available
@@ -147,15 +147,15 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
 
         team_stat = {
             "team_name": team_name_full,
+            "division": team.get("divisionName", ""),
+            "conference": team.get("conferenceName", ""),
+            "home_record": f"{team.get('homeWins', 0)}-{team.get('homeLosses', 0)}-{team.get('homeTies', 0)}",
+            "road_record": f"{team.get('roadWins', 0)}-{team.get('roadLosses', 0)}-{team.get('roadTies', 0)}",
             "goals_for": team.get("goalFor", 0),
             "goals_against": team.get("goalAgainst", 0),
             "goal_diff": team.get("goalDifferential", 0),
             "points": team.get("points", 0),
             "wins_in_ot": team.get("otLosses", 0),
-            "division": team.get("divisionName", ""),
-            "conference": team.get("conferenceName", ""),
-            "home_record": f"{team.get('homeWins', 0)}-{team.get('homeLosses', 0)}-{team.get('homeTies', 0)}",
-            "road_record": f"{team.get('roadWins', 0)}-{team.get('roadLosses', 0)}-{team.get('roadTies', 0)}",
             "streak": f"{team.get('streakCode', '')}{team.get('streakCount', 0)}",
         }
 
@@ -215,20 +215,24 @@ def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
             record_type = record.get("type", "")
             summary = record.get("summary", "")
 
-            if record_type == "total":
+            if record_type == "home":
+                team_stat += "Home Record: " + summary + "\n\n"
+            elif record_type == "road":
+                team_stat += "Road Record: " + summary + "\n\n"
+            elif record_type == "total":
 
                 # Extract detailed stats from total record
                 stat_map = {
-                    "avgPointsAgainst": ("AvgPointsAgainst", str),
-                    "avgPointsFor": ("AvgPointsFor", str),
-                    "divisionWinPercent": ("DivisionWinPercent", str),
-                    "playoffSeed": ("PlayoffSeed", int),
-                    "pointsAgainst": ("PointsAgainst", int),
-                    "pointsFor": ("PointsFor", int),
-                    "streak": ("Streak", int),
                     "divisionWins": ("DivisionWins", int),
                     "divisionLosses": ("DivisionLosses", int),
                     "divisionTies": ("DivisionTies", int),
+                    "divisionWinPercent": ("DivisionWinPercent", str),
+                    "avgPointsFor": ("AvgPointsFor", str),
+                    "avgPointsAgainst": ("AvgPointsAgainst", str),
+                    "pointsFor": ("PointsFor", int),
+                    "pointsAgainst": ("PointsAgainst", int),
+                    "playoffSeed": ("PlayoffSeed", int),
+                    "streak": ("Streak", int),
                 }
 
                 stats = record.get("stats", [])
@@ -243,10 +247,6 @@ def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
                         except Exception:
                             value_str = str(stat_value)
                         team_stat += f"{label}: {value_str}\n\n"
-            elif record_type == "home":
-                team_stat += "Home Record: " + summary + "\n\n"
-            elif record_type == "road":
-                team_stat += "Road Record: " + summary + "\n\n"
         # Standing summary
         team_stat += team_data.get("standingSummary", "")
 

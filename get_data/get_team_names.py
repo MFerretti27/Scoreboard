@@ -11,21 +11,11 @@ from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
 import get_data.get_team_league
+import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import read_teams_from_file, remove_accents, update_teams
+from helper_functions.main_menu_helpers import remove_accents, update_teams
 
-
-def format_teams_block(teams: list[list[str]]) -> str:
-    """Format the 'teams' block using double quotes."""
-    if isinstance(teams, list) and all(isinstance(item, list) and len(item) == 1 for item in teams):
-        formatted = "teams = [\n"
-        for item in teams:
-            team_name = item[0].replace('"', '\\"')  # escape quotes
-            formatted += f'    ["{team_name}"],\n'
-        formatted += "]"
-        return formatted
-    return f"teams = {teams!s}"
 
 def normalize(name: str) -> str:
     """Lowercase, remove punctuation (keep spaces), collapse spaces."""
@@ -214,10 +204,10 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     current_list.clear()
     current_list.extend(sorted_names)
 
-    # update settings.py file team name if it needs to change
+    # update settings.json file team name if it needs to change
     if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and renamed:
         remove_specifically = []
-        settings_dict = read_teams_from_file()
+        settings_dict = [team[0] if isinstance(team, list) else team for team in settings.teams]
         for renamed_team in renamed:
             if renamed_team[0] in settings_dict:
                 settings_dict[settings_dict.index(renamed_team[0])] = renamed_team[1]

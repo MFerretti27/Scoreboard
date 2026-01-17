@@ -1,26 +1,31 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
 import gc
-import json
-import os
 import platform
 import subprocess
 import sys
-import tempfile
 import time
 import tkinter as tk
-import typing
 from datetime import datetime
 from pathlib import Path
 from tkinter import font as tk_font
-from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 import orjson  # type: ignore[import]
 
 import settings
+from gui_layouts.change_functionality_popup import show_scoreboard_popup
 from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import settings_to_json
-from helper_functions.update import check_for_update, update_program
+
+
+def count_lines(text: str) -> int:
+    """Count how many lines a string takes up based on newline characters.
+
+    :param text: The string to count lines for
+    :return: Number of lines the string occupies
+    """
+    if not text:
+        return 0
+    return text.count("\n") + 1
 
 
 def will_text_fit_on_screen(text: str, txt_size: int | None = None) -> bool:
@@ -67,8 +72,7 @@ def reset_window_elements(window: Sg.Window) -> None:
     window["away_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
     window["above_score_txt"].update(value="", font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
                                      text_color="white")
-    if Sg.Window.get_screen_size()[1] < 1000:
-        window["home_player_stats"].update(value="", text_color="white")
+    window["home_player_stats"].update(value="", text_color="white")
     window["away_player_stats"].update(value="", text_color="white")
     window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
     window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
@@ -76,6 +80,7 @@ def reset_window_elements(window: Sg.Window) -> None:
 
     window["home_team_stats"].update(value="", text_color="white")
     window["away_team_stats"].update(value="", text_color="white")
+    window["under_score_image"].update(filename="")
 
 
 def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool, event: str) -> None:
@@ -104,6 +109,47 @@ def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool,
     window[f"{team}_logo_section"].update(visible=True)
     window[f"{team}_stats_section"].update(visible=False)
 
+def check_keyboard_events(window: Sg.Window, event: str) -> None:
+    """Check for specific key presses.
+
+    :param window: element that can be updated for displaying information
+    :param events: key presses that were recorded
+    """
+    # Exit/close handling
+    if event == Sg.WIN_CLOSED or "Escape" in event:
+        window.close()
+        gc.collect()  # Clean up memory
+        time.sleep(0.5)  # Give OS time to destroy the window
+        json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
+        settings.write_settings({"saved_data": json_ready_data})  # Persist to settings.json
+        json_saved_data = orjson.dumps(json_ready_data).decode("utf-8")  # Ensure string not bytes
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
+        sys.exit()
+
+    # Delay toggle
+    delay_triggers = ("Left", "Right")
+    if any(key in event for key in delay_triggers):
+        settings.delay = not settings.delay
+        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+        logger.info(f"{event} key pressed, {msg}")
+        window["bottom_info"].update(value=msg)
+        window.refresh()
+        time.sleep(5)
+
+    # Spoiler mode toggle
+    spoiler_triggers = ("Up", "Down")
+    if any(key in event for key in spoiler_triggers):
+        settings.no_spoiler_mode = not settings.no_spoiler_mode
+        msg = "Entering No Spoiler Mode" if settings.no_spoiler_mode else "Exiting No Spoiler Mode"
+        logger.info(f"{event} key pressed, {msg}")
+        if settings.no_spoiler_mode:
+            window = set_spoiler_mode(window, {})
+        else:
+            window["top_info"].update(value="")
+            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+        window.refresh()
+        time.sleep(5)
+
 
 def check_events(window: Sg.Window, events: list, *, currently_playing: bool = False) -> None:
     """Check for specific key presses.
@@ -112,7 +158,13 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     :param events: key presses that were recorded
     :param currently_playing: current state of scoreboard allowing for more or less key presses
     """
-    event = events[0].split(":")[0] if ":" in events[0] else events[0]
+    if isinstance(events, (list, tuple)) and events:
+        event_raw = str(events[0])
+    elif isinstance(events, str):
+        event_raw = events
+    else:
+        event_raw = ""
+    event = event_raw.split(":")[0] if ":" in event_raw else event_raw
 
     # Exit/close handling
     if event == Sg.WIN_CLOSED or "Escape" in event or "above_score_txt" in event:
@@ -120,24 +172,29 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
         json_ready_data = convert_paths_to_strings(settings.saved_data)  # Convert all Path type to string
-        json_saved_data = orjson.dumps(json_ready_data)
+        settings.write_settings({"saved_data": json_ready_data})  # Persist to settings.json
+        json_saved_data = orjson.dumps(json_ready_data).decode("utf-8")  # Ensure string not bytes
         subprocess.Popen([sys.executable, "-m", "screens.main_screen", "--saved-data", json_saved_data])
         sys.exit()
 
     # Spoiler mode toggle
-    spoiler_triggers = ("Up", "away_score", "home_score")
-    if any(key in event for key in spoiler_triggers) and not settings.no_spoiler_mode:
-        settings.no_spoiler_mode = True
-        window = set_spoiler_mode(window, {"above_score_txt": ""})
+    spoiler_triggers = ("away_score", "home_score", "away_timeouts", "home_timeouts")
+    if any(key in event for key in spoiler_triggers):
+        temp_spoiler = settings.no_spoiler_mode
+        temp_delay = settings.delay
+        show_scoreboard_popup()
+        if settings.no_spoiler_mode:
+            logger.info("Entering No Spoiler Mode")
+            window = set_spoiler_mode(window, {})
+        elif temp_spoiler != settings.no_spoiler_mode:
+            logger.info("Exiting No Spoiler Mode")
+            window["top_info"].update(value="")
+            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+        if temp_delay != settings.delay:
+            logger.info("Toggling Delay Mode")
+            msg = f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)" if settings.delay else "Turning delay OFF"
+            window["top_info"].update(value=msg)
         window.refresh()
-    elif any(
-        key in event for key in (*spoiler_triggers, "Down", "away_timeouts", "home_timeouts")
-    ) and settings.no_spoiler_mode:
-        settings.no_spoiler_mode = False
-        window["top_info"].update(value="")
-        window["bottom_info"].update(value="Exiting No Spoiler Mode")
-        window.refresh()
-        time.sleep(2)
 
     # Team stats display
     if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
@@ -146,15 +203,18 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
         _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
 
-    # Delay toggle
-    delay_triggers = ("Left", "Right", "top_info", "bottom_info")
-    if any(key in event for key in delay_triggers):
-        logger.info(f"{event} key pressed, delay off")
-        settings.delay = not settings.delay
-        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+    # Stay on team
+    stay_on_team_triggers = ("top_info", "bottom_info")
+    if any(key in event for key in stay_on_team_triggers):
+        settings.stay_on_team = not settings.stay_on_team
+        rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
+        msg = "Staying on current Team" if settings.stay_on_team else f"Rotating Teams every {rotating_time} seconds"
+        logger.info(f"{event} key pressed, {msg}")
         window["bottom_info"].update(value=msg)
         window.refresh()
         time.sleep(5)
+
+    check_keyboard_events(window, event)
 
 
 def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
@@ -172,16 +232,20 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     window["under_score_image"].update(filename="")
     if "@" not in team_info.get("above_score_txt", ""):  # Only remove if text doesn't contain team names
         window["above_score_txt"].update(value="")
-    window["home_score"].update(value="0", text_color="white")
-    window["away_score"].update(value="0", text_color="white")
+    window["home_score"].update(value=" ", text_color="white")
+    window["away_score"].update(value=" ", text_color="white")
+    window["hyphen"].update(value="", text_color="white")
     window["home_timeouts"].update(value="")
     window["away_timeouts"].update(value="")
     window["home_record"].update(value="")
     window["away_record"].update(value="")
 
-    if Sg.Window.get_screen_size()[1] < 1000:  # If screen height is small, hide player stats
-        window["home_player_stats"].update(value="")
+    window["home_player_stats"].update(value="")
     window["away_player_stats"].update(value="")
+
+    window["player_stats_content"].update(visible=False)
+    window["under_score_image_column"].update(visible=False)
+    window["timeouts_content"].update(visible=False)
 
     return window
 
@@ -200,21 +264,18 @@ def resize_text() -> None:
 
     max_size = 200
     settings.SCORE_TXT_SIZE = min(max_size, max(40, int(80 * scale)))
-    settings.INFO_TXT_SIZE = min(max_size, max(20, int(68 * scale)))
+    settings.INFO_TXT_SIZE = min(max_size, max(20, int(62 * scale)))
     settings.RECORD_TXT_SIZE = min(max_size, max(35, int(72 * scale)))
     settings.CLOCK_TXT_SIZE = min(max_size, max(60, int(150 * scale)))
     settings.HYPHEN_SIZE = min(max_size, max(30, int(50 * scale)))
-    settings.TIMEOUT_SIZE = min(max_size, max(18, int(26 * scale)))
-    settings.NBA_TOP_INFO_SIZE = min(max_size, max(14, int(38 * scale)))
-    settings.NHL_TOP_INFO_SIZE = min(max_size, max(15, int(42 * scale)))
-    settings.MLB_BOTTOM_INFO_SIZE = min(max_size, max(20, int(60 * scale)))
-    settings.PLAYING_TOP_INFO_SIZE = min(max_size, max(60, int(57 * scale)))
-    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(34 * scale)))
-    settings.TOP_TXT_SIZE = min(max_size, max(10, int(35 * scale)))
+    settings.TIMEOUT_SIZE = min(max_size, max(18, int(20 * scale)))
+    settings.NOT_PLAYING_TOP_INFO_SIZE = min(max_size, max(10, int(24 * scale)))
+    settings.TOP_TXT_SIZE = min(max_size, max(10, int(30 * scale)))
     settings.SIGNATURE_SIZE = min(15, max(7, int(9 * scale)))
     settings.PLAYER_STAT_SIZE = min(18, max(4, int(14 * scale)))
-    settings.PLAYER_STAT_COLUMN = min(50, max(12, int(14 * scale)))
+    settings.TEAM_STAT_SIZE = min(18, max(4, int(16 * scale)))
     settings.NBA_TIMEOUT_SIZE = min(max_size, max(8, int(16 * scale)))
+    settings.TIMEOUT_HEIGHT =  min(max_size, max(20, int(65 * scale)))
 
     logger.info("\nScore txt size: %s", settings.SCORE_TXT_SIZE)
     logger.info("Info txt size: %s", settings.INFO_TXT_SIZE)
@@ -223,26 +284,25 @@ def resize_text() -> None:
     logger.info("Hyphen txt size: %s", settings.HYPHEN_SIZE)
     logger.info("Timeout txt size: %s", settings.TIMEOUT_SIZE)
     logger.info("NBA timeouts txt size: %s", settings.NBA_TIMEOUT_SIZE)
-    logger.info("NBA top txt size: %s", settings.NBA_TOP_INFO_SIZE)
-    logger.info("NHL top txt size: %s", settings.NHL_TOP_INFO_SIZE)
-    logger.info("MLB bottom txt size: %s", settings.MLB_BOTTOM_INFO_SIZE)
-    logger.info("Playing txt size: %s", settings.PLAYING_TOP_INFO_SIZE)
     logger.info("Not playing top txt size: %s", settings.NOT_PLAYING_TOP_INFO_SIZE)
     logger.info("Top txt size: %s", settings.TOP_TXT_SIZE)
     logger.info("Signature txt size: %s", settings.SIGNATURE_SIZE)
+    logger.info("Team Stat txt size: %s", settings.TEAM_STAT_SIZE)
     logger.info("Player Stat txt size: %s", settings.PLAYER_STAT_SIZE)
-    logger.info("Player Stat column size: %s\n", settings.PLAYER_STAT_COLUMN)
+    logger.info("Timeout height size: %s\n", settings.TIMEOUT_HEIGHT)
 
 
 
 def convert_paths_to_strings(obj: object) -> object:
-    """Recursively convert all Path objects in a nested structure to strings."""
+    """Recursively convert all Path objects and datetime objects in a nested structure to strings."""
     if isinstance(obj, dict):
         return {k: convert_paths_to_strings(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [convert_paths_to_strings(i) for i in obj]
     if isinstance(obj, Path):
         return str(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
 
     return obj
 
@@ -280,43 +340,6 @@ def maximize_screen(window: Sg.Window) -> None:
     else:
         window.Maximize()
 
-
-def auto_update(window: Sg.Window, saved_data: dict[str, Any]) -> None:
-    """Automatically update the program at 4:30 AM if auto_update is enabled."""
-    if settings.auto_update and datetime.now().hour == 4 and datetime.now().minute == 30:
-        logger.info("Updating program automatically at 4:30 AM")
-
-        message, successful, latest = check_for_update()
-        logger.info(message)
-        if successful and not latest:
-            window.read(timeout=100)
-            saved_settings = settings_to_json()
-            serializable_settings = {
-                k: v for k, v in saved_settings.items()
-                if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
-            }
-
-            settings_json = json.dumps(serializable_settings, indent=2)
-
-            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
-                tmp.write(settings_json)
-                tmp_path = tmp.name
-            _, successful = update_program()
-            if successful:
-                window.read(timeout=5)
-                time.sleep(3)
-
-                # Relaunch script, passing temp filename as argument
-                python = sys.executable
-                os.execl(
-                    python,
-                    python,
-                    "-m", "screens.not_playing_screen",
-                    "--settings", tmp_path,
-                    "--saved-data", json.dumps(saved_data),
-                )
-
-
 def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = False) -> None:
     """Wait for a short period to allow GUI to update.
 
@@ -329,8 +352,41 @@ def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = Fals
         check_events(window, event, currently_playing=currently_playing)  # Check for button presses
         time.sleep(0.1)
 
-def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
-                       ,*, currently_playing: bool = False) -> None:
+
+def find_max_font_size(text: str, base_size: int, screen_width: float,
+                        max_iterations: int = 100, buffer: float = 1.1) -> int:
+    """Find the maximum font size that fits within screen width."""
+    for i in range(max_iterations):
+        new_txt_size = base_size + i
+        font = tk_font.Font(family=settings.FONT, size=new_txt_size)
+        txt_width = float(font.measure(text)) * buffer
+
+        if txt_width > screen_width:
+            return new_txt_size - 1 if i > 0 else base_size
+    return base_size + max_iterations - 1
+
+
+def _update_font_size(window: Sg.Window, window_key: str, text: str, base_size: int,  # noqa: PLR0913
+                      screen_width: float, max_iterations: int = 100, buffer: float = 1.1) -> tuple[int, bool]:
+    """Update window element font size and return new size and if it changed.
+
+    :param window: The window element to update
+    :param window_key: The key of the window element to update
+    :param text: The text to fit
+    :param base_size: The base font size to start from
+    :param screen_width: The width of the screen to fit within
+    :param max_iterations: Maximum iterations to try increasing font size
+    :param buffer: Buffer multiplier to ensure text fits comfortably
+
+    :return: Tuple of (new_size, size_changed)
+    """
+    new_size = find_max_font_size(text, base_size, screen_width, max_iterations, buffer)
+    window[window_key].update(font=(settings.FONT, new_size))
+    return new_size, new_size != base_size
+
+
+def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = "",
+                       *, currently_playing: bool = False) -> None:
     """Increase the size of the score text and timeouts text if there is more room on the screen.
 
     :param window: The window element to update
@@ -339,74 +395,62 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
     :param currently_playing: Whether a game is currently in progress; defaults to False.
     :return: None
     """
-    # Create root window once for font measurements (major performance improvement)
     root = tk.Tk()
     root.withdraw()
 
-    def find_max_font_size(text: str, base_size: int, screen_width: float,
-                           max_iterations: int = 100, buffer: float = 1.1) -> int:
-        """Find the maximum font size that fits within screen width."""
-        for i in range(max_iterations):
-            new_txt_size = base_size + i
-            font = tk_font.Font(family=settings.FONT, size=new_txt_size)
-            txt_width = float(font.measure(text)) * buffer
-
-            if txt_width > screen_width:
-                return new_txt_size - 1 if i > 0 else base_size
-        return base_size + max_iterations - 1
-
     try:
         log_entries = []
-        screen_width = (Sg.Window.get_screen_size()[0] / 3)
+        screen_width = Sg.Window.get_screen_size()[0] / 3
 
         # Update score text
-        if (Sg.Window.get_screen_size()[0] < 1000 and "FINAL" in team_info.get("bottom_info", "").upper() and
-            settings.display_player_stats and team_league == "NHL"):
-            # if small screen and game is final and player stats are displayed, limit score size so stats fit
-            score_text = "888-888"
-        elif Sg.Window.get_screen_size()[0] < 1000 and (" am " in team_info.get("bottom_info", "") or " pm " in
-                                                          team_info.get("bottom_info", "")):
-            score_text = "88-88"
-        else:
-            score_text = f"{team_info.get('home_score', '0')}-{team_info.get('away_score', '0')}"
+        home_score_str = str(team_info.get("home_score", "0"))
+        away_score_str = str(team_info.get("away_score", "0"))
+        score_digits = sum(ch.isdigit() for ch in home_score_str + away_score_str)
+        score_text = ("88-88" if score_digits <= 3 and settings.display_player_stats
+                      else f"{home_score_str}-{away_score_str}")
 
-        new_score_size = find_max_font_size(score_text, settings.SCORE_TXT_SIZE, screen_width,
-                                            max_iterations=100)
-        new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
-
-        window["home_score"].update(font=(settings.FONT, new_score_size))
+        new_score_size, score_changed = _update_font_size(window, "home_score", score_text,
+                                                           settings.SCORE_TXT_SIZE, screen_width, max_iterations=100)
         window["away_score"].update(font=(settings.FONT, new_score_size))
+
+        new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
         window["hyphen"].update(font=(settings.FONT, new_hyphen_size))
-        if new_score_size != settings.SCORE_TXT_SIZE or new_hyphen_size != settings.HYPHEN_SIZE:
+
+        if score_changed or new_hyphen_size != settings.HYPHEN_SIZE:
             log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
                              f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
 
-        # Update timeouts text if present
         if currently_playing:
-            screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-            size = settings.TIMEOUT_SIZE if team_league != "NBA" else settings.NBA_TIMEOUT_SIZE
+            # Update timeouts
+            timeout_width = screen_width / 2
+            timeout_size = settings.NBA_TIMEOUT_SIZE if team_league == "NBA" else settings.TIMEOUT_SIZE
             timeout_text = ("\u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF  \u25CF"
                             if team_league == "NBA" else "\u25CF  \u25CF  \u25CF")
-            new_timeout_size = find_max_font_size(timeout_text, size, screen_width, max_iterations=50, buffer=1.4)
-
-            window["home_timeouts"].update(font=(settings.FONT, new_timeout_size))
+            new_timeout_size, timeout_changed = _update_font_size(window, "home_timeouts", timeout_text,
+                                                                   timeout_size, timeout_width, max_iterations=50,
+                                                                   buffer=1.4)
             window["away_timeouts"].update(font=(settings.FONT, new_timeout_size))
-            if new_timeout_size != size:
-                log_entries.append(f"timeouts_txt: {size}->{new_timeout_size}")
+            if timeout_changed:
+                log_entries.append(f"timeouts_txt: {timeout_size}->{new_timeout_size}")
+
+            # Update top text
+            new_top_size, top_changed = _update_font_size(window, "top_info", team_info.get("top_info", ""),
+                                                          settings.NOT_PLAYING_TOP_INFO_SIZE,
+                                                          Sg.Window.get_screen_size()[0], buffer=1.5,
+                                                          max_iterations=100)
+            if top_changed:
+                log_entries.append(f"top_info: {settings.NOT_PLAYING_TOP_INFO_SIZE}->{new_top_size}")
 
         # Update above score text if present
-        text = team_info.get("above_score_txt", "")
-        if "@" not in text:
-            screen_width = Sg.Window.get_screen_size()[0] / 3
-            size = settings.NBA_TIMEOUT_SIZE
-        else:
-            screen_width = (Sg.Window.get_screen_size()[0] / 3) / 2
-            size = settings.TOP_TXT_SIZE
-
-        new_size = find_max_font_size(text, size, screen_width, max_iterations=50)
-        window["above_score_txt"].update(font=(settings.FONT, new_size))
-        if new_size != size:
-            log_entries.append(f"above_score_txt: {size}->{new_size}")
+        if "above_score_txt" in team_info:
+            text = team_info.get("above_score_txt", "")
+            has_team_names = "@" in text
+            above_width = screen_width / 2 if has_team_names else screen_width
+            above_size = settings.TOP_TXT_SIZE if has_team_names else settings.NBA_TIMEOUT_SIZE
+            new_above_size, above_changed = _update_font_size(window, "above_score_txt", text,
+                                                               above_size, above_width, max_iterations=50, buffer=1.5)
+            if above_changed:
+                log_entries.append(f"above_score_txt: {above_size}->{new_above_size}")
 
         if log_entries:
             logger.info("Increased Size: %s", ", ".join(log_entries))
@@ -415,48 +459,25 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         root.destroy()
 
 
-def decrease_text_size(window: Sg.Window, team_info: dict, team_league: str) -> None:
-    """Decrease the size of the text to fit on the screen.
+def fade_window_parallel(window_out: Sg.Window, window_in: Sg.Window, steps: int = 20, duration_ms: int = 300) -> None:
+    """Fade out one window and fade in another simultaneously.
 
-    :param window: The window element to update
+    :param window_out: The window to fade out
+    :param window_in: The window to fade in
+    :param steps: Number of steps in the fade animation
+    :param duration_ms: Total duration of the fade in milliseconds
     """
-    root = tk.Tk()
-    root.withdraw()
-
-    def find_min_font_size(text: str, base_size: int, screen_width: float,
-                        max_iterations: int = 100, buffer: float = 1.2) -> int:
-        # Replace tabs with spaces for accurate measurement
-        measured_text = text.replace("\t", "    ")
-        size = base_size
-        for _ in range(max_iterations):
-            txt_width = tk_font.Font(family=settings.FONT, size=size).measure(measured_text) * buffer
-            if txt_width <= screen_width:
-                return size
-            size = max(1, size - 1)  # step down
-        return size  # smallest tried (or 1)
-
     try:
-        log_entries = []
-        screen_width = Sg.Window.get_screen_size()[0]
-
-        # Update score text
-        top_info = team_info.get("top_info", "")
-
-        if team_league == "NBA":
-            size = settings.NBA_TOP_INFO_SIZE
-        elif team_league == "NHL":
-            size = settings.NHL_TOP_INFO_SIZE
-        else:
-            size = settings.PLAYING_TOP_INFO_SIZE
-
-        new_top_info_size = find_min_font_size(top_info, size, screen_width, buffer=1.3, max_iterations=100)
-
-        window["top_info"].update(font=(settings.FONT, new_top_info_size))
-        if new_top_info_size != size:
-            log_entries.append(f"top_info: {size}->{new_top_info_size}")
-
-        if log_entries:
-            logger.info("Decreased Size: %s", ", ".join(log_entries))
-
-    finally:
-        root.destroy()
+        step_duration = duration_ms / steps
+        for i in range(steps + 1):
+            alpha_out = 1.0 - (i / steps)
+            alpha_in = i / steps
+            window_out.set_alpha(alpha_out)
+            window_in.set_alpha(alpha_in)
+            window_out.refresh()
+            window_in.refresh()
+            time.sleep(step_duration / 1000)
+    except Exception as e:
+        logger.info(f"Fade animation not supported on this platform: {e}")
+        window_out.set_alpha(0.0)
+        window_in.set_alpha(1.0)

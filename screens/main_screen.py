@@ -2,11 +2,9 @@
 import gc
 import json
 import os
-import subprocess
 import sys
 import tempfile
 import time
-import typing
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +20,7 @@ from gui_layouts import (
     main_screen_layout,
     manual_layout,
     reorder_teams_layout,
+    scoreboard_layout,
     settings_layout,
     team_selection_layout,
 )
@@ -29,42 +28,27 @@ from helper_functions.internet_connection import connect_to_wifi, is_connected
 from helper_functions.logger_config import logger, rotate_error_log
 from helper_functions.main_menu_helpers import (
     double_check_teams,
-    load_teams_order,
     positive_num,
-    save_teams_order,
     setting_keys_booleans,
-    settings_to_json,
     update_settings,
     update_teams,
-    write_settings_to_py,
 )
 from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
+from screens import scoreboard_screen
 
 set_screen()
 window_width = Sg.Window.get_screen_size()[0]
 window_height = Sg.Window.get_screen_size()[1]
 
-def main(saved_data: dict) -> None:
+def main(window: Sg.Window, saved_data: dict) -> None:
     """Create Main screen GUI functionality.
 
     :param saved_data: dictionary of save team information as to not lose it going to main screen
     """
     number_of_times_pressed = 0
-    teams = load_teams_order()
+    teams = settings.read_settings().get("teams", [])
     team_names = [team[0] for team in teams]
-
-    # Create individual layout columns
-    main_column = Sg.Frame("",
-        main_screen_layout.create_main_layout(window_width),
-        key="MAIN",
-        size=(window_width, window_height),
-        border_width=0,
-    )
-
-    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
-    window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
-                       return_keyboard_events=True).Finalize()
 
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color="red")
@@ -215,7 +199,7 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
             teams_added, teams_removed = update_teams(selected_teams, league)
             window["teams_added"].update(value=teams_added)
             window["teams_removed"].update(value=teams_removed)
-            teams = load_teams_order()
+            teams = settings.read_settings().get("teams", [])
             team_names = [team[0] for team in teams]
 
 def show_fetch_popup(league: str) -> None:
@@ -390,29 +374,37 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
 
     :return window: Window GUI to display
     """
+    # Read teams once at the start
+    teams = settings.read_settings().get("teams", [])
+    team_names = [team[0] for team in teams]
+
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()
             sys.exit()
 
-        teams = load_teams_order()
-        team_names = [team[0] for team in teams]
         selected = values["TEAM_ORDER"]
-        if selected:
+
+        if "Move Up" in event and selected:
             index = team_names.index(selected[0])
+            if index > 0:
+                team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
+                window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
 
-        if "Move Up" in event and index > 0:
-            team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
-            window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
-
-        elif "Move Down" in event and index < len(team_names) - 1:
-            team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
-            window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
+        elif "Move Down" in event and selected:
+            index = team_names.index(selected[0])
+            if index < len(team_names) - 1:
+                team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
+                window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
 
         elif "Save" in event:
             new_teams = [[name] for name in team_names]
-            save_teams_order(new_teams)
+            flattened_teams = ([team[0] for team in new_teams] if
+                       isinstance(new_teams[0], list) else new_teams)
+            settings.write_settings({"teams": [[team] for team in flattened_teams]})
+            logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
+
             window["order_message"].update(value="Order Saved Successfully!")
 
         if "Back" in event:
@@ -455,13 +447,8 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int, saved_data: d
     elif successful and number_of_times_pressed == 1:
         window["update_message"].update(value="Updating...", text_color="green")
         window.read(timeout=100)
-        settings = settings_to_json()
-        serializable_settings = {
-            k: v for k, v in settings.items()
-            if not isinstance(v, type) and not isinstance(v, typing._SpecialForm)  # noqa: SLF001
-        }
-
-        settings_json = json.dumps(serializable_settings, indent=2)
+        settings_dict = settings.read_settings()
+        settings_json = json.dumps(settings_dict, indent=2)
 
         with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
             tmp.write(settings_json)
@@ -507,8 +494,8 @@ def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
         message, successful = restore_backup(selected_version)
         if successful:
             window["update_message"].update(value=message, text_color="green")
-            settings = settings_to_json()
-            settings_json = json.dumps(settings, indent=2)
+            settings_dict = settings.read_settings()
+            settings_json = json.dumps(settings_dict, indent=2)
 
             time.sleep(5)
             with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
@@ -522,7 +509,7 @@ def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
             window["update_message"].update(value=message, text_color="red")
 
 def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> None:
-    """Run the script to display live team data in a new process.
+    """Run the script to display live team data by calling scoreboard screen directly.
 
     :param window: window GUI to display
     """
@@ -544,11 +531,18 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     if "Failed" in download_logo_msg:
         return
 
+    # Update saved_data in settings before launching scoreboard
+    settings.saved_data.update(saved_data)
+
+    # Create the window with initial alpha of 0 for fade-in effect
+    new_window = Sg.Window("Scoreboard", scoreboard_layout.create_scoreboard_layout(), no_titlebar=False,
+                       resizable=True, return_keyboard_events=True).Finalize()
+
     window.close()
     gc.collect()  # Clean up memory
-    time.sleep(0.5)  # Give OS time to destroy the window
-    json_saved_data = json.dumps(saved_data)
-    subprocess.Popen([sys.executable, "-m", "screens.not_playing_screen", "--saved-data", json_saved_data])
+
+    # Call scoreboard screen directly instead of subprocess
+    scoreboard_screen.main(new_window)
     sys.exit()
 
 
@@ -591,6 +585,11 @@ if __name__ == "__main__":
     settings_saved = None
     rotate_error_log()  # Start fresh log file for this session
 
+    # Load saved_data from settings.json first (backup from last session)
+    persisted = settings.read_settings().get("saved_data", {})
+    if persisted:
+        saved_data = persisted
+
     # Parse arguments flexibly
     args = sys.argv[1:]
     try:
@@ -600,8 +599,8 @@ if __name__ == "__main__":
                 settings_path = Path(args[idx + 1])
                 with settings_path.open(encoding="utf-8") as f:
                     settings_saved = json.load(f)
-                    write_settings_to_py(settings_saved)
-                    logger.info("Settings.py updated from JSON.")
+                    settings.write_settings(settings_saved)
+                    logger.info("settings.json updated from JSON.")
 
         if "--saved-data" in args:
             idx = args.index("--saved-data")
@@ -612,6 +611,16 @@ if __name__ == "__main__":
         logger.exception("Error parsing startup arguments")
         saved_data = {}
 
-    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
-    main(saved_data)
+    main_column = Sg.Frame("",
+        main_screen_layout.create_main_layout(window_width),
+        key="MAIN",
+        size=(window_width, window_height),
+        border_width=0,
+    )
 
+    layout = [[Sg.Column([[main_column]], key="VIEW_CONTAINER")]]
+    window = Sg.Window("Scoreboard", layout, size=(window_width, window_height), resizable=True, finalize=True,
+                       return_keyboard_events=True).Finalize()
+
+    logger.info("Launching main_screen with saved_data=%s", bool(saved_data))
+    main(window, saved_data)
