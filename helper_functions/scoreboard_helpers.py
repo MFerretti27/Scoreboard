@@ -385,12 +385,16 @@ def increase_text_size(window: Sg.Window, team_info: dict,team_league: str = ""
         screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
-        if (Sg.Window.get_screen_size()[0] < 1300 and "FINAL" in team_info.get("bottom_info", "").upper() and
-            settings.display_player_stats):
-            # if small screen and game is final and player stats are displayed, limit score size so stats fit
+        home_score_str = str(team_info.get("home_score", "0"))
+        away_score_str = str(team_info.get("away_score", "0"))
+        score_digits = sum(ch.isdigit() for ch in home_score_str + away_score_str)
+
+        # If score has 3 or fewer digits and player stats are displayed
+        # use larger placeholder score to ensure player stats fit
+        if score_digits <= 3 and settings.display_player_stats:
             score_text = "88-88"
         else:
-            score_text = f"{team_info.get('home_score', '0')}-{team_info.get('away_score', '0')}"
+            score_text = f"{home_score_str}-{away_score_str}"
 
         new_score_size = find_max_font_size(score_text, settings.SCORE_TXT_SIZE, screen_width,
                                             max_iterations=100)
