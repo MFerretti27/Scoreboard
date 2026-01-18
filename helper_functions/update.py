@@ -1,4 +1,6 @@
 """Functions to connect to GitHub and update files."""
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -8,13 +10,15 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 from shutil import ignore_patterns
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import FreeSimpleGUI as Sg  # type: ignore[import]
 import requests  # type: ignore[import]
 
 import settings
 from helper_functions.logger_config import logger
+
+if TYPE_CHECKING:
+    import FreeSimpleGUI as Sg
 
 # Path to local version.txt
 LOCAL_VERSION_FILE = "version.txt"

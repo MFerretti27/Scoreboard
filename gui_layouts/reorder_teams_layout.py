@@ -1,14 +1,16 @@
 """GUI Layout screen for setting team display order in main menu."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from constants import colors, ui_keys
 
 
 def create_order_teams_layout(window_width: int) -> list:
     """Create the layout for screen allowing user to change order of teams displayed.
 
     :param window_width: The width of the screen being used
-
     :return layout: List of elements and how the should be displayed
     """
     # Common base screen widths
@@ -38,7 +40,7 @@ def create_order_teams_layout(window_width: int) -> list:
         [Sg.Push(),
          Sg.Listbox(team_names, size=(list_box_size_width, list_box_size_height),
                     font=(settings.FONT, list_box_txt_size),
-                    key="TEAM_ORDER", enable_events=True,
+                    key=ui_keys.TEAM_ORDER, enable_events=True,
                     ),
          Sg.Push(),
          ],
@@ -48,7 +50,7 @@ def create_order_teams_layout(window_width: int) -> list:
          Sg.Push(),
          ],
         [Sg.Push(),
-         Sg.Text("", font=(settings.FONT, button_size), key="order_message", text_color="Green"),
+         Sg.Text("", font=(settings.FONT, button_size), key=ui_keys.ORDER_MESSAGE, text_color=colors.GREEN),
          Sg.Push(),
          ],
          [Sg.VPush()],

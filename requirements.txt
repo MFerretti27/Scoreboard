@@ -9,3 +9,4 @@ nhl-api-py
 rapidfuzz
 types-requests
 orjson
+python-dotenv>=1.0.0

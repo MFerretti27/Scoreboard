@@ -1,8 +1,9 @@
 """Grab Data for ESPN API."""
+from __future__ import annotations
 
 import copy
-import gc
 import json
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -10,8 +11,16 @@ import requests  # type: ignore[import]
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
+from helper_functions.cache import API_RESPONSE_TTL, get_cached, set_cached
 from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other
-from helper_functions.logger_config import logger
+from helper_functions.exceptions import APIError, DataFetchError, DataValidationError, NetworkError
+from helper_functions.logger_config import log_context_scope, logger, track_api_call
+from helper_functions.retry import retry_with_fallback, BackoffConfig
+from helper_functions.validators import (
+    validate_espn_competition,
+    validate_espn_event,
+    validate_espn_scoreboard_response,
+)
 
 from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
@@ -24,96 +33,152 @@ from .get_team_stats import get_team_stats
 doubleheader = 0
 
 
+def _validate_scoreboard_event_and_competition(
+    response_json: dict[str, Any],
+    event: dict[str, Any],
+    competition: dict[str, Any],
+    team_league: str,
+    team_sport: str,
+) -> None:
+    """Validate scoreboard response, event, and competition together."""
+    validations = [
+        (
+            validate_espn_scoreboard_response,
+            f"ESPN {team_league} API returned invalid response structure",
+            "INVALID_RESPONSE",
+            (response_json, team_league),
+        ),
+        (
+            validate_espn_event,
+            f"ESPN {team_league} event data invalid",
+            "INVALID_EVENT",
+            (event, team_league),
+        ),
+        (
+            validate_espn_competition,
+            f"ESPN {team_league} competition data invalid",
+            "INVALID_COMPETITION",
+            (competition, team_league, team_sport),
+        ),
+    ]
+
+    for validator, message, code, args in validations:
+        try:
+            validator(*args)
+        except DataValidationError as exc:
+            raise APIError(message, error_code=code) from exc
+
+
+@retry_with_fallback(
+    max_attempts=settings.RETRY_MAX_ATTEMPTS,
+    backoff=BackoffConfig(
+        initial_delay=settings.RETRY_INITIAL_DELAY,
+        max_delay=settings.RETRY_MAX_DELAY,
+        backoff_multiplier=settings.RETRY_BACKOFF_MULTIPLIER,
+    ),
+    use_cache_fallback=False,  # Cache fallback handled at get_data level
+)
 def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str, Any], bool, bool]:
     """Get data from ESPN API for a specific team.
 
     :param team: Index of teams array to get data for
     :param team_info: Dictionary to store team information
-
     """
     team_name, team_league, team_sport = team[0], team[1].lower(), team[2].lower()
+    currently_playing, team_has_data = False, False
+
     url: str = (f"https://site.api.espn.com/apis/site/v2/sports/{team_sport}/{team_league}/scoreboard")
     index = 0
-    currently_playing: bool = False
-    team_has_data: bool = False
 
-    # Need to set these to empty string to avoid errors and they might not get set but will keys will be looked for
-    team_info.update({
-        "top_info": "",
-        "above_score_txt": "",
-        "under_score_image": "",
-    })
+    with log_context_scope(team=team_name, league=team_league, endpoint="espn_scoreboard"):
+        # Track API call performance
+        start_time = time.time()
+        try:
+            response_as_json = requests.get(url, timeout=5).json()
+            duration_ms = (time.time() - start_time) * 1000
+            track_api_call("espn_scoreboard", duration_ms, success=True)
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            track_api_call("espn_scoreboard", duration_ms, success=False)
+            logger.error(f"ESPN API request failed after {duration_ms:.0f}ms")
+            msg = f"ESPN API request failed for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
 
-    resp = requests.get(url, timeout=5)
-    response_as_json = resp.json()
+        for event in response_as_json["events"]:
+            if team_name.upper() not in event["name"].upper():
+                index += 1  # Continue looking for team in sports league events
+                continue
 
-    for event in response_as_json["events"]:
-        if team_name.upper() not in event["name"].upper():
-            index += 1  # Continue looking for team in sports league events
-            continue
+            logger.info("Found Game: %s", team_name)
+            team_has_data = True
 
-        logger.info("Found Game: %s", team_name)
-        team_has_data = True
-        competition = response_as_json["events"][index]["competitions"][0]
+            competition = response_as_json["events"][index]["competitions"][0]
 
-        # Check if game is within the next month, if not then its too far out to display
-        if not is_valid_game_date(competition["date"]):
-            logger.info("Game is too far in the future or too old, skipping")
-            return team_info, False, False
+            # Validate scoreboard, event, and competition together for the matched team
+            _validate_scoreboard_event_and_competition(
+                response_as_json,
+                event,
+                competition,
+                team_league,
+                team_sport,
+            )
 
-        # Get Score
-        team_info["home_score"] = competition["competitors"][0].get("score", "0")
-        team_info["away_score"] = competition["competitors"][1].get("score", "0")
+            # Check if game is within the next month, if not then its too far out to display
+            if not is_valid_game_date(competition["date"]):
+                logger.info("Game is too far in the future or too old, skipping")
+                return team_info, False, False
 
-        if settings.display_records:
-            team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
-            team_info["home_record"] = competition["competitors"][0].get("records", "N/A")[0].get("summary", "N/A")
+            # Get Score
+            team_info["home_score"] = competition["competitors"][0].get("score", "0")
+            team_info["away_score"] = competition["competitors"][1].get("score", "0")
 
-        team_info["bottom_info"] = response_as_json["events"][index]["status"]["type"]["shortDetail"]
+            if settings.display_records:
+                team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
+                team_info["home_record"] = competition["competitors"][0].get("records", "N/A")[0].get("summary", "N/A")
 
-        # Data only used in this function
-        home_name = competition["competitors"][0]["team"]["displayName"]
-        away_name = competition["competitors"][1]["team"]["displayName"]
-        home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
-        away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
+            team_info["bottom_info"] = response_as_json["events"][index]["status"]["type"]["shortDetail"]
 
-        # Display team names above score
-        team_info["above_score_txt"] = f"{away_short_name} @ {home_short_name}"
+            # Data only used in this function
+            home_name = competition["competitors"][0]["team"]["displayName"]
+            away_name = competition["competitors"][1]["team"]["displayName"]
+            home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
+            away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
 
-        # Check if two of your teams are playing each other to not display same data twice
-        if check_playing_each_other(home_name, away_name):
-            return team_info, False, currently_playing
+            # Display team names above score
+            team_info["above_score_txt"] = f"{away_short_name} @ {home_short_name}"
 
-        # Check if Team is Currently Playing
-        currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
-        team_info, currently_playing = get_not_playing_data(team_info, competition, team_league,
-                                                            team_name, currently_playing=currently_playing)
+            # Check if two of your teams are playing each other to not display same data twice
+            if check_playing_each_other(home_name, away_name):
+                return team_info, False, currently_playing
 
-        # Remove Timezone Characters in info
-        team_info["bottom_info"] = team_info["bottom_info"].replace("EDT", "").replace("EST", "")
+            # Check if Team is Currently Playing
+            currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
+            team_info, currently_playing = get_not_playing_data(team_info, competition, team_league,
+                                                                team_name, currently_playing=currently_playing)
 
-        # Get Logos Location for Teams
-        team_info["away_logo"] = (f"images/sport_logos/{team_league.upper()}/{away_name.upper()}.png")
-        team_info["home_logo"] = (f"images/sport_logos/{team_league.upper()}/{home_name.upper()}.png")
+            # Remove Timezone Characters in info
+            team_info["bottom_info"] = team_info["bottom_info"].replace("EDT", "").replace("EST", "")
 
-        # Get data if team is either playing or not playing
-        if currently_playing:
-            team_info = get_live_game_data(team_league, team_name, team_info, competition)
+            # Get Logos Location for Teams
+            team_info["away_logo"] = (f"images/sport_logos/{team_league.upper()}/{away_name.upper()}.png")
+            team_info["home_logo"] = (f"images/sport_logos/{team_league.upper()}/{home_name.upper()}.png")
 
-        # Check if game is a championship game (call once and reuse result)
-        game_type_image = get_game_type(team_league, team_name)
-        if game_type_image != "":
-            team_info["under_score_image"] = game_type_image
+            # Get data if team is either playing or not playing
+            if currently_playing:
+                team_info = get_live_game_data(team_league, team_name, team_info, competition)
 
-        # Check for MLB doubleheader
-        if handle_doubleheader(team_info, team_league, team_name, response_as_json["events"], competition):
-            return team_info, True, False
+            # Check if game is a championship game (call once and reuse result)
+            game_type_image = get_game_type(team_league, team_name)
+            if game_type_image != "":
+                team_info["under_score_image"] = game_type_image
 
-        break  # Found team in sports events and got data, no need to continue looking
+            # Check for MLB doubleheader
+            if handle_doubleheader(team_info, team_league, team_name, response_as_json["events"], competition):
+                return team_info, True, False
 
-    resp.close()
-    gc.collect()
-    return team_info, team_has_data, currently_playing
+            break  # Found team in sports events and got data, no need to continue looking
+
+        return team_info, team_has_data, currently_playing
 
 def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[str, Any],
                                    home_team_id: str, away_team_id: str) -> dict[str, Any]:
@@ -220,7 +285,7 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
     saved_info = copy.deepcopy(team_info)
     try:
         team_info = append_nba_data(team_info, team_name)
-    except Exception:
+    except Exception as e:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sNBA API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -232,6 +297,8 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NBA API"
+        msg = f"Failed to fetch NBA data for {team_name}"
+        raise APIError(msg, error_code="NBA_API_ERROR") from e
 
     if not settings.display_nba_clock:
         team_info["bottom_info"] = ""
@@ -258,7 +325,7 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
         team_info = append_mlb_data(team_info, team_name, doubleheader)
 
     # If call to API fails get MLB specific info just from ESPN
-    except Exception:
+    except Exception as e:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sMLB API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -270,6 +337,8 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from MLB API"
+        msg = f"Failed to fetch MLB data for {team_name}"
+        raise APIError(msg, error_code="MLB_API_ERROR") from e
 
         team_info["bottom_info"] = team_info["bottom_info"].replace("Bot", "Bottom")
         team_info["bottom_info"] = team_info["bottom_info"].replace("Mid", "Middle")
@@ -348,7 +417,7 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
     saved_info = copy.deepcopy(team_info)
     try:
         team_info = append_nhl_data(team_info, team_name)
-    except Exception:
+    except Exception as e:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sNHL API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -360,6 +429,8 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NHL API"
+        msg = f"Failed to fetch NHL data for {team_name}"
+        raise APIError(msg, error_code="NHL_API_ERROR") from e
 
     return team_info
 
@@ -488,47 +559,69 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
 def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
     """Try to get data for a specific team.
 
-    Uses the ESPN API to get data for a specific team. If the API call fails, it will
-    fall back on other APIs depending on the sport. If no data is available, it will
-    return a message indicating that data could not be retrieved.
+    Flow:
+    1) Try ESPN (no cache fallback here)
+    2) On failure, immediately try sport-specific API (MLB/NBA/NHL)
+    3) If both fail, use cached data up to MAX_STALE_DATA_AGE seconds old
+    4) If still no data, raise DataFetchError
 
     :param team: Index of teams array to get data for
 
-    :return team_info: List of Boolean values representing if team is has data to display
+    :return team_info: List of Boolean values representing if team has data to display
     """
-    team_has_data: bool = False
-    currently_playing: bool = False
-
     team_info: dict[str, Any] = {}
-    team_name: str = team[0]
-    team_league: str = team[1].lower()
+    team_name = team[0]
+    team_league = team[1].lower()
+    cache_key = f"team_data:{team_name}:{team_league}"
 
+    # 1) Try ESPN first (no cache fallback at this layer)
     try:
         team_info, team_has_data, currently_playing = get_espn_data(team, team_info)
-
-    # If call to ESPN fails use another API corresponding to the sport
-    except Exception as e:
-        separator = "\n" + "=" * 80 + "\n"
-        logger.exception(
-            "%sESPN API ERROR:%s\nTeam: %s\nLeague: %s\n\nTeam Info:\n%s\n%s",
-            separator,
-            separator,
-            team_name,
-            team_league,
-            json.dumps(team_info, indent=2, default=str),
-            "=" * 80,
-        )
-        if "MLB" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_mlb_data(team_name)
-        elif "NBA" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nba_data(team_name)
-        elif "NHL" in team_league.upper():
-            team_info, team_has_data, currently_playing = get_all_nhl_data(team_name)
-        else:
-            msg = f"Could Not Get {team_name} data"
-            raise RuntimeError(msg) from e
-
-        team_info["signature"] = f"Failed to get data from ESPN API for {team_league}"
+        set_cached(cache_key, (team_info, team_has_data, currently_playing), ttl=API_RESPONSE_TTL)
+    except Exception as espn_error:
+        logger.warning("ESPN API failed for %s: %s", team_name, espn_error)
+    else:
         return team_info, team_has_data, currently_playing
 
-    return team_info, team_has_data, currently_playing
+    # 2) ESPN failed — immediately try sport-specific API
+    def _get_sport_specific_data() -> tuple[dict[str, Any], bool, bool]:
+        """Fetch data from sport-specific API or raise DataFetchError."""
+        if "MLB" in team_league.upper():
+            return get_all_mlb_data(team_name)
+        if "NBA" in team_league.upper():
+            return get_all_nba_data(team_name)
+        if "NHL" in team_league.upper():
+            return get_all_nhl_data(team_name)
+
+        msg = f"No sport-specific API for {team_league}"
+        raise DataFetchError(
+            msg,
+            team=team_name,
+            league=team_league,
+        )
+
+    try:
+        team_info, team_has_data, currently_playing = _get_sport_specific_data()
+        set_cached(cache_key, (team_info, team_has_data, currently_playing), ttl=API_RESPONSE_TTL)
+        team_info["signature"] = f"Data from {team_league.upper()} API (ESPN unavailable)"
+    except Exception as sport_error:
+        logger.warning("%s API failed for %s: %s", team_league.upper(), team_name, sport_error)
+    else:
+        return team_info, team_has_data, currently_playing
+
+    # 3) Both APIs failed — use cache up to MAX_STALE_DATA_AGE seconds old
+    cached = get_cached(cache_key, max_age=settings.MAX_STALE_DATA_AGE)
+    if cached is not None:
+        team_info, team_has_data, currently_playing = cached
+        team_info["signature"] = "⚠ Using cached data (APIs unavailable)"
+        logger.warning(
+            "Using cached data for %s (up to %ss old) after ESPN and %s API failures",
+            team_name,
+            settings.MAX_STALE_DATA_AGE,
+            team_league.upper(),
+        )
+        return team_info, team_has_data, currently_playing
+
+    # 4) Nothing worked — raise
+    msg = f"Could not fetch data for {team_name} from ESPN, {team_league.upper()}, or cache"
+    raise DataFetchError(msg, team=team_name, league=team_league)

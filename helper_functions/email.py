@@ -1,5 +1,17 @@
-"""Email Notification Module."""
+"""Email Notification Module.
 
+Now supports configuration via environment variables (from a `.env` file if present):
+
+- EMAIL_ENABLED: 'true'/'false' to enable/disable sending (default: true)
+- SMTP_SERVER: SMTP host (default: smtp.gmail.com)
+- SMTP_PORT: SMTP port (default: 587)
+- SMTP_USER: Sender email address
+- SMTP_PASSWORD: SMTP/app password
+- TO_EMAILS: Comma-separated recipient list
+"""
+from __future__ import annotations
+
+import os
 import smtplib
 import socket
 import tempfile
@@ -8,12 +20,29 @@ from contextlib import suppress
 from email.message import EmailMessage
 from pathlib import Path
 
+# Attempt to load .env if available
+with suppress(Exception):  # pragma: no cover - optional dependency
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
 # ---------------- Config ----------------
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = ""
-SMTP_PASSWORD = ""
-TO_EMAILS = [""]
+def _get_env_bool(name: str, *, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return val.strip().lower() in {"1", "true", "yes", "on"}
+
+
+EMAIL_ENABLED = _get_env_bool("EMAIL_ENABLED", default=True)
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "mattferretti27@gmail.com")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "ewrkxsc hpgw quai zmoo")
+_to_emails_env = os.getenv("TO_EMAILS")
+TO_EMAILS = (
+    [e.strip() for e in _to_emails_env.split(",") if e.strip()] if _to_emails_env else ["ferretti7@yahoo.com"]
+)
 # ---------------------------------------
 
 
@@ -26,6 +55,10 @@ def notify_email(subject: str = "", body: str = "") -> None:
     :param subject: Email subject (optional; if empty, uses default with hostname)
     :param body: Email body (optional; if empty, reads from latest timestamped log or error.log)
     """
+    # Respect EMAIL_ENABLED flag (no-op when disabled)
+    if not EMAIL_ENABLED:
+        return
+
     # If no subject provided, use default
     if not subject:
         subject = f"Major League Scoreboard Error - {socket.gethostname()}"
@@ -97,4 +130,29 @@ def _zip_logs(log_dir: Path) -> Path | None:
         return None
     else:
         return tmp_path
+
+
+def email_config_status() -> tuple[bool, bool, str | None]:
+    """Return (enabled, ok, reason) for email configuration.
+
+    ok is True only if required values come from environment or .env.
+    This avoids leaking defaults into production unknowingly.
+    """
+    enabled = EMAIL_ENABLED
+    # Consider config OK only if variables were explicitly provided via env/.env
+    user_set = os.getenv("SMTP_USER") is not None
+    pwd_set = os.getenv("SMTP_PASSWORD") is not None
+    to_set = os.getenv("TO_EMAILS") is not None
+    ok = user_set and pwd_set and to_set
+    reason = None
+    if enabled and not ok:
+        missing = []
+        if not user_set:
+            missing.append("SMTP_USER")
+        if not pwd_set:
+            missing.append("SMTP_PASSWORD")
+        if not to_set:
+            missing.append("TO_EMAILS")
+        reason = f"missing {', '.join(missing)}; set via environment or .env"
+    return enabled, ok, reason
 

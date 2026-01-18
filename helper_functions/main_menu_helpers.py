@@ -1,4 +1,6 @@
 """Helper functions used in main menu."""
+from __future__ import annotations
+
 import unicodedata
 from typing import Any
 

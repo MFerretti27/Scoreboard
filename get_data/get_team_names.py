@@ -1,4 +1,6 @@
 """Get new team names and divisions from API's storing results in get_team_league.py."""
+from __future__ import annotations
+
 import difflib
 import re
 from collections import defaultdict
@@ -13,8 +15,14 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 import get_data.get_team_league
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
+from helper_functions.exceptions import DataValidationError
 from helper_functions.logger_config import logger
 from helper_functions.main_menu_helpers import remove_accents, update_teams
+from helper_functions.validators import (
+    validate_mlb_teams_response,
+    validate_nba_teams_response,
+    validate_nhl_teams_response,
+)
 
 
 def normalize(name: str) -> str:
@@ -61,18 +69,27 @@ def get_new_team_names(league: str) -> tuple:
     renamed: list = []
     try:
         if league == "MLB":
-            teams = statsapi.get("teams", {"sportIds": 1})["teams"]
+            teams_response = statsapi.get("teams", {"sportIds": 1})
+            validate_mlb_teams_response(teams_response)
+            teams = teams_response["teams"]
             new_list.extend([team["name"] for team in teams])
 
         elif league == "NHL":
             client = NHLClient()
-            new_list.extend([team["name"] for team in client.teams.teams()])
+            teams_list = client.teams.teams()
+            validate_nhl_teams_response(teams_list)
+            new_list.extend([team["name"] for team in teams_list])
 
         elif league == "NBA":
-            new_list.extend([team["full_name"] for team in nba_teams.get_teams()])
+            teams_response = nba_teams.get_teams()
+            validate_nba_teams_response(teams_response)
+            new_list.extend([team["full_name"] for team in teams_response])
 
         # Remove accents for consistent sorting
         new_list = list(remove_accents(new_list))
+    except DataValidationError as e:
+        logger.exception(f"Data validation error getting new team names: {e}")
+        return [], [], "Failed to Get New Team Names"
     except Exception:
         logger.exception("Getting new team names failed")
         return [], [], "Failed to Get New Team Names"
@@ -118,7 +135,9 @@ def update_new_division(league: str) -> str:
 
     try:
         if league == "MLB":
-            teams = statsapi.get("teams", {"sportIds": 1})["teams"]
+            teams_response = statsapi.get("teams", {"sportIds": 1})
+            validate_mlb_teams_response(teams_response)
+            teams = teams_response["teams"]
             for team in teams:
                 division_name = team.get("division", {}).get("name", "N/A")
                 division = format_division("MLB", division_name)
@@ -126,7 +145,9 @@ def update_new_division(league: str) -> str:
 
         elif league == "NHL":
             client = NHLClient()
-            for team in client.teams.teams():
+            teams_list = client.teams.teams()
+            validate_nhl_teams_response(teams_list)
+            for team in teams_list:
                 division_name = team.division.get("name") if hasattr(team, "division") else "N/A"
                 division = format_division("NHL", division_name)
                 new_team_divisions[division].append(team["name"])
@@ -145,6 +166,9 @@ def update_new_division(league: str) -> str:
             str_key = str(key)
             update_new_names(str_key, value)
 
+    except DataValidationError as e:
+        logger.exception(f"Data validation error getting divisions: {e}")
+        return "Updating Teams Failed"
     except Exception:
         logger.exception("Failed getting/writing divisions")
         return "Updating Teams Failed"

@@ -1,7 +1,16 @@
 """GUI Layout screen for showing instructions in main menu."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from constants import messages
+from constants.sizing_utils import (
+    calculate_button_size,
+    calculate_message_size,
+    calculate_text_size,
+    get_responsive_scale,
+)
 
 
 def create_instructions_layout(window_width: int) -> list:
@@ -11,14 +20,11 @@ def create_instructions_layout(window_width: int) -> list:
 
     :return layout: List of elements and how the should be displayed
     """
-    common_base_widths = [1366, 1920, 1440, 1280]
-    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
-    scale = window_width / base_width
-    max_size = 100
-    title_size = min(max_size, max(40, int(65 * scale)))
-    text_size = min(max_size, max(20, int(25 * scale)))
-    button_size = min(max_size, max(22, int(30 * scale)))
-    instructions_size = min(max_size, max(10, int(20 * scale)))
+    _, scale = get_responsive_scale(window_width)
+    title_size = min(100, max(40, int(65 * scale)))
+    text_size = calculate_text_size(scale, min_size=20, base_multiplier=25)
+    button_size = calculate_button_size(scale, min_size=22, base_multiplier=30)
+    instructions_size = calculate_message_size(scale, min_size=10, base_multiplier=20)
     return [
         [Sg.Text("Manual", font=(settings.FONT, title_size, "underline"), justification="center", expand_x=True)],
         [Sg.Multiline(help_text, size=(window_width, instructions_size), disabled=True,
@@ -26,7 +32,7 @@ def create_instructions_layout(window_width: int) -> list:
         [Sg.VPush()],
         [
             Sg.Push(),
-            Sg.Button("Back", font=(settings.FONT, button_size)),
+            Sg.Button(messages.BUTTON_BACK, font=(settings.FONT, button_size)),
             Sg.Push(),
         ],
         [Sg.VPush()],

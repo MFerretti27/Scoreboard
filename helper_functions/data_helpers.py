@@ -1,4 +1,6 @@
 """Functions for helping grab data from api's."""
+from __future__ import annotations
+
 from pathlib import Path
 
 import settings

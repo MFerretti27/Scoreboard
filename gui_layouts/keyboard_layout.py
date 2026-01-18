@@ -1,14 +1,16 @@
 """GUI layout for a keyboard input window."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg
 
 
 def keyboard_layout(window: Sg.Window, target_key: str | list[str]) -> None:
     """Open a keyboard window to type in text.
 
-    if multiple target keys are provided, will cycle through them on Enter key press.
+    If multiple target keys are provided, will cycle through them on Enter key press.
 
-    param window: The main window to update text in
-    param target_key: The key of the element to update text for
+    :param window: The main window to update text in
+    :param target_key: The key of the element to update text for
     """
     layout = [
         [Sg.Button(c, size=(3,1)) for c in "QWERTYUIOP"],

@@ -1,4 +1,6 @@
 """Functionality for Main screen GUI."""
+from __future__ import annotations
+
 import gc
 import json
 import os
@@ -572,7 +574,10 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
             window["connection_message"].update(value="Trying to Connect...", text_color="black")
             event, _ = window.read(timeout=100)
             time.sleep(1)
-            logger.info("User Entered %s and %s", values.get("SSID", ""), values.get("password", ""))
+            # Avoid logging plaintext Wi-Fi passwords
+            entered_ssid = values.get("SSID", "")
+            _entered_password = values.get("password", "")
+            logger.info("User entered SSID=%s and a password (redacted)", entered_ssid)
             connect_to_wifi(values.get("SSID", ""), values.get("password", ""))
             if is_connected():
                 window["connection_message"].update(value="Connected!", text_color="green")

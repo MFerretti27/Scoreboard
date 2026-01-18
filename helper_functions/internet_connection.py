@@ -1,4 +1,5 @@
 """Functions to Check Internet Connection and try to Reconnect."""
+from __future__ import annotations
 
 import platform
 import shutil

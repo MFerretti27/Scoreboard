@@ -1,4 +1,6 @@
 """Module to Create and modify scoreboard GUI using FreeSimpleGUI."""
+from __future__ import annotations
+
 import gc
 import platform
 import subprocess
@@ -13,6 +15,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import orjson  # type: ignore[import]
 
 import settings
+from constants import colors, messages, ui_keys
 from gui_layouts.change_functionality_popup import show_scoreboard_popup
 from helper_functions.logger_config import logger
 
@@ -62,25 +65,63 @@ def reset_window_elements(window: Sg.Window) -> None:
 
     :param window: element that can be updated for displaying information
     """
-    window["top_info"].update(value="", font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE), text_color="white")
-    window["bottom_info"].update(value="", font=(settings.FONT, settings.INFO_TXT_SIZE), text_color="white")
-    window["home_timeouts"].update(value="", font=(settings.FONT, settings.TIMEOUT_SIZE), text_color="white")
-    window["away_timeouts"].update(value="", font=(settings.FONT, settings.TIMEOUT_SIZE), text_color="white")
-    window["home_record"].update(value="", font=(settings.FONT, settings.RECORD_TXT_SIZE), text_color="white")
-    window["away_record"].update(value="", font=(settings.FONT, settings.RECORD_TXT_SIZE), text_color="white")
-    window["home_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
-    window["away_score"].update(value="", font=(settings.FONT, settings.SCORE_TXT_SIZE), text_color="white")
-    window["above_score_txt"].update(value="", font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
-                                     text_color="white")
-    window["home_player_stats"].update(value="", text_color="white")
-    window["away_player_stats"].update(value="", text_color="white")
-    window["hyphen"].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color="white")
-    window["signature"].update(value="Created By: Matthew Ferretti",font=(settings.FONT, settings.SIGNATURE_SIZE),
-                               text_color="white")
+    window[ui_keys.TOP_INFO].update(
+        value="",
+        font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.BOTTOM_INFO].update(
+        value="",
+        font=(settings.FONT, settings.INFO_TXT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.HOME_TIMEOUTS].update(
+        value="",
+        font=(settings.FONT, settings.TIMEOUT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.AWAY_TIMEOUTS].update(
+        value="",
+        font=(settings.FONT, settings.TIMEOUT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.HOME_RECORD].update(
+        value="",
+        font=(settings.FONT, settings.RECORD_TXT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.AWAY_RECORD].update(
+        value="",
+        font=(settings.FONT, settings.RECORD_TXT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.HOME_SCORE].update(
+        value="",
+        font=(settings.FONT, settings.SCORE_TXT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.AWAY_SCORE].update(
+        value="",
+        font=(settings.FONT, settings.SCORE_TXT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.ABOVE_SCORE_TXT].update(
+        value="",
+        font=(settings.FONT, settings.NBA_TIMEOUT_SIZE),
+        text_color=colors.WHITE,
+    )
+    window[ui_keys.HOME_PLAYER_STATS].update(value="", text_color=colors.WHITE)
+    window[ui_keys.AWAY_PLAYER_STATS].update(value="", text_color=colors.WHITE)
+    window[ui_keys.HYPHEN].update(value="-", font=(settings.FONT, settings.HYPHEN_SIZE), text_color=colors.WHITE)
+    window[ui_keys.SIGNATURE].update(
+        value="Created By: Matthew Ferretti",
+        font=(settings.FONT, settings.SIGNATURE_SIZE),
+        text_color=colors.WHITE,
+    )
 
-    window["home_team_stats"].update(value="", text_color="white")
-    window["away_team_stats"].update(value="", text_color="white")
-    window["under_score_image"].update(filename="")
+    window[ui_keys.HOME_TEAM_STATS].update(value="", text_color=colors.WHITE)
+    window[ui_keys.AWAY_TEAM_STATS].update(value="", text_color=colors.WHITE)
+    window[ui_keys.UNDER_SCORE_IMAGE].update(filename="")
 
 
 def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool, event: str) -> None:
@@ -130,9 +171,13 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
     delay_triggers = ("Left", "Right")
     if any(key in event for key in delay_triggers):
         settings.delay = not settings.delay
-        msg = "Turning delay OFF" if not settings.delay else f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)"
+        msg = (
+            messages.DELAY_TURNING_OFF
+            if not settings.delay
+            else f"{messages.DELAY_TURNING_ON} ({settings.LIVE_DATA_DELAY} seconds)"
+        )
         logger.info(f"{event} key pressed, {msg}")
-        window["bottom_info"].update(value=msg)
+        window[ui_keys.BOTTOM_INFO].update(value=msg)
         window.refresh()
         time.sleep(5)
 
@@ -140,13 +185,13 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
     spoiler_triggers = ("Up", "Down")
     if any(key in event for key in spoiler_triggers):
         settings.no_spoiler_mode = not settings.no_spoiler_mode
-        msg = "Entering No Spoiler Mode" if settings.no_spoiler_mode else "Exiting No Spoiler Mode"
+        msg = messages.ENTERING_SPOILER if settings.no_spoiler_mode else messages.EXITING_SPOILER
         logger.info(f"{event} key pressed, {msg}")
         if settings.no_spoiler_mode:
             window = set_spoiler_mode(window, {})
         else:
-            window["top_info"].update(value="")
-            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+            window[ui_keys.TOP_INFO].update(value="")
+            window[ui_keys.BOTTOM_INFO].update(value=messages.EXITING_SPOILER)
         window.refresh()
         time.sleep(5)
 
@@ -167,7 +212,7 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
     event = event_raw.split(":")[0] if ":" in event_raw else event_raw
 
     # Exit/close handling
-    if event == Sg.WIN_CLOSED or "Escape" in event or "above_score_txt" in event:
+    if event == Sg.WIN_CLOSED or "Escape" in event or ui_keys.ABOVE_SCORE_TXT in event:
         window.close()
         gc.collect()  # Clean up memory
         time.sleep(0.5)  # Give OS time to destroy the window
@@ -178,39 +223,52 @@ def check_events(window: Sg.Window, events: list, *, currently_playing: bool = F
         sys.exit()
 
     # Spoiler mode toggle
-    spoiler_triggers = ("away_score", "home_score", "away_timeouts", "home_timeouts")
+    spoiler_triggers = (
+        ui_keys.AWAY_SCORE,
+        ui_keys.HOME_SCORE,
+        ui_keys.AWAY_TIMEOUTS,
+        ui_keys.HOME_TIMEOUTS,
+    )
     if any(key in event for key in spoiler_triggers):
         temp_spoiler = settings.no_spoiler_mode
         temp_delay = settings.delay
         show_scoreboard_popup()
         if settings.no_spoiler_mode:
-            logger.info("Entering No Spoiler Mode")
+            logger.info(messages.ENTERING_SPOILER)
             window = set_spoiler_mode(window, {})
         elif temp_spoiler != settings.no_spoiler_mode:
-            logger.info("Exiting No Spoiler Mode")
-            window["top_info"].update(value="")
-            window["bottom_info"].update(value="Exiting No Spoiler Mode")
+            logger.info(messages.EXITING_SPOILER)
+            window[ui_keys.TOP_INFO].update(value="")
+            window[ui_keys.BOTTOM_INFO].update(value=messages.EXITING_SPOILER)
         if temp_delay != settings.delay:
             logger.info("Toggling Delay Mode")
-            msg = f"Turning delay ON ({settings.LIVE_DATA_DELAY} seconds)" if settings.delay else "Turning delay OFF"
-            window["top_info"].update(value=msg)
+            msg = (
+                f"{messages.DELAY_TURNING_ON} ({settings.LIVE_DATA_DELAY} seconds)"
+                if settings.delay
+                else messages.DELAY_TURNING_OFF
+            )
+            window[ui_keys.TOP_INFO].update(value=msg)
         window.refresh()
 
     # Team stats display
-    if any(key in event for key in ("away_logo", "away_record", "away_team_stats")):
+    if any(key in event for key in (ui_keys.AWAY_LOGO, ui_keys.AWAY_RECORD, ui_keys.AWAY_TEAM_STATS)):
         _toggle_team_stats(window, "away", currently_playing=currently_playing, event=event)
 
-    if any(key in event for key in ("home_logo", "home_record", "home_team_stats")):
+    if any(key in event for key in (ui_keys.HOME_LOGO, ui_keys.HOME_RECORD, ui_keys.HOME_TEAM_STATS)):
         _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
 
     # Stay on team
-    stay_on_team_triggers = ("top_info", "bottom_info")
+    stay_on_team_triggers = (ui_keys.TOP_INFO, ui_keys.BOTTOM_INFO)
     if any(key in event for key in stay_on_team_triggers):
         settings.stay_on_team = not settings.stay_on_team
         rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
-        msg = "Staying on current Team" if settings.stay_on_team else f"Rotating Teams every {rotating_time} seconds"
+        msg = (
+            messages.STAYING_ON_TEAM
+            if settings.stay_on_team
+            else f"{messages.ROTATING_TEAMS} {rotating_time} seconds"
+        )
         logger.info(f"{event} key pressed, {msg}")
-        window["bottom_info"].update(value=msg)
+        window[ui_keys.BOTTOM_INFO].update(value=msg)
         window.refresh()
         time.sleep(5)
 
@@ -226,26 +284,26 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
 
     :return window: element updates for window to change
     """
-    window["top_info"].update(value="Will Not Display Game Info", font=(settings.FONT,
-                                                                        settings.NOT_PLAYING_TOP_INFO_SIZE))
-    window["bottom_info"].update(value="No Spoiler Mode On", font=(settings.FONT, settings.INFO_TXT_SIZE))
-    window["under_score_image"].update(filename="")
+    window[ui_keys.TOP_INFO].update(value=messages.WILL_NOT_DISPLAY, font=(settings.FONT,
+                                                                          settings.NOT_PLAYING_TOP_INFO_SIZE))
+    window[ui_keys.BOTTOM_INFO].update(value=messages.NO_SPOILER_ON, font=(settings.FONT, settings.INFO_TXT_SIZE))
+    window[ui_keys.UNDER_SCORE_IMAGE].update(filename="")
     if "@" not in team_info.get("above_score_txt", ""):  # Only remove if text doesn't contain team names
-        window["above_score_txt"].update(value="")
-    window["home_score"].update(value=" ", text_color="white")
-    window["away_score"].update(value=" ", text_color="white")
-    window["hyphen"].update(value="", text_color="white")
-    window["home_timeouts"].update(value="")
-    window["away_timeouts"].update(value="")
-    window["home_record"].update(value="")
-    window["away_record"].update(value="")
+        window[ui_keys.ABOVE_SCORE_TXT].update(value="")
+    window[ui_keys.HOME_SCORE].update(value=" ", text_color=colors.WHITE)
+    window[ui_keys.AWAY_SCORE].update(value=" ", text_color=colors.WHITE)
+    window[ui_keys.HYPHEN].update(value="", text_color=colors.WHITE)
+    window[ui_keys.HOME_TIMEOUTS].update(value="")
+    window[ui_keys.AWAY_TIMEOUTS].update(value="")
+    window[ui_keys.HOME_RECORD].update(value="")
+    window[ui_keys.AWAY_RECORD].update(value="")
 
-    window["home_player_stats"].update(value="")
-    window["away_player_stats"].update(value="")
+    window[ui_keys.HOME_PLAYER_STATS].update(value="")
+    window[ui_keys.AWAY_PLAYER_STATS].update(value="")
 
-    window["player_stats_content"].update(visible=False)
-    window["under_score_image_column"].update(visible=False)
-    window["timeouts_content"].update(visible=False)
+    window[ui_keys.PLAYER_STATS_CONTENT].update(visible=False)
+    window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=False)
+    window[ui_keys.TIMEOUTS_CONTENT].update(visible=False)
 
     return window
 
@@ -307,7 +365,7 @@ def convert_paths_to_strings(obj: object) -> object:
     return obj
 
 
-def scroll(window: Sg.Window, original_text: str, key: str="bottom_info") -> None:
+def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO) -> None:
     """Scroll the display to show the next set of information.
 
     :param window: The window element to update
@@ -395,12 +453,13 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
     :param currently_playing: Whether a game is currently in progress; defaults to False.
     :return: None
     """
+    # Create root window once for font measurements (major performance improvement)
     root = tk.Tk()
     root.withdraw()
 
     try:
         log_entries = []
-        screen_width = Sg.Window.get_screen_size()[0] / 3
+        screen_width = (Sg.Window.get_screen_size()[0] / 3)
 
         # Update score text
         home_score_str = str(team_info.get("home_score", "0"))
@@ -414,12 +473,12 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
         window["away_score"].update(font=(settings.FONT, new_score_size))
 
         new_hyphen_size = settings.HYPHEN_SIZE + (new_score_size - settings.SCORE_TXT_SIZE - 10)
-        window["hyphen"].update(font=(settings.FONT, new_hyphen_size))
 
         if score_changed or new_hyphen_size != settings.HYPHEN_SIZE:
             log_entries.append(f"score: {settings.SCORE_TXT_SIZE}->{new_score_size}, "
                              f"hyphen: {settings.HYPHEN_SIZE}->{new_hyphen_size}")
 
+        # Update timeouts text if present
         if currently_playing:
             # Update timeouts
             timeout_width = screen_width / 2

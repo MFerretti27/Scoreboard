@@ -1,4 +1,6 @@
 """Settings loaded from settings.json with Python fallbacks."""
+from __future__ import annotations
+
 import json
 import tempfile
 from pathlib import Path
@@ -35,6 +37,12 @@ DISPLAY_PLAYING_TIMER: int
 HOW_LONG_TO_DISPLAY_TEAM: int
 TEAM_STAT_SIZE: int
 TIMEOUT_HEIGHT: int
+RETRY_MAX_ATTEMPTS: int
+RETRY_INITIAL_DELAY: float
+RETRY_MAX_DELAY: float
+RETRY_BACKOFF_MULTIPLIER: float
+RETRY_USE_CACHE_FALLBACK: bool
+MAX_STALE_DATA_AGE: int
 display_last_pitch: bool
 display_play_description: bool
 display_bases: bool
@@ -109,6 +117,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "DISPLAY_NOT_PLAYING_TIMER": 25,
     "DISPLAY_PLAYING_TIMER": 25,
     "HOW_LONG_TO_DISPLAY_TEAM": 7,
+
+    # Retry & Error Recovery
+    "RETRY_MAX_ATTEMPTS": 3,
+    "RETRY_INITIAL_DELAY": 1.0,
+    "RETRY_MAX_DELAY": 30.0,
+    "RETRY_BACKOFF_MULTIPLIER": 2.0,
+    "RETRY_USE_CACHE_FALLBACK": True,
+    "MAX_STALE_DATA_AGE": 1800,  # 30 minutes - reject cache older than this
 
     # MLB
     "display_last_pitch": True,

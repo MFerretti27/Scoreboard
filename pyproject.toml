@@ -6,6 +6,38 @@ target-version = "py311"
 select = ["ALL"]
 ignore = ["PLW0603", "PLR2004", "N814", "N813", "N812", "S603", "S606", "S102", "S602", "BLE001", "DTZ005", "S607"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+	"S101",
+	"PT017",
+	"TRY003",
+	"EM101",
+	"T201",
+	"F541",
+	"EXE001",
+	"ARG001",
+	"PLW0602",
+	"INP001",
+	"ANN001",
+	"ANN201",
+	"ANN202",
+	"ANN204",
+	"D102",
+	"D103",
+	"D107",
+	"D101",
+	"D104",
+	"D105",
+	"E501",
+	"PLC0415",
+	"TRY301",
+	"S110",
+	"A002",
+	"N801",
+	"PLW1641",
+	"COM812",
+]
+
 [tool.ruff.format]
 quote-style = "double"
 

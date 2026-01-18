@@ -1,11 +1,16 @@
 """Get series information."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 
+from helper_functions.exceptions import DataValidationError
 from helper_functions.logger_config import logger
+from helper_functions.retry import retry_api_call
+from helper_functions.validators import validate_mlb_series_response, validate_nba_standings
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
@@ -30,6 +35,7 @@ def get_series(team_league: str, team_name: str) -> str:
     return ""
 
 
+@retry_api_call
 def get_current_series_mlb(team_name: str) -> str:
     """Try to get the series information for baseball team.
 
@@ -51,6 +57,11 @@ def get_current_series_mlb(team_name: str) -> str:
         if series_summary == "" or series_summary is None:
             series_summary = mlb_series.get(team_name, "")
         else:
+            # Validate series data
+            try:
+                validate_mlb_series_response({"series_status": series_summary}, team_name)
+            except DataValidationError as e:
+                logger.warning(f"Invalid MLB series data: {e!s}")
             mlb_series[team_name] = series_summary
 
     except (IndexError, KeyError, requests.RequestException, ValueError, TypeError):
@@ -63,6 +74,7 @@ def get_current_series_mlb(team_name: str) -> str:
     return series_summary
 
 
+@retry_api_call
 def get_current_series_nhl(team_name: str) -> str:
     """Try to get the series information for hockey team.
 
@@ -103,6 +115,7 @@ def get_current_series_nhl(team_name: str) -> str:
     return series_summary
 
 
+@retry_api_call
 def get_current_series_nba(team_name: str) -> str:
     """Try to get the series information for basketball team.
 
@@ -114,6 +127,13 @@ def get_current_series_nba(team_name: str) -> str:
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
+
+        # Validate standings structure
+        try:
+            validate_nba_standings(live, team_name)
+        except DataValidationError as e:
+            logger.warning(f"Invalid NBA standings data: {e!s}")
+
         for game in live["scoreboard"]["games"]:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
                 series_summary = game.get("seriesText", "")

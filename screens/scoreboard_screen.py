@@ -1,4 +1,5 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
+from __future__ import annotations
 
 import copy
 import json
@@ -13,6 +14,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
+from constants import colors, messages, ui_keys
 from get_data.get_espn_data import get_data
 from gui_layouts import scoreboard_layout
 from helper_functions.handle_error import handle_error
@@ -41,7 +43,7 @@ SCORE_STATE_STYLES = [
     ("power_play", {"text_color": "blue"}),
     ("bonus", {"text_color": "orange"}),
     ("possession", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline")}),
-    ("redzone", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline"), "text_color": "red"}),
+    ("redzone", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline"), "text_color": colors.RED}),
 ]
 
 # Module-level state
@@ -250,12 +252,14 @@ def _update_team_elements(window: Sg.Window, current_team: dict, score_state_fie
     :param display_index: The index of the team to update
     """
     for key, value in current_team.items():
-        if key in ("home_logo", "away_logo", "under_score_image"):
+        if key in (ui_keys.HOME_LOGO, ui_keys.AWAY_LOGO, ui_keys.UNDER_SCORE_IMAGE):
             window[key].update(filename=value)
-        elif key == "signature":
-            window[key].update(value=value, text_color="red")
-        elif ("home_timeouts" in key or "away_timeouts" in key) and (settings.teams[display_index][1] != "MLB"):
-            window[key].update(value=value, text_color="yellow")
+        elif key == ui_keys.SIGNATURE:
+            window[key].update(value=value, text_color=colors.RED)
+        elif (
+            ui_keys.HOME_TIMEOUTS in key or ui_keys.AWAY_TIMEOUTS in key
+        ) and (settings.teams[display_index][1] != "MLB"):
+            window[key].update(value=value, text_color=colors.YELLOW)
         elif key not in score_state_fields:
             window[key].update(value=value)
 
@@ -268,9 +272,9 @@ def _update_score_states(window: Sg.Window, current_team: dict) -> None:
     """
     for state, props in SCORE_STATE_STYLES:
         if current_team.get(f"home_{state}", False):
-            window["home_score"].update(**props)
+            window[ui_keys.HOME_SCORE].update(**props)
         elif current_team.get(f"away_{state}", False):
-            window["away_score"].update(**props)
+            window[ui_keys.AWAY_SCORE].update(**props)
 
 
 def _update_player_stats(window: Sg.Window, current_team: dict,
@@ -285,13 +289,13 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     home_stats = current_team.get("home_player_stats", "")
     away_stats = current_team.get("away_player_stats", "")
     # NFL stats only have one column, so it can take up whole width
-    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
+    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 25
 
     if Sg.Window.get_screen_size()[0] < SMALL_SCREEN_WIDTH_THRESHOLD:
         if show_home and settings.teams[display_index][1] != "NFL":
-            window["away_player_stats"].update(value=home_stats)
+            window[ui_keys.AWAY_PLAYER_STATS].update(value=home_stats)
         else:
-            window["away_player_stats"].update(value=away_stats)
+            window[ui_keys.AWAY_PLAYER_STATS].update(value=away_stats)
 
         stats_width = 60  # Small screens only have one column
 
@@ -299,9 +303,9 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     home_lines = count_lines(home_stats) + 1
     away_lines = count_lines(away_stats) + 1
 
-    window["home_player_stats"].set_size(size=(stats_width, home_lines))
-    window["away_player_stats"].set_size(size=(stats_width, away_lines))
-    window["away_player_stats"].set_size(size=(stats_width, away_lines))
+    window[ui_keys.HOME_PLAYER_STATS].set_size(size=(stats_width, home_lines))
+    window[ui_keys.AWAY_PLAYER_STATS].set_size(size=(stats_width, away_lines))
+    window[ui_keys.AWAY_PLAYER_STATS].set_size(size=(stats_width, away_lines))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
@@ -316,15 +320,15 @@ def _update_visibility(window: Sg.Window, current_team: dict, *,
     has_away_stats = bool(current_team.get("away_player_stats", ""))
     show_stats = has_home_stats or has_away_stats
 
-    window["player_stats_content"].update(visible=False)
-    window["under_score_image_column"].update(visible=False)
+    window[ui_keys.PLAYER_STATS_CONTENT].update(visible=False)
+    window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=False)
 
     if settings.display_player_stats and show_stats:
-        window["player_stats_content"].update(visible=True)
+        window[ui_keys.PLAYER_STATS_CONTENT].update(visible=True)
     elif current_team.get("under_score_image", ""):
-        window["under_score_image_column"].update(visible=True)
+        window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=True)
 
-    window["timeouts_content"].update(visible=currently_playing)
+    window[ui_keys.TIMEOUTS_CONTENT].update(visible=currently_playing)
 
 
 def update_display(window: Sg.Window, team_info: list[dict], display_index: int, *, currently_playing: bool) -> None:
@@ -371,13 +375,13 @@ def set_delay_display(team_info: list, teams_with_data: list, teams_currently_pl
     for index, info in enumerate(team_info):
         if teams_with_data[index] and teams_currently_playing[index]:
             info.update({
-                "top_info": "Game Started",
-                "bottom_info": f"Setting delay of {settings.LIVE_DATA_DELAY} seconds",
-                "home_timeouts": "",
-                "away_timeouts": "",
-                "home_score": "0",
-                "away_score": "0",
-                "under_score_image": "",
+                ui_keys.TOP_INFO: "Game Started",
+                ui_keys.BOTTOM_INFO: f"{messages.SETTING_DELAY} {settings.LIVE_DATA_DELAY} seconds",
+                ui_keys.HOME_TIMEOUTS: "",
+                ui_keys.AWAY_TIMEOUTS: "",
+                ui_keys.HOME_SCORE: "0",
+                ui_keys.AWAY_SCORE: "0",
+                ui_keys.UNDER_SCORE_IMAGE: "",
                 "home_redzone": False,
                 "away_redzone": False,
                 "home_possession": False,
@@ -476,8 +480,8 @@ def _handle_update_cycle(
                        currently_playing=teams_currently_playing[state.display_index])
         currently_displaying = team_info[state.display_index]
 
-        if will_text_fit_on_screen(team_info[state.display_index].get("bottom_info", "")):
-            scroll(window, team_info[state.display_index]["bottom_info"])
+        if will_text_fit_on_screen(team_info[state.display_index].get(ui_keys.BOTTOM_INFO, "")):
+            scroll(window, team_info[state.display_index][ui_keys.BOTTOM_INFO])
 
     state.update_clock = ticks_ms()
 

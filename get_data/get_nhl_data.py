@@ -1,4 +1,6 @@
 """Get NHL from NHL specific API."""
+from __future__ import annotations
+
 from datetime import UTC
 from typing import Any
 
@@ -8,7 +10,10 @@ from dateutil.parser import isoparse  # type: ignore[import]
 import settings
 from get_data.get_player_stats import get_player_stats
 from helper_functions.data_helpers import check_playing_each_other, get_team_logo
-from helper_functions.logger_config import logger
+from helper_functions.exceptions import APIError, DataValidationError
+from helper_functions.logger_config import log_context_scope, logger
+from helper_functions.retry import BackoffConfig, retry_with_fallback
+from helper_functions.validators import validate_nhl_boxscore
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
@@ -16,6 +21,15 @@ from .get_team_id import get_nhl_game_id
 
 last_play_saved = ""
 
+@retry_with_fallback(
+    max_attempts=settings.RETRY_MAX_ATTEMPTS,
+    backoff=BackoffConfig(
+        initial_delay=settings.RETRY_INITIAL_DELAY,
+        max_delay=settings.RETRY_MAX_DELAY,
+        backoff_multiplier=settings.RETRY_BACKOFF_MULTIPLIER,
+    ),
+    use_cache_fallback=settings.RETRY_USE_CACHE_FALLBACK,
+)
 def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     """Get all information for NHL team.
 
@@ -28,15 +42,25 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     team_info: dict[str, Any] = {}
     currently_playing: bool = False
     has_data: bool = False
-    try:
-        team_id = get_nhl_game_id(team_name)
-        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-    except (requests.exceptions.RequestException, IndexError):
-        logger.info("Error fetching NHL data for team: %s", team_name)
-        return team_info, has_data, currently_playing  # Could not find any game to display
+    with log_context_scope(team=team_name, league="NHL", endpoint="nhl_api_boxscore"):
+        try:
+            team_id = get_nhl_game_id(team_name)
+            box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
+        except (requests.exceptions.RequestException, IndexError) as e:
+            logger.info("Error fetching NHL data for team: %s", team_name)
+            msg = f"Failed to fetch NHL game data for {team_name}"
+            raise APIError(msg, error_code="NHL_API_ERROR") from e
 
-    box_score = box_score.json()
-    has_data = True
+        box_score = box_score.json()
+
+        # Validate boxscore response
+        try:
+            validate_nhl_boxscore(box_score, team_name)
+        except DataValidationError as e:
+            msg = f"NHL boxscore data invalid for {team_name}"
+            raise APIError(msg, error_code="INVALID_BOXSCORE") from e
+
+        has_data = True
 
     # Get Scores, they are only available if game is playing or has finished
     team_info["home_score"] = box_score["awayTeam"].get("score", "0")
@@ -158,18 +182,8 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
 
     # Get if team is in power play
     if settings.display_nhl_power_play:
-        try:
-            # Dont need to store info just has to ensure call is successful
-            _ = box_score["situation"]["awayTeam"]["situationDescriptions"]
-            team_info["away_power_play"] = True
-        except KeyError:
-            team_info["away_power_play"] = False
-        try:
-            # Dont need to store info just has to ensure call is successful
-            _ = box_score["situation"]["homeTeam"]["situationDescriptions"]
-            team_info["home_power_play"] = True
-        except KeyError:
-            team_info["home_power_play"] = False
+        team_info["away_power_play"] = "situationDescriptions" in box_score.get("situation", {}).get("awayTeam", {})
+        team_info["home_power_play"] = "situationDescriptions" in box_score.get("situation", {}).get("homeTeam", {})
 
     if settings.display_nhl_play_by_play:
         team_info["above_score_txt"] = team_info["bottom_info"]  # Move clock to above score

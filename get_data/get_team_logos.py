@@ -1,4 +1,6 @@
 """Use ESPN API to Grab Major League Sports Teams logo and Resize to fit screen."""
+from __future__ import annotations
+
 import random
 import shutil
 from pathlib import Path

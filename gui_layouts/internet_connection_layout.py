@@ -1,14 +1,16 @@
 """Internet Connection screen for main menu."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from constants import ui_keys
 
 
 def create_internet_connection_layout(window_width: int) -> list:
     """Create main screen layout.
 
     :param window_width: The width of the screen being used
-
     :return layout: List of elements and how the should be displayed
     """
     # Common base screen widths
@@ -34,21 +36,29 @@ def create_internet_connection_layout(window_width: int) -> list:
         [Sg.VPush()],
         [Sg.Push(),
          Sg.Text("Enter SSID: ", font=(settings.FONT, text_size), justification="center"),
-         Sg.Input("", enable_events=True, key="SSID", font=(settings.FONT, input_size), justification="left"),
+         Sg.Input("", enable_events=True, key=ui_keys.SSID, font=(settings.FONT, input_size), justification="left"),
          Sg.Push(),
          ],
         [Sg.Push(),
          Sg.Text("Enter Password: ", font=(settings.FONT, text_size), justification="center"),
-         Sg.Input("", enable_events=True, key="password", font=(settings.FONT, input_size), justification="left"),
+         Sg.Input("", enable_events=True, key=ui_keys.PASSWORD, font=(settings.FONT, input_size), justification="left"),
          Sg.Push(),
          ],
          [Sg.VPush()],
          [
-          Sg.Push(), Sg.Text("", font=(settings.FONT, text_size), key="connection_message"),
+          Sg.Push(), Sg.Text("", font=(settings.FONT, text_size), key=ui_keys.CONNECTION_MESSAGE),
           Sg.Push(),
           ],
-          [Sg.VPush()],
-          [Sg.Push(), Sg.Button("Open Keyboard", font=(settings.FONT, button_size), key="open_keyboard"), Sg.Push()],
+         [Sg.VPush()],
+          [
+              Sg.Push(),
+              Sg.Button(
+                  "Open Keyboard",
+                  font=(settings.FONT, button_size),
+                  key=ui_keys.OPEN_KEYBOARD,
+              ),
+              Sg.Push(),
+          ],
           [Sg.VPush()],
          [Sg.Push(),
          Sg.Button("Save", font=(settings.FONT, button_size)),

@@ -1,7 +1,10 @@
 """GUI Layout for selecting teams in main menu."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg  # ignore
 
 import settings
+from constants import colors, ui_keys
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
 
 
@@ -107,12 +110,12 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         [Sg.VPush()],
         [
          Sg.Push(),
-         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color="green"),
+         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key=ui_keys.TEAMS_ADDED, text_color=colors.GREEN),
          Sg.Push(),
          ],
         [
          Sg.Push(),
-         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color="red"),
+         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key=ui_keys.TEAMS_REMOVED, text_color=colors.RED),
          Sg.Push(),
          ],
          [Sg.VPush()],
