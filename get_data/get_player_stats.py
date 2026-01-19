@@ -7,10 +7,10 @@ import requests  # type: ignore[import]
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import boxscore, scoreboard
 
-from helper_functions.exceptions import APIError, DataValidationError
-from helper_functions.logger_config import log_context_scope, logger
-from helper_functions.retry import retry_api_call
-from helper_functions.validators import validate_nba_boxscore
+from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.retry import retry_api_call
+from helper_functions.api_utils.validators import validate_nba_boxscore
+from helper_functions.logging.logger_config import log_context_scope, logger
 
 from .get_mlb_data import API_FIELDS
 from .get_team_id import get_mlb_team_id, get_nhl_game_id  # type: ignore[import]

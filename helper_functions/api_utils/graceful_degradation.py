@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable

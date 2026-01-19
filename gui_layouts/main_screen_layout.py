@@ -4,7 +4,7 @@ from __future__ import annotations
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
-from constants import colors, ui_keys
+from constants import colors, messages, ui_keys
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 
 
@@ -19,14 +19,24 @@ def create_main_layout(window_width: int) -> list:
     text_size = max(12, window_width // 20)
     button_size = max(12, window_width // 45)
     update_button_size = max(12, window_width // 80)
-    message_size = max(12, window_width // 60)
+    message_size = max(12, window_width // 55)
     count = int(len(MLB) + len(NFL) + len(NBA) + len(NHL))
     return [
         [Sg.Push(), Sg.Text("Major League Scoreboard", font=(settings.FONT, text_size)), Sg.Push()],
         [Sg.Push(),
-         Sg.Button("Restore from Version", font=(settings.FONT, update_button_size), key=ui_keys.RESTORE_BUTTON),
-         Sg.Button("Check for Update", font=(settings.FONT, update_button_size), key=ui_keys.UPDATE_BUTTON),
-         Sg.Button("Connect to Internet", font=(settings.FONT, update_button_size)),
+         Sg.Button(
+             messages.BUTTON_RESTORE_FROM_VERSION,
+             font=(settings.FONT, update_button_size),
+             key=ui_keys.RESTORE_BUTTON,
+         ),
+         Sg.Button(
+             messages.BUTTON_CHECK_FOR_UPDATE,
+             font=(settings.FONT, update_button_size),
+             key=ui_keys.UPDATE_BUTTON,
+         ),
+         Sg.Button(
+             messages.BUTTON_CONNECT_TO_INTERNET, font=(settings.FONT, update_button_size),
+         ),
          Sg.Push(),
          ],
         [
@@ -46,22 +56,22 @@ def create_main_layout(window_width: int) -> list:
         [Sg.VPush()],
         [
             Sg.Push(),
-            Sg.Button("Set Team Order", font=(settings.FONT, button_size)),
+            Sg.Button(messages.BUTTON_SET_TEAM_ORDER, font=(settings.FONT, button_size)),
             Sg.Push(),
         ],
         [
             Sg.Push(),
-            Sg.Button("Add MLB team", font=(settings.FONT, button_size), expand_x=True),
-            Sg.Button("Add NHL team", font=(settings.FONT, button_size), expand_x=True),
-            Sg.Button("Add NBA team", font=(settings.FONT, button_size), expand_x=True),
-            Sg.Button("Add NFL team", font=(settings.FONT, button_size), expand_x=True, pad=(0, button_size)),
+            Sg.Button(messages.BUTTON_ADD_MLB, font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.BUTTON_ADD_NHL, font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.BUTTON_ADD_NBA, font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.BUTTON_ADD_NFL, font=(settings.FONT, button_size), expand_x=True, pad=(0, button_size)),
             Sg.Push(),
         ],
         [
-            Sg.Button("Manual", font=(settings.FONT, button_size), expand_x=True),
-            Sg.Button("Settings", font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.BUTTON_MANUAL, font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.SETTINGS_TITLE, font=(settings.FONT, button_size), expand_x=True),
         ],
-        [Sg.Button("Start", font=(settings.FONT, button_size), expand_x=True)],
+        [Sg.Button(messages.BUTTON_START, font=(settings.FONT, button_size), expand_x=True)],
         [Sg.VPush()],
         [Sg.Push(),
          Sg.Text("", font=(settings.FONT, message_size), key=ui_keys.DOWNLOAD_MESSAGE),

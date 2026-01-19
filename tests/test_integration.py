@@ -16,9 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from typing import Never
 
-from helper_functions.cache import clear_cache, set_cached
-from helper_functions.exceptions import APIError, DataValidationError, NetworkError
-from helper_functions.logger_config import (
+from helper_functions.api_utils.cache import clear_cache, set_cached
+from helper_functions.api_utils.exceptions import APIError, DataValidationError, NetworkError
+from helper_functions.api_utils.retry import retry_api_call, retry_with_fallback
+from helper_functions.logging.logger_config import (
     clear_log_context,
     get_performance_stats,
     log_performance_summary,
@@ -30,7 +31,6 @@ from helper_functions.logger_config import (
     track_retry,
     track_validation,
 )
-from helper_functions.retry import retry_api_call, retry_with_fallback
 
 
 def reset_metrics() -> None:
@@ -177,7 +177,7 @@ def test_performance_tracking() -> None:
 
 def test_contextual_logging() -> None:
     """Test contextual logging set/clear functionality."""
-    from helper_functions.logger_config import log_context
+    from helper_functions.logging.logger_config import log_context
 
     # Start with clean context
     clear_log_context()

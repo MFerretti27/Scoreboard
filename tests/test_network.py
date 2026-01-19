@@ -7,7 +7,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from helper_functions.exceptions import APIError, NetworkError
+from helper_functions.api_utils.exceptions import APIError, NetworkError
 
 
 def run_test(test_name: str, test_func) -> bool:
@@ -150,7 +150,7 @@ def test_network_error_recoverable() -> None:
 
 def test_api_error_is_network_error() -> None:
     """Test that APIError inherits from ScoreboardError."""
-    from helper_functions.exceptions import ScoreboardError
+    from helper_functions.api_utils.exceptions import ScoreboardError
     error = APIError("Test", error_code="TEST")
     # APIError should inherit from ScoreboardError
     assert isinstance(error, ScoreboardError), "APIError should be instance of ScoreboardError"

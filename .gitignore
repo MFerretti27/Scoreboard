@@ -22,3 +22,6 @@ __pycache__/
 
 # Ignore Test Results
 TEST_RESULTS/
+
+# Ignore environment variable files
+*.env

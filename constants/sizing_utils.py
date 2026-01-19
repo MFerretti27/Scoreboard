@@ -51,37 +51,21 @@ def calculate_message_size(scale: float, min_size: int = 12, base_multiplier: in
     return min(max_size, max(min_size, int(base_multiplier * scale)))
 
 
+def calculate_title_size(scale: float, min_size: int = 40, base_multiplier: int = 50) -> int:
+    """Calculate responsive title font size.
+
+    :param scale: Scale factor from get_responsive_scale
+    :param min_size: Minimum title size
+    :param base_multiplier: Base multiplier for calculation
+    :return: Calculated title size
+    """
+    max_size = 100
+    return min(max_size, max(min_size, int(base_multiplier * scale)))
+
+
 def get_screen_width() -> int:
     """Get current screen width.
 
     :return: Screen width in pixels
     """
     return Sg.Window.get_screen_size()[0]
-
-
-def calculate_all_sizes(window_width: int) -> dict[str, int]:
-    """Calculate all common GUI sizes at once.
-
-    :param window_width: Current window width
-    :return: Dictionary with all calculated sizes
-    """
-    _, scale = get_responsive_scale(window_width)
-
-    return {
-        "button_size": calculate_button_size(scale),
-        "text_size": calculate_text_size(scale),
-        "message_size": calculate_message_size(scale),
-        "update_button_size": min(100, max(12, int(80 * scale))),
-        "title_size": min(100, max(18, int(28 * scale))),
-        "list_box_txt_size": min(100, max(10, int(20 * scale))),
-        "move_button_size": min(100, max(12, int(20 * scale))),
-        "checkbox_txt_size": min(100, max(10, int(20 * scale))),
-        "checkbox_height": 1,
-        "input_size": min(100, max(12, int(20 * scale))),
-        "help_message": min(100, max(10, int(14 * scale))),
-        "confirmation_txt_size": min(100, max(12, int(16 * scale))),
-        "bottom_title_txt_size": min(100, max(12, int(20 * scale))),
-        "bottom_label_size": min(100, max(15, int(32 * scale))),
-        "top_label_size": min(100, max(18, int(28 * scale))),
-        "checkbox_size": min(100, max(10, int(20 * scale))),
-    }

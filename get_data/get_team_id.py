@@ -6,9 +6,9 @@ from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
-from helper_functions.cache import TEAM_ID_TTL, cache_result
-from helper_functions.exceptions import APIError, DataValidationError
-from helper_functions.validators import (
+from helper_functions.api_utils.cache import TEAM_ID_TTL, cache_result
+from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.validators import (
     validate_mlb_teams_response,
     validate_nba_scoreboard_games,
     validate_nba_teams_response,

@@ -15,14 +15,14 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 import get_data.get_team_league
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
-from helper_functions.exceptions import DataValidationError
-from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import remove_accents, update_teams
-from helper_functions.validators import (
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.validators import (
     validate_mlb_teams_response,
     validate_nba_teams_response,
     validate_nhl_teams_response,
 )
+from helper_functions.logging.logger_config import logger
+from helper_functions.ui.main_menu_helpers import remove_accents, update_teams
 
 
 def normalize(name: str) -> str:

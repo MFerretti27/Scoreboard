@@ -9,11 +9,12 @@ from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
 from get_data.get_player_stats import get_player_stats
-from helper_functions.data_helpers import check_playing_each_other, get_team_logo
-from helper_functions.exceptions import APIError, DataValidationError
-from helper_functions.logger_config import log_context_scope, logger
-from helper_functions.retry import BackoffConfig, retry_with_fallback
-from helper_functions.validators import validate_nhl_boxscore
+from get_data.get_team_stats import get_team_stats
+from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
+from helper_functions.api_utils.validators import validate_nhl_boxscore
+from helper_functions.data.data_helpers import check_playing_each_other, get_team_logo
+from helper_functions.logging.logger_config import log_context_scope, logger
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_nhl
@@ -43,94 +44,139 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     currently_playing: bool = False
     has_data: bool = False
     with log_context_scope(team=team_name, league="NHL", endpoint="nhl_api_boxscore"):
-        try:
-            team_id = get_nhl_game_id(team_name)
-            box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-        except (requests.exceptions.RequestException, IndexError) as e:
-            logger.info("Error fetching NHL data for team: %s", team_name)
-            msg = f"Failed to fetch NHL game data for {team_name}"
-            raise APIError(msg, error_code="NHL_API_ERROR") from e
-
-        box_score = box_score.json()
-
-        # Validate boxscore response
-        try:
-            validate_nhl_boxscore(box_score, team_name)
-        except DataValidationError as e:
-            msg = f"NHL boxscore data invalid for {team_name}"
-            raise APIError(msg, error_code="INVALID_BOXSCORE") from e
-
+        box_score = _fetch_nhl_boxscore(team_name)
         has_data = True
 
-    # Get Scores, they are only available if game is playing or has finished
+    # Get basic game information
+    team_info = _get_nhl_basic_info(box_score)
+    away_team_name = box_score["awayTeam"]["commonName"]["default"]
+    home_team_name = box_score["homeTeam"]["commonName"]["default"]
+
+    # Check if two of your teams are playing each other
+    full_home_team_name = box_score["homeTeam"]["placeName"]["default"] + " " + home_team_name
+    full_away_team_name = box_score["awayTeam"]["placeName"]["default"] + " " + away_team_name
+    if check_playing_each_other(full_home_team_name, full_away_team_name):
+        return team_info, False, currently_playing
+
+    # Get records and logos
+    if settings.display_records:
+        team_info = _get_nhl_records(home_team_name, away_team_name, team_info)
+
+    team_info = get_team_logo(home_team_name, away_team_name, "NHL", team_info)
+
+    # Get game time and venue
+    team_info = _get_nhl_game_time(box_score, team_info)
+
+    # Handle game status
+    game_state = box_score["gameState"]
+    if "LIVE" in game_state or "CRIT" in game_state:
+        team_info = append_nhl_data(team_info, team_name)
+        currently_playing = True
+    elif "FINAL" in game_state or "OFF" in game_state:
+        team_info = _process_nhl_final(box_score, team_name, team_info)
+        return team_info, has_data, currently_playing
+    elif settings.display_odds:
+        team_info["top_info"] = get_nhl_odds(
+            box_score["homeTeam"]["abbrev"],
+            box_score["awayTeam"]["abbrev"],
+            team_name,
+        )
+
+    # Display Team Stats if not currently playing
+    if settings.display_player_stats and not currently_playing:
+        home_team_stats, away_team_stats = get_team_stats("NHL", full_home_team_name, full_away_team_name)
+        team_info["away_team_stats"] = away_team_stats
+        team_info["home_team_stats"] = home_team_stats
+    elif settings.display_player_stats and currently_playing:
+        home_player_stats, away_player_stats = get_player_stats("NHL", team_name)
+        team_info["home_player_stats"] = home_player_stats
+        team_info["away_player_stats"] = away_player_stats
+        team_info.pop("under_score_image", None)
+
+    # Get game type (Stanley Cup/Conference Championship)
+    team_info["under_score_image"] = get_game_type("NHL", team_name)
+
+    return team_info, has_data, currently_playing
+
+
+def _fetch_nhl_boxscore(team_name: str) -> dict:
+    """Fetch and validate NHL boxscore data."""
+    try:
+        team_id = get_nhl_game_id(team_name)
+        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
+    except (requests.exceptions.RequestException, IndexError) as e:
+        logger.info("Error fetching NHL data for team: %s", team_name)
+        msg = f"Failed to fetch NHL game data for {team_name}"
+        raise APIError(msg, error_code="NHL_API_ERROR") from e
+
+    box_score = box_score.json()
+
+    # Validate boxscore response
+    try:
+        validate_nhl_boxscore(box_score, team_name)
+    except DataValidationError as e:
+        msg = f"NHL boxscore data invalid for {team_name}"
+        raise APIError(msg, error_code="INVALID_BOXSCORE") from e
+
+    return box_score
+
+
+def _get_nhl_basic_info(box_score: dict) -> dict:
+    """Get basic NHL game information."""
+    team_info = {}
     team_info["home_score"] = box_score["awayTeam"].get("score", "0")
     team_info["away_score"] = box_score["homeTeam"].get("score", "0")
+    team_info["under_score_image"] = ""
 
-    team_info["under_score_image"] = ""  # Cannot get network image so ensure its set to nothing
-
-    # Get team names
     away_team_name = box_score["awayTeam"]["commonName"]["default"]
     home_team_name = box_score["homeTeam"]["commonName"]["default"]
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
-    # Check if two of your teams are playing each other to not display same data twice
-    full_home_team_name = box_score["homeTeam"]["placeName"]["default"] + " " + home_team_name
-    full_away_team_name = box_score["awayTeam"]["placeName"]["default"] + " " + away_team_name
-    if check_playing_each_other(full_home_team_name, full_away_team_name):
-        team_has_data = False
-        return team_info, team_has_data, currently_playing
+    return team_info
 
-    # Get team record
-    if settings.display_records:
-        record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=5).json()
-        for team in record_data["standings"]:
-            if home_team_name in team["teamName"]["default"]:
-                team_info["home_record"] = str(team["wins"]) + "-" + str(team["losses"])
 
-            if away_team_name in team["teamName"]["default"]:
-                team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
+def _get_nhl_records(home_team_name: str, away_team_name: str, team_info: dict) -> dict:
+    """Get NHL team records."""
+    record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=5).json()
+    for team in record_data["standings"]:
+        if home_team_name in team["teamName"]["default"]:
+            team_info["home_record"] = str(team["wins"]) + "-" + str(team["losses"])
 
-    # Get team logos
-    team_info = get_team_logo(home_team_name, away_team_name, "NHL", team_info)
+        if away_team_name in team["teamName"]["default"]:
+            team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
 
-    # Get game time and venue
+    return team_info
+
+
+def _get_nhl_game_time(box_score: dict, team_info: dict) -> dict:
+    """Get NHL game time and venue."""
     iso_string = box_score["startTimeUTC"]
     utc_time = isoparse(iso_string)
     game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
 
-    team_info["bottom_info"] = f"{game_time}"
+    team_info["bottom_info"] = game_time
     if settings.display_venue:
         venue = box_score["venue"]["default"]
         team_info["bottom_info"] = f"{game_time} @ {venue}"
 
-    # Check if game is playing
-    # CRIT is final minutes of game, LIVE is game in progress
-    if "LIVE" in box_score["gameState"] or "CRIT" in box_score["gameState"]:
-        currently_playing = True
-        team_info = append_nhl_data(team_info, team_name)
+    return team_info
 
-    # Check if game is over
-    elif "FINAL" in box_score["gameState"] or "OFF" in box_score["gameState"]:
-        team_info["top_info"] = get_current_series_nhl(team_name)
-        team_info["bottom_info"] = get_final_status(box_score["periodDescriptor"]["number"],
-                                                    box_score["gameType"])
 
-        if settings.display_player_stats:
-            home_player_stats, away_player_stats = get_player_stats("NHL", team_name)
-            team_info["home_player_stats"] = home_player_stats
-            team_info["away_player_stats"] = away_player_stats
-            team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
-            return team_info, has_data, currently_playing
+def _process_nhl_final(box_score: dict, team_name: str, team_info: dict) -> dict:
+    """Process a finished NHL game."""
+    team_info["top_info"] = get_current_series_nhl(team_name)
+    team_info["bottom_info"] = get_final_status(
+        box_score["periodDescriptor"]["number"],
+        box_score["gameType"],
+    )
 
-    # Game has not started yet
-    elif settings.display_odds:
-        team_info["top_info"] = get_nhl_odds(box_score["homeTeam"]["abbrev"],
-                                            box_score["awayTeam"]["abbrev"], team_name)
+    if settings.display_player_stats:
+        home_player_stats, away_player_stats = get_player_stats("NHL", team_name)
+        team_info["home_player_stats"] = home_player_stats
+        team_info["away_player_stats"] = away_player_stats
+        team_info.pop("under_score_image", None)
 
-    # If str returned is not empty, then it Stanley Cup/conference championship, so display championship png
-    team_info["under_score_image"] = get_game_type("NHL", team_name)
-
-    return team_info, has_data, currently_playing
+    return team_info
 
 
 def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:

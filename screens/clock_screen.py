@@ -7,23 +7,25 @@ This screen should be displayed when:
 """
 from __future__ import annotations
 
-import subprocess
-import sys
 import time
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-import FreeSimpleGUI as Sg  # type: ignore[import]
-import orjson  # type: ignore[import]
 from adafruit_ticks import ticks_add, ticks_diff, ticks_ms  # type: ignore[import]
 
 import settings
 from constants import ui_keys
+from constants.file_paths import get_sport_logo_path
 from get_data.get_espn_data import get_data
 from get_data.get_team_logos import get_random_logo
-from helper_functions.internet_connection import is_connected, reconnect
-from helper_functions.logger_config import logger
-from helper_functions.scoreboard_helpers import reset_window_elements, scroll, will_text_fit_on_screen
-from helper_functions.update import check_for_update
+from helper_functions.logging.logger_config import logger
+from helper_functions.system.internet_connection import is_connected, reconnect
+from helper_functions.system.update import check_for_update
+from helper_functions.ui.event_checks import check_events, scroll
+from helper_functions.ui.scoreboard_helpers import reset_window_elements, will_text_fit_on_screen
+
+if TYPE_CHECKING:
+    import FreeSimpleGUI as Sg
 
 
 def error_handling(window: Sg.Window, error: Exception) -> str:
@@ -86,8 +88,8 @@ def clock(window: Sg.Window, message: str) -> list:
         window[ui_keys.HYPHEN].update(value=":", font=(settings.FONT, settings.SCORE_TXT_SIZE))
         window[ui_keys.HOME_SCORE].update(value=minute, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
         window[ui_keys.AWAY_SCORE].update(value=hour, font=(settings.FONT, settings.CLOCK_TXT_SIZE))
-        window[ui_keys.AWAY_LOGO].update(filename=f"images/sport_logos/{files[0][0]}/{files[0][1]}.png")
-        window[ui_keys.HOME_LOGO].update(filename=f"images/sport_logos/{files[1][0]}/{files[1][1]}.png")
+        window[ui_keys.AWAY_LOGO].update(filename=get_sport_logo_path(files[0][0], files[0][1]))
+        window[ui_keys.HOME_LOGO].update(filename=get_sport_logo_path(files[1][0], files[1][1]))
         window[ui_keys.BOTTOM_INFO].update(value=date, font=(settings.FONT, settings.RECORD_TXT_SIZE))
         window[ui_keys.TOP_INFO].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
 
@@ -95,12 +97,7 @@ def clock(window: Sg.Window, message: str) -> list:
         if should_scroll:
             scroll(window, message, key=ui_keys.TOP_INFO)
 
-        if event[0] == Sg.WIN_CLOSED or "Escape" in event[0]:
-            window.close()
-            time.sleep(0.5)  # Give OS time to destroy the window
-            json_saved_data = orjson.dumps(settings.saved_data)
-            subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
-            sys.exit()
+        check_events(window, event)
 
         # Fetch to see if any teams have data and return to main loop displaying team info
         try:

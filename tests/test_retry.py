@@ -5,9 +5,9 @@ from __future__ import annotations
 import time
 from typing import Never
 
-from helper_functions.cache import clear_cache, get_cached, set_cached
-from helper_functions.exceptions import APIError
-from helper_functions.retry import retry_api_call, retry_with_fallback
+from helper_functions.api_utils.cache import clear_cache, get_cached, set_cached
+from helper_functions.api_utils.exceptions import APIError
+from helper_functions.api_utils.retry import retry_api_call, retry_with_fallback
 
 # Test counter
 tests_passed = 0
@@ -211,7 +211,7 @@ def test_simplified_decorator_with_args() -> None:
 def test_backoff_config_custom() -> None:
     """Test retry with custom BackoffConfig."""
     global call_count
-    from helper_functions.retry import BackoffConfig
+    from helper_functions.api_utils.retry import BackoffConfig
 
     @retry_with_fallback(
         max_attempts=3,

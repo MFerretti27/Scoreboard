@@ -4,8 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import settings
-from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import remove_accents
+from constants.file_paths import NETWORKS_DIR, get_network_image_path
+from helper_functions.logging.logger_config import logger
+from helper_functions.ui.main_menu_helpers import remove_accents
 
 should_skip = False
 
@@ -57,17 +58,17 @@ def get_network_logos(broadcast: str | list, league: str) -> Path | str:
 
         file_path: Path | str = ""
 
-        folder_path = Path.cwd() / "images" / "Networks"
+        folder_path = Path.cwd() / NETWORKS_DIR
         file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
         for file in file_names:
             file_no_png = file.name.upper().split("/")[-1].replace(".PNG", "")
             if file_no_png in broadcast and broadcast != "":
-                file_path = Path.cwd() / "images" / "Networks" / file
+                file_path = Path.cwd() / NETWORKS_DIR / file
                 break
 
         # Display Thursday Night Football logo for Prime games if football
         if "Prime" in str(file_path) and league.upper() == "NFL":
-            file_path = Path.cwd() / "images" / "Networks" / "Prime_TNF.png"
+            file_path = get_network_image_path("Prime_TNF.png")
 
         return file_path
     return ""

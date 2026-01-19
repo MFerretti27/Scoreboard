@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 # Add project root to path
 project_root = Path(__file__).parent

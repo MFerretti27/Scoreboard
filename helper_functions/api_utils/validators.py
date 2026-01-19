@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from helper_functions.exceptions import DataValidationError
-from helper_functions.logger_config import logger
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.logging.logger_config import logger
 
 
 def validate_espn_competition(competition: dict[str, Any], league: str, sport: str) -> None:

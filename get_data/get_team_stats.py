@@ -4,10 +4,10 @@ from __future__ import annotations
 import requests  # type: ignore[import]
 from nba_api.stats.endpoints import leaguedashteamstats, leaguestandingsv3
 
-from helper_functions.exceptions import DataValidationError
-from helper_functions.logger_config import logger
-from helper_functions.retry import retry_api_call
-from helper_functions.validators import validate_nba_standings
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.retry import retry_api_call
+from helper_functions.api_utils.validators import validate_nba_standings
+from helper_functions.logging.logger_config import logger
 
 
 def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = "") -> tuple[str, str]:

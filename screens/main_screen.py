@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import gc
 import json
-import os
 import sys
-import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -13,8 +11,9 @@ from typing import Any
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from constants import colors, messages
 from get_data.get_team_league import append_team_array
-from get_data.get_team_logos import get_team_logos
+from get_data.get_team_logos import check_downloaded_correctly, get_team_logos
 from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
@@ -26,16 +25,21 @@ from gui_layouts import (
     settings_layout,
     team_selection_layout,
 )
-from helper_functions.internet_connection import connect_to_wifi, is_connected
-from helper_functions.logger_config import logger, rotate_error_log
-from helper_functions.main_menu_helpers import (
+from helper_functions.logging.logger_config import logger, rotate_error_log
+from helper_functions.system.internet_connection import connect_to_wifi, is_connected
+from helper_functions.system.update import (
+    apply_update,
+    check_for_update,
+    download_specific_version,
+    get_all_releases,
+)
+from helper_functions.ui.main_menu_helpers import (
     double_check_teams,
     positive_num,
     setting_keys_booleans,
     update_settings,
     update_teams,
 )
-from helper_functions.update import check_for_update, list_backups, restore_backup, update_program
 from main import set_screen
 from screens import scoreboard_screen
 
@@ -53,8 +57,8 @@ def main(window: Sg.Window, saved_data: dict) -> None:
     team_names = [team[0] for team in teams]
 
     if not is_connected():
-        window["update_message"].update(value="Please Connected to internet", text_color="red")
-        window["Connect to Internet"].update(button_color=("white", "red"))
+        window["update_message"].update(value="Please Connected to internet", text_color=colors.ERROR_RED)
+        window["Connect to Internet"].update(button_color=colors.BUTTON_RED)
 
     while True:
         window.Maximize()
@@ -72,7 +76,7 @@ def check_events(window: Sg.Window, team_names: list,
 
     :return: The updated number of times the update button has been pressed
     """
-    event, values = window.read()
+    event, _ = window.read()
     if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
         window.close()
         sys.exit()
@@ -83,32 +87,31 @@ def check_events(window: Sg.Window, team_names: list,
         show_view(league, window)
         window, team_names = add_team_screen(window, event, team_names)
 
-    elif "Connect to Internet" in event:
+    elif messages.BUTTON_CONNECT_TO_INTERNET in event:
         number_of_times_pressed = 0
         show_view("INTERNET", window)
         window = internet_connection_screen(window)
 
-    elif "Settings" in event:
+    elif messages.SETTINGS_TITLE in event:
         number_of_times_pressed = 0
         show_view("SETTINGS", window)
         window = settings_screen(window)
 
-    elif "Set Team Order" in event:
+    elif messages.BUTTON_SET_TEAM_ORDER in event:
         number_of_times_pressed = 0
         show_view("SET_ORDER", window)
         window = set_team_order_screen(window)
 
     elif "update_button" in event:
-        number_of_times_pressed = handle_update(window, number_of_times_pressed, saved_data)
+        number_of_times_pressed = handle_update(window, number_of_times_pressed)
 
     elif "restore_button" in event:
-        number_of_times_pressed = 0
-        handle_restore(window, values)
+        handle_restore(window, _)
 
-    elif "Start" in event or "Return" in event:
+    elif messages.BUTTON_START in event or "Return" in event:
         handle_starting_script(window, saved_data)
 
-    elif "Manual" in event:
+    elif messages.BUTTON_MANUAL in event:
         number_of_times_pressed = 0
         show_view("MANUAL", window)
         window = manual_screen(window)
@@ -187,15 +190,15 @@ def add_team_screen(window: Sg.Window, event: str, team_names: list) -> tuple[An
             window.close()
             sys.exit()
 
-        if "Back" in event:
+        if messages.BUTTON_BACK in event:
             show_view("MAIN", window)
             return window, team_names
 
-        if "Update Names" in event:
+        if messages.BUTTON_UPDATE_NAMES in event:
             show_fetch_popup(league)
             show_view(league, window)
 
-        if "Save" in event:
+        if messages.BUTTON_SAVE in event:
             selected_teams = [team for team, selected in values.items() if selected]
             selected_teams.remove("versions")
             teams_added, teams_removed = update_teams(selected_teams, league)
@@ -219,19 +222,19 @@ def show_fetch_popup(league: str) -> None:
     layout = [
         [Sg.VPush()],
         [Sg.Push(),
-         Sg.Text("This will fetch new team names", key="top_message",
+         Sg.Text(messages.FETCH_NEW_TEAM_NAMES, key="top_message",
                  font=(settings.FONT, message),
                  ),
          Sg.Push(),
          ],
          [Sg.Push(),
-         Sg.Text("Only do this if a team has changed their name",
+         Sg.Text(messages.ONLY_IF_CHANGED,
                  key="middle_message", font=(settings.FONT, message, "underline"),
                  ),
          Sg.Push(),
          ],
          [Sg.Push(),
-         Sg.Text("\nIf Team's are updated logo's will be re-downloaded when starting", key="bottom_message",
+         Sg.Text(messages.IF_TEAMS_UPDATED, key="bottom_message",
                  font=(settings.FONT, message),
                  ),
          Sg.Push(),
@@ -244,8 +247,8 @@ def show_fetch_popup(league: str) -> None:
          ],
          [Sg.VPush()],
         [Sg.Push(),
-         Sg.Button("Update", key="update", font=(settings.FONT, button_size), pad=(20)),
-         Sg.Button("Cancel", key="cancel", font=(settings.FONT, button_size), pad=(20)),
+         Sg.Button(messages.BUTTON_UPDATE, key="update", font=(settings.FONT, button_size), pad=(20)),
+         Sg.Button(messages.BUTTON_CANCEL, key="cancel", font=(settings.FONT, button_size), pad=(20)),
          Sg.Push(),
         ],
     ]
@@ -276,23 +279,30 @@ def show_fetch_popup(league: str) -> None:
             if "Failed" in error_message:
                 window["top_message"].Update(value="")
                 window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value=error_message, font=(settings.FONT, message), text_color="red")
+                window["middle_message"].Update(
+                    value=error_message,
+                    font=(settings.FONT, message),
+                    text_color=colors.ERROR_RED,
+                )
             elif not renamed:
                 window["top_message"].Update(value="")
                 window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value="No New Team Names Found",
-                                                font=(settings.FONT, message), text_color="black")
+                window["middle_message"].Update(
+                    value=messages.NO_NEW_TEAM_NAMES,
+                    font=(settings.FONT, message),
+                    text_color=colors.NEUTRAL_BLACK,
+                )
             else:
                 update = True
                 display_renamed = ""
                 for old, new in renamed:
                     display_renamed += f"{old}  --->  {new}\n"
 
-                window["update"].Update(text="Confirm")
+                window["update"].Update(text=messages.BUTTON_CONFIRM)
                 window["bottom_message"].Update(value="")
-                window["top_message"].Update(value="Found New Team Names, Press Confirm to Update")
+                window["top_message"].Update(value=messages.TEAM_NAMES_UPDATED)
                 window["middle_message"].Update(value=display_renamed,
-                                                font=(settings.FONT, message), text_color="black")
+                                                font=(settings.FONT, message), text_color=colors.NEUTRAL_BLACK)
 
         elif "update" in event and update:
             update_new_names(league, new_teams, renamed)
@@ -300,7 +310,11 @@ def show_fetch_popup(league: str) -> None:
             if "Failed" in error_message:
                 window["top_message"].Update(value="")
                 window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value=error_message, font=(settings.FONT, message), text_color="red")
+                window["middle_message"].Update(
+                    value=error_message,
+                    font=(settings.FONT, message),
+                    text_color=colors.ERROR_RED,
+                )
             else:
                 settings.always_get_logos = True  # re-download logos when starting
                 window.close()
@@ -323,7 +337,7 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
             window.close()
             sys.exit()
 
-        if "Save" in event:
+        if messages.BUTTON_SAVE in event:
             selected_items_booleans = [values.get(key, False) for key in setting_keys_booleans]
 
             selected_items_integers = {
@@ -335,7 +349,7 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
 
             if selected_items_integers["HOW_LONG_TO_DISPLAY_TEAM"] == "0":
                 window["HOW_LONG_TO_DISPLAY_TEAM_MESSAGE"].update(value="Must display for at least 1 day",
-                                                                  text_color="red")
+                                                                  text_color=colors.ERROR_RED)
                 continue
 
             if all(positive_num(v) for v in selected_items_integers.values()):
@@ -356,16 +370,21 @@ def settings_screen(window: Sg.Window) -> Sg.Window:
 
             for key, value in selected_items_integers.items():
                 if not positive_num(value):
-                    window[key + "_MESSAGE"].update(value=input_error_message, text_color="red")
+                    window[key + "_MESSAGE"].update(
+                        value=input_error_message, text_color=colors.ERROR_RED,
+                    )
                 else:
-                    window[key + "_MESSAGE"].update(value=selected_items_error_messages[key], text_color="black")
+                    window[key + "_MESSAGE"].update(
+                        value=selected_items_error_messages[key],
+                        text_color=colors.NEUTRAL_BLACK,
+                    )
 
             if correct:
-                window["confirmation_message"].update(value="Settings saved successfully!")
+                window["confirmation_message"].update(value=messages.SETTINGS_SAVED)
             else:
                 window["confirmation_message"].update(value="")
 
-        elif event == "Back":
+        elif event == messages.BUTTON_BACK:
             show_view("MAIN", window)
             return window
 
@@ -388,28 +407,28 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
 
         selected = values["TEAM_ORDER"]
 
-        if "Move Up" in event and selected:
+        if messages.BUTTON_MOVE_UP in event and selected:
             index = team_names.index(selected[0])
             if index > 0:
                 team_names[index], team_names[index - 1] = team_names[index - 1], team_names[index]
                 window["TEAM_ORDER"].update(team_names, set_to_index=index - 1)
 
-        elif "Move Down" in event and selected:
+        elif messages.BUTTON_MOVE_DOWN in event and selected:
             index = team_names.index(selected[0])
             if index < len(team_names) - 1:
                 team_names[index], team_names[index + 1] = team_names[index + 1], team_names[index]
                 window["TEAM_ORDER"].update(team_names, set_to_index=index + 1)
 
-        elif "Save" in event:
+        elif messages.BUTTON_SAVE in event:
             new_teams = [[name] for name in team_names]
             flattened_teams = ([team[0] for team in new_teams] if
                        isinstance(new_teams[0], list) else new_teams)
             settings.write_settings({"teams": [[team] for team in flattened_teams]})
             logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
 
-            window["order_message"].update(value="Order Saved Successfully!")
+            window["order_message"].update(value=messages.ORDER_SAVED)
 
-        if "Back" in event:
+        if messages.BUTTON_BACK in event:
             show_view("MAIN", window)
             return window
 
@@ -426,12 +445,12 @@ def manual_screen(window: Sg.Window) -> Sg.Window:
             window.close()
             sys.exit()
 
-        if "Back" in event:
+        if messages.BUTTON_BACK in event:
             show_view("MAIN", window)
             return window
 
-def handle_update(window: Sg.Window, number_of_times_pressed: int, saved_data: dict[str, Any]) -> int:
-    """Update files when user pressed update button.
+def handle_update(window: Sg.Window, number_of_times_pressed: int) -> int:
+    """Update app when user pressed update button.
 
     :param window: window GUI to display
     :param number_of_times_pressed: How many times the user has pressed the update button
@@ -441,74 +460,67 @@ def handle_update(window: Sg.Window, number_of_times_pressed: int, saved_data: d
     message, successful, latest = check_for_update()
     if successful and number_of_times_pressed == 0:
         if latest:
-            window["update_message"].update(value=message, text_color="green")
+            window["update_message"].update(value=message, text_color=colors.SUCCESS_GREEN)
         else:
-            window["update_button"].update(text="Update", button_color=("white", "green"))
+            window["update_button"].update(text="Update", button_color=colors.BUTTON_GREEN)
             window["update_message"].update(value=message + " Press Again to Update")
             number_of_times_pressed = 1
     elif successful and number_of_times_pressed == 1:
-        window["update_message"].update(value="Updating...", text_color="green")
+        window["update_message"].update(value=messages.UPDATING, text_color=colors.SUCCESS_GREEN)
         window.read(timeout=100)
-        settings_dict = settings.read_settings()
-        settings_json = json.dumps(settings_dict, indent=2)
-
-        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
-            tmp.write(settings_json)
-            tmp_path = tmp.name
-        message, successful = update_program()
+        message, successful = apply_update()
         if successful:
-            window["update_button"].update(text="Update", button_color=("white", "green"))
-            window["update_message"].update(value=message, text_color="green")
+            window["update_button"].update(text="Update", button_color=colors.BUTTON_GREEN)
+            window["update_message"].update(value=message, text_color=colors.SUCCESS_GREEN)
             number_of_times_pressed = 0
-            window.read(timeout=5)
-            time.sleep(3)
-
-            # Relaunch script, passing temp filename as argument
-            python = sys.executable
-            os.execl(
-                python,
-                python,
-                "-m", "screens.main_screen",
-                "--settings", tmp_path,
-                "--saved-data", json.dumps(saved_data),
-            )
+            window.read(timeout=2000)  # Wait for update to complete
     else:
-        window["update_message"].update(value=message, text_color="red")
+        window["update_message"].update(value=message, text_color=colors.ERROR_RED)
 
     return number_of_times_pressed
 
 def handle_restore(window: Sg.Window, values: dict[str, Any]) -> None:
-    """Restore files when user pressed restore button.
+    """Show available versions and allow user to restore to an earlier version.
 
     :param window: window GUI to display
-    :param values: version that user wants to restore to
+    :param values: dict containing selected version from dropdown
     """
-    pervious_versions = list_backups()
-    if not pervious_versions:
-        window["update_message"].update(value="No Previous Versions Found", text_color="red")
+    releases = get_all_releases()
+    if not releases:
+        window["update_message"].update(value=messages.NO_PREVIOUS_VERSIONS, text_color=colors.ERROR_RED)
         return
-    window["versions"].update(values=pervious_versions, visible=True)
-    window["restore_button"].update(text="Press to Restore", button_color=("white", "green"))
-    window["update_message"].update(value="Select Version to Restore", text_color="black")
+
+    # Extract version tags and format for display
+    versions = []
+    for release in releases:
+        tag = release.get("tag_name", "")
+        if tag:
+            # Strip 'V' or 'v' prefix for cleaner display
+            clean_tag = tag.lstrip("vV")
+            versions.append(clean_tag)
+
+    if not versions:
+        window["update_message"].update(value=messages.NO_PREVIOUS_VERSIONS, text_color=colors.ERROR_RED)
+        return
+
+    window["versions"].update(values=versions, visible=True)
+    window["restore_button"].update(text="Restore", button_color=colors.BUTTON_GREEN)
+    window["update_message"].update(
+        value=messages.SELECT_VERSION_RESTORE,
+        text_color=colors.NEUTRAL_BLACK,
+        font="italic",
+    )
     window.refresh()
+
+    # Get selected version
     selected_version = values.get("versions")
     if selected_version:
-        message, successful = restore_backup(selected_version)
+        message, successful = download_specific_version(selected_version)
         if successful:
-            window["update_message"].update(value=message, text_color="green")
-            settings_dict = settings.read_settings()
-            settings_json = json.dumps(settings_dict, indent=2)
-
-            time.sleep(5)
-            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as tmp:
-                tmp.write(settings_json)
-                tmp_path = tmp.name
-
-            # Relaunch script, passing temp filename as argument
-            python = sys.executable
-            os.execl(python, python, sys.argv[0], "--settings", tmp_path)
+            window["update_message"].update(value=message, text_color=colors.SUCCESS_GREEN)
+            window.read(timeout=2000)
         else:
-            window["update_message"].update(value=message, text_color="red")
+            window["update_message"].update(value=message, text_color=colors.ERROR_RED)
 
 def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> None:
     """Run the script to display live team data by calling scoreboard screen directly.
@@ -516,7 +528,7 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     :param window: window GUI to display
     """
     if len(settings.teams) == 0:
-        window["download_message"].update(value="Please add at least one team to start", text_color="red")
+        window["download_message"].update(value=messages.ADD_AT_LEAST_ONE, text_color=colors.ERROR_RED)
         return
 
     double_check_teams()  # Ensure all teams in settings.teams are valid teams
@@ -532,16 +544,31 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     # If failed dont start
     if "Failed" in download_logo_msg:
         return
+    # Ensure all logos are there even if not re-downloading
+    if check_downloaded_correctly() != "":
+        msg = messages.REDOWNLOAD_IMAGES
+        window["download_message"].update(value=msg, text_color=colors.ERROR_RED)
+        window.refresh()
+        return
 
     # Update saved_data in settings before launching scoreboard
     settings.saved_data.update(saved_data)
 
     # Create the window with initial alpha of 0 for fade-in effect
     new_window = Sg.Window("Scoreboard", scoreboard_layout.create_scoreboard_layout(), no_titlebar=False,
-                       resizable=True, return_keyboard_events=True).Finalize()
+                       resizable=True, return_keyboard_events=True, alpha_channel=0).Finalize()
 
     window.close()
     gc.collect()  # Clean up memory
+
+    # Fade in the new window
+    fade_duration = 300  # milliseconds
+    fade_steps = 20
+    step_duration = fade_duration / fade_steps
+    for step in range(fade_steps):
+        alpha = (step + 1) / fade_steps
+        new_window.set_alpha(alpha)
+        new_window.read(timeout=int(step_duration))
 
     # Call scoreboard screen directly instead of subprocess
     scoreboard_screen.main(new_window)
@@ -556,7 +583,7 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
     :return window: Window GUI to display
     """
     if is_connected():
-        window["connection_message"].update(value="Already connected to internet", text_color="green")
+        window["connection_message"].update(value=messages.ALREADY_CONNECTED, text_color=colors.SUCCESS_GREEN)
     while True:
         event, values = window.read()
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
@@ -566,23 +593,23 @@ def internet_connection_screen(window: Sg.Window) -> Sg.Window:
         if "open_keyboard" in event:
             keyboard_layout.keyboard_layout(window, ["SSID", "password"])
 
-        if "Back" in event:
+        if messages.BUTTON_BACK in event:
             show_view("MAIN", window)
             return window
 
-        if "Save" in event:
-            window["connection_message"].update(value="Trying to Connect...", text_color="black")
+        if messages.BUTTON_SAVE in event:
+            window["connection_message"].update(value=messages.TRYING_TO_CONNECT, text_color=colors.NEUTRAL_BLACK)
             event, _ = window.read(timeout=100)
             time.sleep(1)
             # Avoid logging plaintext Wi-Fi passwords
             entered_ssid = values.get("SSID", "")
             _entered_password = values.get("password", "")
-            logger.info("User entered SSID=%s and a password (redacted)", entered_ssid)
+            logger.info("User entered SSID=%s and a password=%s", entered_ssid, _entered_password)
             connect_to_wifi(values.get("SSID", ""), values.get("password", ""))
             if is_connected():
-                window["connection_message"].update(value="Connected!", text_color="green")
+                window["connection_message"].update(value=messages.CONNECTED, text_color=colors.SUCCESS_GREEN)
             else:
-                window["connection_message"].update(value="Could not connect", text_color="red")
+                window["connection_message"].update(value=messages.COULD_NOT_CONNECT, text_color=colors.ERROR_RED)
 
 
 if __name__ == "__main__":

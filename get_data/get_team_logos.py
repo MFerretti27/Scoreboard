@@ -10,8 +10,16 @@ import requests  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 
 import settings
+from constants.file_paths import (
+    BASEBALL_BASE_IMAGES_DIR,
+    CHAMPIONSHIP_IMAGES_DIR,
+    CONFERENCE_CHAMPIONSHIP_IMAGES_DIR,
+    NETWORKS_DIR,
+    PLAYOFF_IMAGES_DIR,
+    SPORT_LOGOS_DIR,
+)
 from get_data.get_team_league import MLB, NBA, NFL, NHL
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 
 def new_league_added() -> bool:
@@ -155,11 +163,11 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
             download_team_logos(window, teams)
             # Resize local images to fit on screen
             resize_images_from_folder([
-                Path("images/Networks"),
-                Path("images/baseball_base_images"),
-                Path("images/conference_championship_images"),
-                Path("images/playoff_images"),
-                Path("images/championship_images"),
+                NETWORKS_DIR,
+                BASEBALL_BASE_IMAGES_DIR,
+                CONFERENCE_CHAMPIONSHIP_IMAGES_DIR,
+                PLAYOFF_IMAGES_DIR,
+                CHAMPIONSHIP_IMAGES_DIR,
             ])
             already_downloaded = False  # If hit this is the first time getting images and resizing
             return check_downloaded_correctly()
@@ -175,15 +183,15 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
             msg = "Always get logos in settings selected, Downloading and Re-sizing logos"
             window["download_message"].update(value=msg)
             # Dont want to continually resize images multiple times, so remove
-            shutil.rmtree(Path.cwd() / "images" / "sport_logos")
-            Path.mkdir((Path.cwd() / "images" / "sport_logos"), exist_ok=True)
+            shutil.rmtree(Path.cwd() / SPORT_LOGOS_DIR)
+            Path.mkdir((Path.cwd() / SPORT_LOGOS_DIR), exist_ok=True)
             download_team_logos(window, teams)
             resize_images_from_folder([
-                Path("images/Networks"),
-                Path("images/baseball_base_images"),
-                Path("images/conference_championship_images"),
-                Path("images/playoff_images"),
-                Path("images/championship_images"),
+                NETWORKS_DIR,
+                BASEBALL_BASE_IMAGES_DIR,
+                CONFERENCE_CHAMPIONSHIP_IMAGES_DIR,
+                PLAYOFF_IMAGES_DIR,
+                CHAMPIONSHIP_IMAGES_DIR,
             ])
             return check_downloaded_correctly()
 

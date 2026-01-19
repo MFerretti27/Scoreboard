@@ -16,8 +16,8 @@ from enum import Enum
 from threading import Lock
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from helper_functions.exceptions import APIError
-from helper_functions.logger_config import logger
+from helper_functions.api_utils.exceptions import APIError
+from helper_functions.logging.logger_config import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable

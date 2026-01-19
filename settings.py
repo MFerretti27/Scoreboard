@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 SETTINGS_PATH = Path(__file__).with_name("settings.json")
 
@@ -80,6 +80,8 @@ no_spoiler_mode: bool
 stay_on_team: bool
 delay: bool
 
+
+# Default settings to fall back on if settings.json is missing or incomplete
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
     "teams": [

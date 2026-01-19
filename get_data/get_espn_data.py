@@ -11,16 +11,17 @@ import requests  # type: ignore[import]
 from dateutil.parser import isoparse  # type: ignore[import]
 
 import settings
-from helper_functions.cache import API_RESPONSE_TTL, get_cached, set_cached
-from helper_functions.data_helpers import check_for_doubleheader, check_playing_each_other
-from helper_functions.exceptions import APIError, DataFetchError, DataValidationError, NetworkError
-from helper_functions.logger_config import log_context_scope, logger, track_api_call
-from helper_functions.retry import retry_with_fallback, BackoffConfig
-from helper_functions.validators import (
+from constants.file_paths import get_baseball_base_image_path, get_sport_logo_path
+from helper_functions.api_utils.cache import API_RESPONSE_TTL, get_cached, set_cached
+from helper_functions.api_utils.exceptions import APIError, DataFetchError, DataValidationError, NetworkError
+from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
+from helper_functions.api_utils.validators import (
     validate_espn_competition,
     validate_espn_event,
     validate_espn_scoreboard_response,
 )
+from helper_functions.data.data_helpers import check_for_doubleheader, check_playing_each_other
+from helper_functions.logging.logger_config import log_context_scope, logger, track_api_call
 
 from .get_game_type import get_game_type
 from .get_mlb_data import append_mlb_data, get_all_mlb_data
@@ -100,7 +101,7 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             track_api_call("espn_scoreboard", duration_ms, success=False)
-            logger.error(f"ESPN API request failed after {duration_ms:.0f}ms")
+            logger.info(f"ESPN API request failed after {duration_ms:.0f}ms")
             msg = f"ESPN API request failed for {team_name}"
             raise NetworkError(msg, error_code="NETWORK_ERROR") from e
 
@@ -160,8 +161,8 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             team_info["bottom_info"] = team_info["bottom_info"].replace("EDT", "").replace("EST", "")
 
             # Get Logos Location for Teams
-            team_info["away_logo"] = (f"images/sport_logos/{team_league.upper()}/{away_name.upper()}.png")
-            team_info["home_logo"] = (f"images/sport_logos/{team_league.upper()}/{home_name.upper()}.png")
+            team_info["away_logo"] = get_sport_logo_path(team_league.upper(), away_name.upper())
+            team_info["home_logo"] = get_sport_logo_path(team_league.upper(), home_name.upper())
 
             # Get data if team is either playing or not playing
             if currently_playing:
@@ -226,9 +227,9 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
     if "halftime" not in team_info["bottom_info"].lower() and "end" not in team_info["bottom_info"].lower():
         team_info["top_info"], team_info["bottom_info"] = team_info["bottom_info"], team_info["top_info"]
 
-    if ("1st" in team_info["bottom_info"] or "2nd" in team_info["bottom_info"]
-        or "3rd" in team_info["bottom_info"] or "4th" in team_info["bottom_info"]):
-        team_info["bottom_info"] = team_info["bottom_info"] + " Quarter"
+    if ("1st" in team_info["top_info"] or "2nd" in team_info["top_info"]
+        or "3rd" in team_info["top_info"] or "4th" in team_info["top_info"]):
+        team_info["top_info"] = team_info["top_info"] + " Quarter"
 
     return team_info
 
@@ -285,7 +286,7 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
     saved_info = copy.deepcopy(team_info)
     try:
         team_info = append_nba_data(team_info, team_name)
-    except Exception as e:
+    except Exception:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sNBA API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -297,8 +298,6 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NBA API"
-        msg = f"Failed to fetch NBA data for {team_name}"
-        raise APIError(msg, error_code="NBA_API_ERROR") from e
 
     if not settings.display_nba_clock:
         team_info["bottom_info"] = ""
@@ -325,7 +324,7 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
         team_info = append_mlb_data(team_info, team_name, doubleheader)
 
     # If call to API fails get MLB specific info just from ESPN
-    except Exception as e:
+    except Exception:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sMLB API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -337,8 +336,6 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from MLB API"
-        msg = f"Failed to fetch MLB data for {team_name}"
-        raise APIError(msg, error_code="MLB_API_ERROR") from e
 
         team_info["bottom_info"] = team_info["bottom_info"].replace("Bot", "Bottom")
         team_info["bottom_info"] = team_info["bottom_info"].replace("Mid", "Middle")
@@ -401,8 +398,8 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
             }
 
             # Get image location for representing runners on base
-            team_info["under_score_image"] = (
-                f"images/baseball_base_images/{base_conditions[(on_first, on_second, on_third)]}"
+            team_info["under_score_image"] = get_baseball_base_image_path(
+                base_conditions[(on_first, on_second, on_third)],
             )
     return team_info
 
@@ -417,7 +414,7 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
     saved_info = copy.deepcopy(team_info)
     try:
         team_info = append_nhl_data(team_info, team_name)
-    except Exception as e:
+    except Exception:
         separator = "\n" + "=" * 80 + "\n"
         logger.exception(
             "%sNHL API ERROR:%s\nTeam: %s\n\nTeam Info:\n%s\n%s",
@@ -429,9 +426,6 @@ def get_currently_playing_nhl_data(team_name: str, team_info: dict[str, Any]) ->
         )
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from NHL API"
-        msg = f"Failed to fetch NHL data for {team_name}"
-        raise APIError(msg, error_code="NHL_API_ERROR") from e
-
     return team_info
 
 
@@ -488,7 +482,7 @@ def get_live_game_data(team_league: str, team_name: str, info: dict, comp: dict)
 
     return: Updated info with live game data for the specified league
     """
-    if settings.display_player_stats:
+    if settings.display_player_stats and team_league.upper() != "NFL":
         home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
         info["home_team_stats"] = home_player_stats
         info["away_team_stats"] = away_player_stats
@@ -573,6 +567,9 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
     team_name = team[0]
     team_league = team[1].lower()
     cache_key = f"team_data:{team_name}:{team_league}"
+
+    # Initialize top_info to avoid KeyError later
+    team_info["top_info"] = ""
 
     # 1) Try ESPN first (no cache fallback at this layer)
     try:

@@ -6,7 +6,7 @@ from typing import Any
 
 import settings
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 # List of setting keys to be updated
 setting_keys_booleans = [

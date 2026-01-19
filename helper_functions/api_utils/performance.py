@@ -12,7 +12,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from helper_functions.logger_config import logger, track_api_call
+from helper_functions.logging.logger_config import logger, track_api_call
 
 if TYPE_CHECKING:
     from collections.abc import Callable

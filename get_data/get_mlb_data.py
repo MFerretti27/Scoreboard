@@ -8,11 +8,12 @@ import requests
 import statsapi  # type: ignore[import]
 
 import settings
-from helper_functions.data_helpers import check_playing_each_other, get_team_logo
-from helper_functions.exceptions import APIError, DataValidationError
-from helper_functions.logger_config import log_context_scope, logger
-from helper_functions.retry import retry_with_fallback, BackoffConfig
-from helper_functions.validators import validate_mlb_game, validate_mlb_schedule_response
+from constants.file_paths import get_baseball_base_image_path
+from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
+from helper_functions.api_utils.validators import validate_mlb_game, validate_mlb_schedule_response
+from helper_functions.data.data_helpers import check_playing_each_other, get_team_logo
+from helper_functions.logging.logger_config import log_context_scope, logger
 
 from .get_game_type import get_game_type
 from .get_series_data import get_current_series_mlb
@@ -50,9 +51,52 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     currently_playing = False
 
     with log_context_scope(team=team_name, league="MLB", endpoint="mlb_statsapi"):
-        # Try to get first game from now for the next 3 days
-        today = datetime.now().strftime("%Y-%m-%d")
-        three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+        # Fetch and validate game data
+        data, live, live_feed = _fetch_mlb_data(team_name, double_header)
+        has_data = True
+
+        # Get basic game information
+        team_info, game_time = _get_mlb_basic_info(live, live_feed)
+        home_team_name = live["gameData"]["teams"]["home"]["teamName"]
+        away_team_name = live["gameData"]["teams"]["away"]["teamName"]
+
+        # Check if two of your teams are playing each other
+        full_home_team_name = live_feed["gameData"]["teams"]["home"]["franchiseName"] + " " + home_team_name
+        full_away_team_name = live_feed["gameData"]["teams"]["away"]["franchiseName"] + " " + away_team_name
+        if check_playing_each_other(full_home_team_name, full_away_team_name):
+            return team_info, False, currently_playing
+
+        # Get logos and game type
+        team_info = _get_mlb_logos_and_type(home_team_name, away_team_name, team_name, team_info)
+
+        # Get records if enabled
+        if settings.display_records:
+            team_info = _get_mlb_records(live, team_info)
+
+        # Handle game status
+        game_status = live["gameData"]["status"]["detailedState"]
+        if "Progress" in game_status:
+            team_info = append_mlb_data(team_info, team_name, double_header)
+            currently_playing = True
+        elif "Final" in game_status:
+            team_info["top_info"] = get_current_series_mlb(team_name)
+            team_info["bottom_info"] = game_status.upper()
+            team_info, has_data, currently_playing = check_double_header(
+                home_team_name, away_team_name, team_info, live_feed, double_header,
+            )
+            return team_info, has_data, currently_playing
+        else:
+            # Game not played yet - check if delayed/postponed
+            team_info = check_delayed(data, double_header, team_info, game_time)
+
+        return team_info, has_data, currently_playing
+
+
+def _fetch_mlb_data(team_name: str, double_header: int) -> tuple:
+    """Fetch and validate MLB game data."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    three_days_later = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+    try:
         try:
             data = statsapi.schedule(
                 team=get_mlb_team_id(team_name),
@@ -60,104 +104,95 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
                 start_date=today,
                 end_date=three_days_later,
             )
-            # Validate schedule response
-            try:
-                validate_mlb_schedule_response(data, team_name)
-            except DataValidationError as e:
-                msg = f"MLB schedule response invalid for {team_name}"
-                raise APIError(msg, error_code="INVALID_SCHEDULE") from e
-
-            live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
-
-            # Validate game data
-            try:
-                validate_mlb_game(live, team_name)
-            except DataValidationError as e:
-                msg = f"MLB game data invalid for {team_name}"
-                raise APIError(msg, error_code="INVALID_GAME_DATA") from e
-
-            live_feed = requests.get(
-                f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live', timeout=5,
-            ).json()
-        except (APIError, DataValidationError):
-            # Re-raise validation errors as APIError
-            raise
         except Exception as e:
-            logger.exception("Could not get MLB data")
-            msg = f"Failed to fetch MLB game data for {team_name}"
-            raise APIError(msg, error_code="MLB_API_ERROR") from e
+            logger.exception("statsapi.schedule timeout or error for %s", team_name)
+            msg = f"MLB schedule API timeout for {team_name}"
+            raise APIError(msg, error_code="MLB_SCHEDULE_TIMEOUT") from e
 
-        has_data = True
-        # Cannot Get network so dont display anything, and if game is currently playing it will updated with base images
-        team_info["under_score_image"] = ""
+        try:
+            validate_mlb_schedule_response(data, team_name)
+        except DataValidationError as e:
+            msg = f"MLB schedule response invalid for {team_name}"
+            raise APIError(msg, error_code="INVALID_SCHEDULE") from e
 
-        # Get Score
-        team_info["home_score"] = live["liveData"]["linescore"]["teams"]["home"].get("runs", 0)
-        team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
+        try:
+            live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
+        except Exception as e:
+            logger.exception("statsapi.get game timeout or error for %s", team_name)
+            msg = f"MLB game API timeout for {team_name}"
+            raise APIError(msg, error_code="MLB_GAME_TIMEOUT") from e
 
-        # Get date and put in local time
-        utc_time = datetime.strptime(live["gameData"]["datetime"]["dateTime"], "%Y-%m-%dT%H:%M:%S%z")
-        game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
+        try:
+            validate_mlb_game(live, team_name)
+        except DataValidationError as e:
+            msg = f"MLB game data invalid for {team_name}"
+            raise APIError(msg, error_code="INVALID_GAME_DATA") from e
 
-        # Get venue and set bottom info to display game time and venue
-        team_info["bottom_info"] = game_time
-        if settings.display_venue:
-            venue = live_feed["gameData"]["venue"]["name"]
-            team_info["bottom_info"] = f"{game_time} @ {venue}"
+        live_feed = requests.get(
+            f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live', timeout=5,
+        ).json()
+    except (APIError, DataValidationError):
+        raise
+    except Exception as e:
+        logger.exception("Could not get MLB data")
+        msg = f"Failed to fetch MLB game data for {team_name}"
+        raise APIError(msg, error_code="MLB_API_ERROR") from e
 
-        # Get Home and Away team logos/names
-        home_team_name = live["gameData"]["teams"]["home"]["teamName"]
-        away_team_name = live["gameData"]["teams"]["away"]["teamName"]
-        team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
+    return data, live, live_feed
 
-        # Check if two of your teams are playing each other to not display same data twice
-        full_home_team_name = live_feed["gameData"]["teams"]["home"]["franchiseName"] + " " + home_team_name
-        full_away_team_name = live_feed["gameData"]["teams"]["away"]["franchiseName"] + " " + away_team_name
-        if check_playing_each_other(full_home_team_name, full_away_team_name):
-            team_has_data = False
-            return team_info, team_has_data, currently_playing
 
-        # If team is D-backs change to "ARIZONA DIAMONDBACKS", there is no logo file called D-backs
-        home_team_name = home_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
-        away_team_name = away_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+def _get_mlb_basic_info(live: dict, live_feed: dict) -> tuple[dict, str]:
+    """Get basic MLB game information."""
+    team_info = {}
+    team_info["under_score_image"] = ""
 
-        # Get team logos
-        team_info = get_team_logo(home_team_name, away_team_name, "MLB", team_info)
+    # Get scores
+    team_info["home_score"] = live["liveData"]["linescore"]["teams"]["home"].get("runs", 0)
+    team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
 
-        # If str returned is not empty, then its world series/conference championship, so display championship png
-        team_info["under_score_image"] = get_game_type("MLB", team_name)
+    # Get date and game time
+    utc_time = datetime.strptime(live["gameData"]["datetime"]["dateTime"], "%Y-%m-%dT%H:%M:%S%z")
+    game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
 
-        # Get Home and Away team records
-        if settings.display_records:
-            home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
-            home_losses = live["gameData"]["teams"]["home"]["record"]["losses"]
-            team_info["home_record"] = f"{home_wins!s}-{home_losses!s}"
+    team_info["bottom_info"] = game_time
+    if settings.display_venue:
+        venue = live_feed["gameData"]["venue"]["name"]
+        team_info["bottom_info"] = f"{game_time} @ {venue}"
 
-            away_wins = live["gameData"]["teams"]["away"]["record"]["wins"]
-            away_losses = live["gameData"]["teams"]["away"]["record"]["losses"]
-            team_info["away_record"] = f"{away_wins!s}-{away_losses!s}"
+    # Get team names
+    home_team_name = live["gameData"]["teams"]["home"]["teamName"]
+    away_team_name = live["gameData"]["teams"]["away"]["teamName"]
+    team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
-        # Check if game is currently playing
-        if "Progress" in live["gameData"]["status"]["detailedState"]:
-            currently_playing = True
-            team_info = append_mlb_data(team_info, team_name, double_header)
+    return team_info, game_time
 
-        # Check if game is over
-        elif "Final" in live["gameData"]["status"]["detailedState"]:
-            team_info["top_info"] = get_current_series_mlb(team_name)
-            team_info["bottom_info"] = live["gameData"]["status"]["detailedState"].upper()
 
-            team_info, has_data, currently_playing = check_double_header(
-                home_team_name, away_team_name, team_info, live_feed, double_header,
-            )
-            return team_info, has_data, currently_playing
+def _get_mlb_logos_and_type(home_team_name: str, away_team_name: str, team_name: str, team_info: dict) -> dict:
+    """Get team logos and game type."""
+    # Handle D-backs name
+    home_team_name = home_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
+    away_team_name = away_team_name.replace("D-backs", "ARIZONA DIAMONDBACKS")
 
-        # Game has not been played yet but scheduled
-        else:
-            # Check if postponed or delayed
-            team_info = check_delayed(data, double_header, team_info, game_time)
+    # Get team logos
+    team_info = get_team_logo(home_team_name, away_team_name, "MLB", team_info)
 
-        return team_info, has_data, currently_playing
+    # Get game type (World Series/Championship)
+    team_info["under_score_image"] = get_game_type("MLB", team_name)
+
+    return team_info
+
+
+def _get_mlb_records(live: dict, team_info: dict) -> dict:
+    """Get home and away team records."""
+    home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
+    home_losses = live["gameData"]["teams"]["home"]["record"]["losses"]
+    team_info["home_record"] = f"{home_wins!s}-{home_losses!s}"
+
+    away_wins = live["gameData"]["teams"]["away"]["record"]["wins"]
+    away_losses = live["gameData"]["teams"]["away"]["record"]["losses"]
+    team_info["away_record"] = f"{away_wins!s}-{away_losses!s}"
+
+    return team_info
 
 
 def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> dict:
@@ -223,7 +258,7 @@ def append_mlb_data(team_info: dict, team_name: str, double_header: int = 0) -> 
 
         # Get image location for representing runners on base
         base_image = base_conditions[(bases["first"], bases["second"], bases["third"])]
-        team_info["under_score_image"] = f"images/baseball_base_images/{base_image}"
+        team_info["under_score_image"] = get_baseball_base_image_path(base_image)
 
     return team_info
 

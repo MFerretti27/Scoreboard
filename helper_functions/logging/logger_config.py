@@ -13,8 +13,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-from .email import email_config_status, notify_email
-
 THROTTLE_SECONDS = 60  # debounce identical error messages
 
 # Context variables for structured logging
@@ -65,38 +63,7 @@ class ContextualFormatter(logging.Formatter):
             for key, value in context.items():
                 setattr(record, key, value)
 
-            # Build context string for message
-            context_parts = []
-            if "team" in context:
-                context_parts.append(f"team={context['team']}")
-            if "league" in context:
-                context_parts.append(f"league={context['league']}")
-            if "endpoint" in context:
-                context_parts.append(f"endpoint={context['endpoint']}")
-            if "duration_ms" in context:
-                context_parts.append(f"duration={context['duration_ms']:.0f}ms")
-
-            if context_parts:
-                record.msg = f"[{' | '.join(context_parts)}] {record.msg}"
-
         return super().format(record)
-
-
-class EmailNotificationHandler(logging.Handler):
-    """Custom handler that sends email notifications on exceptions."""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record by sending an email."""
-        if record.levelno >= logging.ERROR:
-            try:
-                enabled, ok, reason = email_config_status()
-                if enabled and not ok:
-                    logger.warning("Email notifications enabled but not configured: %s", reason)
-                    return
-                notify_email()
-                logger.info("Diagnostic email sent to improve scoreboard functionality.")
-            except Exception as e:
-                logger.info("Failed to send diagnostic email: %s", e)
 
 
 class SpacedErrorFormatter(logging.Formatter):
@@ -189,11 +156,6 @@ _remove_empty_logs()
 
 error_handler = _build_error_handler()
 logger.addHandler(error_handler)
-
-# Add email notification handler for errors (no filter; throttling handled by file handler)
-email_handler = EmailNotificationHandler()
-email_handler.setLevel(logging.ERROR)
-logger.addHandler(email_handler)
 
 logger.setLevel(logging.INFO)
 logger.propagate = False

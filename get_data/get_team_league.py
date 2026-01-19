@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from rapidfuzz import fuzz, process  # type: ignore[import]
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",

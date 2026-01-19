@@ -5,10 +5,11 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 from constants import colors, ui_keys
+from constants.file_paths import get_sport_logo_path
 from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_random_logo
-from helper_functions.logger_config import logger
-from helper_functions.scoreboard_helpers import resize_text
+from helper_functions.logging.logger_config import logger
+from helper_functions.ui.scoreboard_helpers import resize_text
 from main import set_screen
 
 
@@ -41,7 +42,7 @@ def create_scoreboard_layout() -> list:
     home_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[0][0]}/{files[0][1]}.png", key=ui_keys.HOME_LOGO,
+        [Sg.Image(get_sport_logo_path(files[0][0], files[0][1]), key=ui_keys.HOME_LOGO,
                   pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
@@ -50,7 +51,7 @@ def create_scoreboard_layout() -> list:
     away_logo_layout = [
         [Sg.Push()],
         [Sg.VPush()],
-        [Sg.Image(f"images/sport_logos/{files[1][0]}/{files[1][1]}.png", key=ui_keys.AWAY_LOGO,
+        [Sg.Image(get_sport_logo_path(files[1][0], files[1][1]), key=ui_keys.AWAY_LOGO,
                   pad=((0, 0), (0, 0)), enable_events=True)],
         [Sg.VPush()],
         [Sg.Push()],
@@ -111,16 +112,16 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key=ui_keys.HOME_PLAYER_STATS,
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=1, background_color=colors.BLACK,
-                      size=(home_size[0], home_size[1]), text_color=colors.WHITE)],
+                      border_width=1, background_color=colors.BACKGROUND_BLACK,
+                      size=(home_size[0], home_size[1]), text_color=colors.TEXT_WHITE)],
     ]
 
     away_player_stats = [
         [Sg.Multiline("", key=ui_keys.AWAY_PLAYER_STATS,
                       font=(settings.FONT, settings.PLAYER_STAT_SIZE), justification="center",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=1, background_color=colors.BLACK,
-                      size=(away_size[0], away_size[1]), text_color=colors.WHITE)],
+                      border_width=1, background_color=colors.BACKGROUND_BLACK,
+                      size=(away_size[0], away_size[1]), text_color=colors.TEXT_WHITE)],
     ]
 
 
@@ -128,16 +129,16 @@ def create_scoreboard_layout() -> list:
         [Sg.Multiline("", key=ui_keys.HOME_TEAM_STATS,
                       font=(settings.FONT, settings.TEAM_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=1, background_color=colors.BLACK,
-                      size=(60, 50), text_color=colors.WHITE, enable_events=True)],
+                      border_width=1, background_color=colors.BACKGROUND_BLACK,
+                      size=(60, 50), text_color=colors.TEXT_WHITE, enable_events=True)],
     ]
 
     away_team_stats = [
         [Sg.Multiline("", key=ui_keys.AWAY_TEAM_STATS,
                       font=(settings.FONT, settings.TEAM_STAT_SIZE), justification="left",
                       no_scrollbar=True, disabled=True, autoscroll=False,
-                      border_width=1, background_color=colors.BLACK,
-                      size=(60, 50), text_color=colors.WHITE, enable_events=True)],
+                      border_width=1, background_color=colors.BACKGROUND_BLACK,
+                      size=(60, 50), text_color=colors.TEXT_WHITE, enable_events=True)],
     ]
 
     # Info layouts
@@ -160,15 +161,10 @@ def create_scoreboard_layout() -> list:
     ]
 
     # record height split
-    if settings.display_records:
-        away_logo_height = int(column_height * 4 / 5)
-        home_logo_height = int(column_height * 4 / 5)
-        away_record_height = int(column_height * 1 / 5)
-        home_record_height = int(column_height * 1 / 5)
-    else:
-        away_logo_height = home_logo_height = column_height
-        away_record_height = home_record_height = 0
-
+    away_logo_height = int(column_height * 4 / 5)
+    home_logo_height = int(column_height * 4 / 5)
+    away_record_height = int(column_height * 1 / 5)
+    home_record_height = int(column_height * 1 / 5)
 
     away_logo_swap_frame = Sg.Frame(
         "",

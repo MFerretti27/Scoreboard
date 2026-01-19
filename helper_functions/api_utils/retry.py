@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import TYPE_CHECKING, TypeVar
 
-from helper_functions.cache import API_RESPONSE_TTL, get_cached, set_cached
-from helper_functions.exceptions import (
+from helper_functions.api_utils.cache import API_RESPONSE_TTL, get_cached, set_cached
+from helper_functions.api_utils.exceptions import (
     ScoreboardError,
 )
-from helper_functions.logger_config import logger, track_retry
+from helper_functions.logging.logger_config import logger, track_retry
 
 if TYPE_CHECKING:
     from collections.abc import Callable

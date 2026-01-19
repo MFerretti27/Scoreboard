@@ -8,7 +8,7 @@ import time
 from functools import wraps
 from typing import TYPE_CHECKING, TypeVar
 
-from helper_functions.logger_config import logger, track_cache_hit, track_cache_miss
+from helper_functions.logging.logger_config import logger, track_cache_hit, track_cache_miss
 
 if TYPE_CHECKING:
     from collections.abc import Callable

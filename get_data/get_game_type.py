@@ -2,22 +2,26 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
-from helper_functions.exceptions import DataValidationError
-from helper_functions.logger_config import logger
-from helper_functions.validators import (
+from constants.file_paths import (
+    get_championship_image_path,
+    get_conference_championship_image_path,
+    get_playoff_image_path,
+)
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.validators import (
     validate_espn_scoreboard_event,
     validate_mlb_schedule_games,
     validate_nba_scoreboard_dict,
     validate_nhl_game_center_response,
     validate_nhl_playoff_response,
 )
+from helper_functions.logging.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 from .get_team_league import MLB_AL_EAST, MLB_AL_WEST, MLB_NL_EAST, MLB_NL_WEST
@@ -67,16 +71,16 @@ def get_nba_game_type(team_name: str) -> str:
     except DataValidationError as e:
         logger.warning(f"Invalid NBA scoreboard data for {team_name}: {e}")
         if was_finals_game[0] and was_finals_game[1] == team_name:
-            return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+            return get_championship_image_path("nba_finals.png")
         return ""
     except Exception:
         logger.exception("Error getting NBA game type")
         if was_finals_game[0] and was_finals_game[1] == team_name:
-            return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+            return get_championship_image_path("nba_finals.png")
         return ""
 
     if game_type == "NBA Finals":
-        return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+        return get_championship_image_path("nba_finals.png")
 
     return ""
 
@@ -97,13 +101,13 @@ def get_mlb_game_type(team_name: str) -> str:
         validate_mlb_schedule_games(games, team_name)
         game_type = games[0].get("game_type")
         if game_type == "W":
-            result = f"{Path.cwd()}/images/championship_images/world_series.png"
+            result = get_championship_image_path("world_series.png")
         elif game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
-            result = str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
+            result = get_conference_championship_image_path("alcs.png")
         elif game_type == "L" and team_name in (MLB_NL_EAST + MLB_NL_WEST):
-            result = str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
+            result = get_conference_championship_image_path("nlcs.png")
         elif game_type in ["F", "D"]:
-            result = str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
+            result = get_playoff_image_path("mlb_postseason.png")
 
     except DataValidationError as e:
         logger.warning(f"Invalid MLB schedule data for {team_name}: {e}")
@@ -164,13 +168,13 @@ def get_nhl_game_type(team_name: str) -> str:
         if (your_team_abbr in (away_team_abbr, home_team_abbr)):
 
             if current_round == 4:
-                path = str(Path.cwd() / "images" / "championship_images" / "stanley_cup.png")
+                path = get_championship_image_path("stanley_cup.png")
             elif current_round == 3 and conference == "Eastern":
-                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_eastern_championship.png")
+                path = get_conference_championship_image_path("nhl_eastern_championship.png")
             elif current_round == 3 and conference == "Western":
-                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_western_championship.png")
+                path = get_conference_championship_image_path("nhl_western_championship.png")
             elif current_round in [2, 1]:
-                path = str(Path.cwd() / "images" / "playoff_images" / "nhl_playoffs.png")
+                path = get_playoff_image_path("nhl_playoffs.png")
 
     except DataValidationError as e:
         logger.warning(f"Invalid NHL game data for {team_name}: {e}")
@@ -190,12 +194,10 @@ def get_nfl_game_type(team_name: str) -> str:
     """
     # Map playoff rounds to image paths
     playoff_images = {
-        "super_bowl": str(Path.cwd() / "images" / "championship_images" / "super_bowl.png"),
-        "afc_championship": str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png"),
-        "nfl_conference": str(
-            Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png",
-        ),
-        "playoffs": str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png"),
+        "super_bowl": get_championship_image_path("super_bowl.png"),
+        "afc_championship": get_conference_championship_image_path("afc_championship.png"),
+        "nfl_conference": get_conference_championship_image_path("nfl_conference_championship.png"),
+        "playoffs": get_playoff_image_path("nfl_playoffs.png"),
     }
     try:
         result = ""

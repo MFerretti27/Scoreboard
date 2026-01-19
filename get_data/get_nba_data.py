@@ -13,11 +13,11 @@ from get_data.get_game_type import get_game_type
 from get_data.get_player_stats import get_player_stats
 from get_data.get_series_data import get_series
 from get_data.get_team_id import get_nba_team_id
-from helper_functions.data_helpers import check_playing_each_other, get_team_logo
-from helper_functions.exceptions import APIError, DataValidationError
-from helper_functions.logger_config import log_context_scope
-from helper_functions.retry import retry_with_fallback, BackoffConfig
-from helper_functions.validators import validate_nba_game
+from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
+from helper_functions.api_utils.validators import validate_nba_game
+from helper_functions.data.data_helpers import check_playing_each_other, get_team_logo
+from helper_functions.logging.logger_config import log_context_scope
 
 home_team_bonus = False
 away_team_bonus = False
@@ -66,80 +66,110 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                     ) from e
 
                 has_data = True
+                team_info = _get_basic_game_info(game)
 
-                # Can't get network image so display nothing
-                team_info["under_score_image"] = ""
+                # Check if two of your teams are playing each other
+                if check_playing_each_other(game["homeTeam"]["teamName"], game["awayTeam"]["teamName"]):
+                    return team_info, False, currently_playing
 
-                # Get game time
-                utc_time = datetime.strptime(game["gameTimeUTC"], "%Y-%m-%dT%H:%M:%S%z")
-                game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
-                team_info["bottom_info"] = game_time
+                # Get team records and logos
+                team_info = _get_team_data(game, team_info)
 
-                # Get above score text
-                home_team_name = game["homeTeam"]["teamName"]
-                away_team_name = game["awayTeam"]["teamName"]
-                team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
-
-                # Check if two of your teams are playing each other to not display same data twice
-                if check_playing_each_other(home_team_name, away_team_name):
-                    team_has_data = False
-                    return team_info, team_has_data, currently_playing
-
-                # Get team records
-                home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team_name)).get_dict()
-                away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team_name)).get_dict()
-
-                team_info["home_record"] = (
-                    str(home_team_info["resultSets"][0]["rowSet"][0][9])
-                    + "-"
-                    + str(home_team_info["resultSets"][0]["rowSet"][0][10])
-                )
-                team_info["away_record"] = (
-                    str(away_team_info["resultSets"][0]["rowSet"][0][9])
-                    + "-"
-                    + str(away_team_info["resultSets"][0]["rowSet"][0][10])
-                )
-
-                # Get team logos
-                team_info = get_team_logo(home_team_name, away_team_name, "NBA", team_info)
-
-                team_info["home_score"] = game["homeTeam"]["score"]
-                team_info["away_score"] = game["awayTeam"]["score"]
-
-                # Check if game is over
+                # Handle game status
                 if "Final" in game["gameStatusText"]:
-                    team_info["bottom_info"] = game["gameStatusText"].rstrip().upper()
-                    team_info["top_info"] = get_series("NBA", team_name)
-
-                    if settings.display_player_stats:
-                        home_player_stats, away_player_stats = get_player_stats("NBA", team_name)
-                        team_info["home_player_stats"] = home_player_stats
-                        team_info["away_player_stats"] = away_player_stats
-                        team_info.pop("under_score_image", None)  # Remove under score image if displaying player stats
-                        return team_info, has_data, currently_playing
-
-                # Check if game is currently playing
+                    team_info, currently_playing = _process_final_game(game, team_info, team_name)
                 elif " am " not in game["gameStatusText"] or " pm " not in game["gameStatusText"]:
-                    team_info = append_nba_data(team_info, team_name.split(" ")[-1])
-                    currently_playing = True
+                    team_info, currently_playing = _process_live_game(game, team_info, team_name)
+                elif settings.display_odds:
+                    team_info = _process_upcoming_game(game, team_info)
 
-                    # Re-structure clock
-                    if settings.display_nba_play_by_play:
-                        team_info["above_score_txt"] = restructure_clock(game)
-                    else:
-                        team_info["bottom_info"] = restructure_clock(game)
-
-                elif settings.display_odds:  # Game has not started yet, get odds if enabled
-                    home_team_abbr = game.get("homeTeam", {}).get("teamTricode", "")
-                    away_team_abbr = game.get("awayTeam", {}).get("teamTricode", "")
-                    team_info["top_info"] = get_nba_odds(game["gameId"], home_team_abbr, away_team_abbr)
-
-                # Check for NBA Finals/championship (call once and reuse result)
+                # Check for NBA Finals/championship
                 nba_game_type_image = get_game_type("NBA", team_name)
                 if nba_game_type_image != "":
                     team_info["under_score_image"] = nba_game_type_image
 
     return team_info, has_data, currently_playing
+
+
+def _get_basic_game_info(game: dict) -> dict:
+    """Extract basic game information."""
+    team_info = {}
+    team_info["under_score_image"] = ""
+
+    # Get game time
+    utc_time = datetime.strptime(game["gameTimeUTC"], "%Y-%m-%dT%H:%M:%S%z")
+    game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
+    team_info["bottom_info"] = game_time
+
+    # Get above score text
+    home_team_name = game["homeTeam"]["teamName"]
+    away_team_name = game["awayTeam"]["teamName"]
+    team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
+    team_info["home_score"] = game["homeTeam"]["score"]
+    team_info["away_score"] = game["awayTeam"]["score"]
+
+    return team_info
+
+
+def _get_team_data(game: dict, team_info: dict) -> dict:
+    """Get team records and logos."""
+    home_team_name = game["homeTeam"]["teamName"]
+    away_team_name = game["awayTeam"]["teamName"]
+
+    # Get team records
+    home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team_name)).get_dict()
+    away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team_name)).get_dict()
+
+    team_info["home_record"] = (
+        str(home_team_info["resultSets"][0]["rowSet"][0][9])
+        + "-"
+        + str(home_team_info["resultSets"][0]["rowSet"][0][10])
+    )
+    team_info["away_record"] = (
+        str(away_team_info["resultSets"][0]["rowSet"][0][9])
+        + "-"
+        + str(away_team_info["resultSets"][0]["rowSet"][0][10])
+    )
+
+    # Get team logos
+    team_info = get_team_logo(home_team_name, away_team_name, "NBA", team_info)
+
+    return team_info  # noqa: RET504
+
+
+def _process_final_game(game: dict, team_info: dict, team_name: str) -> tuple[dict, bool]:
+    """Process a finished game."""
+    team_info["bottom_info"] = game["gameStatusText"].rstrip().upper()
+    team_info["top_info"] = get_series("NBA", team_name)
+
+    if settings.display_player_stats:
+        home_player_stats, away_player_stats = get_player_stats("NBA", team_name)
+        team_info["home_player_stats"] = home_player_stats
+        team_info["away_player_stats"] = away_player_stats
+        team_info.pop("under_score_image", None)
+
+    return team_info, False
+
+
+def _process_live_game(game: dict, team_info: dict, team_name: str) -> tuple[dict, bool]:
+    """Process a live game."""
+    team_info = append_nba_data(team_info, team_name.split(" ")[-1])
+
+    # Re-structure clock
+    if settings.display_nba_play_by_play:
+        team_info["above_score_txt"] = restructure_clock(game)
+    else:
+        team_info["bottom_info"] = restructure_clock(game)
+
+    return team_info, True
+
+
+def _process_upcoming_game(game: dict, team_info: dict) -> dict:
+    """Process a game not yet started."""
+    home_team_abbr = game.get("homeTeam", {}).get("teamTricode", "")
+    away_team_abbr = game.get("awayTeam", {}).get("teamTricode", "")
+    team_info["top_info"] = get_nba_odds(game["gameId"], home_team_abbr, away_team_abbr)
+    return team_info
 
 
 def append_nba_data(team_info: dict, team_name: str) -> dict:

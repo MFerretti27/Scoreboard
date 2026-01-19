@@ -10,14 +10,14 @@ import contextlib
 import time
 from typing import Never
 
-from helper_functions.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitState
-from helper_functions.exceptions import APIError, NetworkError
-from helper_functions.graceful_degradation import (
+from helper_functions.api_utils import RequestBatch, close_session, get_session
+from helper_functions.api_utils.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitState
+from helper_functions.api_utils.exceptions import APIError, NetworkError
+from helper_functions.api_utils.graceful_degradation import (
     GracefulDegradation,
     PartialResult,
     merge_partial_results,
 )
-from helper_functions.performance import RequestBatch, close_session, get_session
 
 
 def test_circuit_breaker_basic() -> None:
@@ -218,7 +218,7 @@ def test_request_batching() -> None:
 
 def test_stress_retry_logic() -> None:
     """Stress test retry logic with repeated failures."""
-    from helper_functions.retry import retry_with_fallback
+    from helper_functions.api_utils.retry import retry_with_fallback
 
     attempt_count = 0
 

@@ -2,8 +2,8 @@
 """Test input validation for API responses."""
 from __future__ import annotations
 
-from helper_functions.exceptions import DataValidationError
-from helper_functions.validators import (
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.validators import (
     validate_espn_competition,
     validate_espn_event,
     validate_espn_scoreboard_event,
