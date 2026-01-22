@@ -106,7 +106,7 @@ def notify_email(subject: str = "", body: str = "") -> None:
 
     zip_path = _zip_logs(log_dir)
 
-    msg = EmailMessage()
+    msg: EmailMessage = EmailMessage()
     msg["From"] = SMTP_USER
     msg["To"] = ", ".join(TO_EMAILS)
     msg["Subject"] = subject

@@ -61,7 +61,7 @@ def show_scoreboard_popup() -> str | None:
         resizable=True,
         finalize=True,
         auto_close=True,
-        auto_close_duration=60,
+        auto_close_duration=20,
     )
     window.keep_on_top_set()
 

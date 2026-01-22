@@ -265,7 +265,7 @@ def increase_text_size(window: Sg.Window, team_info: dict, team_league: str = ""
         if "above_score_txt" in team_info:
             text = team_info.get("above_score_txt", "")
             has_team_names = "@" in text
-            above_width = screen_width / 2 if has_team_names else screen_width
+            above_width = screen_width / 3 if has_team_names else screen_width
             above_size = settings.TOP_TXT_SIZE if has_team_names else settings.NBA_TIMEOUT_SIZE
             new_above_size, above_changed = _update_font_size(window, "above_score_txt", text,
                                                                above_size, above_width, max_iterations=50, buffer=1.5)

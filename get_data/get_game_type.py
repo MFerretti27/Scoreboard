@@ -24,7 +24,20 @@ from helper_functions.api_utils.validators import (
 from helper_functions.logging.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
-from .get_team_league import MLB_AL_EAST, MLB_AL_WEST, MLB_NL_EAST, MLB_NL_WEST
+from .get_team_league import (
+    MLB_AL_EAST,
+    MLB_AL_WEST,
+    MLB_NL_EAST,
+    MLB_NL_WEST,
+    NFL_AFC_EAST,
+    NFL_AFC_NORTH,
+    NFL_AFC_SOUTH,
+    NFL_AFC_WEST,
+    NFL_NFC_EAST,
+    NFL_NFC_NORTH,
+    NFL_NFC_SOUTH,
+    NFL_NFC_WEST,
+)
 
 # NBA only has data for one day so store if it was a championship game to display for longer
 was_finals_game: list[bool | str] = [False, ""]
@@ -196,6 +209,7 @@ def get_nfl_game_type(team_name: str) -> str:
     playoff_images = {
         "super_bowl": get_championship_image_path("super_bowl.png"),
         "afc_championship": get_conference_championship_image_path("afc_championship.png"),
+        "nfc_championship": get_conference_championship_image_path("nfc_championship.png"),
         "nfl_conference": get_conference_championship_image_path("nfl_conference_championship.png"),
         "playoffs": get_playoff_image_path("nfl_playoffs.png"),
     }
@@ -228,8 +242,15 @@ def get_nfl_game_type(team_name: str) -> str:
                 logger.info("Game type: playoffs - super bowl")
                 result = playoff_images["super_bowl"]
             elif "conference championship" in headline or week_num == 3:
-                logger.info("Game type: playoffs - conference championship")
-                result = playoff_images["afc_championship"] if week_num == 3 else playoff_images["nfl_conference"]
+                if team_name in (NFL_AFC_EAST + NFL_AFC_WEST + NFL_AFC_NORTH + NFL_AFC_SOUTH):
+                    logger.info("Game type: playoffs - afc championship")
+                    result = playoff_images["afc_championship"]
+                elif team_name in (NFL_NFC_EAST + NFL_NFC_WEST + NFL_NFC_NORTH + NFL_NFC_SOUTH):
+                    logger.info("Game type: playoffs - nfc championship")
+                    result = playoff_images["nfc_championship"]
+                else:
+                    logger.info("Game type: playoffs - Some type of conference championship")
+                    result = playoff_images["playoffs"]
             else:
                 # Wild card (week 1), divisional (week 2), or generic playoffs
                 stage = "wild card" if ("wild card" in headline or week_num == 1) else "divisional/other"
