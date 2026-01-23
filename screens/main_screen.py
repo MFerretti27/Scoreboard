@@ -113,7 +113,7 @@ def check_events(window: Sg.Window, team_names: list,
     elif messages.BUTTON_START in event or "Return" in event:
         handle_starting_script(window, saved_data)
 
-    elif messages.BUTTON_MANUAL in event:
+    elif messages.BUTTON_INSTRUCTIONS in event:
         number_of_times_pressed = 0
         show_view("MANUAL", window)
         window = manual_screen(window)
