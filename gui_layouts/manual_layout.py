@@ -27,35 +27,37 @@ def create_instructions_layout(window_width: int) -> list:
     button_size = calculate_button_size(scale, min_size=22, base_multiplier=30)
     instructions_size = calculate_message_size(scale, min_size=10, base_multiplier=20)
 
+    instructions_font = "Consolas"
+
     # Define content for each tab
     getting_started_tab = [
         [Sg.Multiline(getting_started_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     settings_tab = [
         [Sg.Multiline(settings_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     scoreboard_tab = [
         [Sg.Multiline(scoreboard_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     clock_tab = [
         [Sg.Multiline(clock_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     data_sources_tab = [
         [Sg.Multiline(data_sources_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     tips_tab = [
         [Sg.Multiline(tips_text, size=(window_width - 20, instructions_size), disabled=True,
-                      no_scrollbar=False, font=("Courier", text_size))],
+                      no_scrollbar=False, font=(instructions_font, text_size))],
     ]
 
     # Create tab group
@@ -75,7 +77,8 @@ def create_instructions_layout(window_width: int) -> list:
     )
 
     return [
-        [Sg.Text("Manual", font=(settings.FONT, title_size, "underline"), justification="center", expand_x=True)],
+        [Sg.Text(messages.BUTTON_INSTRUCTIONS, font=(settings.FONT, title_size, "underline"),
+                 justification="center", expand_x=True)],
         [tab_group],
         [Sg.VPush()],
         [

@@ -50,7 +50,7 @@ def create_settings_layout(window_width: int) -> list:
                     [
                         [
                             Sg.Text(
-                                "Display Time:",
+                                "Display Timer:",
                                 font=(settings.FONT, top_label_size),
                                 background_color=color,
                             ),
@@ -72,7 +72,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(background_color=color),
                             Sg.Text(
-                                "How often to display each team when no team is playing",
+                                "How often to display each team when no team has live games",
                                 key=ui_keys.DISPLAY_NOT_PLAYING_TIMER_MESSAGE,
                                 font=(settings.FONT, message_size, "italic"),
                                 background_color=color,
@@ -108,7 +108,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(background_color=color),
                             Sg.Text(
-                                "How often to display each team when teams are playing",
+                                "How often to display each team when multiple teams have live games",
                                 key=ui_keys.DISPLAY_PLAYING_TIMER_MESSAGE,
                                 font=(settings.FONT, message_size, "italic"),
                                 background_color=color,
@@ -148,7 +148,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(background_color=color),
                             Sg.Text(
-                                "Delay to display live data",
+                                "How many seconds live game updates are behind (for TV sync or spoilers)",
                                 key=ui_keys.LIVE_DATA_DELAY_MESSAGE,
                                 font=(settings.FONT, message_size, "italic"),
                                 background_color=color,
@@ -184,7 +184,7 @@ def create_settings_layout(window_width: int) -> list:
                         [
                             Sg.Push(background_color=color),
                             Sg.Text(
-                                "How long to display team info when finished",
+                                "How long to display game info once finished (if not replaced by new game info)",
                                 key=ui_keys.HOW_LONG_TO_DISPLAY_TEAM_MESSAGE,
                                 background_color=color,
                                 font=(settings.FONT, message_size, "italic"),

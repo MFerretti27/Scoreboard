@@ -44,6 +44,8 @@ def create_scoreboard_popup() -> list:
         Sg.Button(messages.BUTTON_RETURN_SCOREBOARD, key=ui_keys.CANCEL_BUTTON,
                   font=(settings.FONT, return_button_size), pad=(5), expand_x=True, size=(0, 1)),
          ],
+         [Sg.Button("", key="dummy", pad=(0), size=(0, 0), visible=False),
+         ],
     ]
 
 
@@ -64,10 +66,14 @@ def show_scoreboard_popup() -> str | None:
         auto_close_duration=20,
     )
     window.keep_on_top_set()
+    window.TKroot.overrideredirect(True)  # noqa: FBT003
 
     while True:
         window.bring_to_front()
-        event, _ = window.read()
+        # Focus dummy element to prevent button auto-press
+        # This is needed for touchscreens to prevent ghost press
+        window["dummy"].set_focus()
+        event, _ = window.read(timeout=100)
 
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:
             window.close()

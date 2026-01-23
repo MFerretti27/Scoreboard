@@ -25,7 +25,7 @@ BUTTON_CANCEL = "Cancel"  # Used in update_name_popup to cancel operation
 
 # Main menu navigation buttons (main_screen_layout.py)
 BUTTON_START = "Start"  # Main menu: start scoreboard display
-BUTTON_MANUAL = "Manual"  # Main menu: show instructions
+BUTTON_INSTRUCTIONS = "Instructions"  # Main menu: show instructions
 SETTINGS_TITLE = "Settings"  # Main menu: open settings screen
 BUTTON_SET_TEAM_ORDER = "Set Team Order"  # Main menu: reorder team display
 

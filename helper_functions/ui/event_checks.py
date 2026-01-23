@@ -33,63 +33,61 @@ def _manually_change_team(
     if team_status is None:
         return
 
-    rotate_team_triggers = (ui_keys.HOME_RECORD, ui_keys.AWAY_RECORD)
     info = ""
     changed_team = False
 
-    if any(key in event for key in rotate_team_triggers):
-        number_of_teams = len(settings.teams)
-        # Only restrict to live teams when more than one is live; otherwise allow switching across teams with data
-        prefer_playing = settings.prioritize_playing_team and sum(team_status.teams_currently_playing) >= 1
-        teams_filter = team_status.teams_currently_playing if prefer_playing else team_status.teams_with_data
+    number_of_teams = len(settings.teams)
+    # Only restrict to live teams when more than one is live; otherwise allow switching across teams with data
+    prefer_playing = settings.prioritize_playing_team and sum(team_status.teams_currently_playing) >= 1
+    teams_filter = team_status.teams_currently_playing if prefer_playing else team_status.teams_with_data
 
-        step = 1 if ui_keys.HOME_RECORD in event else -1  # Next or previous
-        new_index = state.display_index
+    step = 1 if ui_keys.HOME_RECORD in event else -1  # Next or previous
+    new_index = state.display_index
 
-        for i in range(1, number_of_teams + 1):
-            candidate = (state.display_index + step * i) % number_of_teams
-            if teams_filter[candidate]:
-                new_index = candidate
-                break
+    for i in range(1, number_of_teams + 1):
+        candidate = (state.display_index + step * i) % number_of_teams
+        if teams_filter[candidate]:
+            new_index = candidate
+            break
 
-        if new_index != state.display_index:
-            if (step == -1 and state.display_index != state.original_index and
-                team_status.teams_with_data[state.original_index]):
-                state.display_index = state.original_index
-            else:
-                state.original_index = state.display_index
-                state.display_index = new_index
-
-            info = f"Switching to team: {settings.teams[state.display_index][0]}"
-            window[ui_keys.BOTTOM_INFO].update(
-                value=info,
-                font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
-            )
-            logger.info(f"\nManually switched to team: {settings.teams[state.display_index][0]}\n"
-                        f"Was on team index {state.original_index}, now on {state.display_index}\n",
-                        )
-
-            state.display_clock = ticks_ms()
-            changed_team = True
+    if new_index != state.display_index:
+        if (step == -1 and state.display_index != state.original_index and
+            team_status.teams_with_data[state.original_index]):
+            state.display_index = state.original_index
         else:
-            feedback_info = "Cannot switch teams"
-            if prefer_playing and sum(team_status.teams_currently_playing) <= 1:
-                info = "This is the only team currently playing (prioritize playing team is enabled)"
-            elif sum(team_status.teams_with_data) <= 1:
-                info = "This is the only team with data available"
-            else:
-                info = "No other eligible teams found"
+            state.original_index = state.display_index
+            state.display_index = new_index
 
-            window[ui_keys.TOP_INFO].update(
-                value=feedback_info,
-                font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
-            )
-            window[ui_keys.BOTTOM_INFO].update(
-                value=info,
-                font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
-            )
-            logger.info(f"Cannot Switch Team - {info}")
-            wait(window, 4.5, team_status=team_status, state=state, team_info=team_info)  # Pause, let user read message
+        info = f"Switching to team: {settings.teams[state.display_index][0]}"
+        window[ui_keys.BOTTOM_INFO].update(
+            value=info,
+            font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+        )
+        logger.info(f"\nManually switched to team: {settings.teams[state.display_index][0]}\n"
+                    f"Was on team index {state.original_index}, now on {state.display_index}\n",
+                    )
+
+        state.display_clock = ticks_ms()
+        changed_team = True
+    else:
+        feedback_info = "Cannot switch teams"
+        if prefer_playing and sum(team_status.teams_currently_playing) <= 1:
+            info = "This is the only team currently playing (prioritize playing team is enabled)"
+        elif sum(team_status.teams_with_data) <= 1:
+            info = "This is the only team with data available"
+        else:
+            info = "No other eligible teams found"
+
+        window[ui_keys.TOP_INFO].update(
+            value=feedback_info,
+            font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+        )
+        window[ui_keys.BOTTOM_INFO].update(
+            value=info,
+            font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+        )
+        logger.info(f"Cannot Switch Team - {info}")
+        wait(window, 3, team_status=team_status, state=state, team_info=team_info)  # Pause, let user read message
 
     if info and will_text_fit_on_screen(info, txt_size=settings.NOT_PLAYING_TOP_INFO_SIZE):
         scroll(window, info, team_status=team_status, state=state, team_info=team_info)
@@ -237,10 +235,11 @@ def go_to_main_screen(window: Sg.Window) -> None:
     main_screen.main(new_window, settings.saved_data)
 
 
-def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool, event: str) -> None:
+def _toggle_team_stats(window: Sg.Window, team: str, team_status: object, state: object, *, event: str) -> None:
     """Temporarily show team stats instead of the logo."""
     logger.info("%s key pressed, displaying team info", event)
 
+    currently_playing = team_status.teams_currently_playing[state.display_index]
     alignment = "center" if currently_playing else "left"
     elem = window[f"{team}_team_stats"]
     current_text = elem.get()
@@ -253,7 +252,7 @@ def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool,
     window[f"{team}_logo_section"].update(visible=False)
     window[f"{team}_stats_section"].update(visible=True)
     window.refresh()
-    wait(window, 10)
+    wait(window, 10, state=state, team_status=team_status)
     window[f"{team}_logo_section"].update(visible=True)
     window[f"{team}_stats_section"].update(visible=False)
 
@@ -274,7 +273,7 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
         logger.info("%s key pressed, %s", event, msg)
         window[ui_keys.BOTTOM_INFO].update(value=msg)
         window.refresh()
-        time.sleep(5)
+        time.sleep(3)
 
     spoiler_triggers = ("Up", "Down")
     if any(key in event for key in spoiler_triggers):
@@ -287,7 +286,10 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
             window[ui_keys.TOP_INFO].update(value="")
             window[ui_keys.BOTTOM_INFO].update(value=messages.EXITING_SPOILER)
         window.refresh()
-        time.sleep(5)
+        time.sleep(3)
+
+    if event == Sg.WIN_CLOSED or "Escape" in event:
+        go_to_main_screen(window)
 
 
 def check_events(window: Sg.Window, events: list | str, *, team_status: object = None,
@@ -306,13 +308,6 @@ def check_events(window: Sg.Window, events: list | str, *, team_status: object =
         event_raw = ""
     event = event_raw.split(":")[0] if ":" in event_raw else event_raw
 
-    # Check for manual team changes (timeout button presses)
-    if team_status is not None and state is not None and team_info is not None:
-        _manually_change_team(window, event, team_status, state, team_info)
-
-    if event == Sg.WIN_CLOSED or "Escape" in event:
-        go_to_main_screen(window)
-
     menu_triggers = (ui_keys.AWAY_SCORE, ui_keys.HOME_SCORE, ui_keys.AWAY_TIMEOUTS,
                      ui_keys.HOME_TIMEOUTS, ui_keys.ABOVE_SCORE_TXT,
                      )
@@ -320,10 +315,13 @@ def check_events(window: Sg.Window, events: list | str, *, team_status: object =
         __toggle_menu(window)
 
     if any(key in event for key in (ui_keys.AWAY_LOGO, ui_keys.AWAY_TEAM_STATS)):
-        _toggle_team_stats(window, "away", currently_playing=currently_playing, event=event)
+        _toggle_team_stats(window, "away", team_status, state, event=event)
 
     if any(key in event for key in (ui_keys.HOME_LOGO, ui_keys.HOME_TEAM_STATS)):
-        _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
+        _toggle_team_stats(window, "home", team_status, state, event=event)
+
+    if any(key in event for key in (ui_keys.HOME_RECORD, ui_keys.AWAY_RECORD)):
+        _manually_change_team(window, event, team_status, state, team_info)
 
     if any(key in event for key in (ui_keys.TOP_INFO, ui_keys.BOTTOM_INFO)):
         __toggle_stay_on_team(window, event, team_status, currently_playing=currently_playing)

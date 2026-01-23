@@ -82,6 +82,7 @@ def show_fetch_popup(league: str) -> None:
         auto_close=True,
         auto_close_duration=60,
     )
+    window.TKroot.overrideredirect(True)  # noqa: FBT003
 
     update = False
     while True:

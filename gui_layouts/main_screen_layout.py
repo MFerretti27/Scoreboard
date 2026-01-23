@@ -68,7 +68,7 @@ def create_main_layout(window_width: int) -> list:
             Sg.Push(),
         ],
         [
-            Sg.Button(messages.BUTTON_MANUAL, font=(settings.FONT, button_size), expand_x=True),
+            Sg.Button(messages.BUTTON_INSTRUCTIONS, font=(settings.FONT, button_size), expand_x=True),
             Sg.Button(messages.SETTINGS_TITLE, font=(settings.FONT, button_size), expand_x=True),
         ],
         [Sg.Button(messages.BUTTON_START, font=(settings.FONT, button_size), expand_x=True)],
