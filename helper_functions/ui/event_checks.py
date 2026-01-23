@@ -17,6 +17,7 @@ from constants import colors, messages, ui_keys
 from gui_layouts import main_screen_layout
 from gui_layouts.change_functionality_popup import show_scoreboard_popup
 from helper_functions.logging.logger_config import logger
+from helper_functions.ui.fetch_data_thread import stop_background_thread
 from helper_functions.ui.scoreboard_helpers import will_text_fit_on_screen
 from screens import main_screen, scoreboard_screen
 
@@ -54,11 +55,8 @@ def _manually_change_team(
         if new_index != state.display_index:
             if (step == -1 and state.display_index != state.original_index and
                 team_status.teams_with_data[state.original_index]):
-                logger.info("Manually going to previous team")
                 state.display_index = state.original_index
             else:
-                direction_txt = "next" if step == 1 else "previous"
-                logger.info(f"Manually going to {direction_txt} team")
                 state.original_index = state.display_index
                 state.display_index = new_index
 
@@ -67,8 +65,8 @@ def _manually_change_team(
                 value=info,
                 font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
             )
-            logger.info(f"Manually switched to team {settings.teams[state.display_index][0]}\n"
-                        f"Was on team index {state.original_index}, now on {state.display_index}",
+            logger.info(f"\nManually switched to team: {settings.teams[state.display_index][0]}\n"
+                        f"Was on team index {state.original_index}, now on {state.display_index}\n",
                         )
 
             state.display_clock = ticks_ms()
@@ -120,6 +118,65 @@ def _manually_change_team(
         state.display_first_time = False
 
 
+def __toggle_stay_on_team(window: Sg.Window, event: str, team_status: scoreboard_screen.TeamStatus, *,
+                          currently_playing: bool) -> None:
+    """Toggle the stay on team feature."""
+    settings.stay_on_team = not settings.stay_on_team
+    rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
+    msg = (
+        messages.STAYING_ON_TEAM
+        if settings.stay_on_team
+        else f"{messages.ROTATING_TEAMS} {rotating_time} seconds"
+    )
+    logger.info("%s key pressed, %s", event, msg)
+    if sum(team_status.teams_with_data) <= 1 and settings.stay_on_team:
+        top_msg = f"{sum(team_status.teams_with_data)} team(s) have game information to display"
+        bottom_msg = "Stay on team feature cannot be used when rotating is not possible"
+        settings.stay_on_team = False
+        window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+        window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
+                                            font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+        logger.info(msg)
+        window.refresh()
+
+    if sum(team_status.teams_currently_playing) == 1 and settings.stay_on_team and settings.prioritize_playing_team:
+        top_msg = "Only one team has live game, 'Prioritize Playing Team' is enabled in settings"
+        bottom_msg = "Stay on team feature cannot be used when rotating is not possible"
+        settings.stay_on_team = False
+        window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+        window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
+                                            font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+        logger.info(msg)
+        window.refresh()
+
+    time.sleep(3)
+
+
+def __toggle_menu(window: Sg.Window) -> None:
+    """Show the change functionality popup and handle changes."""
+    temp_spoiler = settings.no_spoiler_mode
+    temp_delay = settings.delay
+    action = show_scoreboard_popup()
+    if action == "MENU":
+        go_to_main_screen(window)
+    if settings.no_spoiler_mode:
+        logger.info(messages.ENTERING_SPOILER)
+        window = set_spoiler_mode(window, {})
+    elif temp_spoiler != settings.no_spoiler_mode:
+        logger.info(messages.EXITING_SPOILER)
+        window[ui_keys.TOP_INFO].update(value="")
+        window[ui_keys.BOTTOM_INFO].update(value=messages.EXITING_SPOILER)
+    if temp_delay != settings.delay:
+        logger.info("Toggling Delay Mode")
+        msg = (
+            f"{messages.DELAY_TURNING_ON} ({settings.LIVE_DATA_DELAY} seconds)"
+            if settings.delay
+            else messages.DELAY_TURNING_OFF
+        )
+        window[ui_keys.TOP_INFO].update(value=msg)
+    window.refresh()
+
+
 def convert_paths_to_strings(obj: object) -> object:
     """Recursively convert Path and datetime objects in a nested structure to strings."""
     if isinstance(obj, dict):
@@ -137,7 +194,7 @@ def convert_paths_to_strings(obj: object) -> object:
 def go_to_main_screen_hard(window: Sg.Window) -> None:
     """Close current window and launch main screen module via subprocess."""
     # Stop scoreboard background thread if running
-    scoreboard_screen.stop_background_thread()
+    stop_background_thread()
     window.close()
     gc.collect()
     time.sleep(0.5)
@@ -163,7 +220,7 @@ def go_to_main_screen(window: Sg.Window) -> None:
                        return_keyboard_events=True, alpha_channel=0).Finalize()
 
     # Stop scoreboard background thread if running
-    scoreboard_screen.stop_background_thread()
+    stop_background_thread()
 
     window.close()
     gc.collect()  # Clean up memory
@@ -196,7 +253,7 @@ def _toggle_team_stats(window: Sg.Window, team: str, *, currently_playing: bool,
     window[f"{team}_logo_section"].update(visible=False)
     window[f"{team}_stats_section"].update(visible=True)
     window.refresh()
-    wait(window, 10, currently_playing=currently_playing)
+    wait(window, 10)
     window[f"{team}_logo_section"].update(visible=True)
     window[f"{team}_stats_section"].update(visible=False)
 
@@ -233,8 +290,14 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
         time.sleep(5)
 
 
-def check_events(window: Sg.Window, events: list | str, *, currently_playing: bool = False, team_status: object = None, state: object = None, team_info: list = None) -> None:
+def check_events(window: Sg.Window, events: list | str, *, team_status: object = None,
+                 state: object = None, team_info: list | None = None) -> None:
     """Handle button and keyboard events on the scoreboard screen."""
+    if team_status is None or state is None:
+        return
+    currently_playing = team_status.teams_currently_playing[state.display_index]
+
+    # Sanitize event input
     if isinstance(events, (list, tuple)) and events:
         event_raw = str(events[0])
     elif isinstance(events, str):
@@ -250,35 +313,11 @@ def check_events(window: Sg.Window, events: list | str, *, currently_playing: bo
     if event == Sg.WIN_CLOSED or "Escape" in event:
         go_to_main_screen(window)
 
-    spoiler_triggers = (
-        ui_keys.AWAY_SCORE,
-        ui_keys.HOME_SCORE,
-        ui_keys.AWAY_TIMEOUTS,
-        ui_keys.HOME_TIMEOUTS,
-        ui_keys.ABOVE_SCORE_TXT,
-    )
-    if any(key in event for key in spoiler_triggers):
-        temp_spoiler = settings.no_spoiler_mode
-        temp_delay = settings.delay
-        action = show_scoreboard_popup()
-        if action == "MENU":
-            go_to_main_screen(window)
-        if settings.no_spoiler_mode:
-            logger.info(messages.ENTERING_SPOILER)
-            window = set_spoiler_mode(window, {})
-        elif temp_spoiler != settings.no_spoiler_mode:
-            logger.info(messages.EXITING_SPOILER)
-            window[ui_keys.TOP_INFO].update(value="")
-            window[ui_keys.BOTTOM_INFO].update(value=messages.EXITING_SPOILER)
-        if temp_delay != settings.delay:
-            logger.info("Toggling Delay Mode")
-            msg = (
-                f"{messages.DELAY_TURNING_ON} ({settings.LIVE_DATA_DELAY} seconds)"
-                if settings.delay
-                else messages.DELAY_TURNING_OFF
-            )
-            window[ui_keys.TOP_INFO].update(value=msg)
-        window.refresh()
+    menu_triggers = (ui_keys.AWAY_SCORE, ui_keys.HOME_SCORE, ui_keys.AWAY_TIMEOUTS,
+                     ui_keys.HOME_TIMEOUTS, ui_keys.ABOVE_SCORE_TXT,
+                     )
+    if any(key in event for key in menu_triggers):
+        __toggle_menu(window)
 
     if any(key in event for key in (ui_keys.AWAY_LOGO, ui_keys.AWAY_TEAM_STATS)):
         _toggle_team_stats(window, "away", currently_playing=currently_playing, event=event)
@@ -286,38 +325,8 @@ def check_events(window: Sg.Window, events: list | str, *, currently_playing: bo
     if any(key in event for key in (ui_keys.HOME_LOGO, ui_keys.HOME_TEAM_STATS)):
         _toggle_team_stats(window, "home", currently_playing=currently_playing, event=event)
 
-    stay_on_team_triggers = (ui_keys.TOP_INFO, ui_keys.BOTTOM_INFO)
-
-    if any(key in event for key in stay_on_team_triggers):
-        settings.stay_on_team = not settings.stay_on_team
-        rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
-        msg = (
-            messages.STAYING_ON_TEAM
-            if settings.stay_on_team
-            else f"{messages.ROTATING_TEAMS} {rotating_time} seconds"
-        )
-        logger.info("%s key pressed, %s", event, msg)
-        if sum(team_status.teams_with_data) <= 1 and settings.stay_on_team:
-            top_msg = f"{sum(team_status.teams_with_data)} team(s) have game information to display"
-            bottom_msg = "Stay on team feature cannot be used when rotating is not possible"
-            settings.stay_on_team = False
-            window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-            window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
-                                               font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-            logger.info(msg)
-            window.refresh()
-            time.sleep(5)
-
-        if sum(team_status.teams_currently_playing) == 1 and settings.stay_on_team and settings.prioritize_playing_team:
-            top_msg = "Only one team has live game, 'Prioritize Playing Team' is enabled in settings"
-            bottom_msg = "Stay on team feature cannot be used when rotating is not possible"
-            settings.stay_on_team = False
-            window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-            window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
-                                               font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-            logger.info(msg)
-            window.refresh()
-            time.sleep(5)
+    if any(key in event for key in (ui_keys.TOP_INFO, ui_keys.BOTTOM_INFO)):
+        __toggle_stay_on_team(window, event, team_status, currently_playing=currently_playing)
 
     check_keyboard_events(window, event)
 
@@ -348,8 +357,8 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     return window
 
 
-def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO, *, team_status: object = None,
-           state: object = None, team_info: list | None = None) -> None:
+def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO, *,
+           team_status: object = None, state: object = None, team_info: list | None = None) -> None:
     """Scroll the display to show the next set of information while checking for manual team changes."""
     text = original_text + "         "
     for i in range(2):
@@ -376,11 +385,10 @@ def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO
             wait(window, 5, team_status=team_status, state=state, team_info=team_info)
 
 
-def wait(window: Sg.Window, time_waiting: int, *, currently_playing: bool = False, team_status: object = None,
+def wait(window: Sg.Window, time_waiting: int, *, team_status: object = None,
          state: object = None, team_info: list | None = None) -> None:
     """Wait while still servicing events."""
     for _ in range(int(time_waiting / 0.2)):
         event = window.read(timeout=0.1)
-        check_events(window, event, currently_playing=currently_playing,
-                     team_status=team_status, state=state, team_info=team_info)
+        check_events(window, event, team_status=team_status, state=state, team_info=team_info)
         time.sleep(0.1)

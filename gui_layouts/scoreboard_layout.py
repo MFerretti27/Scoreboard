@@ -6,7 +6,6 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 import settings
 from constants import colors, ui_keys
 from constants.file_paths import get_sport_logo_path
-from get_data.get_team_league import append_team_array
 from get_data.get_team_logos import get_random_logo
 from helper_functions.logging.logger_config import logger
 from helper_functions.ui.scoreboard_helpers import resize_text
@@ -20,7 +19,6 @@ def create_scoreboard_layout() -> list:
     """
     Sg.theme(colors.THEME_BLACK)
     set_screen()  # Set the screen to display on
-    append_team_array(settings.teams)  # Get the team league and sport name
     resize_text()  # Resize text to fit screen size
     files = get_random_logo()
 

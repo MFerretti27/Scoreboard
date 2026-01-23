@@ -67,8 +67,9 @@ def get_game_type(team_league: str, team_name: str) -> str:
 
 
 def get_nba_game_type(team_name: str) -> str:
-    """Check if NBA game is championship.
+    """Check if NBA game is championship or playoff.
 
+    :param team_name: The name of the NBA team
     :return: Path for championship image or empty string if not a championship game
     """
     try:
@@ -99,8 +100,9 @@ def get_nba_game_type(team_name: str) -> str:
 
 
 def get_mlb_game_type(team_name: str) -> str:
-    """Check if MLB game is championship.
+    """Check if MLB game is championship or playoff.
 
+    :param team_name: The name of the MLB team
     :return: Path for championship image or empty string if not a championship game
     """
     result = ""
@@ -131,8 +133,9 @@ def get_mlb_game_type(team_name: str) -> str:
 
 
 def get_nhl_game_type(team_name: str) -> str:
-    """Check if NHL game is championship.
+    """Check if NHL game is championship or playoff.
 
+    :param team_name: The name of the NHL team
     :return: Path for championship image or empty string if not a championship game
     """
     try:
@@ -200,10 +203,10 @@ def get_nhl_game_type(team_name: str) -> str:
 
 
 def get_nfl_game_type(team_name: str) -> str:
-    """Return a concise stage label for a game.
+    """Check if NFL game is championship or playoff.
 
-    Uses ESPN's season.type and optional notes/week to distinguish:
-    - preseason, regular-season, playoffs (wild card/divisional/conference championship/super bowl)
+    :param team_name: The name of the NFL team
+    :return: Path for championship image or empty string if not a championship game
     """
     # Map playoff rounds to image paths
     playoff_images = {

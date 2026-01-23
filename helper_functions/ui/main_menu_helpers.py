@@ -77,7 +77,14 @@ def update_teams(selected_teams: list, league: str, specific_remove: list | None
         for remove_team in specific_remove:
             new_teams.remove(remove_team)
 
-    settings.write_settings({"teams": [[team] for team in new_teams]})
+    sport_name = {
+        "MLB": "baseball",
+        "NBA": "basketball",
+        "NHL": "hockey",
+        "NFL": "football",
+    }.get(league, "football")
+    new_teams_list = [[team, league, sport_name] for team in new_teams]
+    settings.write_settings({"teams": new_teams_list})
 
     added_teams = [team for team in new_teams if team not in existing_teams]
     removed_teams += [team for team in available_checkbox_teams if (team in existing_teams

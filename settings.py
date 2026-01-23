@@ -85,11 +85,11 @@ delay: bool
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
     "teams": [
-        ["Detroit Lions"],
-        ["Detroit Tigers"],
-        ["Pittsburgh Steelers"],
-        ["Detroit Pistons"],
-        ["Detroit Red Wings"],
+        ["Detroit Lions", "NFL", "football"],
+        ["Detroit Tigers", "MLB", "baseball"],
+        ["Pittsburgh Steelers", "NFL", "football"],
+        ["Detroit Pistons", "NBA", "basketball"],
+        ["Detroit Red Wings", "NHL", "hockey"],
     ],
 
     # Text sizing
@@ -185,7 +185,7 @@ def _normalize_teams(raw_teams: object) -> list[list[str]]:
         return DEFAULT_SETTINGS["teams"].copy()
     for entry in raw_teams:
         if isinstance(entry, list) and entry:
-            normalized.append([str(entry[0])])
+            normalized.append([str(e) for e in entry])
         elif isinstance(entry, str):
             normalized.append([entry])
     return normalized or DEFAULT_SETTINGS["teams"].copy()

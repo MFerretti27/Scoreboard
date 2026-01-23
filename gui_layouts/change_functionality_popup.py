@@ -67,7 +67,6 @@ def show_scoreboard_popup() -> str | None:
 
     while True:
         window.bring_to_front()
-        window.force_focus()
         event, _ = window.read()
 
         if event in (Sg.WIN_CLOSED, "Exit") or "Escape" in event:

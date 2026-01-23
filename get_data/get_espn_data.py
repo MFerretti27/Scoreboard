@@ -20,7 +20,7 @@ from helper_functions.api_utils.validators import (
     validate_espn_event,
     validate_espn_scoreboard_response,
 )
-from helper_functions.data.data_helpers import check_for_doubleheader, check_playing_each_other
+from helper_functions.data.data_helpers import check_for_doubleheader, check_playing_each_other, validate_team_names
 from helper_functions.logging.logger_config import log_context_scope, logger, track_api_call
 
 from .get_game_type import get_game_type
@@ -126,7 +126,6 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
 
             # Check if game is within the next month, if not then its too far out to display
             if not is_valid_game_date(competition["date"]):
-                logger.info("Game is too far in the future or too old, skipping")
                 return team_info, False, False
 
             # Get Score
@@ -144,6 +143,9 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             away_name = competition["competitors"][1]["team"]["displayName"]
             home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
             away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
+
+            # Validate team names
+            home_name, away_name = validate_team_names(home_name, away_name, team_league.upper())
 
             # Display team names above score
             team_info["above_score_txt"] = f"{away_short_name} @ {home_short_name}"
@@ -438,7 +440,11 @@ def is_valid_game_date(date_str: str) -> bool:
     """
     target_date = isoparse(date_str)
     now = datetime.now(UTC)
-    return now - timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM) <= target_date <= now + timedelta(days=30)
+    valid_date = now - timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM) <= target_date <= now + timedelta(days=30)
+
+    if not valid_date:
+        logger.info("Game is too far in the future or too old, skipping")
+    return valid_date
 
 
 def handle_doubleheader(info: dict, league: str, name: str, events: list, comp: dict) -> bool:
@@ -542,7 +548,7 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
             spread = competition.get("odds", [{}])[0].get("details", "N/A")
             team_info["top_info"] = f"Spread: {spread} \t\t OverUnder: {over_under}"
             if team_league.upper() in ["NHL", "MLB"]:
-                team_info["top_info"] = f"MoneyLine: {spread} \t OverUnder: {over_under}"
+                team_info["top_info"] = f"MoneyLine: {spread} \t\t OverUnder: {over_under}"
 
     # If game is over try displaying series information if available
     if "FINAL" in team_info["bottom_info"] and settings.display_series:

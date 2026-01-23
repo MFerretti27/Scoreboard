@@ -5,8 +5,10 @@ from pathlib import Path
 
 import settings
 from constants.file_paths import NETWORKS_DIR, get_network_image_path
+from get_data.get_team_league import get_team_league
 from helper_functions.logging.logger_config import logger
 from helper_functions.ui.main_menu_helpers import remove_accents
+from screens import main_screen
 
 should_skip = False
 
@@ -76,6 +78,8 @@ def get_network_logos(broadcast: str | list, league: str) -> Path | str:
 def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_info: dict) -> dict:
     """Get the team logo for the given team name.
 
+    THIS FUNCTION CANNOT FAIL. MUST RETURN A VALID FILEPATH TO A PNG.
+
     :param home_team_name: Name of the home team
     :param away_team_name: Name of the away team
     :param league: League of the teams (e.g., MLB)
@@ -83,12 +87,14 @@ def get_team_logo(home_team_name: str, away_team_name: str, league: str, team_in
 
     :return team_info: Updated dictionary all data to display for the team
     """
-    # Trying to use file that does not exist leads to crash
-    # so check if team exists before trying to get logo
+    # Find closest matching team names in local files so logos can be found
+    home_team_name, away_team_name = validate_team_names(home_team_name, away_team_name, league)
+
     folder_path = Path.cwd() / "images" / "sport_logos" / league
     file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
-    available_teams = {str(remove_accents(f.stem)).upper() for f in file_names}
 
+    # More Thorough check if team names exist in local files, this will error more gracefully than giving invalid path
+    available_teams = {str(remove_accents(f.stem)).upper() for f in file_names}
     if away_team_name.upper() not in available_teams and not any(away_team_name.upper() in team
                                                                  for team in available_teams):
         logger.warning("Away team name %s not found in %s folder", away_team_name, league)
@@ -126,3 +132,43 @@ def check_for_doubleheader(response_as_json: dict, team_name: str) -> bool:
 
     return count == 2
 
+
+def validate_team_names(away_team_name: str, home_team_name: str, league: str) -> tuple[str, str]:
+    """Validate that the team name exists in the given league.
+
+    :param away_team_name: Name of the away team
+    :param home_team_name: Name of the home team
+    :param league: League of the teams (e.g., MLB)
+
+    :return: Tuple containing validated away and home team names
+    """
+    folder_path = Path.cwd() / "images" / "sport_logos" / league
+    file_names = [f for f in Path(folder_path).iterdir() if Path.is_file(Path.cwd() / folder_path / f)]
+    available_teams = {str(remove_accents(f.stem)).upper() for f in file_names}
+
+
+    # Check if Team names from API exist in available teams
+    home_valid = home_team_name.upper() in available_teams or any(home_team_name.upper() in team
+                                                                  for team in available_teams)
+    away_valid = away_team_name.upper() in available_teams or any(away_team_name.upper() in team
+                                                                  for team in available_teams)
+
+    # Teams are not valid but try to continue with closest match
+    if not home_valid or not away_valid:
+        # Get the closest matching team name in local files
+        # This prevents crashes due to misnamed teams
+        found_home_team = get_team_league(home_team_name)
+        found_away_team = get_team_league(away_team_name)
+
+        # Use name in local files
+        home_team_name = found_home_team[0]
+        away_team_name = found_away_team[0]
+
+        if not home_valid:
+            logger.exception("Local files have: %s but API gave: %s", found_home_team[0], home_team_name)
+        if not away_valid:
+            logger.exception("Local files have: %s but API gave: %s", found_away_team[0], away_team_name)
+
+        main_screen.starting_message = f"Please Update {league} team names from their respective 'add screen'"
+
+    return away_team_name, home_team_name

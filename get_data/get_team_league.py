@@ -167,11 +167,11 @@ DIVISION_TEAMS = {
 }
 
 def get_team_league(team_name: str) -> tuple:
-    """Get the league and sport name for a given team name.
+    """Get the best matching team name, league and sport name for a given team name.
 
     :param team_name: The name of the team to search for.
 
-    :return: A tuple containing the league and sport name.
+    :return: A tuple containing the name, league and sport name.
     """
     team_name_capitalized = team_name.strip().upper()
     best_match = ("", 0.0, "Unknown")
@@ -194,13 +194,13 @@ def get_team_league(team_name: str) -> tuple:
     )
 
     if best_match[2].upper() == "NFL":
-        matched_team = (best_match[2], "football")
+        matched_team = (best_match[0], best_match[2], "football")
     elif best_match[2].upper() == "MLB":
-        matched_team = (best_match[2], "baseball")
+        matched_team = (best_match[0], best_match[2], "baseball")
     elif best_match[2].upper() == "NHL":
-        matched_team = (best_match[2], "hockey")
+        matched_team = (best_match[0], best_match[2], "hockey")
     elif best_match[2].upper() == "NBA":
-        matched_team = (best_match[2], "basketball")
+        matched_team = (best_match[0], best_match[2], "basketball")
 
     if best_match[1] >= 70:
         return matched_team  # return tuple of league and sport name
@@ -209,14 +209,3 @@ def get_team_league(team_name: str) -> tuple:
     msg = f"Team '{team_name}' not found in any league."
     raise ValueError(msg)
 
-
-# Get Team league and sport name, needed for various functions later in script
-def append_team_array(teams: list) -> None:
-    """Get the team league and sport name from the team list.
-
-    :param teams: List of teams
-    """
-    for i in range(len(teams)):
-        league, sports_name = get_team_league(teams[i][0])  # Get the team league and sport name
-        teams[i].append(league)  # Add the league to the teams list
-        teams[i].append(sports_name)  # Add the sport name to the teams lists

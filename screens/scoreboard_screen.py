@@ -347,11 +347,7 @@ def main(window: Sg.Window) -> None:
 
             # Handle events and settings changes
             prev_spoiler_mode, prev_delay = settings.no_spoiler_mode, settings.delay
-            current_playing_flag = (bool(teams_currently_playing[state.display_index])
-                                    if teams_currently_playing and
-                                    state.display_index < len(teams_currently_playing) else False)
-            check_events(window, event, currently_playing=current_playing_flag, team_status=team_status,
-                         state=state, team_info=team_info)
+            check_events(window, event, team_status=team_status, state=state, team_info=team_info)
 
             if prev_spoiler_mode and not settings.no_spoiler_mode:
                 logger.info("No spoiler mode changed, refreshing data")

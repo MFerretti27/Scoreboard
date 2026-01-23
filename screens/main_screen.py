@@ -12,8 +12,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 from constants import colors, messages
-from get_data.get_team_league import append_team_array
-from get_data.get_team_logos import check_downloaded_correctly, get_team_logos
+from get_data.get_team_logos import get_team_logos
 from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
     internet_connection_layout,
@@ -46,6 +45,7 @@ from screens import scoreboard_screen
 set_screen()
 window_width = Sg.Window.get_screen_size()[0]
 window_height = Sg.Window.get_screen_size()[1]
+starting_message = ""
 
 def main(window: Sg.Window, saved_data: dict) -> None:
     """Create Main screen GUI functionality.
@@ -59,6 +59,8 @@ def main(window: Sg.Window, saved_data: dict) -> None:
     if not is_connected():
         window["update_message"].update(value="Please Connected to internet", text_color=colors.ERROR_RED)
         window["Connect to Internet"].update(button_color=colors.BUTTON_RED)
+    else:
+        window["update_message"].update(value=starting_message, text_color=colors.THEME_BLACK)
 
     while True:
         window.Maximize()
@@ -534,21 +536,12 @@ def handle_starting_script(window: Sg.Window, saved_data: dict[str, Any]) -> Non
     double_check_teams()  # Ensure all teams in settings.teams are valid teams
     window["PROGRESS_BAR"].update(visible=True)
     window["PROGRESS_BAR"].update(current_count=0)
-    window.refresh()  # Refresh to display text
-    append_team_array(settings.teams)  # Get the team league and sport name
-    window.refresh()  # Refresh to display text
-    download_logo_msg = get_team_logos(window, settings.teams)  # Get the team logos
+    succeeded, download_logo_msg = get_team_logos(window, settings.teams)  # Get the team logos
     window["download_message"].update(value=f"{download_logo_msg}")
     window.refresh()
 
     # If failed dont start
-    if "Failed" in download_logo_msg:
-        return
-    # Ensure all logos are there even if not re-downloading
-    if check_downloaded_correctly() != "":
-        msg = messages.REDOWNLOAD_IMAGES
-        window["download_message"].update(value=msg, text_color=colors.ERROR_RED)
-        window.refresh()
+    if not succeeded:
         return
 
     # Update saved_data in settings before launching scoreboard

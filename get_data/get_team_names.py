@@ -4,7 +4,6 @@ from __future__ import annotations
 import difflib
 import re
 from collections import defaultdict
-from pathlib import Path
 from typing import Any
 
 import statsapi  # type: ignore[import]
@@ -12,7 +11,6 @@ from nba_api.stats.endpoints import leaguestandings  # type: ignore[import]
 from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
-import get_data.get_team_league
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
 from helper_functions.api_utils.exceptions import DataValidationError
@@ -161,7 +159,7 @@ def update_new_division(league: str) -> str:
 
         logger.info("New Divisions:\n %s\n", new_team_divisions)
 
-        # Using key (list name) and value (teams in list) update division lists in get_team_league.py
+        # Using key (list name) and value (teams in list) update division lists in settings.json via update_new_names
         for key, value in new_team_divisions.items():
             str_key = str(key)
             update_new_names(str_key, value)
@@ -183,60 +181,31 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     :param renamed: List teams and what they were renamed to
     :param new_teams: New teams that are being added to list
     """
-    team_file_path = Path("get_data/get_team_league.py")
-    content = team_file_path.read_text(encoding="utf-8")
-
-    pattern = re.compile(
-        rf"(^\s*{re.escape(list_to_update)}\s*=\s*\[)([\s\S]*?)(\]\s*,?)",
-        re.MULTILINE,
-    )
-
-    match: re.Match[str]| None = pattern.search(content)
-
-    if not match:
-        return
-    _, list_block, _ = match.group(1), match.group(2), match.group(3)
-
     # Sort the new team list alphabetically
     sorted_names = sorted(new_teams)
 
-    # Build the block preserving indentation from the original
-    indent_match = re.match(r"(\s*)", list_block.split("\n")[0])
-    indent = indent_match.group(1) if indent_match else "    "
-
-    # Join into wrapped lines of max ~100 chars
-    formatted_lines = []
-    line = indent
-    for name in sorted_names:
-        item = f'"{name}", '
-        if len(line) + len(item) > 120:  # wrap line if too long
-            formatted_lines.append(line.rstrip())
-            line = indent + item
-        else:
-            line += item
-    if line.strip():
-        formatted_lines.append(line.rstrip())
-
-    new_block = "\n".join(formatted_lines)
-
-    new_content = content[: match.start(2)] + "\n" + new_block + "\n" + content[match.end(2):]
-
-    team_file_path.write_text(new_content, encoding="utf-8")
-
-    # Update current in-memory instance so changes take effect immediately
-    current_list = getattr(get_data.get_team_league, list_to_update)
-    current_list.clear()
-    current_list.extend(sorted_names)
-
-    # update settings.json file team name if it needs to change
-    if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and renamed:
+    # Update settings.json via settings.write_settings()
+    settings_data = settings.read_settings()
+    teams = settings_data.get("teams", [])
+    # If renamed teams are provided, update them in the teams list
+    if renamed:
         remove_specifically = []
-        settings_dict = [team[0] if isinstance(team, list) else team for team in settings.teams]
         for renamed_team in renamed:
-            if renamed_team[0] in settings_dict:
-                settings_dict[settings_dict.index(renamed_team[0])] = renamed_team[1]
-                remove_specifically.append(renamed_team[0])
-        update_teams(settings_dict, list_to_update, specific_remove=remove_specifically)
+            for idx, team in enumerate(teams):
+                if team and isinstance(team, list) and team[0] == renamed_team[0]:
+                    teams[idx][0] = renamed_team[1]
+                    remove_specifically.append(renamed_team[0])
+        settings_data["teams"] = teams
+        settings.write_settings(settings_data)
+        update_teams([team[0] for team in teams], list_to_update, specific_remove=remove_specifically)
+    else:
+        # If not a rename, just update the teams for the league
+        # Replace all teams for the league in settings.json
+        for idx, team in enumerate(teams):
+            if team and isinstance(team, list) and team[1] == list_to_update:
+                teams[idx][0] = sorted_names[idx] if idx < len(sorted_names) else team[0]
+        settings_data["teams"] = teams
+        settings.write_settings(settings_data)
 
 
 def compare_teams(old_list: list[str],

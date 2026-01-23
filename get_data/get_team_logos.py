@@ -104,49 +104,48 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
     for i in range(len(teams)):
         sport_league = teams[i][1].lower()
         sport_name = teams[i][2].lower()
-        if not Path.exists(Path.cwd() / "images" / "sport_logos" / sport_league.upper()):
 
-            # Create a directory for the current sport if it doesn't exist
-            sport_dir = Path.cwd() / "images" / "sport_logos" / sport_league.upper()
-            if not Path.exists(sport_dir):
-                Path.mkdir(sport_dir)
+        # Create a directory for the current sport if it doesn't exist
+        sport_dir = Path.cwd() / "images" / "sport_logos" / sport_league.upper()
+        if not Path.exists(sport_dir):
+            Path.mkdir(sport_dir)
 
-            # Fetch the JSON data
-            url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
-            response = requests.get(url, timeout=5)
-            data = response.json()
+        # Fetch the JSON data
+        url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
+        response = requests.get(url, timeout=5)
+        data = response.json()
 
-            # Extract team data
-            teams_data = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
+        # Extract team data
+        teams_data = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
 
-            # Download, process, resize, and save each logo
-            for team in teams_data:
-                team_name = team["team"]["displayName"]
-                logo_url = team["team"]["logos"][0]["href"]
-                team_name = team_name.upper()
+        # Download, process, resize, and save each logo
+        for team in teams_data:
+            team_name = team["team"]["displayName"]
+            logo_url = team["team"]["logos"][0]["href"]
+            team_name = team_name.upper()
 
-                logger.info("Downloading logo for %s from %s...", team_name, teams[i][1])
+            logger.info("Downloading logo for %s from %s...", team_name, teams[i][1])
 
-                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
-                response = requests.get(logo_url, stream=True, timeout=5)
-                with Path(img_path_png).open("wb") as file:
-                    file.writelines(response.iter_content(chunk_size=1024))
+            img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
+            response = requests.get(logo_url, stream=True, timeout=5)
+            with Path(img_path_png).open("wb") as file:
+                file.writelines(response.iter_content(chunk_size=1024))
 
-                # Open, resize, and save the image with PIL
-                with Image.open(img_path_png):
-                    resize_image(img_path_png, sport_dir, team_name)
+            # Open, resize, and save the image with PIL
+            with Image.open(img_path_png):
+                resize_image(img_path_png, sport_dir, team_name)
 
-                # Delete the original .png file
-                Path.unlink(Path(img_path_png))
-                count +=1
-                window["PROGRESS_BAR"].update(current_count=count)
-                window.refresh()  # Refresh to display text
+            # Delete the original .png file
+            Path.unlink(Path(img_path_png))
+            count +=1
+            window["PROGRESS_BAR"].update(current_count=count)
+            window.refresh()  # Refresh to display text
 
     if Path.exists(Path.cwd() / "images" / "sport_logos"):
         logger.info("All logos have been downloaded!\n")
 
 
-def get_team_logos(window: Sg.Window, teams: list) -> str:
+def get_team_logos(window: Sg.Window, teams: list) -> tuple[bool, str]:
     """Determine if logos need to be downloaded.
 
     :param teams: Dictionary with teams to display
@@ -170,14 +169,6 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
                 CHAMPIONSHIP_IMAGES_DIR,
             ])
             already_downloaded = False  # If hit this is the first time getting images and resizing
-            return check_downloaded_correctly()
-
-        # If user selects new team in a league they haven't selected before download all logos in that league
-        if new_league_added():
-            msg = "New league added, Downloading and Re-sizing logos for new league"
-            window["download_message"].update(value=msg)
-            download_team_logos(window, teams)  # Will only get new league team logos
-            return check_downloaded_correctly()
 
         if settings.always_get_logos and already_downloaded:
             msg = "Always get logos in settings selected, Downloading and Re-sizing logos"
@@ -193,13 +184,16 @@ def get_team_logos(window: Sg.Window, teams: list) -> str:
                 PLAYOFF_IMAGES_DIR,
                 CHAMPIONSHIP_IMAGES_DIR,
             ])
+
+        succeeded, msg = double_check_logos()
+        if not succeeded:
             return check_downloaded_correctly()
 
     except Exception as e:
         logger.exception("Failed to download team logos")
-        return "Failed to download team logos, please try again. Error: " + str(e)
+        return False, "Failed to download team logos, please try again. Error: " + str(e)
 
-    return "Starting..."
+    return succeeded, msg
 
 def get_random_logo() -> dict:
     """Get 2 random teams from teams array, if only one team then it will return the only team there.
@@ -235,10 +229,10 @@ def resize_images_from_folder(image_folder_path: list[Path]) -> None:
                 resize_image(file, file.parent, file.name)
 
 
-def check_downloaded_correctly() -> str:
+def check_downloaded_correctly() -> tuple[bool, str]:
     """Check to see that all logos for every team was downloaded.
 
-    return: Empty string if all logos downloaded correctly, otherwise error message
+    return: Tuple of (bool all logos present, message string)
     """
     folder_path = Path.cwd() / "images" / "sport_logos"
 
@@ -260,35 +254,56 @@ def check_downloaded_correctly() -> str:
         elif folder.name in NHL:
             looking_at_sport = "NHL"
         else:
-            return "Failed to get Logos, Please Retry By Pressing Start Again."
+            return False, "Failed to get Logos, Please Retry By Pressing Start Again."
 
         if looking_at_sport == "MLB" and len(list(folder.iterdir())) != len(MLB) - 1:
             number_of_files = len(list(folder.iterdir()))
             shutil.rmtree(folder_path)
             MLB.remove("MLB")
-            return ("Failed to get MLB Logos, Please Retry By Pressing Start Again."
+            return False, ("Failed to get MLB Logos, Please Retry By Pressing Start Again."
                     f" Got {number_of_files} logos but MLB has {len(MLB)} teams.")
         if looking_at_sport == "NFL" and len(list(folder.iterdir())) != len(NFL) - 1:
             number_of_files = len(list(folder.iterdir()))
             shutil.rmtree(folder_path)
             NFL.remove("NFL")
-            return ("Failed to get NFL Logos, Please Retry By Pressing Start Again."
+            return False, ("Failed to get NFL Logos, Please Retry By Pressing Start Again."
                     f" Got {number_of_files} logos but NFL has {len(NFL)} teams.")
         if looking_at_sport == "NBA" and len(list(folder.iterdir())) != len(NBA) - 1:
             number_of_files = len(list(folder.iterdir()))
             shutil.rmtree(folder_path)
             NBA.remove("NBA")
-            return ("Failed to get NBA Logos, Please Retry By Pressing Start Again."
+            return False, ("Failed to get NBA Logos, Please Retry By Pressing Start Again."
                     f" Got {number_of_files} logos but NBA has {len(NBA)} teams.")
         if looking_at_sport == "NHL" and len(list(folder.iterdir())) != len(NHL) - 1:
             number_of_files = len(list(folder.iterdir()))
             shutil.rmtree(folder_path)
             NHL.remove("NHL")
-            return ("Failed to get NHL Logos, Please Retry By Pressing Start Again."
+            return False, ("Failed to get NHL Logos, Please Retry By Pressing Start Again."
                     f" Got {number_of_files} logos but NHL has {len(NHL)} teams.")
 
     MLB.remove("MLB")
     NFL.remove("NFL")
     NBA.remove("NBA")
     NHL.remove("NHL")
-    return ""
+    return True, ""
+
+
+def double_check_logos() -> tuple[bool, str]:
+    """Double check that all logos are present for teams selected.
+
+    return: Tuple of (bool all logos present, message string)
+    """
+    missing_logos = []
+    leagues = [(NHL, "NHL"), (MLB, "MLB"), (NFL, "NFL"), (NBA, "NBA")]
+    for teams, league in leagues:
+        for team in teams:
+            logo_path = Path.cwd() / "images" / "sport_logos" / league / f"{team.upper()}.png"
+            if not Path.exists(logo_path):
+                missing_logos.append(f"{team})")
+
+    if missing_logos:
+        logger.exception("Missing logos for the following teams: %s", ", ".join(missing_logos))
+        return False, "Missing logos for the following teams: " + ", ".join(missing_logos)
+
+    logger.info("All team logos are present.")
+    return True, ""
