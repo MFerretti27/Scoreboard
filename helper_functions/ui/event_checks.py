@@ -36,6 +36,11 @@ def _manually_change_team(
     info = ""
     changed_team = False
 
+    is_visible = window["home_stats_section"].visible or window["away_stats_section"].visible
+    if is_visible:
+        logger.info("Cannot switch teams while team stats are visible")
+        return
+
     number_of_teams = len(settings.teams)
     # Only restrict to live teams when more than one is live; otherwise allow switching across teams with data
     prefer_playing = settings.prioritize_playing_team and sum(team_status.teams_currently_playing) >= 1
