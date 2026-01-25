@@ -7,6 +7,7 @@ import settings
 from constants import colors, messages, ui_keys
 from constants.sizing_utils import calculate_title_size, get_responsive_scale
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
+from helper_functions.logging.logger_config import logger
 
 
 def create_team_selection_layout(window_width: int, league: str) -> list:
@@ -58,7 +59,8 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     for division in ALL_DIVISIONS.get(league, []):
         if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
             divisions_already_checked.append(division)
-            settings.division_checked = True
+            settings.division_checked[division] = True
+            logger.info(f"Division {division} is already checked")
 
     division_checkboxes = [
         Sg.Checkbox(division_name, key=division_name,

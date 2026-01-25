@@ -12,6 +12,7 @@ import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
 from constants import colors, messages
+from get_data.get_team_league import get_team_league
 from get_data.get_team_logos import get_team_logos
 from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 from gui_layouts import (
@@ -142,22 +143,24 @@ def show_view(view_to_show: str, window: Sg.Window) -> None:
             except Exception:
                 logger.info("Could not delete element")
 
-    settings.division_checked = False  # Reset division checked status for new screen
+    settings.division_checked.clear()  # Reset division checked status for new screen
 
-    # Get the appropriate layout
+    logger.info(f"Switching layout to {view_to_show}")
+
+    # Use lambdas to defer layout creation until needed
     layouts = {
-        "MAIN":     main_screen_layout.create_main_layout(window_width),
-        "MLB":      team_selection_layout.create_team_selection_layout(window_width, "MLB"),
-        "NFL":      team_selection_layout.create_team_selection_layout(window_width, "NFL"),
-        "NBA":      team_selection_layout.create_team_selection_layout(window_width, "NBA"),
-        "NHL":      team_selection_layout.create_team_selection_layout(window_width, "NHL"),
-        "SETTINGS": settings_layout.create_settings_layout(window_width),
-        "INTERNET": internet_connection_layout.create_internet_connection_layout(window_width),
-        "SET_ORDER": reorder_teams_layout.create_order_teams_layout(window_width),
-        "MANUAL": manual_layout.create_instructions_layout(window_width),
+        "MAIN":     lambda: main_screen_layout.create_main_layout(window_width),
+        "MLB":      lambda: team_selection_layout.create_team_selection_layout(window_width, "MLB"),
+        "NFL":      lambda: team_selection_layout.create_team_selection_layout(window_width, "NFL"),
+        "NBA":      lambda: team_selection_layout.create_team_selection_layout(window_width, "NBA"),
+        "NHL":      lambda: team_selection_layout.create_team_selection_layout(window_width, "NHL"),
+        "SETTINGS": lambda: settings_layout.create_settings_layout(window_width),
+        "INTERNET": lambda: internet_connection_layout.create_internet_connection_layout(window_width),
+        "SET_ORDER": lambda: reorder_teams_layout.create_order_teams_layout(window_width),
+        "MANUAL": lambda: manual_layout.create_instructions_layout(window_width),
     }
 
-    new_layout = [[Sg.Frame("", layouts[view_to_show], key=view_to_show,
+    new_layout = [[Sg.Frame("", layouts[view_to_show](), key=view_to_show,
                             size=(window_width, window_height), border_width=0)]]
 
     window.extend_layout(container, new_layout)
@@ -425,7 +428,13 @@ def set_team_order_screen(window: Sg.Window) -> Sg.Window:
             new_teams = [[name] for name in team_names]
             flattened_teams = ([team[0] for team in new_teams] if
                        isinstance(new_teams[0], list) else new_teams)
-            settings.write_settings({"teams": [[team] for team in flattened_teams]})
+
+            redefined_teams = []
+            for team in new_teams:
+                team_name, team_league, team_sport = get_team_league(str(team))
+                redefined_teams.append([team_name, team_league, team_sport])
+
+            settings.write_settings({"teams": redefined_teams})
             logger.info("Teams Reordered: %s", ", ".join(flattened_teams))
 
             window["order_message"].update(value=messages.ORDER_SAVED)

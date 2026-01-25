@@ -40,7 +40,7 @@ NFL = [
 NHL = [
 "Anaheim Ducks", "Boston Bruins", "Buffalo Sabres", "Calgary Flames", "Carolina Hurricanes", "Chicago Blackhawks",
 "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings", "Edmonton Oilers",
-"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadiens", "Nashville Predators",
+"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadians", "Nashville Predators",
 "New Jersey Devils", "New York Islanders", "New York Rangers", "Ottawa Senators", "Philadelphia Flyers",
 "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken", "St. Louis Blues", "Tampa Bay Lightning",
 "Toronto Maple Leafs", "Utah Mammoth", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
@@ -111,20 +111,20 @@ NBA_SOUTHWEST_DIVISION = ["Dallas Mavericks", "Houston Rockets", "Memphis Grizzl
 # Eastern Conference:
 NHL_ATLANTIC_DIVISION = [
 "Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montréal Canadiens", "Ottawa Senators",
-"Tampa Bay Lightning",
+"Tampa Bay Lightning", "Toronto Maple Leafs",
 ]
 NHL_METROPOLITAN_DIVISION = [
 "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers",
-"Philadelphia Flyers", "Pittsburgh Penguins",
+"Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals",
 ]
 # Western Conference:
 NHL_CENTRAL_DIVISION = [
 "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues",
-"Utah Hockey Club",
+"Utah Mammoth", "Winnipeg Jets",
 ]
 NHL_PACIFIC_DIVISION = [
 "Anaheim Ducks", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Seattle Kraken",
-"Vancouver Canucks",
+"Vancouver Canucks", "Vegas Golden Knights",
 ]
 
 ALL_DIVISIONS = {

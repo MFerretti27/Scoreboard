@@ -5,7 +5,7 @@ import unicodedata
 from typing import Any
 
 import settings
-from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
+from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL, get_team_league
 from helper_functions.logging.logger_config import logger
 
 # List of setting keys to be updated
@@ -63,28 +63,40 @@ def update_teams(selected_teams: list, league: str, specific_remove: list | None
     for items in selected_teams:
         if items not in available_checkbox_teams and items not in ALL_DIVISIONS[league]:
             selected_teams.remove(items)
+            logger.info("\n \n")
+            logger.info(f"Removed '{items}' from selected teams as its not a valid team.")
 
     selected_teams, existing_teams, removed_teams, = \
         update_division(league, selected_teams, existing_teams, removed_teams, available_checkbox_teams)
 
+    logger.info(f"Existing Teams: {existing_teams}\n"
+                f"Added Teams: {selected_teams}\n"
+                f"Removed Teams: {removed_teams}\n",
+                )
+
     untouched_teams = [team for team in existing_teams if team not in available_checkbox_teams]
     new_teams = list(dict.fromkeys(untouched_teams + selected_teams))  # Remove duplicates
+
+    logger.info(f"Remove Duplicates: {new_teams}\n")
 
     new_teams = double_check_teams(new_teams)  # Ensure all teams are valid
 
     # If need to remove specific team passed in such as team name no longer exists
     if specific_remove:
         for remove_team in specific_remove:
-            new_teams.remove(remove_team)
+            if remove_team in new_teams:
+                new_teams.remove(remove_team)
 
-    sport_name = {
-        "MLB": "baseball",
-        "NBA": "basketball",
-        "NHL": "hockey",
-        "NFL": "football",
-    }.get(league, "football")
-    new_teams_list = [[team, league, sport_name] for team in new_teams]
+    new_teams_list = []
+    for team in new_teams:
+        team_name, team_league, team_sport = get_team_league(team)
+        new_teams_list.append([team_name, team_league, team_sport])
+
     settings.write_settings({"teams": new_teams_list})
+    logger.info(f"Updated teams to: {new_teams_list}\n"
+                f"Added Teams: {selected_teams}\n"
+                f"Removed Teams: {removed_teams}",
+                )
 
     added_teams = [team for team in new_teams if team not in existing_teams]
     removed_teams += [team for team in available_checkbox_teams if (team in existing_teams
@@ -134,36 +146,40 @@ def update_division(league: str, selected_teams: list, existing_teams: list, rem
     :return removed_teams: Teams that should be removed
     """
     divisions = ALL_DIVISIONS.get(league, [])
-    division_checked = settings.division_checked
     selected_divisions = [d for d in selected_teams if d in divisions]
 
-    is_division_selected = bool(selected_divisions)
-    should_remove_division = is_division_selected and division_checked
-    should_add_division_teams = is_division_selected and not division_checked
-    should_uncheck_division_teams = not is_division_selected and division_checked
+    # Track which divisions changed state
+    for div in divisions:
+        was_checked = settings.division_checked[div]
+        is_checked = div in selected_divisions
 
-    if should_remove_division:
-        for team in existing_teams[:]:
-            if team not in selected_teams and team in available_checkbox_teams:
-                existing_teams.remove(team)
-                removed_teams.append(team)
-        selected_teams[:] = [t for t in selected_teams if t not in divisions]
-
-    if should_add_division_teams:
-        for division in selected_divisions:
-            division_key = f"{league} {division}"
+        # Only act if the checked state changed
+        if not was_checked and is_checked:
+            # Division was just checked: add all teams in this division
+            division_key = f"{league} {div}"
             teams = DIVISION_TEAMS.get(division_key, [])
             for team in teams:
                 if team in available_checkbox_teams and team not in selected_teams:
                     selected_teams.append(team)
-            selected_teams.remove(division)
+            # Optionally, remove the division label from selected_teams if you don't want it stored
+            if div in selected_teams:
+                selected_teams.remove(div)
+            logger.info(f"Added teams for division {div}: {teams}")
 
-    if should_uncheck_division_teams:
-        for division in divisions:
-            key = f"{league} {division}"
-            teams = DIVISION_TEAMS.get(key, [])
-            if all(t in selected_teams for t in teams):
-                selected_teams[:] = [t for t in selected_teams if t not in teams]
+        elif was_checked and not is_checked:
+            # Division was just unchecked: remove all teams in this division
+            division_key = f"{league} {div}"
+            teams = DIVISION_TEAMS.get(division_key, [])
+            for team in teams:
+                if team in selected_teams:
+                    selected_teams.remove(team)
+                    if team in existing_teams:
+                        existing_teams.remove(team)
+                        removed_teams.append(team)
+            logger.info(f"Removed teams for division {div}: {teams}")
+
+        # Update the checked state for next time
+        settings.division_checked[div] = is_checked
 
     return selected_teams, existing_teams, removed_teams
 

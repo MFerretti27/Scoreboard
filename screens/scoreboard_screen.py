@@ -289,6 +289,17 @@ def _handle_rotation_cycle(
         logger.info(f"Rest of teams: {teams_with_data}\n")
 
 
+def check_thead_health() -> None:
+    """Check if background fetch thread is alive, restart if not."""
+    global fetch_thread_should_run, fetch_thread
+    if not fetch_thread.is_alive():
+        fetch_thread_should_run = True
+        logger.error("Background fetch thread has stopped unexpectedly.")
+        fetch_thread_should_run = True
+        fetch_thread = threading.Thread(target=background_fetch_loop, daemon=True)
+        fetch_thread.start()
+        logger.info("Restarted background fetch thread.")
+
 
 ##################################
 #                                #
@@ -313,10 +324,14 @@ def main(window: Sg.Window) -> None:
     currently_displaying: dict = {}
     team_info = []  # Always defined for error handling
     maximize_screen(window)
+    time.sleep(3)  # Allow time for thread to start
 
     while True:
         try:
             event = window.read(timeout=5000)
+
+            # Ensure background thread is running
+            check_thead_health()
 
             # Read latest data from background thread
             teams_with_data, team_info, teams_currently_playing = get_display_data_from_thread()

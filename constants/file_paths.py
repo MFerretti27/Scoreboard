@@ -39,7 +39,7 @@ def get_sport_logo_path(league: str, team: str) -> str:
     :param team: Team abbreviation
     :return: Path string to the logo file
     """
-    return str(SPORT_LOGOS_DIR / league / f"{team}{PNG_EXT}")
+    return str(Path.cwd() / SPORT_LOGOS_DIR / league / f"{team}{PNG_EXT}")
 
 
 # Used in: get_data/get_espn_data.py, get_data/get_mlb_data.py
@@ -49,7 +49,7 @@ def get_baseball_base_image_path(filename: str) -> str:
     :param filename: Base image filename
     :return: Path string to the base image file
     """
-    return str(BASEBALL_BASE_IMAGES_DIR / filename)
+    return str(Path.cwd() / BASEBALL_BASE_IMAGES_DIR / filename)
 
 
 # Used in: get_data/get_game_type.py

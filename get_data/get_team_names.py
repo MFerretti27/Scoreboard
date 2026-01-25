@@ -1,9 +1,8 @@
 """Get new team names and divisions from API's storing results in get_team_league.py."""
-from __future__ import annotations
-
 import difflib
 import re
 from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 import statsapi  # type: ignore[import]
@@ -11,14 +10,9 @@ from nba_api.stats.endpoints import leaguestandings  # type: ignore[import]
 from nba_api.stats.static import teams as nba_teams  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
+import get_data.get_team_league
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
-from helper_functions.api_utils.exceptions import DataValidationError
-from helper_functions.api_utils.validators import (
-    validate_mlb_teams_response,
-    validate_nba_teams_response,
-    validate_nhl_teams_response,
-)
 from helper_functions.logging.logger_config import logger
 from helper_functions.ui.main_menu_helpers import remove_accents, update_teams
 
@@ -67,27 +61,18 @@ def get_new_team_names(league: str) -> tuple:
     renamed: list = []
     try:
         if league == "MLB":
-            teams_response = statsapi.get("teams", {"sportIds": 1})
-            validate_mlb_teams_response(teams_response)
-            teams = teams_response["teams"]
+            teams = statsapi.get("teams", {"sportIds": 1})["teams"]
             new_list.extend([team["name"] for team in teams])
 
         elif league == "NHL":
             client = NHLClient()
-            teams_list = client.teams.teams()
-            validate_nhl_teams_response(teams_list)
-            new_list.extend([team["name"] for team in teams_list])
+            new_list.extend([team["name"] for team in client.teams.teams()])
 
         elif league == "NBA":
-            teams_response = nba_teams.get_teams()
-            validate_nba_teams_response(teams_response)
-            new_list.extend([team["full_name"] for team in teams_response])
+            new_list.extend([team["full_name"] for team in nba_teams.get_teams()])
 
         # Remove accents for consistent sorting
         new_list = list(remove_accents(new_list))
-    except DataValidationError as e:
-        logger.exception(f"Data validation error getting new team names: {e}")
-        return [], [], "Failed to Get New Team Names"
     except Exception:
         logger.exception("Getting new team names failed")
         return [], [], "Failed to Get New Team Names"
@@ -133,9 +118,7 @@ def update_new_division(league: str) -> str:
 
     try:
         if league == "MLB":
-            teams_response = statsapi.get("teams", {"sportIds": 1})
-            validate_mlb_teams_response(teams_response)
-            teams = teams_response["teams"]
+            teams = statsapi.get("teams", {"sportIds": 1})["teams"]
             for team in teams:
                 division_name = team.get("division", {}).get("name", "N/A")
                 division = format_division("MLB", division_name)
@@ -143,10 +126,9 @@ def update_new_division(league: str) -> str:
 
         elif league == "NHL":
             client = NHLClient()
-            teams_list = client.teams.teams()
-            validate_nhl_teams_response(teams_list)
-            for team in teams_list:
-                division_name = team.division.get("name") if hasattr(team, "division") else "N/A"
+            for team in client.teams.teams():
+                logger.info(f"team: {team}")
+                division_name = team.get("division", {}).get("name", "N/A")
                 division = format_division("NHL", division_name)
                 new_team_divisions[division].append(team["name"])
 
@@ -157,16 +139,15 @@ def update_new_division(league: str) -> str:
                 division = format_division("NBA", division_name)
                 new_team_divisions[division].append(f"{team[3]} {team[4]}")
 
-        logger.info("New Divisions:\n %s\n", new_team_divisions)
 
-        # Using key (list name) and value (teams in list) update division lists in settings.json via update_new_names
+        logger.info(f"team: {new_team_divisions}")
+
+        # Using key (list name) and value (teams in list) update division lists in get_team_league.py
         for key, value in new_team_divisions.items():
+            logger.info("New Division %s: [%s]\n", key, value)
             str_key = str(key)
             update_new_names(str_key, value)
 
-    except DataValidationError as e:
-        logger.exception(f"Data validation error getting divisions: {e}")
-        return "Updating Teams Failed"
     except Exception:
         logger.exception("Failed getting/writing divisions")
         return "Updating Teams Failed"
@@ -181,31 +162,60 @@ def update_new_names(list_to_update: str, new_teams: list, renamed: list | None=
     :param renamed: List teams and what they were renamed to
     :param new_teams: New teams that are being added to list
     """
+    team_file_path = Path("get_data/get_team_league.py")
+    content = team_file_path.read_text(encoding="utf-8")
+
+    pattern = re.compile(
+        rf"(^\s*{re.escape(list_to_update)}\s*=\s*\[)([\s\S]*?)(\]\s*,?)",
+        re.MULTILINE,
+    )
+
+    match: re.Match[str]| None = pattern.search(content)
+
+    if not match:
+        return
+    _, list_block, _ = match.group(1), match.group(2), match.group(3)
+
     # Sort the new team list alphabetically
     sorted_names = sorted(new_teams)
 
-    # Update settings.json via settings.write_settings()
-    settings_data = settings.read_settings()
-    teams = settings_data.get("teams", [])
-    # If renamed teams are provided, update them in the teams list
-    if renamed:
+    # Build the block preserving indentation from the original
+    indent_match = re.match(r"(\s*)", list_block.split("\n")[0])
+    indent = indent_match.group(1) if indent_match else "    "
+
+    # Join into wrapped lines of max ~100 chars
+    formatted_lines = []
+    line = indent
+    for name in sorted_names:
+        item = f'"{name}", '
+        if len(line) + len(item) > 120:  # wrap line if too long
+            formatted_lines.append(line.rstrip())
+            line = indent + item
+        else:
+            line += item
+    if line.strip():
+        formatted_lines.append(line.rstrip())
+
+    new_block = "\n".join(formatted_lines)
+
+    new_content = content[: match.start(2)] + "\n" + new_block + "\n" + content[match.end(2):]
+
+    team_file_path.write_text(new_content, encoding="utf-8")
+
+    # Update current in-memory instance so changes take effect immediately
+    current_list = getattr(get_data.get_team_league, list_to_update)
+    current_list.clear()
+    current_list.extend(sorted_names)
+
+    # update settings.json file team name if it needs to change
+    if list_to_update in ["MLB", "NFL", "NBA", "NHL"] and renamed:
         remove_specifically = []
+        settings_dict = [team[0] if isinstance(team, list) else team for team in settings.teams]
         for renamed_team in renamed:
-            for idx, team in enumerate(teams):
-                if team and isinstance(team, list) and team[0] == renamed_team[0]:
-                    teams[idx][0] = renamed_team[1]
-                    remove_specifically.append(renamed_team[0])
-        settings_data["teams"] = teams
-        settings.write_settings(settings_data)
-        update_teams([team[0] for team in teams], list_to_update, specific_remove=remove_specifically)
-    else:
-        # If not a rename, just update the teams for the league
-        # Replace all teams for the league in settings.json
-        for idx, team in enumerate(teams):
-            if team and isinstance(team, list) and team[1] == list_to_update:
-                teams[idx][0] = sorted_names[idx] if idx < len(sorted_names) else team[0]
-        settings_data["teams"] = teams
-        settings.write_settings(settings_data)
+            if renamed_team[0] in settings_dict:
+                settings_dict[settings_dict.index(renamed_team[0])] = renamed_team[1]
+                remove_specifically.append(renamed_team[0])
+        update_teams(settings_dict, list_to_update, specific_remove=remove_specifically)
 
 
 def compare_teams(old_list: list[str],

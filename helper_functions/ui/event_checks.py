@@ -119,14 +119,6 @@ def _manually_change_team(
 def __toggle_stay_on_team(window: Sg.Window, event: str, team_status: scoreboard_screen.TeamStatus, *,
                           currently_playing: bool) -> None:
     """Toggle the stay on team feature."""
-    settings.stay_on_team = not settings.stay_on_team
-    rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
-    msg = (
-        messages.STAYING_ON_TEAM
-        if settings.stay_on_team
-        else f"{messages.ROTATING_TEAMS} {rotating_time} seconds"
-    )
-    logger.info("%s key pressed, %s", event, msg)
     if sum(team_status.teams_with_data) <= 1 and settings.stay_on_team:
         top_msg = f"{sum(team_status.teams_with_data)} team(s) have game information to display"
         bottom_msg = "Stay on team feature cannot be used when rotating is not possible"
@@ -134,7 +126,7 @@ def __toggle_stay_on_team(window: Sg.Window, event: str, team_status: scoreboard
         window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
         window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
                                             font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-        logger.info(msg)
+        logger.info(top_msg + ", " + bottom_msg)
         window.refresh()
 
     if sum(team_status.teams_currently_playing) == 1 and settings.stay_on_team and settings.prioritize_playing_team:
@@ -144,8 +136,20 @@ def __toggle_stay_on_team(window: Sg.Window, event: str, team_status: scoreboard
         window[ui_keys.TOP_INFO].update(value=top_msg, font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
         window[ui_keys.BOTTOM_INFO].update(value=bottom_msg,
                                             font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
-        logger.info(msg)
+        logger.info(top_msg + ", " + bottom_msg)
         window.refresh()
+
+    else:
+        settings.stay_on_team = not settings.stay_on_team
+        rotating_time = settings.DISPLAY_NOT_PLAYING_TIMER if currently_playing else settings.DISPLAY_PLAYING_TIMER
+        msg = (
+            messages.STAYING_ON_TEAM
+            if settings.stay_on_team
+            else f"{messages.ROTATING_TEAMS} {rotating_time} seconds"
+        )
+        window[ui_keys.BOTTOM_INFO].update(value=msg,
+                                    font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE))
+        logger.info("%s key pressed, %s", event, msg)
 
     time.sleep(3)
 
@@ -355,7 +359,7 @@ def set_spoiler_mode(window: Sg.Window, team_info: dict) -> Sg.Window:
     return window
 
 
-def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO, *,
+def scroll(window: Sg.Window, original_text: str, key: str = ui_keys.BOTTOM_INFO, *,  # noqa: PLR0913
            team_status: object = None, state: object = None, team_info: list | None = None) -> None:
     """Scroll the display to show the next set of information while checking for manual team changes."""
     text = original_text + "         "

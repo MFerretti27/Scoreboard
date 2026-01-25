@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -296,4 +297,5 @@ _apply_settings(_load_settings_file())
 
 # Runtime/shared state (not persisted)
 saved_data: Any = {}
-division_checked: bool = False  # Used to check if a division was checked when the screen was opened
+# Used to check if a division was checked when the screen was opened
+division_checked: defaultdict[str, bool] = defaultdict(bool)

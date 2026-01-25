@@ -169,6 +169,7 @@ def background_fetch_loop() -> None:
     The fetch interval adapts based on whether any team is currently playing.
     """
     state = DisplayState()
+    logger.info(f"Starting background fetch thread [{fetch_thread_should_run}]...")
     while fetch_thread_should_run:
         try:
             teams_with_data = []
@@ -204,4 +205,12 @@ def background_fetch_loop() -> None:
             state.delay_over = False
             interval = settings.FETCH_DATA_NOT_PLAYING_TIMER
             logger.info(f"Background fetch interval set to {interval} seconds (no game in progress).")
+
+        # Don't go below 0 seconds
+        if interval > 0:
+            interval = 5
+
+        # Dont exceed 5 minutes
+        interval = min(300, interval)
+
         time.sleep(interval)
