@@ -38,6 +38,7 @@ def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bo
     """
     end_game_keywords = ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm "]
     schedule_keywords = [" am ", " pm "]
+    latest_fetch_result: dict[str, list[bool]] = {}
 
     for index, info in enumerate(team_info):
         if "bottom_info" not in info:
@@ -104,7 +105,7 @@ def _handle_delay_logic(
     team_info: list[dict],
     teams_with_data: list[bool],
     teams_currently_playing: list[bool],
-) -> list[dict]:
+) -> tuple[list[dict], list[bool]]:
     """Handle delay timing and data buffering logic.
 
     :param state: DisplayState containing delay clock and flags
@@ -113,7 +114,7 @@ def _handle_delay_logic(
     :param teams_with_data: Teams with data available
     :param teams_currently_playing: Teams currently playing
 
-    :return: Updated team_info list
+    :return: Updated team_info list and teams_currently_playing list
     """
     # Wait for delay to be over to start displaying data
     if ticks_diff(ticks_ms(), state.delay_clock) >= delay_timer and state.delay_started:

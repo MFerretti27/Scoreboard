@@ -154,7 +154,7 @@ def handle_error(
             _logic_error_counter = 0
             return
 
-        _log_error_details(team_info, error)
+        _log_error_details(team_info if team_info is not None else [], error)
         try:
             notify_email()
         except Exception as e:
@@ -166,7 +166,7 @@ def handle_error(
     if is_connected():
         _logic_error_counter += 1
         if _logic_error_counter >= _LOGIC_ERROR_THRESHOLD:
-            _log_error_details(team_info, error)
+            _log_error_details(team_info if team_info is not None else [], error)
             logger.warning(
                 "Unrecoverable error encountered (%s/%s).",
                 _logic_error_counter, _LOGIC_ERROR_THRESHOLD,
@@ -182,7 +182,7 @@ def handle_error(
     # Handle offline reconnection
     if not _attempt_reconnect(window, max_attempts):
         logger.error("No internet connection after extended retry period")
-        _log_error_details(team_info, error)
+        _log_error_details(team_info if team_info is not None else [], error)
         try:
             notify_email()
         except Exception as e:

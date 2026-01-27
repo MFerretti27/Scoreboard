@@ -48,7 +48,7 @@ def cache_result(ttl: int = API_RESPONSE_TTL, key_prefix: str = "") -> Callable[
                 if age < _cache_ttl.get(cache_key, ttl):
                     track_cache_hit()
                     logger.debug(f"Cache hit: {cache_key} (age: {age:.0f}s)")
-                    return _cache[cache_key]
+                    return _cache[cache_key]  # type: ignore[return-value]
                 logger.debug(
                     "Cache expired: %s (age: %.0fs > %ss)",
                     cache_key,

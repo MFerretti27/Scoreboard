@@ -289,16 +289,34 @@ def _handle_rotation_cycle(
         logger.info(f"Rest of teams: {teams_with_data}\n")
 
 
-def check_thead_health() -> None:
+def check_thread_health() -> None:
     """Check if background fetch thread is alive, restart if not."""
     global fetch_thread_should_run, fetch_thread
-    if not fetch_thread.is_alive():
+    if fetch_thread is None or not fetch_thread.is_alive():
         fetch_thread_should_run = True
         logger.error("Background fetch thread has stopped unexpectedly.")
         fetch_thread_should_run = True
         fetch_thread = threading.Thread(target=background_fetch_loop, daemon=True)
         fetch_thread.start()
         logger.info("Restarted background fetch thread.")
+
+
+def wait_for_thread(window: Sg.Window, wait_time_limit: float = 10.0) -> None:
+    """Wait for background fetch thread to start.
+
+    :param window: The window element to update
+    :param wait_time_limit: Maximum time to wait for thread to start in seconds
+    """
+    wait_time = 0
+    while not fetch_thread.is_alive() and wait_time < wait_time_limit:
+        time.sleep(0.1)
+        wait_time += 0.1
+
+    if fetch_thread.is_alive():
+        logger.info("Background fetch thread started successfully.")
+    else:
+        logger.error("Background fetch thread failed to start within expected time.")
+        clock(window, message="Error fetching data...")
 
 
 ##################################
@@ -324,14 +342,16 @@ def main(window: Sg.Window) -> None:
     currently_displaying: dict = {}
     team_info = []  # Always defined for error handling
     maximize_screen(window)
-    time.sleep(3)  # Allow time for thread to start
+
+    # Allow time for thread to start
+    wait_for_thread(window)
 
     while True:
         try:
             event = window.read(timeout=5000)
 
             # Ensure background thread is running
-            check_thead_health()
+            check_thread_health()
 
             # Read latest data from background thread
             teams_with_data, team_info, teams_currently_playing = get_display_data_from_thread()

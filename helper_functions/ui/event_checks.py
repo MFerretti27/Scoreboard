@@ -244,7 +244,14 @@ def go_to_main_screen(window: Sg.Window) -> None:
     main_screen.main(new_window, settings.saved_data)
 
 
-def _toggle_team_stats(window: Sg.Window, team: str, team_status: object, state: object, *, event: str) -> None:
+def _toggle_team_stats(
+    window: Sg.Window,
+    team: str,
+    team_status: scoreboard_screen.TeamStatus,
+    state: scoreboard_screen.DisplayState,
+    *,
+    event: str,
+) -> None:
     """Temporarily show team stats instead of the logo."""
     logger.info("%s key pressed, displaying team info", event)
 
@@ -301,8 +308,14 @@ def check_keyboard_events(window: Sg.Window, event: str) -> None:
         go_to_main_screen(window)
 
 
-def check_events(window: Sg.Window, events: list | str, *, team_status: object = None,
-                 state: object = None, team_info: list | None = None) -> None:
+def check_events(
+    window: Sg.Window,
+    events: list | str,
+    *,
+    team_status: scoreboard_screen.TeamStatus | None = None,
+    state: scoreboard_screen.DisplayState | None = None,
+    team_info: list[dict] | None = None,
+) -> None:
     """Handle button and keyboard events on the scoreboard screen."""
     if team_status is None or state is None:
         return

@@ -75,13 +75,14 @@ def email_config_status() -> tuple[bool, bool, str | None]:
 
 def notify_email(subject: str = "", body: str = "") -> None:
     """Send diagnostic email notification."""
-    enabled, ok, reason = email_config_status()
+    enabled, ok, _ = email_config_status()
 
     if not enabled:
+        logger.info("Email notifications are disabled; skipping email send")
         return
 
     if not ok:
-        msg = f"Email misconfigured: {reason}"
+        logger.warning("Email configuration is incomplete; cannot send email")
         return
 
     # Default subject
