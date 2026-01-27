@@ -1,1 +1,1 @@
-"""Empty File."""
+"""Screens package initializer."""

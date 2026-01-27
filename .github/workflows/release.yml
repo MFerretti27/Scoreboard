@@ -1,0 +1,187 @@
+name: Build and Release Scoreboard
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    env:
+      BASE_ICON_PNG: assets/icons/app_icon.png
+      DMG_BG_PNG: assets/icons/app_icon.png
+      LINUX_DESKTOP_FILE: /tmp/app_icon.desktop
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller pillow icnsutil
+
+      - name: Generate all OS icons
+        run: |
+          # Generate Windows ICO, Linux PNG 256x256, macOS ICNS
+          python .github/scripts/convert_icons.py "$BASE_ICON_PNG" /tmp
+
+          # Set environment variables for PyInstaller
+          echo "APP_ICON_WIN=/tmp/scoreboard_app.ico" >> $GITHUB_ENV
+          echo "APP_ICON_LINUX=/tmp/scoreboard_256.png" >> $GITHUB_ENV
+          echo "APP_ICON_MAC=/tmp/scoreboard_app.icns" >> $GITHUB_ENV
+          echo "DMG_ICON_MAC=/tmp/scoreboard_volume.icns" >> $GITHUB_ENV
+
+      - name: Build (Windows/Linux onefile)
+        if: runner.os != 'macOS'
+        run: |
+          python - <<'PY'
+          import os
+          import platform
+          import shlex
+          import subprocess
+
+          src = "screens/main_screen.py"
+          name = "Scoreboard"
+          icon = os.environ.get("APP_ICON_WIN") if platform.system() == "Windows" else os.environ.get("APP_ICON_LINUX")
+          data_pairs = [
+              ("images", "images"),
+              ("settings.py", "."),
+          ]
+
+          sep = ";" if platform.system() == "Windows" else ":"
+          add_data_args = []
+          for src_path, dst_path in data_pairs:
+              add_data_args.extend(["--add-data", f"{src_path}{sep}{dst_path}"])
+
+          cmd = [
+              "pyinstaller",
+              "--noconfirm",
+              "--onefile",
+              "--windowed",
+              "--icon", icon,
+              "--name", name,
+              *add_data_args,
+              src,
+          ]
+
+          print("Running:", " ".join(shlex.quote(c) for c in cmd))
+          subprocess.check_call(cmd)
+          PY
+
+      - name: Build (macOS .app)
+        if: runner.os == 'macOS'
+        run: |
+          python - <<'PY'
+          import os
+          import shlex
+          import subprocess
+
+          src = "screens/main_screen.py"
+          name = "Scoreboard"
+          icon = os.environ.get("APP_ICON_MAC")
+          data_pairs = [
+              ("images", "images"),
+              ("settings.py", "."),
+          ]
+
+          sep = ":"
+          add_data_args = []
+          for src_path, dst_path in data_pairs:
+              add_data_args.extend(["--add-data", f"{src_path}{sep}{dst_path}"])
+
+          cmd = [
+              "pyinstaller",
+              "--noconfirm",
+              "--onedir",
+              "--windowed",
+              "--icon", icon,
+              "--name", name,
+              *add_data_args,
+              src,
+          ]
+
+          print("Running:", " ".join(shlex.quote(c) for c in cmd))
+          subprocess.check_call(cmd)
+          PY
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            powershell -Command "Compress-Archive -Path dist/Scoreboard.exe -DestinationPath Scoreboard-windows.zip"
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            APP_PATH="dist/Scoreboard.app"
+            STAGE="stage"
+            mkdir -p "$STAGE"
+            cp -R "$APP_PATH" "$STAGE/"
+            cp "$DMG_ICON_MAC" "$STAGE/.VolumeIcon.icns"
+            SetFile -a C "$STAGE" || true
+            if [[ -f "$DMG_BG_PNG" ]]; then
+              BG_DIR="$STAGE/.background"
+              mkdir -p "$BG_DIR"
+              cp "$DMG_BG_PNG" "$BG_DIR/background.png"
+            fi
+            hdiutil create -volname "Scoreboard" -srcfolder "$STAGE" -ov -format UDZO Scoreboard-macos.dmg
+          else
+            STAGE_LINUX="stage-linux"
+            mkdir -p "$STAGE_LINUX"
+            cp dist/Scoreboard "$STAGE_LINUX/"
+            cp "$APP_ICON_LINUX" "$STAGE_LINUX/scoreboard.png"
+            cat > "$LINUX_DESKTOP_FILE" <<'EOF'
+            [Desktop Entry]
+            Version=1.0
+            Type=Application
+            Name=Scoreboard
+            Comment=Live sports scoreboard
+            Exec=./Scoreboard
+            Icon=scoreboard
+            Terminal=false
+            Categories=Sports;Utility;
+            EOF
+            cp "$LINUX_DESKTOP_FILE" "$STAGE_LINUX/Scoreboard.desktop"
+            zip -j Scoreboard-linux.zip "$STAGE_LINUX"/*
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Scoreboard-${{ runner.os }}
+          path: |
+            Scoreboard-*.zip
+            Scoreboard-*.dmg
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Scoreboard-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lh artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/Scoreboard-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

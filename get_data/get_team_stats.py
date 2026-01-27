@@ -1,9 +1,13 @@
 """Get player statistics for various sports leagues."""
+from __future__ import annotations
 
 import requests  # type: ignore[import]
 from nba_api.stats.endpoints import leaguedashteamstats, leaguestandingsv3
 
-from helper_functions.logger_config import logger
+from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.retry import retry_api_call
+from helper_functions.api_utils.validators import validate_nba_standings
+from helper_functions.logging.logger_config import logger
 
 
 def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
@@ -30,9 +34,16 @@ def get_team_stats(team_league: str, home_team_name: str, away_team_name: str = 
         return "", ""
     return "", ""
 
+@retry_api_call
 def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[str, str]:
     """Get NBA team stats for the current season including shooting and foul percentages."""
     standings = leaguestandingsv3.LeagueStandingsV3().get_dict()
+
+    # Validate standings structure
+    try:
+        validate_nba_standings(standings, home_team_name)
+    except DataValidationError as e:
+        logger.warning(f"Invalid NBA standings data: {e!s}")
 
     home_stats = {}
     away_stats = {}
@@ -46,6 +57,12 @@ def get_nba_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
         per_mode_detailed="PerGame",
         season_type_all_star="Regular Season",
     ).get_dict()
+
+    # Validate team stats structure
+    try:
+        validate_nba_standings(team_stats_data, home_team_name)
+    except DataValidationError as e:
+        logger.warning(f"Invalid NBA team stats data: {e!s}")
 
     # Build the full list of team stats once
     team_stats = []
@@ -188,6 +205,7 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     return home_stats_str, away_stats_str
 
 
+@retry_api_call
 def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
     """Get comprehensive team stats from ESPN teams API.
 

@@ -6,7 +6,7 @@ import sys
 import venv
 from pathlib import Path
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 
 def create_virtualenv(venv_dir: str) -> None:
@@ -14,11 +14,16 @@ def create_virtualenv(venv_dir: str) -> None:
 
     :param venv_dir: virtual environment directory name
     """
-    if not Path(venv_dir).exists():
-        logger.info(f"Creating virtual environment in {venv_dir}...")
-        venv.create(venv_dir, with_pip=True)
-    else:
-        logger.info(f"Virtual environment already exists in {venv_dir}.")
+    try:
+        if not Path(venv_dir).exists():
+            logger.info(f"Creating virtual environment in {venv_dir}...")
+            venv.create(venv_dir, with_pip=True)
+        else:
+            logger.info(f"Virtual environment already exists in {venv_dir}.")
+    except Exception:
+        logger.exception("Failed to create virtual environment in %s", venv_dir, exc_info=True)
+        logger.info("Please ensure you have sufficient disk space and permissions.")
+        sys.exit(1)
 
 
 def install_requirements(venv_dir: str, requirements_file: str) -> None:
@@ -40,7 +45,15 @@ def install_requirements(venv_dir: str, requirements_file: str) -> None:
         logger.info(f"Error: pip executable not found at {pip_executable}")
         sys.exit(1)
 
-    subprocess.check_call([pip_executable, "install", "-r", requirements_file])
+    try:
+        subprocess.check_call([pip_executable, "install", "-r", requirements_file])
+    except subprocess.CalledProcessError:
+        logger.exception("Failed to install dependencies from %s", requirements_file, exc_info=True)
+        logger.info("Please check your internet connection and requirements.txt file.")
+        sys.exit(1)
+    except FileNotFoundError:
+        logger.exception("pip executable not found or permissions denied", exc_info=True)
+        sys.exit(1)
 
 
 def run_program_in_venv(venv_dir: str, program_script: str) -> None:
@@ -58,7 +71,11 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
 
     # Run the program
     logger.info(f"Running program {program_script} inside virtual environment...")
-    subprocess.call([python_executable, "-m", program_script])
+    try:
+        subprocess.call([python_executable, "-m", program_script])
+    except Exception:
+        logger.exception("Failed to run program %s", program_script, exc_info=True)
+        sys.exit(1)
 
 
 def set_screen() -> None:
@@ -76,13 +93,19 @@ def remove_ds_files() -> None:
     """Remove all .DS_Store files (only needed on macOS)."""
     if platform.system() == "Darwin":
         logger.info("Removing .DS_Store files...")
-        # Walk through the directory and remove .DS_Store files
-        for root, _, files in os.walk("."):
-            for file in files:
-                if file == ".DS_Store":
-                    path = Path(root) / file
-                    logger.info(f"Removing: {path}")
-                    path.unlink()
+        try:
+            # Walk through the directory and remove .DS_Store files
+            for root, _, files in os.walk("."):
+                for file in files:
+                    if file == ".DS_Store":
+                        path = Path(root) / file
+                        try:
+                            logger.info(f"Removing: {path}")
+                            path.unlink()
+                        except Exception:
+                            logger.exception("Failed to remove .DS_Store file: %s", path, exc_info=True)
+        except Exception:
+            logger.exception("Error walking directory during .DS_Store removal", exc_info=True)
 
 
 def main() -> None:
