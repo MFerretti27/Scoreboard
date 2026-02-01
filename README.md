@@ -1,12 +1,6 @@
 # General Information
-- Python Script to Display your Favorite Major League Sports Teams in Scoreboard Style <br />
-- Using FreeSimpleGUI for GUI interface (Free version of PySimpleGUI)
-    - [FreeSimpleGUI Documentation](https://docs.pysimplegui.com/en/latest/)<br />
-- List of API's used:
-    - ESPN API
-    - [MLB-StatsAPI](https://github.com/toddrob99/MLB-StatsAPI)
-    - [nba_api](https://github.com/swar/nba_api)
-    - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
+A full python application for displaying your teams in a scroaboard style. The application is very user friendly not requireing any programming knowlage to use but helpful for setting it up. This scoreboard is highly customizable allowing the user to choose how much or little infomation they want displayed. This application can also run on any playform (Windows, Linux, or MacOS) and should auto size to what any screen you are using. There are detailed instructions on how to build this using the same materials I use.<br />
+
 
 
 # Screen Shots
@@ -47,24 +41,32 @@ For football a the team who has possession of the ball will be underlined.<br />
 
 
 ## Controls
-Pressing keys on the keyboard while script is running will trigger different actions.
+The application is interactive and requires input from the user. It is easiest if the screen is touchscreen but supports when the screen is not touchscreen.<br />
 
-Escape - Return to main menu.<br />
-Caps Lock - Stay on the current displayed team (only if multiple teams are playing).<br />
-Shift - Resume rotating between multiple teams.<br />
-Right Arrow - Turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.<br />
-Left Arrow - Turn off live data delay, this will show live game info as soon as its available.<br />
-Up Arrow - Enter "No Spoiler Mode," hiding scores, records, and game details.<br />
-Down Arrow - Exit "No Spoiler Mode," showing scores, records, and game details.<br />
+- You can navigate the main menu by just click the button/checkboxes on the screen or with mouse<br />
+
+- While scoreboard is running:<br />
+    - If you are using a touchscrenn:<br />
+        - Click the home teams record location to go to next team<br />
+        - Click the away teams reacord location to go to the previous team<br />
+        - Click the score to open a popup that allows you to turn on a delay, enter "No Spoiler Mode", and return to menu<br />
+        - Click the bottom of the screen to pause/resume rotating between teams <br />
+
+    - If you are using a non-tocuhscreen (mouse/keyboard)
+        - Click the home teams record location with mouse to go to next team
+        - Click the away teams reacord location with mouse to go to the previous team
+        - Click Escape on the keyboard to return to main menu.<br />
+        - Click Caps Lock on the keyboard to stay on the current displayed team (only if multiple teams are playing).<br />
+        - Click Right/Left Arrow on the keyboard turn on live data delay, this will put a delay on live data shown. The amount of delay is set in settings.<br />
+        - Click Up/Down Arrow Enter on the keyboard to enter "No Spoiler Mode" (hiding scores, records, and game details).<br />
 
 
 
 ## How to Run
-Using Python run the main.py file e.g. ```python main.py``` <br />
-- This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries will be installed with python)<br />
-- When starting the main menu will be displayed, this is where you can add teams you want to follow, check for updates, change the display order of teams, and change overall settings.<br />
-- Press the Start button or "Return/Enter" on the keyboard on main menu screen to start displaying teams selected.<br />
-- Press Escape on the keyboard to return to main menu or press escape while at main menu to exit.<br />
+1. Using Python run the main.py file e.g. ```python main.py``` <br />
+    - This file will create a virtual environment and install the all library dependencies needed for the scoreboard script to work (Other generic libraries will be installed with python)<br />
+2. Download the executiable file for the playform you intend to use in the realeases section of this repo.<br />
+- When starting the application the main menu will be displayed, this is where you can add teams you want to follow, check for updates, change the display order of teams, and change overall settings.<br />
 
 
 ## How Data is Collected
@@ -118,7 +120,6 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
     -	Venue of where game is being played before the game has started (stadium name).
     -	Date of when game finished.
     -	Series information for sports play a series of games (MLB, NBA, NHL).
-    -	A broadcast network logo that game is on, only if its national broadcast not local one.
     -   A image showing that the current game is a playoff/championship game.
 -	Sports specific elements can be displayed or not displayed based off settings:
     -	MLB
@@ -168,24 +169,30 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
 - All other requirements are in requirements.txt file and will be installed when you run the main.py file in virtual environment.
 
 
+# Tools Used
+- Using FreeSimpleGUI for GUI interface (Free version of PySimpleGUI)
+    - [FreeSimpleGUI Documentation](https://docs.pysimplegui.com/en/latest/)<br />
+- List of API's used:
+    - ESPN API
+    - [MLB-StatsAPI](https://github.com/toddrob99/MLB-StatsAPI)
+    - [nba_api](https://github.com/swar/nba_api)
+    - [nhl-api-py](https://github.com/coreyjs/nhl-api-py)
+
 
 ## Hardware Recommended
-- Raspberry PI (3b+ and up, the better the CPU the less lag displaying images)
+- Raspberry PI (4 and up, the better the CPU the less lag displaying images)
     - [Link](https://www.amazon.com/Raspberry-Pi-Quad-core-Cortex-A76-Processor/dp/B0CTQ3BQLS/ref=sxin_16_pa_sp_search_thematic_sspa?content-id=amzn1.sym.76d54fcc-2362-404d-ab9b-b0653e2b2239%3Aamzn1.sym.76d54fcc-2362-404d-ab9b-b0653e2b2239&crid=2W4WOFMA7GQFC&cv_ct_cx=raspberry%2Bpi%2B5&dib=eyJ2IjoiMSJ9.9Y9spcqJNnOBeHLQWNTS41xuiL-91jGxokGdWfYaXkN26OVp-gUsmv2kqlxliXXA.-RF009atOtVOBvjkGi-tAig15vDCYjL13yHoA8iGsX0&dib_tag=se&keywords=raspberry%2Bpi%2B5&pd_rd_i=B0CTQ3BQLS&pd_rd_r=a22d1f2f-599f-4cb8-8e5d-9832619347b6&pd_rd_w=go2DS&pd_rd_wg=aZn7Y&pf_rd_p=76d54fcc-2362-404d-ab9b-b0653e2b2239&pf_rd_r=FEB2SVV839B11Z6QKJBH&qid=1731383117&s=electronics&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=ras%2Celectronics%2C190&sr=1-1-6024b2a3-78e4-4fed-8fed-e1613be3bcce-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9zZWFyY2hfdGhlbWF0aWM&th=1)<br />
-- Monitor (22, 24, inch have been tested, use these for 100% known working without making any changes to code)
-    - 22 inch flat monitor [Link](https://www.amazon.com/dp/B0D17P8N28?ref=ppx_yo2ov_dt_b_fed_asin_title)<br />
-    - 24 inch Asus monitor [Link](https://www.amazon.com/ASUS-VA24DQ-Adaptive-Sync-DisplayPort-Frameless/dp/B08C5MGFXQ/ref=sr_1_3?crid=3S3T4WEGS9F80&dib=eyJ2IjoiMSJ9.rmF77kGZWbFRIylLifYcthss5lyAUm4EJ3MCJ40pqPqk6E_p4qgSiCnLo3AtyHk0jlxasr3d1r7SRelS4QjWUlJ8WoVcpdJ8JIkxzzURDpKruZxWRjl2bgEddP3chNo-kYixRihIxsh7RNkkfIIuqltU9GVN0nA6SqcF4MWjIJIWxBeebZn1awc6QkvL0lgoY7ORZlWmoiBAFy58rvyO2zj6JnsciaG1HeKXFcKam3c.L37ENfD17MKaFgnxtCRUxVbtX79lT4SiDcT7y2hxc2w&dib_tag=se&keywords=asus+monitor&qid=1748050481&sprefix=asus+monitor%2Caps%2C202&sr=8-3&ufe=app_do%3Aamzn1.fos.9fe8cbfa-bf43-43d1-a707-3f4e65a4b666)
-    - 15 inch monitor [Link](https://www.amazon.com/Portable-Ultra-Slim-External-Kickstand-Extender/dp/B0D8JXY8V3/ref=sr_1_1_sspa?crid=IXV836AAVTQY&dib=eyJ2IjoiMSJ9.JFwG8BAM9jkKSm3OAh4xtDYnh0VGDF3iuVvD2ln-HAvVOuW69xYNAH5kzbNq8sVzDK1D9IY5ceWZ-C0EX6IEkSRt8KxpAunjMeQ1XkfiD_zJF_Op2FScahvVyb7t43xlh5HS9T_ujfUZL-NmmMDqGHYFOEsPuZlkTO3SXRK3W1-kjzRWKU3O9FPoVypirbHmYjc_UcHbGqa0_bxOFUF_a1SV5TlbSs0jRIMzGs7JeL0.jqQ152DrfcMx0DyA7sv6mx2l9on_qiKtzkIPrQmWwRQ&dib_tag=se&keywords=ailrinni%2Bportable%2Bmonitor%2B-%2B15.6%2Binch%2Bfull%2Bhd%2B1080p%2Bips&qid=1748048739&sprefix=%2Caps%2C188&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&th=1)<br />
+- Monitor (7-22 inch monitors have been tested, use these for 100% known working without making any changes to code)
+    - 7 inch touchscreen monitor [Link](https://www.amazon.com/dp/B0D3QB7X4Z?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)<br />
+    - 10.1 inch Asus monitor [Link](https://www.amazon.com/dp/B0BHQRSDZR?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
+    - 15 inch monitor [Link](https://www.amazon.com/dp/B0DD6HK35V/?coliid=ITZX6F2VLHA8&colid=2DECD67MCFUR2&ref_=list_c_wl_lv_ov_lig_dp_it&th=1)<br />
 
-- Remote (Helpful when setting everything up on pi, navigating main menu, and controlling scoreboard - see controls section)
+- Remote (Helpful if not using touchscreen to set everything up on pi, navigating main menu, and controlling scoreboard - see controls section)
   - [Link](https://www.amazon.com/dp/B06XHF7DNQ?ref=ppx_yo2ov_dt_b_fed_asin_title)
     
   
-This code has been tested in the following operating systems, Debian (Raspberry Pi), Darwin (Mac) and Windows.<br />
-Text and images should auto size based on the monitor size you are using.<br />
 
 
 ## Future Plans
 - [ ] Support for college sports
-- [ ] Improve main screen layout switching (Less flicker when navigating)
 - [ ] Clean up code
