@@ -47,19 +47,18 @@ class DisplayState:
         self.delay_clock = current_time
 
 def save_team_data(
-    info: dict, fetch_index: int, teams_with_data: list[bool],
-) -> tuple[dict, list[bool]]:
+    info: dict, fetch_index: int, *, has_data: bool,
+) -> tuple[dict, bool]:
     """Save or retrieve team data for display, handling final states and display duration.
 
     params info: The team information dictionary.
     fetch_index: Index of the team in the settings.teams list.
-    teams_with_data: List indicating which teams currently have data available.
+    has_data: Boolean indicating if the team currently has data available.
 
-    return: Updated team info and teams_with_data list.
+    return: Updated team info and has_data boolean.
     """
     team_name = settings.teams[fetch_index][0]
     is_team_saved = team_name in settings.saved_data
-    has_data = teams_with_data[fetch_index]
     is_final = "FINAL" in info.get("bottom_info", "")
 
     if has_data and is_final and not is_team_saved:
@@ -67,10 +66,10 @@ def save_team_data(
             info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
         settings.saved_data[team_name] = [info, datetime.now()]
         logger.info("Saving Data to display longer than it's available")
-        return info, teams_with_data
+        return info, has_data
     if is_team_saved and has_data and is_final:
         info["bottom_info"] = settings.saved_data[team_name][0]["bottom_info"]
-        return info, teams_with_data
+        return info, has_data
     if is_team_saved and not has_data:
         logger.info("Data is no longer available, checking if should display")
         current_date = datetime.now()
@@ -80,7 +79,7 @@ def save_team_data(
         if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
             logger.info(f"It will display, time its been: {date_difference}")
             info = settings.saved_data[team_name][0]
-            teams_with_data[fetch_index] = True
-            return info, teams_with_data
+            has_data = True
+            return info, has_data
         del settings.saved_data[team_name]
-    return info, teams_with_data
+    return info, has_data

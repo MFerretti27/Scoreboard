@@ -17,7 +17,6 @@ from constants import colors, messages, ui_keys
 from gui_layouts import main_screen_layout
 from gui_layouts.change_functionality_popup import show_scoreboard_popup
 from helper_functions.logging.logger_config import logger
-from helper_functions.ui.fetch_data_thread import stop_background_thread
 from helper_functions.ui.scoreboard_helpers import will_text_fit_on_screen
 from screens import main_screen, scoreboard_screen
 
@@ -201,6 +200,7 @@ def convert_paths_to_strings(obj: object) -> object:
 def go_to_main_screen_hard(window: Sg.Window) -> None:
     """Close current window and launch main screen module via subprocess."""
     # Stop scoreboard background thread if running
+    from helper_functions.ui.fetch_data_thread import stop_background_thread
     stop_background_thread()
     window.close()
     gc.collect()
@@ -227,6 +227,7 @@ def go_to_main_screen(window: Sg.Window) -> None:
                        return_keyboard_events=True, alpha_channel=0).Finalize()
 
     # Stop scoreboard background thread if running
+    from helper_functions.ui.fetch_data_thread import stop_background_thread
     stop_background_thread()
 
     window.close()

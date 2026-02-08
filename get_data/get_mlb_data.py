@@ -9,7 +9,7 @@ import statsapi  # type: ignore[import]
 
 import settings
 from constants.file_paths import get_baseball_base_image_path
-from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.exceptions import APIError, DataValidationError, NetworkError
 from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
 from helper_functions.api_utils.validators import validate_mlb_game, validate_mlb_schedule_response
 from helper_functions.data.data_helpers import check_playing_each_other, get_team_logo
@@ -128,9 +128,15 @@ def _fetch_mlb_data(team_name: str, double_header: int) -> tuple:
             msg = f"MLB game data invalid for {team_name}"
             raise APIError(msg, error_code="INVALID_GAME_DATA") from e
 
-        live_feed = requests.get(
-            f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live', timeout=5,
-        ).json()
+        try:
+            live_feed_resp = requests.get(
+                f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live', timeout=5,
+            )
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.error(f"Network error while fetching MLB live feed for {team_name}: {e}")
+            msg = f"Network error while fetching MLB live feed for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+        live_feed = live_feed_resp.json()
     except (APIError, DataValidationError):
         raise
     except Exception as e:

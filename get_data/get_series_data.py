@@ -7,7 +7,7 @@ import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 
-from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.exceptions import DataValidationError, NetworkError
 from helper_functions.api_utils.retry import retry_api_call
 from helper_functions.api_utils.validators import validate_mlb_series_response, validate_nba_standings
 from helper_functions.logging.logger_config import logger
@@ -85,8 +85,20 @@ def get_current_series_nhl(team_name: str) -> str:
     series_summary = ""
     try:
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
-        res = resp.json()
+        try:
+            resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.error(f"NHL series API returned status {resp.status_code} for team {team_name}")
+            msg = f"Network error while fetching NHL series for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+        if resp.status_code != 200:
+            logger.error(f"NHL series API returned status {resp.status_code} for team {team_name}")
+            return series_summary
+        try:
+            res = resp.json()
+        except Exception as e:
+            logger.error(f"NHL series API JSON decode error for team {team_name}: {e}")
+            return series_summary
 
         away_series_wins = res["seasonSeriesWins"]["awayTeamWins"]
         home_series_wins = res["seasonSeriesWins"]["homeTeamWins"]

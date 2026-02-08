@@ -127,7 +127,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "RETRY_MAX_DELAY": 30.0,
     "RETRY_BACKOFF_MULTIPLIER": 2.0,
     "RETRY_USE_CACHE_FALLBACK": True,
-    "MAX_STALE_DATA_AGE": 1800,  # 30 minutes - reject cache older than this
+    "MAX_STALE_DATA_AGE": 300,  # 5 minutes - reject cache older than this
 
     # MLB
     "display_last_pitch": True,

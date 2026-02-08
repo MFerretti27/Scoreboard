@@ -13,7 +13,7 @@ from constants.file_paths import (
     get_conference_championship_image_path,
     get_playoff_image_path,
 )
-from helper_functions.api_utils.exceptions import DataValidationError
+from helper_functions.api_utils.exceptions import DataValidationError, NetworkError
 from helper_functions.api_utils.validators import (
     validate_espn_scoreboard_event,
     validate_mlb_schedule_games,
@@ -142,8 +142,16 @@ def get_nhl_game_type(team_name: str) -> str:
 
         # Get abbreviations for the teams in the current game
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
-        res = resp.json()
+        try:
+            res = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5).json()
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.error(f"Network error while fetching NHL game type for {team_name}: {e}")
+            msg = f"Network error while fetching NHL game type for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+        if res.status_code != 200:
+            logger.error(f"NHL API returned status {res.status_code} for team {team_name}")
+            return ""
+
         validate_nhl_game_center_response(res, team_name)
 
         if res["seasonSeries"][0]["gameType"] == 2:
@@ -220,7 +228,14 @@ def get_nfl_game_type(team_name: str) -> str:
         result = ""
         # Fetch NFL scoreboard and find the event for this team
         resp = requests.get("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", timeout=5)
-        data = resp.json()
+        if resp.status_code != 200:
+            logger.error(f"NFL API returned status {resp.status_code}")
+            return result
+        try:
+            data = resp.json()
+        except Exception as e:
+            logger.error(f"NFL API JSON decode error: {e}")
+            return result
         events = data.get("events", [])
         event = next((e for e in events if team_name in e.get("name", "")), None)
         if not event:

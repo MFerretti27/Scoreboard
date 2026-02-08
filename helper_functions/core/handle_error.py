@@ -77,6 +77,7 @@ def _attempt_recovery(window: Sg.Window, max_attempts: int) -> bool:
     )
 
     for attempt in range(max_attempts):
+        any_success = False
         try:
             event = window.read(timeout=5)
             check_events(window, event)
@@ -86,6 +87,7 @@ def _attempt_recovery(window: Sg.Window, max_attempts: int) -> bool:
                     _retry_manager.retry_with_backoff(get_data, team)
                     _fallback_provider.cache_data(team[0], {"status": "success"})
                     logger.info(f"Successfully fetched data for {team[0]} after error")
+                    any_success = True
                 except Exception as fetch_err:
                     logger.warning(f"Failed to fetch data for {team[0]}: {fetch_err}")
         except Exception as recovery_err:
@@ -97,7 +99,8 @@ def _attempt_recovery(window: Sg.Window, max_attempts: int) -> bool:
             )
             wait(window, 30)
         else:
-            return True
+            if any_success:
+                return True
 
     return False
 
@@ -142,6 +145,8 @@ def handle_error(
     :param error: The exception that occurred
     :param team_info: Current team information for error context
     """
+    logger.info("handle_error called: error=%s, team_info_present=%s",
+                type(error).__name__ if error else None, team_info is not None)
     global _logic_error_counter
 
     is_network_error = isinstance(error, NetworkError) or not is_connected()
@@ -150,10 +155,14 @@ def handle_error(
 
     # Try to recover if connected and error is recoverable
     if is_connected() and is_recoverable:
+        logger.info("handle_error: Entering recovery branch (connected & recoverable)")
+        logger.info("Attempting to recover from error...")
         if _attempt_recovery(window, max_attempts):
+            logger.info("handle_error: Recovery succeeded, returning to normal operation.")
             _logic_error_counter = 0
             return
 
+        logger.info("handle_error: Recovery failed, logging error and escalating to clock.")
         _log_error_details(team_info if team_info is not None else [], error)
         try:
             notify_email()
@@ -164,8 +173,11 @@ def handle_error(
 
     # Handle unrecoverable logical errors
     if is_connected():
+        logger.info("handle_error: Entering unrecoverable logical error branch (connected & unrecoverable)")
+        logger.info("Handling unrecoverable logical error...")
         _logic_error_counter += 1
         if _logic_error_counter >= _LOGIC_ERROR_THRESHOLD:
+            logger.info("handle_error: Logic error threshold reached, escalating to clock.")
             _log_error_details(team_info if team_info is not None else [], error)
             logger.warning(
                 "Unrecoverable error encountered (%s/%s).",
@@ -180,7 +192,9 @@ def handle_error(
         return
 
     # Handle offline reconnection
+    logger.info("handle_error: Entering offline/reconnect branch (not connected)")
     if not _attempt_reconnect(window, max_attempts):
+        logger.info("handle_error: Reconnect failed after retries, escalating to clock.")
         logger.error("No internet connection after extended retry period")
         _log_error_details(team_info if team_info is not None else [], error)
         try:

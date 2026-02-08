@@ -2,6 +2,7 @@
 import copy
 import threading
 import time
+import traceback
 
 from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
@@ -28,6 +29,9 @@ fetch_thread_should_run = True
 
 # Global thread handle for cleanup
 fetch_thread = None
+
+# Heartbeat timestamp to detect stuck threads
+fetch_thread_heartbeat = 0
 
 def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bool]) -> list[bool]:
     """Update the currently playing flags based on delay information not current information.
@@ -161,7 +165,7 @@ def get_display_data_from_thread() -> tuple[list[bool], list[dict], list[bool]]:
     return teams_with_data, team_info, teams_currently_playing
 
 
-def background_fetch_loop() -> None:
+def background_fetch_loop(stop_event: threading.Event) -> None:
     """Continuously fetches data in the background, handles delay logic, and updates shared state for UI display.
 
     This function runs in a separate thread, periodically fetching data for all teams.
@@ -169,18 +173,21 @@ def background_fetch_loop() -> None:
     Updates the latest fetch results for use by the UI.
     The fetch interval adapts based on whether any team is currently playing.
     """
+    global fetch_thread_heartbeat
     state = DisplayState()
     logger.info(f"Starting background fetch thread [{fetch_thread_should_run}]...")
     while fetch_thread_should_run:
         try:
+            fetch_thread_heartbeat = time.time()
+            logger.debug(f"Fetch thread heartbeat at {fetch_thread_heartbeat}")
             teams_with_data = []
             team_info = []
             teams_currently_playing = []
             for fetch_index in range(len(settings.teams)):
                 info, data, currently_playing = get_data(settings.teams[fetch_index])
-                teams_with_data.append(data)
                 teams_currently_playing.append(currently_playing)
-                info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
+                info, data = save_team_data(info, fetch_index, has_data=data)
+                teams_with_data.append(data)
                 team_info.append(info)
 
             # Delay logic (buffering) if enabled and any team is currently playing
@@ -196,8 +203,11 @@ def background_fetch_loop() -> None:
                 latest_fetch_result["team_info"] = team_info.copy()
                 latest_fetch_result["teams_currently_playing"] = teams_currently_playing.copy()
                 latest_fetch_result["timestamp"] = time.time()
+
+            stop_event.clear()
         except Exception as e:
-            logger.exception(f"Error in background fetch thread: {e}")
+            logger.error(f"Exception in background fetch thread: {e}\n{traceback.format_exc()}")
+            stop_event.set()
 
         if any(teams_currently_playing):
             interval = PLAYING_GAME_FETCH_INTERVAL_MS / MILLISECONDS_PER_SECOND
@@ -215,3 +225,4 @@ def background_fetch_loop() -> None:
         interval = min(300, interval)
 
         time.sleep(interval)
+    logger.info("[DIAG] Exiting background_fetch_loop (thread exit)")

@@ -31,6 +31,33 @@ from .get_player_stats import get_player_stats
 from .get_series_data import get_series
 from .get_team_stats import get_team_stats
 
+
+def safe_get_nested(obj: Any, path: list[Any], default: Any = None) -> Any:  # noqa: ANN401
+    """Safely get a nested value from dict/list structure by path (list of keys/indices).
+
+    :param obj: The dictionary or list to traverse
+    :param path: List of keys/indices to traverse
+    :param default: Default value to return if any key/index is not found
+    Returns default if any lookup fails, but allows any type (str, int, etc.) as a valid leaf value.
+    """
+    for i, key in enumerate(path):
+        if isinstance(obj, dict):
+            if key in obj:
+                obj = obj[key]
+            else:
+                return default
+        elif isinstance(obj, list) and isinstance(key, int):
+            if 0 <= key < len(obj):
+                obj = obj[key]
+            else:
+                return default
+        else:
+            # If we're at the last key, allow primitive types (str, int, etc.)
+            if i == len(path) - 1:
+                return obj
+            return default
+    return obj
+
 doubleheader = 0
 
 
@@ -70,6 +97,30 @@ def _validate_scoreboard_event_and_competition(
             raise APIError(message, error_code=code) from exc
 
 
+def call_espn_api(url: str, team_name: str) -> json:
+    """Call ESPN API and set response_as_json global variable.
+
+    :param url: URL to call
+    :param team_name: Name of the team for logging purposes
+
+    :return: JSON response from ESPN API
+    """
+    # Track API call performance
+    start_time = time.time()
+    try:
+        response_as_json = requests.get(url, timeout=5).json()
+        duration_ms = (time.time() - start_time) * 1000
+        track_api_call("espn_scoreboard", duration_ms, success=True)
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        track_api_call("espn_scoreboard", duration_ms, success=False)
+        logger.info(f"ESPN API request failed after {duration_ms:.0f}ms")
+        msg = f"ESPN API request failed for {team_name}"
+        raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+
+    return response_as_json
+
+
 @retry_with_fallback(
     max_attempts=settings.RETRY_MAX_ATTEMPTS,
     backoff=BackoffConfig(
@@ -92,28 +143,20 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
     index = 0
 
     with log_context_scope(team=team_name, league=team_league, endpoint="espn_scoreboard"):
-        # Track API call performance
-        start_time = time.time()
-        try:
-            response_as_json = requests.get(url, timeout=5).json()
-            duration_ms = (time.time() - start_time) * 1000
-            track_api_call("espn_scoreboard", duration_ms, success=True)
-        except Exception as e:
-            duration_ms = (time.time() - start_time) * 1000
-            track_api_call("espn_scoreboard", duration_ms, success=False)
-            logger.info(f"ESPN API request failed after {duration_ms:.0f}ms")
-            msg = f"ESPN API request failed for {team_name}"
-            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
 
-        for event in response_as_json["events"]:
-            if team_name.upper() not in event["name"].upper():
+        response_as_json = call_espn_api(url, team_name)
+
+        events = safe_get_nested(response_as_json, ["events"], [])
+        for event in events:
+            event_name = safe_get_nested(event, ["name"], "")
+            if team_name.upper() not in str(event_name).upper():
                 index += 1  # Continue looking for team in sports league events
                 continue
 
             logger.info("Found Game: %s", team_name)
             team_has_data = True
 
-            competition = response_as_json["events"][index]["competitions"][0]
+            competition = safe_get_nested(response_as_json, ["events", index, "competitions", 0], {})
 
             # Validate scoreboard, event, and competition together for the matched team
             _validate_scoreboard_event_and_competition(
@@ -125,24 +168,28 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
             )
 
             # Check if game is within the next month, if not then its too far out to display
-            if not is_valid_game_date(competition["date"]):
+            game_date = safe_get_nested(competition, ["date"], None)
+            if not (game_date and is_valid_game_date(game_date)):
                 return team_info, False, False
 
             # Get Score
-            team_info["home_score"] = competition["competitors"][0].get("score", "0")
-            team_info["away_score"] = competition["competitors"][1].get("score", "0")
+            team_info["home_score"] = safe_get_nested(competition, ["competitors", 0, "score"], "0")
+            team_info["away_score"] = safe_get_nested(competition, ["competitors", 1, "score"], "0")
 
             if settings.display_records:
-                team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
-                team_info["home_record"] = competition["competitors"][0].get("records", "N/A")[0].get("summary", "N/A")
+                team_info["away_record"] = safe_get_nested(competition,
+                                                           ["competitors", 1, "records", 0, "summary"], "N/A")
+                team_info["home_record"] = safe_get_nested(competition,
+                                                           ["competitors", 0, "records", 0, "summary"], "N/A")
 
-            team_info["bottom_info"] = response_as_json["events"][index]["status"]["type"]["shortDetail"]
+            team_info["bottom_info"] = safe_get_nested(response_as_json,
+                                                       ["events", index, "status", "type", "shortDetail"], "")
 
             # Data only used in this function
-            home_name = competition["competitors"][0]["team"]["displayName"]
-            away_name = competition["competitors"][1]["team"]["displayName"]
-            home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
-            away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
+            home_name = safe_get_nested(competition, ["competitors", 0, "team", "displayName"], "")
+            away_name = safe_get_nested(competition, ["competitors", 1, "team", "displayName"], "")
+            home_short_name = safe_get_nested(competition, ["competitors", 0, "team", "shortDisplayName"], "")
+            away_short_name = safe_get_nested(competition, ["competitors", 1, "team", "shortDisplayName"], "")
 
             # Validate team names
             home_name, away_name = validate_team_names(home_name, away_name, team_league.upper())
@@ -155,12 +202,12 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
                 return team_info, False, currently_playing
 
             # Check if Team is Currently Playing
-            currently_playing = not any(t in team_info["bottom_info"] for t in ["AM", "PM"])
+            currently_playing = not any(t in str(team_info["bottom_info"]) for t in ["AM", "PM"])
             team_info, currently_playing = get_not_playing_data(team_info, competition, team_league,
                                                                 team_name, currently_playing=currently_playing)
 
             # Remove Timezone Characters in info
-            team_info["bottom_info"] = team_info["bottom_info"].replace("EDT", "").replace("EST", "")
+            team_info["bottom_info"] = str(team_info["bottom_info"]).replace("EDT", "").replace("EST", "")
 
             # Get Logos Location for Teams
             team_info["away_logo"] = get_sport_logo_path(team_league.upper(), away_name.upper())
@@ -194,12 +241,12 @@ def get_currently_playing_nfl_data(team_info: dict[str, Any], competition: dict[
 
     :return: Updated team_info with NFL specific data
     """
-    down = competition.get("situation", {}).get("shortDownDistanceText")
-    red_zone = competition.get("situation", {}).get("isRedZone")
-    spot = competition.get("situation", {}).get("possessionText")
-    possession = competition.get("situation", {}).get("possession")
-    away_timeouts = competition.get("situation", {}).get("awayTimeouts")
-    home_timeouts = competition.get("situation", {}).get("homeTimeouts")
+    down = safe_get_nested(competition, ["situation", "shortDownDistanceText"], None)
+    red_zone = safe_get_nested(competition, ["situation", "isRedZone"], None)
+    spot = safe_get_nested(competition, ["situation", "possessionText"], None)
+    possession = safe_get_nested(competition, ["situation", "possession"], None)
+    away_timeouts = safe_get_nested(competition, ["situation", "awayTimeouts"], None)
+    home_timeouts = safe_get_nested(competition, ["situation", "homeTimeouts"], None)
 
     if not settings.display_nfl_clock:
         team_info["bottom_info"] = ""
@@ -251,23 +298,23 @@ def get_currently_playing_nba_data(team_name: str, team_info: dict[str, Any],
     :return: Updated team_info with NBA specific data
     """
     if settings.display_nba_shooting:
-        home_field_goal_attempt = (competition["competitors"][0]["statistics"][3]["displayValue"])
-        home_field_goal_made = (competition["competitors"][0]["statistics"][4]["displayValue"])
+        home_field_goal_attempt = safe_get_nested(competition, ["competitors", 0, "statistics", 3, "displayValue"], "0")
+        home_field_goal_made = safe_get_nested(competition, ["competitors", 0, "statistics", 4, "displayValue"], "0")
 
-        home_3pt_attempt = (competition["competitors"][0]["statistics"][11]["displayValue"])
-        home_3pt_made = (competition["competitors"][0]["statistics"][12]["displayValue"])
+        home_3pt_attempt = safe_get_nested(competition, ["competitors", 0, "statistics", 11, "displayValue"], "0")
+        home_3pt_made = safe_get_nested(competition, ["competitors", 0, "statistics", 12, "displayValue"], "0")
 
-        home_free_throw_attempt = (competition["competitors"][0]["statistics"][7]["displayValue"])
-        home_free_throw_made = (competition["competitors"][0]["statistics"][8]["displayValue"])
+        home_free_throw_attempt = safe_get_nested(competition, ["competitors", 0, "statistics", 7, "displayValue"], "0")
+        home_free_throw_made = safe_get_nested(competition, ["competitors", 0, "statistics", 8, "displayValue"], "0")
 
-        away_field_goal_attempt = (competition["competitors"][1]["statistics"][3]["displayValue"])
-        away_field_goal_made = (competition["competitors"][1]["statistics"][4]["displayValue"])
+        away_field_goal_attempt = safe_get_nested(competition, ["competitors", 1, "statistics", 3, "displayValue"], "0")
+        away_field_goal_made = safe_get_nested(competition, ["competitors", 1, "statistics", 4, "displayValue"], "0")
 
-        away_3pt_attempt = (competition["competitors"][1]["statistics"][11]["displayValue"])
-        away_3pt_made = (competition["competitors"][1]["statistics"][12]["displayValue"])
+        away_3pt_attempt = safe_get_nested(competition, ["competitors", 1, "statistics", 11, "displayValue"], "0")
+        away_3pt_made = safe_get_nested(competition, ["competitors", 1, "statistics", 12, "displayValue"], "0")
 
-        away_free_throw_attempt = (competition["competitors"][1]["statistics"][7]["displayValue"])
-        away_free_throw_made = (competition["competitors"][1]["statistics"][8]["displayValue"])
+        away_free_throw_attempt = safe_get_nested(competition, ["competitors", 1, "statistics", 7, "displayValue"], "0")
+        away_free_throw_made = safe_get_nested(competition, ["competitors", 1, "statistics", 8, "displayValue"], "0")
 
         away_stats = (
             f"FG: {away_field_goal_made}/{away_field_goal_attempt}  "
@@ -339,8 +386,8 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
         team_info = copy.deepcopy(saved_info)  # Try clause might modify dictionary
         team_info["signature"] = "Failed to get data from MLB API"
 
-        team_info["bottom_info"] = team_info["bottom_info"].replace("Bot", "Bottom")
-        team_info["bottom_info"] = team_info["bottom_info"].replace("Mid", "Middle")
+        team_info["bottom_info"] = str(team_info["bottom_info"]).replace("Bot", "Bottom")
+        team_info["bottom_info"] = str(team_info["bottom_info"]).replace("Mid", "Middle")
 
         # Change to display inning above score
         if settings.display_inning:
@@ -351,16 +398,10 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
 
         # Get who is pitching and batting, if info is available
         if settings.display_pitcher_batter:
-            pitcher = (
-                competition.get("situation", {}).get("pitcher", {}).get("athlete", {})
-                            .get("shortName", "N/A")
-            )
-            pitcher = " ".join(pitcher.split()[1:])  # Remove First Name
-            batter = (
-                competition.get("situation", {}).get("batter", {}).get("athlete", {})
-                            .get("shortName", "N/A")
-            )
-            batter = " ".join(batter.split()[1:])  # Remove First Name
+            pitcher = safe_get_nested(competition, ["situation", "pitcher", "athlete", "shortName"], "N/A")
+            pitcher = " ".join(str(pitcher).split()[1:])  # Remove First Name
+            batter = safe_get_nested(competition, ["situation", "batter", "athlete", "shortName"], "N/A")
+            batter = " ".join(str(batter).split()[1:])  # Remove First Name
             if pitcher != "N/A":
                 team_info["bottom_info"] += (f"P: {pitcher}   ")
             if batter != "N/A":
@@ -368,26 +409,26 @@ def get_currently_playing_mlb_data(team_name: str, team_info: dict[str, Any],
 
         # Get Hits and Errors
         if settings.display_hits_errors:
-            home_hits = (competition["competitors"][0]["hits"])
-            away_hits = (competition["competitors"][1]["hits"])
-            home_errors = (competition["competitors"][0]["errors"])
-            away_errors = (competition["competitors"][1]["errors"])
+            home_hits = safe_get_nested(competition, ["competitors", 0, "hits"], "N/A")
+            away_hits = safe_get_nested(competition, ["competitors", 1, "hits"], "N/A")
+            home_errors = safe_get_nested(competition, ["competitors", 0, "errors"], "N/A")
+            away_errors = safe_get_nested(competition, ["competitors", 1, "errors"], "N/A")
             team_info["away_timeouts"] = (f"Hits: {away_hits} Errors: {away_errors}")
             team_info["home_timeouts"] = (f"Hits: {home_hits} Errors: {home_errors}")
 
         # If inning is changing do not display count and move inning to display below score
-        if "Mid" not in team_info["above_score_txt"] and "End" not in team_info["above_score_txt"]:
+        if "Mid" not in str(team_info["above_score_txt"]) and "End" not in str(team_info["above_score_txt"]):
             if settings.display_outs:
-                outs = (competition.get("outsText", "0 Outs"))
+                outs = safe_get_nested(competition, ["outsText"], "0 Outs")
                 team_info["top_info"] += (f"{outs}")
         else:
             team_info["bottom_info"] = ""
 
         if settings.display_bases:
             # Get runners position
-            on_first = (competition["situation"]["onFirst"])
-            on_second = (competition["situation"]["onSecond"])
-            on_third = (competition["situation"]["onThird"])
+            on_first = safe_get_nested(competition, ["situation", "onFirst"], default=False)
+            on_second = safe_get_nested(competition, ["situation", "onSecond"], default=False)
+            on_third = safe_get_nested(competition, ["situation", "onThird"], default=False)
             base_conditions = {
                 (True, False, False): "on_first.png",
                 (False, True, False): "on_second.png",
@@ -459,17 +500,25 @@ def handle_doubleheader(info: dict, league: str, name: str, events: list, comp: 
     return: True if the game is a doubleheader, False otherwise
     """
     global doubleheader
-    if ("FINAL" not in info["bottom_info"] or league != "mlb" or
+    if ("FINAL" not in str(info.get("bottom_info", "")) or league != "mlb" or
         not check_for_doubleheader({"events": events}, name) or doubleheader != 0):
         return False
 
     doubleheader = 1
-    score = f"{info['away_score']}-{info['home_score']}" if int(info["away_score"]) > int(info["home_score"]) \
-        else f"{info['home_score']}-{info['away_score']}"
-    winner = comp["competitors"][0]["team"]["displayName"] if int(info["home_score"]) > int(info["away_score"]) \
-        else comp["competitors"][1]["team"]["displayName"]
+    away_score = safe_get_nested(info, ["away_score"], "0")
+    home_score = safe_get_nested(info, ["home_score"], "0")
+    try:
+        away_score_int = int(away_score)
+        home_score_int = int(home_score)
+    except Exception:
+        away_score_int = 0
+        home_score_int = 0
+    score = f"{away_score}-{home_score}" if away_score_int > home_score_int else f"{home_score}-{away_score}"
+    winner = safe_get_nested(comp, ["competitors", 0, "team", "displayName"], "") if home_score_int > away_score_int \
+        else safe_get_nested(comp, ["competitors", 1, "team", "displayName"], "")
 
-    updated_info, _, still_playing = get_data([name, league, comp["competitors"][0]["team"]["sport"]["name"]])
+    sport_name = safe_get_nested(comp, ["competitors", 0, "team", "sport", "name"], "")
+    updated_info, _, still_playing = get_data([name, league, sport_name])
     if not still_playing:
         updated_info["top_info"] = f"Doubleheader: {winner} Won {score} First Game"
 
@@ -514,20 +563,21 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
     return: Updated info with live game data for the specified league
     """
     # Get Team Stats if not currently playing
-    away_team_name = team_info["above_score_txt"].split(" @ ")[0]
-    home_team_name = team_info["above_score_txt"].split(" @ ")[1]
+    above_score_txt = str(team_info.get("above_score_txt", " @ "))
+    away_team_name = above_score_txt.split(" @ ")[0]
+    home_team_name = above_score_txt.split(" @ ")[1] if " @ " in above_score_txt else ""
     if team_league == "nfl":
-        home_team_name = competition["competitors"][0]["team"]["abbreviation"]
-        away_team_name = competition["competitors"][1]["team"]["abbreviation"]
+        home_team_name = safe_get_nested(competition, ["competitors", 0, "team", "abbreviation"], "")
+        away_team_name = safe_get_nested(competition, ["competitors", 1, "team", "abbreviation"], "")
     home_team_stats, away_team_stats = get_team_stats(team_league.upper(), home_team_name, away_team_name)
     team_info["away_team_stats"] = away_team_stats
     team_info["home_team_stats"] = home_team_stats
 
     # Check if Team is Done Playing
-    if any(keyword in str(team_info["bottom_info"])
+    if any(keyword in str(team_info.get("bottom_info", ""))
             for keyword in ["Delayed", "Postponed", "Final", "Canceled", "Delay"]):
         currently_playing = False
-        team_info["bottom_info"] = str(team_info["bottom_info"]).upper()
+        team_info["bottom_info"] = str(team_info.get("bottom_info", "")).upper()
 
         if settings.display_player_stats:
             home_player_stats, away_player_stats = get_player_stats(team_league, team_name)
@@ -537,15 +587,15 @@ def get_not_playing_data(team_info: dict, competition: dict, team_league: str,
 
     # Check if Game hasn't been played yet
     elif not currently_playing:
-        team_info["bottom_info"] = str(team_info["bottom_info"])
+        team_info["bottom_info"] = str(team_info.get("bottom_info", ""))
 
         if settings.display_venue:
-            venue = competition["venue"]["fullName"]
+            venue = safe_get_nested(competition, ["venue", "fullName"], "")
             team_info["bottom_info"] = str(team_info["bottom_info"] + "@ " + venue)
 
         if settings.display_odds:
-            over_under = competition.get("odds", [{}])[0].get("overUnder", "N/A")
-            spread = competition.get("odds", [{}])[0].get("details", "N/A")
+            over_under = safe_get_nested(competition, ["odds", 0, "overUnder"], "N/A")
+            spread = safe_get_nested(competition, ["odds", 0, "details"], "N/A")
             team_info["top_info"] = f"Spread: {spread} \t\t OverUnder: {over_under}"
             if team_league.upper() in ["NHL", "MLB"]:
                 team_info["top_info"] = f"MoneyLine: {spread} \t\t OverUnder: {over_under}"
@@ -582,7 +632,7 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
         team_info, team_has_data, currently_playing = get_espn_data(team, team_info)
         set_cached(cache_key, (team_info, team_has_data, currently_playing), ttl=API_RESPONSE_TTL)
     except Exception as espn_error:
-        logger.warning("ESPN API failed for %s: %s", team_name, espn_error)
+        logger.warning(f"ESPN API failed: {espn_error}", exc_info=True)
     else:
         return team_info, team_has_data, currently_playing
 
@@ -608,7 +658,7 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
         set_cached(cache_key, (team_info, team_has_data, currently_playing), ttl=API_RESPONSE_TTL)
         team_info["signature"] = f"Data from {team_league.upper()} API (ESPN unavailable)"
     except Exception as sport_error:
-        logger.warning("%s API failed for %s: %s", team_league.upper(), team_name, sport_error)
+        logger.warning(f"{team_league.upper()} API failed: {sport_error}", exc_info=True)
     else:
         return team_info, team_has_data, currently_playing
 
@@ -617,14 +667,10 @@ def get_data(team: list[str]) -> tuple[dict[str, Any], bool, bool]:
     if cached is not None:
         team_info, team_has_data, currently_playing = cached
         team_info["signature"] = "⚠ Using cached data (APIs unavailable)"
-        logger.warning(
-            "Using cached data for %s (up to %ss old) after ESPN and %s API failures",
-            team_name,
-            settings.MAX_STALE_DATA_AGE,
-            team_league.upper(),
-        )
+        logger.warning(f"Using cached data (up to {settings.MAX_STALE_DATA_AGE}s old) after ESPN and API failures.")
         return team_info, team_has_data, currently_playing
 
     # 4) Nothing worked — raise
     msg = f"Could not fetch data for {team_name} from ESPN, {team_league.upper()}, or cache"
+    logger.error(f"{msg}")
     raise DataFetchError(msg, team=team_name, league=team_league)

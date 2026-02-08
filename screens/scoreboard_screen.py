@@ -1,6 +1,7 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
 from __future__ import annotations
 
+import contextlib
 import copy
 import json
 import logging
@@ -14,11 +15,14 @@ from typing import Any
 import FreeSimpleGUI as Sg  # type: ignore[import]
 from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
+import helper_functions.ui.fetch_data_thread as fetch_data_thread_mod
 import settings
 from constants import colors, ui_keys
+from get_data.get_espn_data import get_data
 from gui_layouts import scoreboard_layout
 from helper_functions.core.handle_error import handle_error
 from helper_functions.logging.logger_config import logger
+from helper_functions.system.internet_connection import is_connected, reconnect
 from helper_functions.system.update import auto_update
 from helper_functions.ui.event_checks import check_events, scroll, set_spoiler_mode
 from helper_functions.ui.fetch_data_thread import (
@@ -52,6 +56,9 @@ SCORE_STATE_STYLES = [
 saved_delay_data: list[list[dict[str, Any]]] = []  # Used to store delayed data
 show_home_stats_next: bool = True  # Track which player stats to show on small screens
 
+# Global thread control
+fetch_thread_should_run: bool = False
+fetch_thread: threading.Thread | None = None
 
 @dataclass
 class DisplayState:
@@ -251,14 +258,14 @@ def _should_rotate_team(state: DisplayState, display_timer: int) -> bool:
 
 def _handle_update_cycle(
     window: Sg.Window,
-    team_info: list[dict],
+    team_info: list[dict[str, Any]],
     state: DisplayState,
     team_status: TeamStatus | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Execute display update cycle and return currently displaying team info."""
-    currently_displaying = {}
+    currently_displaying: dict[str, Any] = {}
 
-    if team_status.teams_with_data[state.display_index]:
+    if team_status is not None and team_status.teams_with_data[state.display_index]:
         update_display(window, team_info, state.display_index,
                        currently_playing=team_status.teams_currently_playing[state.display_index])
         currently_displaying = team_info[state.display_index]
@@ -289,16 +296,34 @@ def _handle_rotation_cycle(
         logger.info(f"Rest of teams: {teams_with_data}\n")
 
 
-def check_thread_health() -> None:
-    """Check if background fetch thread is alive, restart if not."""
+def check_thread_health(window: Sg.Window, stop_event: threading.Event) -> None:
+    """Check if background fetch thread is alive and making progress, restart if not.
+
+    :param window: The window element to update
+    """
     global fetch_thread_should_run, fetch_thread
+    # Check if thread is dead
     if fetch_thread is None or not fetch_thread.is_alive():
         fetch_thread_should_run = True
         logger.error("Background fetch thread has stopped unexpectedly.")
-        fetch_thread_should_run = True
-        fetch_thread = threading.Thread(target=background_fetch_loop, daemon=True)
+        fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
         fetch_thread.start()
         logger.info("Restarted background fetch thread.")
+        wait_for_thread(window)
+    else:
+        # Heartbeat check: if no progress in 30 seconds, consider stuck
+        now = time.time()
+        heartbeat = getattr(fetch_data_thread_mod, "fetch_thread_heartbeat", 0)
+        if heartbeat and now - heartbeat > 300:
+            logger.error(f"Background fetch thread appears stuck (no heartbeat for {int(now-heartbeat)}s). Restarting.")
+            fetch_thread_should_run = False
+            with contextlib.suppress(Exception):
+                fetch_thread.join(timeout=2)
+            fetch_thread_should_run = True
+            fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
+            fetch_thread.start()
+            logger.info("Restarted background fetch thread after no data was fetched after 5 minutes.")
+            wait_for_thread(window)
 
 
 def wait_for_thread(window: Sg.Window, wait_time_limit: float = 10.0) -> None:
@@ -307,17 +332,37 @@ def wait_for_thread(window: Sg.Window, wait_time_limit: float = 10.0) -> None:
     :param window: The window element to update
     :param wait_time_limit: Maximum time to wait for thread to start in seconds
     """
-    wait_time = 0
-    while not fetch_thread.is_alive() and wait_time < wait_time_limit:
+    wait_time: float = 0.0
+    while (fetch_thread is None or not fetch_thread.is_alive()) and wait_time < wait_time_limit:
         time.sleep(0.1)
         wait_time += 0.1
 
-    if fetch_thread.is_alive():
+    if fetch_thread is not None and fetch_thread.is_alive():
         logger.info("Background fetch thread started successfully.")
     else:
         logger.error("Background fetch thread failed to start within expected time.")
         clock(window, message="Error fetching data...")
 
+
+def handle_resume_from_sleep(window: Sg.Window) -> None:
+    """Handle system resume from sleep by running recovery logic.
+
+    :param window: The window element to update
+    """
+    logger.info("Detected system resume, running recovery logic.")
+    # 1. Check and restore internet connection
+    if not is_connected():
+        reconnect()
+    # 2. Restart threads/timers if needed (depends on your architecture)
+    # 3. Optionally clear/refresh cache
+    # 4. Force data refresh for all teams
+    for team in settings.teams:
+        try:
+            get_data(team)
+        except Exception as e:
+            logger.warning(f"Failed to refresh data for {team[0]} after resume: {e}")
+    # 5. Update UI
+    window.refresh()
 
 ##################################
 #                                #
@@ -327,31 +372,40 @@ def wait_for_thread(window: Sg.Window, wait_time_limit: float = 10.0) -> None:
 
 def main(window: Sg.Window) -> None:
     """Run the scoreboard application with background fetch."""
-    global fetch_thread_should_run, fetch_thread
+    global fetch_thread_should_run
 
     # Reset UI flags
     settings.stay_on_team = False
     settings.no_spoiler_mode = False
 
     # Start background fetch thread
-    fetch_thread_should_run = True
-    fetch_thread = threading.Thread(target=background_fetch_loop, daemon=True)
+    fetch_thread_should_run = True  # Set flag to run thread
+    stop_event = threading.Event()  # Event to signal error and to stop
+    fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
     fetch_thread.start()
 
     state = DisplayState()
     currently_displaying: dict = {}
-    team_info = []  # Always defined for error handling
+    team_info: list[dict[str, Any]] = []  # Always defined for error handling
     maximize_screen(window)
 
-    # Allow time for thread to start
-    wait_for_thread(window)
+    last_time = time.time()
 
     while True:
+        now = time.time()
+        if now - last_time > 10:  # 10 seconds is a typical threshold
+            handle_resume_from_sleep(window)
+        last_time = now
         try:
             event = window.read(timeout=5000)
 
             # Ensure background thread is running
-            check_thread_health()
+            check_thread_health(window, stop_event)
+
+            if stop_event.is_set():
+                logger.info("Background fetch thread reported an error, handling recovery.")
+                handle_error(window, team_info=team_info)
+                stop_event.clear()
 
             # Read latest data from background thread
             teams_with_data, team_info, teams_currently_playing = get_display_data_from_thread()

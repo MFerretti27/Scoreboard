@@ -18,7 +18,7 @@ from constants.file_paths import (
     PLAYOFF_IMAGES_DIR,
     SPORT_LOGOS_DIR,
 )
-from get_data.get_team_league import MLB, NBA, NFL, NHL
+from get_data.get_team_league import MLB, NBA, NFL, NHL, get_team_league
 from helper_functions.logging.logger_config import logger
 
 
@@ -186,8 +186,6 @@ def get_team_logos(window: Sg.Window, teams: list) -> tuple[bool, str]:
             ])
 
         succeeded, msg = double_check_logos()
-        if not succeeded:
-            return check_downloaded_correctly()
 
     except Exception as e:
         logger.exception("Failed to download team logos")
@@ -299,7 +297,10 @@ def double_check_logos() -> tuple[bool, str]:
         for team in teams:
             logo_path = Path.cwd() / "images" / "sport_logos" / league / f"{team.upper()}.png"
             if not Path.exists(logo_path):
-                missing_logos.append(f"{team})")
+                team_name_in_files, new_league, sport_name = get_team_league(team)
+                settings.teams.append([team_name_in_files, new_league, sport_name])
+                missing_logos.append(f"{team}")
+
 
     if missing_logos:
         logger.exception("Missing logos for the following teams: %s", ", ".join(missing_logos))

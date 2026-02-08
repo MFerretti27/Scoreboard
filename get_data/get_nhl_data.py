@@ -10,7 +10,7 @@ from dateutil.parser import isoparse  # type: ignore[import]
 import settings
 from get_data.get_player_stats import get_player_stats
 from get_data.get_team_stats import get_team_stats
-from helper_functions.api_utils.exceptions import APIError, DataValidationError
+from helper_functions.api_utils.exceptions import APIError, DataValidationError, NetworkError
 from helper_functions.api_utils.retry import BackoffConfig, retry_with_fallback
 from helper_functions.api_utils.validators import validate_nhl_boxscore
 from helper_functions.data.data_helpers import check_playing_each_other, get_team_logo
@@ -103,13 +103,27 @@ def _fetch_nhl_boxscore(team_name: str) -> dict:
     """Fetch and validate NHL boxscore data."""
     try:
         team_id = get_nhl_game_id(team_name)
-        box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-    except (requests.exceptions.RequestException, IndexError) as e:
+        try:
+            box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.info("Network error fetching NHL data for team: %s", team_name)
+            msg = f"Network error fetching NHL game data for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+    except (NetworkError, IndexError) as e:
         logger.info("Error fetching NHL data for team: %s", team_name)
         msg = f"Failed to fetch NHL game data for {team_name}"
         raise APIError(msg, error_code="NHL_API_ERROR") from e
 
-    box_score = box_score.json()
+    if box_score.status_code != 200:
+        logger.error(f"NHL boxscore API returned status {box_score.status_code} for team {team_name}")
+        msg = f"NHL boxscore API error for {team_name}"
+        raise APIError(msg, error_code="NHL_API_ERROR") from None
+    try:
+        box_score = box_score.json()
+    except Exception as e:
+        logger.error(f"NHL boxscore API JSON decode error for team {team_name}: {e}")
+        msg = f"NHL boxscore API JSON decode error for {team_name}"
+        raise APIError(msg, error_code="NHL_API_ERROR") from None
 
     # Validate boxscore response
     try:
@@ -189,7 +203,14 @@ def append_nhl_data(team_info: dict[str, Any], team_name: str) -> dict:
     """
     team_id = get_nhl_game_id(team_name)
     box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-    box_score = box_score.json()
+    if box_score.status_code != 200:
+        logger.error(f"NHL boxscore API returned status {box_score.status_code} for team {team_name}: {box_score.text}")
+        return team_info
+    try:
+        box_score = box_score.json()
+    except Exception as e:
+        logger.error(f"NHL boxscore API JSON decode error for team {team_name}: {e}\nResponse text: {box_score.text}")
+        return team_info
 
     # Get shots on goal of each team
     if settings.display_nhl_sog:
