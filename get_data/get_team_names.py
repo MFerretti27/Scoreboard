@@ -13,8 +13,8 @@ from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 import get_data.get_team_league
 import settings
 from get_data.get_team_league import MLB, NBA, NFL, NHL
-from helper_functions.logger_config import logger
-from helper_functions.main_menu_helpers import remove_accents, update_teams
+from helper_functions.logging.logger_config import logger
+from helper_functions.ui.main_menu_helpers import remove_accents, update_teams
 
 
 def normalize(name: str) -> str:
@@ -127,7 +127,8 @@ def update_new_division(league: str) -> str:
         elif league == "NHL":
             client = NHLClient()
             for team in client.teams.teams():
-                division_name = team.division.get("name") if hasattr(team, "division") else "N/A"
+                logger.info(f"team: {team}")
+                division_name = team.get("division", {}).get("name", "N/A")
                 division = format_division("NHL", division_name)
                 new_team_divisions[division].append(team["name"])
 
@@ -138,10 +139,12 @@ def update_new_division(league: str) -> str:
                 division = format_division("NBA", division_name)
                 new_team_divisions[division].append(f"{team[3]} {team[4]}")
 
-        logger.info("New Divisions:\n %s\n", new_team_divisions)
+
+        logger.info(f"team: {new_team_divisions}")
 
         # Using key (list name) and value (teams in list) update division lists in get_team_league.py
         for key, value in new_team_divisions.items():
+            logger.info("New Division %s: [%s]\n", key, value)
             str_key = str(key)
             update_new_names(str_key, value)
 

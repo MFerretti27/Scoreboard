@@ -1,33 +1,41 @@
 """Script to Display a Scoreboard for your Favorite Teams."""
+from __future__ import annotations
 
+import contextlib
 import copy
 import json
 import logging
 import sys
+import threading
+import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 from adafruit_ticks import ticks_diff, ticks_ms  # type: ignore[import]
 
+import helper_functions.ui.fetch_data_thread as fetch_data_thread_mod
 import settings
+from constants import colors, ui_keys
 from get_data.get_espn_data import get_data
 from gui_layouts import scoreboard_layout
-from helper_functions.handle_error import handle_error
-from helper_functions.logger_config import logger
-from helper_functions.scoreboard_helpers import (
-    check_events,
+from helper_functions.core.handle_error import handle_error
+from helper_functions.logging.logger_config import logger
+from helper_functions.system.internet_connection import is_connected, reconnect
+from helper_functions.system.update import auto_update
+from helper_functions.ui.event_checks import check_events, scroll, set_spoiler_mode
+from helper_functions.ui.fetch_data_thread import (
+    background_fetch_loop,
+    get_display_data_from_thread,
+)
+from helper_functions.ui.scoreboard_helpers import (
     count_lines,
     increase_text_size,
     maximize_screen,
     reset_window_elements,
-    scroll,
-    set_spoiler_mode,
     will_text_fit_on_screen,
 )
-from helper_functions.update import auto_update
 from screens.clock_screen import clock
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in terminal
@@ -36,18 +44,21 @@ logging.getLogger("httpx").setLevel(logging.WARNING)  # Ignore httpx logging in 
 MILLISECONDS_PER_SECOND = 1000
 PLAYING_GAME_FETCH_INTERVAL_MS = 3000
 SMALL_SCREEN_WIDTH_THRESHOLD = 1300
-READ_TIMEOUT_MS = 2000
+READ_TIMEOUT_MS = 100  # Reduced from 2000ms to 100ms for more responsive user input
 SCORE_STATE_STYLES = [
-    ("power_play", {"text_color": "blue"}),
-    ("bonus", {"text_color": "orange"}),
+    ("power_play", {"text_color": colors.POWER_PLAY_BLUE}),
+    ("bonus", {"text_color": colors.BONUS_ORANGE}),
     ("possession", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline")}),
-    ("redzone", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline"), "text_color": "red"}),
+    ("redzone", {"font": (settings.FONT, settings.SCORE_TXT_SIZE, "underline"), "text_color": colors.SPORTS_RED}),
 ]
 
 # Module-level state
 saved_delay_data: list[list[dict[str, Any]]] = []  # Used to store delayed data
 show_home_stats_next: bool = True  # Track which player stats to show on small screens
 
+# Global thread control
+fetch_thread_should_run: bool = False
+fetch_thread: threading.Thread | None = None
 
 @dataclass
 class DisplayState:
@@ -72,136 +83,13 @@ class DisplayState:
         self.fetch_clock = current_time
         self.delay_clock = current_time
 
-def save_team_data(info: dict[str, Any], fetch_index: int,
-                   teams_with_data: list[bool]) -> tuple[dict[str, Any], list[bool]]:
-    """Save data to display longer than data is available (minimum 3 days).
 
-    :param info: The information to save.
-    :param fetch_index: The index of the team being fetched.
-    :param teams_with_data: A list indicating which teams have data available.
+@dataclass
+class TeamStatus:
+    """Bundle team state collections to reduce parameter count."""
 
-    :return: A tuple containing the updated team_info and teams_with_data lists.
-    """
-    team_name = settings.teams[fetch_index][0]
-    is_team_saved = team_name in settings.saved_data
-    has_data = teams_with_data[fetch_index]
-    is_final = "FINAL" in info.get("bottom_info", "")
-
-    # Team just finished game - save data
-    if has_data and is_final and not is_team_saved:
-        if settings.display_date_ended:
-            info["bottom_info"] += "   " + datetime.now().strftime("%-m/%-d/%y")
-
-        settings.saved_data[team_name] = [info, datetime.now()]
-        logger.info("Saving Data to display longer than it's available")
-        return info, teams_with_data
-
-    # Team is already saved - don't overwrite with new date
-    if is_team_saved and has_data and is_final:
-        info["bottom_info"] = settings.saved_data[team_name][0]["bottom_info"]
-        return info, teams_with_data
-
-    # Team data no longer available - check if should display from saved data
-    if is_team_saved and not has_data:
-        logger.info("Data is no longer available, checking if should display")
-        current_date = datetime.now()
-        saved_date = settings.saved_data[team_name][1]
-        saved_datetime = datetime.fromisoformat(saved_date) if isinstance(saved_date, str) else saved_date
-
-        date_difference = current_date - saved_datetime
-
-        # Display if within allowed timeframe
-        if date_difference <= timedelta(days=settings.HOW_LONG_TO_DISPLAY_TEAM):
-            logger.info(f"It will display, time its been: {date_difference}")
-            info = settings.saved_data[team_name][0]
-            teams_with_data[fetch_index] = True
-            return info, teams_with_data
-
-        # Remove if past allowed timeframe
-        del settings.saved_data[team_name]
-
-    return info, teams_with_data
-
-def get_display_data(state: DisplayState) -> tuple:
-    """Fetch and update display data for teams.
-
-    :param state: DisplayState containing delay timing and flags
-
-    :return: tuple (
-        teams_with_data,
-        team_info,
-        teams_currently_playing,
-    )
-    """
-    teams_with_data = []
-    team_info = []
-    teams_currently_playing = []
-    delay_timer = settings.LIVE_DATA_DELAY * MILLISECONDS_PER_SECOND
-
-    for fetch_index in range(len(settings.teams)):
-        logger.info(f"\nFetching data for {settings.teams[fetch_index][0]}")
-        info, data, currently_playing = get_data(settings.teams[fetch_index])
-        teams_with_data.append(data)
-        teams_currently_playing.append(currently_playing)
-
-        if currently_playing and settings.teams[fetch_index][0] in settings.saved_data:
-            logger.info("Removing saved data for team that is currently playing")
-            del settings.saved_data[settings.teams[fetch_index][0]]
-
-        info, teams_with_data = save_team_data(info, fetch_index, teams_with_data)
-
-        team_info.append(info)
-
-    if settings.delay and any(teams_currently_playing):
-        team_info = _handle_delay_logic(
-            state, delay_timer, team_info,
-            teams_with_data, teams_currently_playing,
-        )
-
-    return teams_with_data, team_info, teams_currently_playing
-
-
-def _handle_delay_logic(
-    state: DisplayState,
-    delay_timer: int,
-    team_info: list[dict],
-    teams_with_data: list[bool],
-    teams_currently_playing: list[bool],
-) -> list[dict]:
-    """Handle delay timing and data buffering logic.
-
-    :param state: DisplayState containing delay clock and flags
-    :param delay_timer: Delay duration in milliseconds
-    :param team_info: Current team info list
-    :param teams_with_data: Teams with data available
-    :param teams_currently_playing: Teams currently playing
-
-    :return: Updated team_info list
-    """
-    # Wait for delay to be over to start displaying data
-    if ticks_diff(ticks_ms(), state.delay_clock) >= delay_timer and state.delay_started:
-        state.delay_over = True
-    elif not state.delay_started:
-        logger.info("Setting delay")
-        state.delay_started = True
-        state.delay_clock = ticks_ms()
-    else:
-        delay_seconds = ticks_diff(ticks_ms(), state.delay_clock)/MILLISECONDS_PER_SECOND
-        logger.info(f"Delay not over {delay_seconds} seconds passed")
-
-    saved_delay_data.append(copy.deepcopy(team_info))
-
-    if state.delay_over:
-        if saved_delay_data:
-            team_info[:] = copy.deepcopy(saved_delay_data.pop(0))
-        else:
-            logger.warning("saved_delay_data is empty after delay; falling back to last valid info.")
-            team_info[:] = copy.deepcopy(team_info)
-        update_playing_flags(team_info, teams_currently_playing)
-    else:
-        team_info[:] = set_delay_display(team_info, teams_with_data, teams_currently_playing)
-
-    return team_info
+    teams_with_data: list[bool]
+    teams_currently_playing: list[bool]
 
 
 def find_next_team_to_display(teams_currently_playing: list[bool],
@@ -219,7 +107,7 @@ def find_next_team_to_display(teams_currently_playing: list[bool],
 
     if settings.stay_on_team:
         logger.info(
-            f"Not Switching teams that are currently playing, staying on {settings.teams[display_index][0]}\n")
+            f"Not Switching teams, staying on {settings.teams[display_index][0]}\n")
         return original_index, original_index
 
     teams_filter = (teams_currently_playing if settings.prioritize_playing_team and any(teams_currently_playing)
@@ -250,12 +138,14 @@ def _update_team_elements(window: Sg.Window, current_team: dict, score_state_fie
     :param display_index: The index of the team to update
     """
     for key, value in current_team.items():
-        if key in ("home_logo", "away_logo", "under_score_image"):
+        if key in (ui_keys.HOME_LOGO, ui_keys.AWAY_LOGO, ui_keys.UNDER_SCORE_IMAGE):
             window[key].update(filename=value)
-        elif key == "signature":
-            window[key].update(value=value, text_color="red")
-        elif ("home_timeouts" in key or "away_timeouts" in key) and (settings.teams[display_index][1] != "MLB"):
-            window[key].update(value=value, text_color="yellow")
+        elif key == ui_keys.SIGNATURE:
+            window[key].update(value=value, text_color=colors.SPORTS_RED)
+        elif (
+            ui_keys.HOME_TIMEOUTS in key or ui_keys.AWAY_TIMEOUTS in key
+        ) and (settings.teams[display_index][1] != "MLB"):
+            window[key].update(value=value, text_color=colors.TIMEOUT_YELLOW)
         elif key not in score_state_fields:
             window[key].update(value=value)
 
@@ -268,9 +158,9 @@ def _update_score_states(window: Sg.Window, current_team: dict) -> None:
     """
     for state, props in SCORE_STATE_STYLES:
         if current_team.get(f"home_{state}", False):
-            window["home_score"].update(**props)
+            window[ui_keys.HOME_SCORE].update(**props)
         elif current_team.get(f"away_{state}", False):
-            window["away_score"].update(**props)
+            window[ui_keys.AWAY_SCORE].update(**props)
 
 
 def _update_player_stats(window: Sg.Window, current_team: dict,
@@ -285,13 +175,13 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     home_stats = current_team.get("home_player_stats", "")
     away_stats = current_team.get("away_player_stats", "")
     # NFL stats only have one column, so it can take up whole width
-    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 30
+    stats_width = 60 if settings.teams[display_index][1] == "NFL" else 27
 
     if Sg.Window.get_screen_size()[0] < SMALL_SCREEN_WIDTH_THRESHOLD:
         if show_home and settings.teams[display_index][1] != "NFL":
-            window["away_player_stats"].update(value=home_stats)
+            window[ui_keys.AWAY_PLAYER_STATS].update(value=home_stats)
         else:
-            window["away_player_stats"].update(value=away_stats)
+            window[ui_keys.AWAY_PLAYER_STATS].update(value=away_stats)
 
         stats_width = 60  # Small screens only have one column
 
@@ -299,9 +189,8 @@ def _update_player_stats(window: Sg.Window, current_team: dict,
     home_lines = count_lines(home_stats) + 1
     away_lines = count_lines(away_stats) + 1
 
-    window["home_player_stats"].set_size(size=(stats_width, home_lines))
-    window["away_player_stats"].set_size(size=(stats_width, away_lines))
-    window["away_player_stats"].set_size(size=(stats_width, away_lines))
+    window[ui_keys.HOME_PLAYER_STATS].set_size(size=(stats_width, home_lines))
+    window[ui_keys.AWAY_PLAYER_STATS].set_size(size=(stats_width, away_lines))
 
 
 def _update_visibility(window: Sg.Window, current_team: dict, *,
@@ -316,15 +205,17 @@ def _update_visibility(window: Sg.Window, current_team: dict, *,
     has_away_stats = bool(current_team.get("away_player_stats", ""))
     show_stats = has_home_stats or has_away_stats
 
-    window["player_stats_content"].update(visible=False)
-    window["under_score_image_column"].update(visible=False)
-
     if settings.display_player_stats and show_stats:
-        window["player_stats_content"].update(visible=True)
+        window[ui_keys.PLAYER_STATS_CONTENT].update(visible=True)
+        window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=False)
     elif current_team.get("under_score_image", ""):
-        window["under_score_image_column"].update(visible=True)
+        window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=True)
+        window[ui_keys.PLAYER_STATS_CONTENT].update(visible=False)
+    else:
+        window[ui_keys.PLAYER_STATS_CONTENT].update(visible=False)
+        window[ui_keys.UNDER_SCORE_IMAGE_COLUMN].update(visible=False)
 
-    window["timeouts_content"].update(visible=currently_playing)
+    window[ui_keys.TIMEOUTS_CONTENT].update(visible=currently_playing)
 
 
 def update_display(window: Sg.Window, team_info: list[dict], display_index: int, *, currently_playing: bool) -> None:
@@ -359,125 +250,29 @@ def update_display(window: Sg.Window, team_info: list[dict], display_index: int,
     show_home_stats_next = not show_home_stats_next
 
 
-def set_delay_display(team_info: list, teams_with_data: list, teams_currently_playing: list) -> list:
-    """Set the display to hide information until delay is over.
-
-    :param team_info: List of team information dictionaries
-    :param teams_with_data: List of teams that have data available
-    :param teams_currently_playing: List of teams that are currently playing
-
-    :return: Updated team_info list hiding team display information
-    """
-    for index, info in enumerate(team_info):
-        if teams_with_data[index] and teams_currently_playing[index]:
-            info.update({
-                "top_info": "Game Started",
-                "bottom_info": f"Setting delay of {settings.LIVE_DATA_DELAY} seconds",
-                "home_timeouts": "",
-                "away_timeouts": "",
-                "home_score": "0",
-                "away_score": "0",
-                "under_score_image": "",
-                "home_redzone": False,
-                "away_redzone": False,
-                "home_possession": False,
-                "away_possession": False,
-                "home_bonus": False,
-                "away_bonus": False,
-                "home_power_play": False,
-                "away_power_play": False,
-            })
-            if "@" not in info.get("above_score_txt", ""):
-                info["above_score_txt"] = ""
-
-    return team_info
-
-
-def update_playing_flags(team_info: list[dict], teams_currently_playing: list[bool]) -> None:
-    """Update the currently playing flags based on delay information not current information.
-
-    :param team_info: List of team information dictionaries
-    :param teams_currently_playing: List of teams that are currently playing
-    :return: None
-    """
-    end_game_keywords = ["delayed", "postponed", "final", "canceled", "delay", " am ", " pm "]
-    schedule_keywords = [" am ", " pm "]
-
-    for index, info in enumerate(team_info):
-        if "bottom_info" not in info:
-            continue
-
-        bottom_info_lower = str(info["bottom_info"]).lower()
-        team_name = settings.teams[index][0]
-        has_end_game_keywords = any(kw in bottom_info_lower for kw in end_game_keywords)
-        has_schedule_keywords = any(kw in bottom_info_lower for kw in schedule_keywords)
-
-        # Set to True if game ended but delay hasn't caught up
-        if not teams_currently_playing[index] and not has_end_game_keywords:
-            logger.info(f"Setting team {team_name} currently playing to True")
-            logger.info("Game is over but delay hasn't caught up yet")
-            teams_currently_playing[index] = True
-
-        # Set to False if delay is over but game hasn't started
-        elif teams_currently_playing[index] and has_schedule_keywords:
-            logger.info(f"Setting team {team_name} currently playing to False")
-            logger.info(f"Determined due to {info['bottom_info']}")
-            logger.info("Game has started but delay doesn't reflect that yet")
-            teams_currently_playing[index] = False
-
-
-def _should_fetch_data(state: DisplayState, fetch_timer: int) -> bool:
-    """Determine if data should be fetched based on timing."""
-    return ticks_diff(ticks_ms(), state.fetch_clock) >= fetch_timer or state.fetch_first_time
-
-
-def _should_update_display(state: DisplayState, display_timer: int) -> bool:
-    """Determine if display should be updated based on timing."""
-    return ticks_diff(ticks_ms(), state.update_clock) >= int(display_timer / 2) and not state.display_first_time
-
-
 def _should_rotate_team(state: DisplayState, display_timer: int) -> bool:
     """Determine if team rotation should occur based on timing."""
     return ticks_diff(ticks_ms(), state.display_clock) >= display_timer or state.display_first_time
 
 
-def _handle_fetch_cycle(state: DisplayState) -> tuple[list[bool], list[dict], list[bool], int]:
-    """Execute data fetch cycle and return results.
-
-    :return: tuple (teams_with_data, team_info, teams_currently_playing, fetch_timer)
-    """
-    teams_with_data, team_info, teams_currently_playing = get_display_data(state)
-
-    state.fetch_first_time = False
-    state.fetch_clock = ticks_ms()
-
-    if any(teams_currently_playing):
-        fetch_timer = PLAYING_GAME_FETCH_INTERVAL_MS
-    else:
-        state.delay_started = False
-        state.delay_over = False
-        fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
-
-    return teams_with_data, team_info, teams_currently_playing, fetch_timer
-
 
 def _handle_update_cycle(
     window: Sg.Window,
-    team_info: list[dict],
+    team_info: list[dict[str, Any]],
     state: DisplayState,
-    teams_with_data: list[bool],
-    teams_currently_playing: list[bool],
-) -> dict:
+    team_status: TeamStatus | None = None,
+) -> dict[str, Any]:
     """Execute display update cycle and return currently displaying team info."""
-    currently_displaying = {}
+    currently_displaying: dict[str, Any] = {}
 
-    if teams_with_data[state.display_index]:
+    if team_status is not None and team_status.teams_with_data[state.display_index]:
         update_display(window, team_info, state.display_index,
-                       currently_playing=teams_currently_playing[state.display_index])
+                       currently_playing=team_status.teams_currently_playing[state.display_index])
         currently_displaying = team_info[state.display_index]
 
-        if will_text_fit_on_screen(team_info[state.display_index].get("bottom_info", "")):
-            scroll(window, team_info[state.display_index]["bottom_info"])
+        if will_text_fit_on_screen(team_info[state.display_index].get(ui_keys.BOTTOM_INFO, "")):
+            scroll(window, team_info[state.display_index][ui_keys.BOTTOM_INFO],
+                   team_status=team_status, state=state, team_info=team_info)
 
     state.update_clock = ticks_ms()
 
@@ -498,65 +293,167 @@ def _handle_rotation_cycle(
     else:
         logger.info(f"\nTeam doesn't have data {settings.teams[state.display_index][0]}")
         state.display_index = (state.display_index + 1) % len(settings.teams)
+        logger.info(f"Rest of teams: {teams_with_data}\n")
 
+
+def check_thread_health(window: Sg.Window, stop_event: threading.Event) -> None:
+    """Check if background fetch thread is alive and making progress, restart if not.
+
+    :param window: The window element to update
+    """
+    global fetch_thread_should_run, fetch_thread
+    # Check if thread is dead
+    if fetch_thread is None or not fetch_thread.is_alive():
+        fetch_thread_should_run = True
+        logger.error("Background fetch thread has stopped unexpectedly.")
+        fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
+        fetch_thread.start()
+        logger.info("Restarted background fetch thread.")
+        wait_for_thread(window)
+    else:
+        # Heartbeat check: if no progress in 30 seconds, consider stuck
+        now = time.time()
+        heartbeat = getattr(fetch_data_thread_mod, "fetch_thread_heartbeat", 0)
+        if heartbeat and now - heartbeat > 300:
+            logger.error(f"Background fetch thread appears stuck (no heartbeat for {int(now-heartbeat)}s). Restarting.")
+            fetch_thread_should_run = False
+            with contextlib.suppress(Exception):
+                fetch_thread.join(timeout=2)
+            fetch_thread_should_run = True
+            fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
+            fetch_thread.start()
+            logger.info("Restarted background fetch thread after no data was fetched after 5 minutes.")
+            wait_for_thread(window)
+
+
+def wait_for_thread(window: Sg.Window, wait_time_limit: float = 10.0) -> None:
+    """Wait for background fetch thread to start.
+
+    :param window: The window element to update
+    :param wait_time_limit: Maximum time to wait for thread to start in seconds
+    """
+    wait_time: float = 0.0
+    while (fetch_thread is None or not fetch_thread.is_alive()) and wait_time < wait_time_limit:
+        time.sleep(0.1)
+        wait_time += 0.1
+
+    if fetch_thread is not None and fetch_thread.is_alive():
+        logger.info("Background fetch thread started successfully.")
+    else:
+        logger.error("Background fetch thread failed to start within expected time.")
+        clock(window, message="Error fetching data...")
+
+
+def handle_resume_from_sleep(window: Sg.Window) -> None:
+    """Handle system resume from sleep by running recovery logic.
+
+    :param window: The window element to update
+    """
+    logger.info("Detected system resume, running recovery logic.")
+    # 1. Check and restore internet connection
+    if not is_connected():
+        reconnect()
+    # 2. Restart threads/timers if needed (depends on your architecture)
+    # 3. Optionally clear/refresh cache
+    # 4. Force data refresh for all teams
+    for team in settings.teams:
+        try:
+            get_data(team)
+        except Exception as e:
+            logger.warning(f"Failed to refresh data for {team[0]} after resume: {e}")
+    # 5. Update UI
+    window.refresh()
 
 ##################################
 #                                #
 #        Main Event Loop         #
 #                                #
 ##################################
+
 def main(window: Sg.Window) -> None:
-    """Create Main function to run the scoreboard application."""
-    # Initialize state
+    """Run the scoreboard application with background fetch."""
+    global fetch_thread_should_run
+
+    # Reset UI flags
+    settings.stay_on_team = False
+    settings.no_spoiler_mode = False
+
+    # Start background fetch thread
+    fetch_thread_should_run = True  # Set flag to run thread
+    stop_event = threading.Event()  # Event to signal error and to stop
+    fetch_thread = threading.Thread(target=background_fetch_loop, args=(stop_event,), daemon=True)
+    fetch_thread.start()
+
     state = DisplayState()
-    team_info: list[dict] = []
-    teams_with_data: list[bool] = []
-    teams_currently_playing: list[bool] = []
     currently_displaying: dict = {}
-
-    display_timer = settings.DISPLAY_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
-    fetch_timer = settings.FETCH_DATA_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND
-
+    team_info: list[dict[str, Any]] = []  # Always defined for error handling
     maximize_screen(window)
 
-    while True:
-        try:
-            event = window.read(timeout=READ_TIMEOUT_MS)
+    last_time = time.time()
 
-            # Fetch Data
-            if _should_fetch_data(state, fetch_timer):
-                teams_with_data, team_info, teams_currently_playing, fetch_timer = _handle_fetch_cycle(state)
+    while True:
+        now = time.time()
+        if now - last_time > 10:  # 10 seconds is a typical threshold
+            handle_resume_from_sleep(window)
+        last_time = now
+        try:
+            event = window.read(timeout=5000)
+
+            # Ensure background thread is running
+            check_thread_health(window, stop_event)
+
+            if stop_event.is_set():
+                logger.info("Background fetch thread reported an error, handling recovery.")
+                handle_error(window, team_info=team_info)
+                stop_event.clear()
+
+            # Read latest data from background thread
+            teams_with_data, team_info, teams_currently_playing = get_display_data_from_thread()
+
+            # Defensive: skip loop if teams/settings mismatch
+            if not settings.teams or not team_info or len(settings.teams) == 0 or len(team_info) != len(settings.teams):
+                logger.warning("settings.teams or team_info is empty or mismatched; skipping display update.")
+                time.sleep(0.2)
+                continue
+
+            team_status = TeamStatus(teams_with_data=teams_with_data, teams_currently_playing=teams_currently_playing)
+
+            # Defensive: clamp display_index to valid range
+            if state.display_index >= len(settings.teams):
+                state.display_index = 0
+            if state.original_index >= len(settings.teams):
+                state.original_index = 0
 
             # Display Team Information
-            if _should_update_display(state, display_timer):
+            currently_displaying = {}
+            if team_info and len(team_info) == len(settings.teams):
                 currently_displaying = _handle_update_cycle(
-                    window, team_info, state, teams_with_data, teams_currently_playing)
+                    window, team_info, state, team_status)
 
             # Find next team to display
-            if _should_rotate_team(state, display_timer):
+            if _should_rotate_team(state, settings.DISPLAY_NOT_PLAYING_TIMER * MILLISECONDS_PER_SECOND):
                 _handle_rotation_cycle(state, teams_with_data, teams_currently_playing)
 
             # Handle events and settings changes
             prev_spoiler_mode, prev_delay = settings.no_spoiler_mode, settings.delay
-            check_events(window, event)
+            check_events(window, event, team_status=team_status, state=state, team_info=team_info)
 
             if prev_spoiler_mode and not settings.no_spoiler_mode:
                 logger.info("No spoiler mode changed, refreshing data")
-                state.fetch_first_time = True
-                state.display_first_time = True
 
-            if not state.fetch_first_time and not any(teams_with_data):
+            if not any(teams_with_data):
                 logger.info("\nNo Teams with Data Displaying Clock\n")
                 teams_with_data = clock(window, message="No Data For Any Teams")
 
             if settings.auto_update:
-                auto_update(window, settings.saved_data)
+                auto_update(window)
 
             if settings.delay and prev_delay != settings.delay:
                 state.delay_clock = ticks_ms()
                 state.delay_over = False
 
-            if settings.stay_on_team and currently_displaying != team_info[state.display_index]:
+            if (settings.stay_on_team and state.display_index < len(team_info) and
+                currently_displaying != team_info[state.display_index]):
                 state.display_index = state.original_index
 
         except Exception as error:

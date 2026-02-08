@@ -1,17 +1,43 @@
 """Get if the Game is playoff/championship."""
+from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 from nhlpy.nhl_client import NHLClient  # type: ignore[import]
 
-from helper_functions.logger_config import logger
+from constants.file_paths import (
+    get_championship_image_path,
+    get_conference_championship_image_path,
+    get_playoff_image_path,
+)
+from helper_functions.api_utils.exceptions import DataValidationError, NetworkError
+from helper_functions.api_utils.validators import (
+    validate_espn_scoreboard_event,
+    validate_mlb_schedule_games,
+    validate_nba_scoreboard_dict,
+    validate_nhl_game_center_response,
+    validate_nhl_playoff_response,
+)
+from helper_functions.logging.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
-from .get_team_league import MLB_AL_EAST, MLB_AL_WEST, MLB_NL_EAST, MLB_NL_WEST
+from .get_team_league import (
+    MLB_AL_EAST,
+    MLB_AL_WEST,
+    MLB_NL_EAST,
+    MLB_NL_WEST,
+    NFL_AFC_EAST,
+    NFL_AFC_NORTH,
+    NFL_AFC_SOUTH,
+    NFL_AFC_WEST,
+    NFL_NFC_EAST,
+    NFL_NFC_NORTH,
+    NFL_NFC_SOUTH,
+    NFL_NFC_WEST,
+)
 
 # NBA only has data for one day so store if it was a championship game to display for longer
 was_finals_game: list[bool | str] = [False, ""]
@@ -41,36 +67,45 @@ def get_game_type(team_league: str, team_name: str) -> str:
 
 
 def get_nba_game_type(team_name: str) -> str:
-    """Check if NBA game is championship.
+    """Check if NBA game is championship or playoff.
 
+    :param team_name: The name of the NBA team
     :return: Path for championship image or empty string if not a championship game
     """
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
+        validate_nba_scoreboard_dict(live)
         game_type = live["scoreboard"]["games"][0]["gameLabel"]
 
         # Store data for when scoreboard data is not available
         was_finals_game[0] = "NBA Finals" in game_type
         was_finals_game[1] = team_name if was_finals_game[0] else ""
 
+    except DataValidationError as e:
+        logger.warning(f"Invalid NBA scoreboard data for {team_name}: {e}")
+        if was_finals_game[0] and was_finals_game[1] == team_name:
+            return get_championship_image_path("nba_finals.png")
+        return ""
     except Exception:
         logger.exception("Error getting NBA game type")
         if was_finals_game[0] and was_finals_game[1] == team_name:
-            return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+            return get_championship_image_path("nba_finals.png")
         return ""
 
     if game_type == "NBA Finals":
-        return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+        return get_championship_image_path("nba_finals.png")
 
     return ""
 
 
 def get_mlb_game_type(team_name: str) -> str:
-    """Check if MLB game is championship.
+    """Check if MLB game is championship or playoff.
 
+    :param team_name: The name of the MLB team
     :return: Path for championship image or empty string if not a championship game
     """
+    result = ""
     try:
         # Try to get first game from now for the next 3 days
         today = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -78,34 +113,46 @@ def get_mlb_game_type(team_name: str) -> str:
         games = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
+        validate_mlb_schedule_games(games, team_name)
         game_type = games[0].get("game_type")
         if game_type == "W":
-            return f"{Path.cwd()}/images/championship_images/world_series.png"
-        if game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
-            return str(Path.cwd() / "images" / "conference_championship_images" / "alcs.png")
-        if game_type == "L" and team_name in (MLB_NL_EAST + MLB_NL_WEST):
-            return str(Path.cwd() / "images" / "conference_championship_images" / "nlcs.png")
-        if game_type in ["F", "D"]:
-            return str(Path.cwd() / "images" / "playoff_images" / "mlb_postseason.png")
+            result = get_championship_image_path("world_series.png")
+        elif game_type == "L" and team_name in (MLB_AL_EAST + MLB_AL_WEST):
+            result = get_conference_championship_image_path("alcs.png")
+        elif game_type == "L" and team_name in (MLB_NL_EAST + MLB_NL_WEST):
+            result = get_conference_championship_image_path("nlcs.png")
+        elif game_type in ["F", "D"]:
+            result = get_playoff_image_path("mlb_postseason.png")
 
+    except DataValidationError as e:
+        logger.warning(f"Invalid MLB schedule data for {team_name}: {e}")
     except Exception:
         logger.exception("Could not get MLB game type")
-        return ""
 
-    return ""
+    return result
 
 
 def get_nhl_game_type(team_name: str) -> str:
-    """Check if NHL game is championship.
+    """Check if NHL game is championship or playoff.
 
+    :param team_name: The name of the NHL team
     :return: Path for championship image or empty string if not a championship game
     """
     try:
 
         # Get abbreviations for the teams in the current game
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
-        res = resp.json()
+        try:
+            res = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5).json()
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.error(f"Network error while fetching NHL game type for {team_name}: {e}")
+            msg = f"Network error while fetching NHL game type for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+        if res.status_code != 200:
+            logger.error(f"NHL API returned status {res.status_code} for team {team_name}")
+            return ""
+
+        validate_nhl_game_center_response(res, team_name)
 
         if res["seasonSeries"][0]["gameType"] == 2:
             return ""
@@ -137,6 +184,7 @@ def get_nhl_game_type(team_name: str) -> str:
         # Get playoff information for the current season
         playoff_info = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/", timeout=5)
         playoff_info = playoff_info.json()
+        validate_nhl_playoff_response(playoff_info)
 
         # Check if the team is in the playoffs/championship
         current_round = playoff_info["currentRound"]
@@ -144,14 +192,17 @@ def get_nhl_game_type(team_name: str) -> str:
         if (your_team_abbr in (away_team_abbr, home_team_abbr)):
 
             if current_round == 4:
-                path = str(Path.cwd() / "images" / "championship_images" / "stanley_cup.png")
+                path = get_championship_image_path("stanley_cup.png")
             elif current_round == 3 and conference == "Eastern":
-                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_eastern_championship.png")
+                path = get_conference_championship_image_path("nhl_eastern_championship.png")
             elif current_round == 3 and conference == "Western":
-                path = str(Path.cwd() / "images" / "conference_championship_images" / "nhl_western_championship.png")
+                path = get_conference_championship_image_path("nhl_western_championship.png")
             elif current_round in [2, 1]:
-                path = str(Path.cwd() / "images" / "playoff_images" / "nhl_playoffs.png")
+                path = get_playoff_image_path("nhl_playoffs.png")
 
+    except DataValidationError as e:
+        logger.warning(f"Invalid NHL game data for {team_name}: {e}")
+        return ""
     except Exception:
         logger.exception("Error getting NHL game type")
         return ""
@@ -160,55 +211,78 @@ def get_nhl_game_type(team_name: str) -> str:
 
 
 def get_nfl_game_type(team_name: str) -> str:
-    """Return a concise stage label for a game.
+    """Check if NFL game is championship or playoff.
 
-    Uses ESPN's season.type and optional notes/week to distinguish:
-    - preseason, regular-season, playoffs (wild card/divisional/conference championship/super bowl)
+    :param team_name: The name of the NFL team
+    :return: Path for championship image or empty string if not a championship game
     """
-    # Fetch NFL scoreboard and find the event for this team
-    resp = requests.get("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", timeout=5)
-    data = resp.json()
-    events = data.get("events", [])
-    event = next((e for e in events if team_name in e.get("name", "")), None)
-    if not event:
-        logger.info("Game type: team not found in scoreboard")
-        return ""
-
-    season_type = event.get("season", {}).get("type")  # 1->preseason, 2->regular, 3->post-season
-
-    # Default mapping by season type
-    if season_type in (1, 2):
-        label = "preseason" if season_type == 1 else "regular-season"
-        logger.info("Game type: %s", label)
-        return label
-    if season_type != 3:
-        logger.info("Game type: unknown season type")
-        return ""
-
-    # Postseason: refine using notes headline or week number
-    headline = "".join(n.get("headline", "") for n in event.get("notes", [])).lower()
-    week_num = event.get("week", {}).get("number")
-
     # Map playoff rounds to image paths
     playoff_images = {
-        "super_bowl": str(Path.cwd() / "images" / "championship_images" / "super_bowl.png"),
-        "afc_championship": str(Path.cwd() / "images" / "conference_championship_images" / "afc_championship.png"),
-        "nfl_conference": str(
-            Path.cwd() / "images" / "conference_championship_images" / "nfl_conference_championship.png",
-        ),
-        "playoffs": str(Path.cwd() / "images" / "playoff_images" / "nfl_playoffs.png"),
+        "super_bowl": get_championship_image_path("super_bowl.png"),
+        "afc_championship": get_conference_championship_image_path("afc_championship.png"),
+        "nfc_championship": get_conference_championship_image_path("nfc_championship.png"),
+        "nfl_conference": get_conference_championship_image_path("nfl_conference_championship.png"),
+        "playoffs": get_playoff_image_path("nfl_playoffs.png"),
     }
+    try:
+        result = ""
+        # Fetch NFL scoreboard and find the event for this team
+        resp = requests.get("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", timeout=5)
+        if resp.status_code != 200:
+            logger.error(f"NFL API returned status {resp.status_code}")
+            return result
+        try:
+            data = resp.json()
+        except Exception as e:
+            logger.error(f"NFL API JSON decode error: {e}")
+            return result
+        events = data.get("events", [])
+        event = next((e for e in events if team_name in e.get("name", "")), None)
+        if not event:
+            logger.info("Game type: team not found in scoreboard")
+            return result
 
-    # Determine playoff stage and return appropriate image
-    if "super bowl" in headline or week_num == 4:
-        logger.info("Game type: playoffs - super bowl")
-        return playoff_images["super_bowl"]
-    if "conference championship" in headline or week_num == 3:
-        logger.info("Game type: playoffs - conference championship")
-        return playoff_images["afc_championship"] if week_num == 3 else playoff_images["nfl_conference"]
+        validate_espn_scoreboard_event(event, team_name)
+        season_type = event.get("season", {}).get("type")  # 1->preseason, 2->regular, 3->post-season
 
-    # Wild card (week 1), divisional (week 2), or generic playoffs
-    stage = "wild card" if ("wild card" in headline or week_num == 1) else "divisional/other"
-    logger.info("Game type: playoffs - %s", stage)
-    return playoff_images["playoffs"]
+        # Default mapping by season type
+        if season_type in (1, 2):
+            label = "preseason" if season_type == 1 else "regular-season"
+            logger.info("Game type: %s", label)
+            result = label
+        elif season_type == 3:
+            # Postseason: refine using notes headline or week number
+            headline = "".join(n.get("headline", "") for n in event.get("notes", [])).lower()
+            week_num = event.get("week", {}).get("number")
+
+            # Determine playoff stage
+            if "super bowl" in headline or week_num == 4:
+                logger.info("Game type: playoffs - super bowl")
+                result = playoff_images["super_bowl"]
+            elif "conference championship" in headline or week_num == 3:
+                if team_name in (NFL_AFC_EAST + NFL_AFC_WEST + NFL_AFC_NORTH + NFL_AFC_SOUTH):
+                    logger.info("Game type: playoffs - afc championship")
+                    result = playoff_images["afc_championship"]
+                elif team_name in (NFL_NFC_EAST + NFL_NFC_WEST + NFL_NFC_NORTH + NFL_NFC_SOUTH):
+                    logger.info("Game type: playoffs - nfc championship")
+                    result = playoff_images["nfc_championship"]
+                else:
+                    logger.info("Game type: playoffs - Some type of conference championship")
+                    result = playoff_images["playoffs"]
+            else:
+                # Wild card (week 1), divisional (week 2), or generic playoffs
+                stage = "wild card" if ("wild card" in headline or week_num == 1) else "divisional/other"
+                logger.info("Game type: playoffs - %s", stage)
+                result = playoff_images["playoffs"]
+        else:
+            logger.info("Game type: unknown season type")
+
+    except DataValidationError as e:
+        logger.warning(f"Invalid NFL event data for {team_name}: {e}")
+        return ""
+    except Exception:
+        logger.exception(f"Error getting NFL game type for {team_name}")
+        return ""
+
+    return result
 

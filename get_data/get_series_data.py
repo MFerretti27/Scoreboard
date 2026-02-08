@@ -1,11 +1,16 @@
 """Get series information."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import requests
 import statsapi  # type: ignore[import]
 from nba_api.live.nba.endpoints import scoreboard  # type: ignore[import]
 
-from helper_functions.logger_config import logger
+from helper_functions.api_utils.exceptions import DataValidationError, NetworkError
+from helper_functions.api_utils.retry import retry_api_call
+from helper_functions.api_utils.validators import validate_mlb_series_response, validate_nba_standings
+from helper_functions.logging.logger_config import logger
 
 from .get_team_id import get_mlb_team_id, get_nhl_game_id
 
@@ -30,6 +35,7 @@ def get_series(team_league: str, team_name: str) -> str:
     return ""
 
 
+@retry_api_call
 def get_current_series_mlb(team_name: str) -> str:
     """Try to get the series information for baseball team.
 
@@ -51,6 +57,11 @@ def get_current_series_mlb(team_name: str) -> str:
         if series_summary == "" or series_summary is None:
             series_summary = mlb_series.get(team_name, "")
         else:
+            # Validate series data
+            try:
+                validate_mlb_series_response({"series_status": series_summary}, team_name)
+            except DataValidationError as e:
+                logger.warning(f"Invalid MLB series data: {e!s}")
             mlb_series[team_name] = series_summary
 
     except (IndexError, KeyError, requests.RequestException, ValueError, TypeError):
@@ -63,6 +74,7 @@ def get_current_series_mlb(team_name: str) -> str:
     return series_summary
 
 
+@retry_api_call
 def get_current_series_nhl(team_name: str) -> str:
     """Try to get the series information for hockey team.
 
@@ -73,8 +85,20 @@ def get_current_series_nhl(team_name: str) -> str:
     series_summary = ""
     try:
         team_id = get_nhl_game_id(team_name)
-        resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
-        res = resp.json()
+        try:
+            resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
+        except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+            logger.error(f"NHL series API returned status {resp.status_code} for team {team_name}")
+            msg = f"Network error while fetching NHL series for {team_name}"
+            raise NetworkError(msg, error_code="NETWORK_ERROR") from e
+        if resp.status_code != 200:
+            logger.error(f"NHL series API returned status {resp.status_code} for team {team_name}")
+            return series_summary
+        try:
+            res = resp.json()
+        except Exception as e:
+            logger.error(f"NHL series API JSON decode error for team {team_name}: {e}")
+            return series_summary
 
         away_series_wins = res["seasonSeriesWins"]["awayTeamWins"]
         home_series_wins = res["seasonSeriesWins"]["homeTeamWins"]
@@ -103,6 +127,7 @@ def get_current_series_nhl(team_name: str) -> str:
     return series_summary
 
 
+@retry_api_call
 def get_current_series_nba(team_name: str) -> str:
     """Try to get the series information for basketball team.
 
@@ -114,6 +139,13 @@ def get_current_series_nba(team_name: str) -> str:
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
+
+        # Validate standings structure
+        try:
+            validate_nba_standings(live, team_name)
+        except DataValidationError as e:
+            logger.warning(f"Invalid NBA standings data: {e!s}")
+
         for game in live["scoreboard"]["games"]:
             if game["homeTeam"]["teamName"] in team_name or game["awayTeam"]["teamName"] in team_name:
                 series_summary = game.get("seriesText", "")

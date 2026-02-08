@@ -1,8 +1,16 @@
 """Popup layout to update team names."""
+from __future__ import annotations
 
 import FreeSimpleGUI as Sg  # type: ignore[import]
 
 import settings
+from constants import colors, messages, ui_keys
+from constants.sizing_utils import (
+    calculate_button_size,
+    calculate_text_size,
+    get_responsive_scale,
+    get_screen_width,
+)
 from get_data.get_team_names import get_new_team_names, update_new_division, update_new_names
 
 
@@ -11,35 +19,29 @@ def create_update_name_popup_layout() -> list:
 
     :return layout: List of elements and how the should be displayed
     """
-    # Common base screen widths
-    common_base_widths = [1366, 1920, 1440, 1280]
-    window_width, _ = Sg.Window.get_screen_size()
+    window_width = get_screen_width()
+    _, scale = get_responsive_scale(window_width)
 
-    # Find the largest base width that doesn't exceed the window width using `max()`
-    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
-    scale = window_width / base_width
-
-    max_size = 100
-    button_size = min(max_size, max(14, int(50 * scale)))
-    message = min(max_size, max(14, int(20 * scale)))
+    button_size = calculate_button_size(scale)
+    message = calculate_text_size(scale, min_size=14)
     return [
         [Sg.VPush()],
         [Sg.Push(),
-         Sg.Text("This will fetch new team names", key="top_message",
-                 font=(settings.FONT, message),
-                 ),
+         Sg.Text(messages.FETCH_NEW_TEAM_NAMES, key=ui_keys.TOP_MESSAGE,
+             font=(settings.FONT, message),
+             ),
          Sg.Push(),
          ],
          [Sg.Push(),
-         Sg.Text("Only do this if a team has changed their name",
-                 key="middle_message", font=(settings.FONT, message, "underline"),
-                 ),
+         Sg.Text(messages.ONLY_IF_CHANGED,
+             key=ui_keys.MIDDLE_MESSAGE, font=(settings.FONT, message, "underline"),
+             ),
          Sg.Push(),
          ],
          [Sg.Push(),
-         Sg.Text("\nIf Team's are updated logo's will be re-downloaded when starting", key="bottom_message",
-                 font=(settings.FONT, message),
-                 ),
+         Sg.Text(messages.IF_TEAMS_UPDATED, key=ui_keys.BOTTOM_MESSAGE,
+             font=(settings.FONT, message),
+             ),
          Sg.Push(),
          ],
          [Sg.Push(),
@@ -49,10 +51,21 @@ def create_update_name_popup_layout() -> list:
          Sg.Push(),
          ],
          [Sg.VPush()],
-        [Sg.Push(),
-         Sg.Button("Update", key="update", font=(settings.FONT, button_size), pad=(20)),
-         Sg.Button("Cancel", key="cancel", font=(settings.FONT, button_size), pad=(20)),
-         Sg.Push(),
+        [
+            Sg.Push(),
+            Sg.Button(
+                messages.BUTTON_UPDATE,
+                key=ui_keys.UPDATE_POPUP_UPDATE,
+                font=(settings.FONT, button_size),
+                pad=(20),
+            ),
+            Sg.Button(
+                messages.BUTTON_CANCEL,
+                key=ui_keys.UPDATE_POPUP_CANCEL,
+                font=(settings.FONT, button_size),
+                pad=(20),
+            ),
+            Sg.Push(),
         ],
     ]
 
@@ -69,6 +82,7 @@ def show_fetch_popup(league: str) -> None:
         auto_close=True,
         auto_close_duration=60,
     )
+    window.TKroot.overrideredirect(True)  # noqa: FBT003
 
     update = False
     while True:
@@ -80,39 +94,39 @@ def show_fetch_popup(league: str) -> None:
             window.close()
             return
 
-        if "update" in event and not update:
+        if ui_keys.UPDATE_POPUP_UPDATE in event and not update:
             renamed, new_teams, error_message = get_new_team_names(league)
             if "Failed" in error_message:
-                window["top_message"].Update(value="")
-                window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value=error_message, text_color="red")
+                window[ui_keys.TOP_MESSAGE].Update(value="")
+                window[ui_keys.BOTTOM_MESSAGE].Update(value="")
+                window[ui_keys.MIDDLE_MESSAGE].Update(value=error_message, text_color=colors.ERROR_RED)
             elif not renamed:
-                window["top_message"].Update(value="")
-                window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value="No New Team Names Found", text_color="black")
+                window[ui_keys.TOP_MESSAGE].Update(value="")
+                window[ui_keys.BOTTOM_MESSAGE].Update(value="")
+                window[ui_keys.MIDDLE_MESSAGE].Update(value=messages.NO_NEW_TEAM_NAMES, text_color=colors.NEUTRAL_BLACK)
             else:
                 update = True
                 display_renamed = ""
                 for old, new in renamed:
                     display_renamed += f"{old}  --->  {new}\n"
 
-                window["update"].Update(text="Confirm")
-                window["bottom_message"].Update(value="")
-                window["top_message"].Update(value="Found New Team Names, Press Confirm to Update")
-                window["middle_message"].Update(value=display_renamed, text_color="black")
+                window[ui_keys.UPDATE_POPUP_UPDATE].Update(text=messages.BUTTON_CONFIRM)
+                window[ui_keys.BOTTOM_MESSAGE].Update(value="")
+                window[ui_keys.TOP_MESSAGE].Update(value=messages.TEAM_NAMES_UPDATED)
+                window[ui_keys.MIDDLE_MESSAGE].Update(value=display_renamed, text_color=colors.NEUTRAL_BLACK)
 
-        elif "update" in event and update:
+        elif ui_keys.UPDATE_POPUP_UPDATE in event and update:
             update_new_names(league, new_teams, renamed)
             error_message = update_new_division(league)
             if "Failed" in error_message:
-                window["top_message"].Update(value="")
-                window["bottom_message"].Update(value="")
-                window["middle_message"].Update(value=error_message, text_color="red")
+                window[ui_keys.TOP_MESSAGE].Update(value="")
+                window[ui_keys.BOTTOM_MESSAGE].Update(value="")
+                window[ui_keys.MIDDLE_MESSAGE].Update(value=error_message, text_color=colors.ERROR_RED)
             else:
                 settings.always_get_logos = True  # re-download logos when starting
                 window.close()
                 return
 
-        elif "cancel" in event:
+        elif ui_keys.UPDATE_POPUP_CANCEL in event:
             window.close()
             return

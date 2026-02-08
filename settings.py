@@ -1,10 +1,13 @@
 """Settings loaded from settings.json with Python fallbacks."""
+from __future__ import annotations
+
 import json
 import tempfile
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 SETTINGS_PATH = Path(__file__).with_name("settings.json")
 
@@ -35,6 +38,12 @@ DISPLAY_PLAYING_TIMER: int
 HOW_LONG_TO_DISPLAY_TEAM: int
 TEAM_STAT_SIZE: int
 TIMEOUT_HEIGHT: int
+RETRY_MAX_ATTEMPTS: int
+RETRY_INITIAL_DELAY: float
+RETRY_MAX_DELAY: float
+RETRY_BACKOFF_MULTIPLIER: float
+RETRY_USE_CACHE_FALLBACK: bool
+MAX_STALE_DATA_AGE: int
 display_last_pitch: bool
 display_play_description: bool
 display_bases: bool
@@ -72,14 +81,16 @@ no_spoiler_mode: bool
 stay_on_team: bool
 delay: bool
 
+
+# Default settings to fall back on if settings.json is missing or incomplete
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
     "teams": [
-        ["Detroit Lions"],
-        ["Detroit Tigers"],
-        ["Pittsburgh Steelers"],
-        ["Detroit Pistons"],
-        ["Detroit Red Wings"],
+        ["Detroit Lions", "NFL", "football"],
+        ["Detroit Tigers", "MLB", "baseball"],
+        ["Pittsburgh Steelers", "NFL", "football"],
+        ["Detroit Pistons", "NBA", "basketball"],
+        ["Detroit Red Wings", "NHL", "hockey"],
     ],
 
     # Text sizing
@@ -109,6 +120,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "DISPLAY_NOT_PLAYING_TIMER": 25,
     "DISPLAY_PLAYING_TIMER": 25,
     "HOW_LONG_TO_DISPLAY_TEAM": 7,
+
+    # Retry & Error Recovery
+    "RETRY_MAX_ATTEMPTS": 3,
+    "RETRY_INITIAL_DELAY": 1.0,
+    "RETRY_MAX_DELAY": 30.0,
+    "RETRY_BACKOFF_MULTIPLIER": 2.0,
+    "RETRY_USE_CACHE_FALLBACK": True,
+    "MAX_STALE_DATA_AGE": 300,  # 5 minutes - reject cache older than this
 
     # MLB
     "display_last_pitch": True,
@@ -167,7 +186,7 @@ def _normalize_teams(raw_teams: object) -> list[list[str]]:
         return DEFAULT_SETTINGS["teams"].copy()
     for entry in raw_teams:
         if isinstance(entry, list) and entry:
-            normalized.append([str(entry[0])])
+            normalized.append([str(e) for e in entry])
         elif isinstance(entry, str):
             normalized.append([entry])
     return normalized or DEFAULT_SETTINGS["teams"].copy()
@@ -278,4 +297,5 @@ _apply_settings(_load_settings_file())
 
 # Runtime/shared state (not persisted)
 saved_data: Any = {}
-division_checked: bool = False  # Used to check if a division was checked when the screen was opened
+# Used to check if a division was checked when the screen was opened
+division_checked: defaultdict[str, bool] = defaultdict(bool)

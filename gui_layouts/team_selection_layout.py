@@ -1,8 +1,13 @@
 """GUI Layout for selecting teams in main menu."""
+from __future__ import annotations
+
 import FreeSimpleGUI as Sg  # ignore
 
 import settings
+from constants import colors, messages, ui_keys
+from constants.sizing_utils import calculate_title_size, get_responsive_scale
 from get_data.get_team_league import ALL_DIVISIONS, DIVISION_TEAMS, MLB, NBA, NFL, NHL
+from helper_functions.logging.logger_config import logger
 
 
 def create_team_selection_layout(window_width: int, league: str) -> list:
@@ -31,15 +36,10 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         "NFL": 2,
     }.get(league, 2)
 
-    # Common base screen widths
-    common_base_widths = [1366, 1920, 1440, 1280]
-
-    # Find the largest base width that doesn't exceed the window width using `max()`
-    base_width = max([width for width in common_base_widths if width <= window_width], default=1366)
-    scale = window_width / base_width
+    _, scale = get_responsive_scale(window_width)
 
     max_size = 100
-    text_size = min(max_size, max(30, int(50 * scale)))
+    text_size = calculate_title_size(scale)
     bottom_title_txt_size = min(max_size, max(20, int(40 * scale)))
     checkbox_width = min(max_size, max(20, int(20 * scale)))
     checkbox_height = min(max_size, max(2, int(2 * scale)))
@@ -59,7 +59,8 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     for division in ALL_DIVISIONS.get(league, []):
         if all(team in selected_teams for team in DIVISION_TEAMS[league + " " + division]):
             divisions_already_checked.append(division)
-            settings.division_checked = True
+            settings.division_checked[division] = True
+            logger.info(f"Division {division} is already checked")
 
     division_checkboxes = [
         Sg.Checkbox(division_name, key=division_name,
@@ -89,7 +90,7 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
     return [
         [Sg.Push(), Sg.Text(f"Choose {league} Team to Add", font=(settings.FONT, text_size, "underline")), Sg.Push()],
          [Sg.Push(),
-          Sg.Button("Update Names", font=(settings.FONT, update_names_button_size)),
+          Sg.Button(messages.BUTTON_UPDATE_NAMES, font=(settings.FONT, update_names_button_size)),
          Sg.Push(),
          ],
         [Sg.VPush()],
@@ -107,17 +108,28 @@ def create_team_selection_layout(window_width: int, league: str) -> list:
         [Sg.VPush()],
         [
          Sg.Push(),
-         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_added", text_color="green"),
+         Sg.Text(
+             "",
+             font=(settings.FONT, confirmation_txt_size),
+             key=ui_keys.TEAMS_ADDED,
+             text_color=colors.SUCCESS_GREEN,
+         ),
          Sg.Push(),
          ],
         [
          Sg.Push(),
-         Sg.Text("", font=(settings.FONT, confirmation_txt_size), key="teams_removed", text_color="red"),
+         Sg.Text(
+             "",
+             font=(settings.FONT, confirmation_txt_size),
+             key=ui_keys.TEAMS_REMOVED,
+             text_color=colors.ERROR_RED,
+         ),
          Sg.Push(),
          ],
          [Sg.VPush()],
         [Sg.Push(),
-         Sg.Button("Save", font=(settings.FONT, button_size)), Sg.Button("Back", font=(settings.FONT, button_size)),
+         Sg.Button(messages.BUTTON_SAVE, font=(settings.FONT, button_size)),
+         Sg.Button(messages.BUTTON_BACK, font=(settings.FONT, button_size)),
          Sg.Push(),
          ],
         [Sg.VPush()],

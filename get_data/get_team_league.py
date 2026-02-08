@@ -3,9 +3,11 @@
 It compares the input team name with a list of known team names in various leagues (NBA, MLB, NFL, NHL).
 The function returns a tuple containing the league and sport name if a match is found with a score of 70 or higher.
 """
+from __future__ import annotations
+
 from rapidfuzz import fuzz, process  # type: ignore[import]
 
-from helper_functions.logger_config import logger
+from helper_functions.logging.logger_config import logger
 
 NBA = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
@@ -38,7 +40,7 @@ NFL = [
 NHL = [
 "Anaheim Ducks", "Boston Bruins", "Buffalo Sabres", "Calgary Flames", "Carolina Hurricanes", "Chicago Blackhawks",
 "Colorado Avalanche", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings", "Edmonton Oilers",
-"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadiens", "Nashville Predators",
+"Florida Panthers", "Los Angeles Kings", "Minnesota Wild", "Montreal Canadians", "Nashville Predators",
 "New Jersey Devils", "New York Islanders", "New York Rangers", "Ottawa Senators", "Philadelphia Flyers",
 "Pittsburgh Penguins", "San Jose Sharks", "Seattle Kraken", "St. Louis Blues", "Tampa Bay Lightning",
 "Toronto Maple Leafs", "Utah Mammoth", "Vancouver Canucks", "Vegas Golden Knights", "Washington Capitals",
@@ -109,20 +111,20 @@ NBA_SOUTHWEST_DIVISION = ["Dallas Mavericks", "Houston Rockets", "Memphis Grizzl
 # Eastern Conference:
 NHL_ATLANTIC_DIVISION = [
 "Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montréal Canadiens", "Ottawa Senators",
-"Tampa Bay Lightning",
+"Tampa Bay Lightning", "Toronto Maple Leafs",
 ]
 NHL_METROPOLITAN_DIVISION = [
 "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers",
-"Philadelphia Flyers", "Pittsburgh Penguins",
+"Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals",
 ]
 # Western Conference:
 NHL_CENTRAL_DIVISION = [
 "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues",
-"Utah Hockey Club",
+"Utah Mammoth", "Winnipeg Jets",
 ]
 NHL_PACIFIC_DIVISION = [
 "Anaheim Ducks", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Seattle Kraken",
-"Vancouver Canucks",
+"Vancouver Canucks", "Vegas Golden Knights",
 ]
 
 ALL_DIVISIONS = {
@@ -165,11 +167,11 @@ DIVISION_TEAMS = {
 }
 
 def get_team_league(team_name: str) -> tuple:
-    """Get the league and sport name for a given team name.
+    """Get the best matching team name, league and sport name for a given team name.
 
     :param team_name: The name of the team to search for.
 
-    :return: A tuple containing the league and sport name.
+    :return: A tuple containing the name, league and sport name.
     """
     team_name_capitalized = team_name.strip().upper()
     best_match = ("", 0.0, "Unknown")
@@ -192,13 +194,13 @@ def get_team_league(team_name: str) -> tuple:
     )
 
     if best_match[2].upper() == "NFL":
-        matched_team = (best_match[2], "football")
+        matched_team = (best_match[0], best_match[2], "football")
     elif best_match[2].upper() == "MLB":
-        matched_team = (best_match[2], "baseball")
+        matched_team = (best_match[0], best_match[2], "baseball")
     elif best_match[2].upper() == "NHL":
-        matched_team = (best_match[2], "hockey")
+        matched_team = (best_match[0], best_match[2], "hockey")
     elif best_match[2].upper() == "NBA":
-        matched_team = (best_match[2], "basketball")
+        matched_team = (best_match[0], best_match[2], "basketball")
 
     if best_match[1] >= 70:
         return matched_team  # return tuple of league and sport name
@@ -207,14 +209,3 @@ def get_team_league(team_name: str) -> tuple:
     msg = f"Team '{team_name}' not found in any league."
     raise ValueError(msg)
 
-
-# Get Team league and sport name, needed for various functions later in script
-def append_team_array(teams: list) -> None:
-    """Get the team league and sport name from the team list.
-
-    :param teams: List of teams
-    """
-    for i in range(len(teams)):
-        league, sports_name = get_team_league(teams[i][0])  # Get the team league and sport name
-        teams[i].append(league)  # Add the league to the teams list
-        teams[i].append(sports_name)  # Add the sport name to the teams lists
