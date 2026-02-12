@@ -68,7 +68,7 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
             with settings_path.open(encoding="utf-8") as f:
                 settings_data = json.load(f)
                 continuous_mode = settings_data.get("continuous_mode", False)
-                restart_delay = settings_data.get("RESTART_DELAY_SECONDS", 5)
+                restart_delay = settings_data.get("restart_delay_seconds", 5)
         except json.JSONDecodeError as e:
             logger.info(f"Could not parse settings.json (JSON error: {e}), using default continuous_mode=False")
         except OSError as e:
@@ -84,14 +84,14 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
                 with settings_path.open(encoding="utf-8") as f:
                     settings_data = json.load(f)
                     continuous_mode = settings_data.get("continuous_mode", False)
-                    restart_delay = settings_data.get("RESTART_DELAY_SECONDS", 5)
+                    restart_delay = settings_data.get("restart_delay_seconds", 5)
                     
                 if not continuous_mode:
                     logger.info("Continuous mode disabled in settings, stopping restart loop")
                     break
-            except (json.JSONDecodeError, OSError):
+            except (json.JSONDecodeError, OSError) as e:
                 # If we can't read settings, continue with current values
-                pass
+                logger.info(f"Warning: Could not reload settings ({e}), continuing with current values")
             
             restart_count += 1
             logger.info(f"Starting program {program_script} (run #{restart_count})...")

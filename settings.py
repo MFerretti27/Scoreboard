@@ -72,7 +72,7 @@ no_spoiler_mode: bool
 stay_on_team: bool
 delay: bool
 continuous_mode: bool
-RESTART_DELAY_SECONDS: int
+restart_delay_seconds: int
 
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
@@ -160,7 +160,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "stay_on_team": False,
     "delay": False,
     "continuous_mode": False,
-    "RESTART_DELAY_SECONDS": 5,
+    "restart_delay_seconds": 5,
 }
 
 
