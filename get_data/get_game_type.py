@@ -48,7 +48,16 @@ def get_nba_game_type(team_name: str) -> str:
     try:
         games = scoreboard.ScoreBoard()  # Today's Score Board
         live = games.get_dict()
-        game_type = live["scoreboard"]["games"][0]["gameLabel"]
+        scoreboard_data = live.get("scoreboard", {})
+        games_list = scoreboard_data.get("games", [])
+        
+        if not games_list:
+            logger.warning("No NBA games found in scoreboard")
+            if was_finals_game[0] and was_finals_game[1] == team_name:
+                return str(Path.cwd() / "images" / "championship_images" / "nba_finals.png")
+            return ""
+            
+        game_type = games_list[0].get("gameLabel", "")
 
         # Store data for when scoreboard data is not available
         was_finals_game[0] = "NBA Finals" in game_type
@@ -78,6 +87,11 @@ def get_mlb_game_type(team_name: str) -> str:
         games = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
+        
+        if not games:
+            logger.warning("No MLB games found for team %s", team_name)
+            return ""
+            
         game_type = games[0].get("game_type")
         if game_type == "W":
             return f"{Path.cwd()}/images/championship_images/world_series.png"
@@ -105,20 +119,37 @@ def get_nhl_game_type(team_name: str) -> str:
         # Get abbreviations for the teams in the current game
         team_id = get_nhl_game_id(team_name)
         resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
+        resp.raise_for_status()
         res = resp.json()
 
-        if res["seasonSeries"][0]["gameType"] == 2:
+        season_series = res.get("seasonSeries", [])
+        if not season_series:
+            logger.warning("No season series data for NHL team %s", team_name)
+            return ""
+            
+        game_type = season_series[0].get("gameType", 2)
+        if game_type == 2:
             return ""
 
-        away_team_abbr = res["seasonSeries"][0]["awayTeam"]["abbrev"]
-        home_team_abbr = res["seasonSeries"][0]["homeTeam"]["abbrev"]
+        away_team = season_series[0].get("awayTeam", {})
+        home_team = season_series[0].get("homeTeam", {})
+        away_team_abbr = away_team.get("abbrev", "")
+        home_team_abbr = home_team.get("abbrev", "")
 
         # Get the conference of the your team and your team abbreviation
         client = NHLClient()
+        your_team_abbr = None
+        conference = None
+        
         for team in client.teams.teams():
-            if team["name"] == team_name:
-                your_team_abbr = team["abbr"]
-                conference = team["conference"]["name"]
+            if team.get("name") == team_name:
+                your_team_abbr = team.get("abbr")
+                conference = team.get("conference", {}).get("name")
+                break
+        
+        if not your_team_abbr or not conference:
+            logger.warning("Could not find NHL team info for %s", team_name)
+            return ""
 
         # Get the current season year
         now = datetime.now(UTC)
@@ -135,11 +166,12 @@ def get_nhl_game_type(team_name: str) -> str:
         season = f"{start_year}{end_year}"
 
         # Get playoff information for the current season
-        playoff_info = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/", timeout=5)
-        playoff_info = playoff_info.json()
+        playoff_resp = requests.get(f"https://api-web.nhle.com/v1/playoff-series/carousel/{season}/", timeout=5)
+        playoff_resp.raise_for_status()
+        playoff_info = playoff_resp.json()
 
         # Check if the team is in the playoffs/championship
-        current_round = playoff_info["currentRound"]
+        current_round = playoff_info.get("currentRound", 0)
         path = ""
         if (your_team_abbr in (away_team_abbr, home_team_abbr)):
 

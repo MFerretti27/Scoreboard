@@ -46,6 +46,11 @@ def get_current_series_mlb(team_name: str) -> str:
         one_day_later = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
         schedule = statsapi.schedule(team=team_id, start_date=today, end_date=one_day_later)
 
+        if not schedule:
+            logger.warning("No MLB schedule found for team %s", team_name)
+            series_summary = mlb_series.get(team_name, "")
+            return series_summary
+            
         game = schedule[0]  # Take the first game today
         series_summary = game.get("series_status", "")
         if series_summary == "" or series_summary is None:
@@ -74,13 +79,22 @@ def get_current_series_nhl(team_name: str) -> str:
     try:
         team_id = get_nhl_game_id(team_name)
         resp = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/right-rail", timeout=5)
+        resp.raise_for_status()
         res = resp.json()
 
-        away_series_wins = res["seasonSeriesWins"]["awayTeamWins"]
-        home_series_wins = res["seasonSeriesWins"]["homeTeamWins"]
+        season_series_wins = res.get("seasonSeriesWins", {})
+        away_series_wins = season_series_wins.get("awayTeamWins", 0)
+        home_series_wins = season_series_wins.get("homeTeamWins", 0)
 
-        away_abbreviation = res["seasonSeries"][0]["awayTeam"]["abbrev"]
-        home_abbreviation = res["seasonSeries"][0]["homeTeam"]["abbrev"]
+        season_series = res.get("seasonSeries", [])
+        if not season_series:
+            logger.warning("No season series data for NHL team %s", team_name)
+            return series_summary
+            
+        away_team = season_series[0].get("awayTeam", {})
+        home_team = season_series[0].get("homeTeam", {})
+        away_abbreviation = away_team.get("abbrev", "")
+        home_abbreviation = home_team.get("abbrev", "")
 
         if away_series_wins == 4:
             series_summary = f"{away_abbreviation} wins {away_series_wins}-{home_series_wins}"
