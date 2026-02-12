@@ -1,8 +1,10 @@
 """Main file to run."""
+import json
 import os
 import platform
 import subprocess
 import sys
+import time
 import venv
 from pathlib import Path
 
@@ -56,9 +58,59 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
         logger.info(f"Error: Python executable not found at {python_executable}")
         sys.exit(1)
 
-    # Run the program
-    logger.info(f"Running program {program_script} inside virtual environment...")
-    subprocess.call([python_executable, "-m", program_script])
+    # Load settings to check continuous_mode
+    settings_path = Path("settings.json")
+    continuous_mode = False
+    restart_delay = 5
+    
+    if settings_path.exists():
+        try:
+            with settings_path.open(encoding="utf-8") as f:
+                settings_data = json.load(f)
+                continuous_mode = settings_data.get("continuous_mode", False)
+                restart_delay = settings_data.get("restart_delay_seconds", 5)
+        except json.JSONDecodeError as e:
+            logger.info(f"Could not parse settings.json (JSON error: {e}), using default continuous_mode=False")
+        except OSError as e:
+            logger.info(f"Could not read settings.json (IO error: {e}), using default continuous_mode=False")
+
+    if continuous_mode:
+        logger.info(f"Continuous mode enabled. Program will restart automatically after {restart_delay} seconds.")
+        logger.info("To stop continuous mode: disable it in settings or press Ctrl+C")
+        restart_count = 0
+        while True:
+            # Reload settings on each iteration to check if continuous_mode was disabled
+            try:
+                with settings_path.open(encoding="utf-8") as f:
+                    settings_data = json.load(f)
+                    continuous_mode = settings_data.get("continuous_mode", False)
+                    restart_delay = settings_data.get("restart_delay_seconds", 5)
+                    
+                if not continuous_mode:
+                    logger.info("Continuous mode disabled in settings, stopping restart loop")
+                    break
+            except (json.JSONDecodeError, OSError) as e:
+                # If we can't read settings, continue with current values
+                logger.info(f"Warning: Could not reload settings ({e}), continuing with current values")
+            
+            restart_count += 1
+            logger.info(f"Starting program {program_script} (run #{restart_count})...")
+            exit_code = subprocess.call([python_executable, "-m", program_script])
+            
+            # Log exit status with more detail
+            if exit_code == 0:
+                logger.info(f"Program exited normally with code {exit_code}")
+            elif exit_code < 0:
+                logger.info(f"Program terminated by signal {-exit_code}")
+            else:
+                logger.info(f"Program exited with error code {exit_code}")
+            
+            logger.info(f"Restarting in {restart_delay} seconds...")
+            time.sleep(restart_delay)
+    else:
+        # Run the program once (original behavior)
+        logger.info(f"Running program {program_script} inside virtual environment...")
+        subprocess.call([python_executable, "-m", program_script])
 
 
 def set_screen() -> None:

@@ -90,6 +90,10 @@ Using Python run the main.py file e.g. ```python main.py``` <br />
         - How often the scoreboard should update new information.
             - This is only when no team is playing. If a team is playing it will update every few seconds to ensure the most information is captured and displayed. (Set delay if this is too fast and ahead of TV).
         - How long team information should be displayed once game is over.
+        - **Continuous Mode**: Enable automatic restart if the scoreboard exits or crashes.
+            - When enabled, the scoreboard will automatically restart after a configurable delay (default 5 seconds).
+            - Useful for long-term display setups or unattended operation (e.g., dedicated scoreboard displays).
+            - The program will continue to restart indefinitely until you manually stop it.
 
 ## Scoreboard Screen
 -   Home team will always display on the right.

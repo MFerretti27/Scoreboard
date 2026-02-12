@@ -199,6 +199,29 @@ def create_settings_layout(window_width: int) -> list:
                     background_color=color,
                     ),
             ],
+            [
+                Sg.Column(
+                    [
+                        [Sg.Checkbox("Continuous Mode",
+                            key="continuous_mode",
+                            font=(settings.FONT, top_label_size),
+                            background_color=color,
+                            checkbox_color=checkbox_color,
+                            default=current_settings.get("continuous_mode", False)),
+                        ],
+                        [
+                            Sg.Text("\tAutomatically restart the scoreboard if it exits or crashes",
+                                    font=(settings.FONT, message_size), background_color=color),
+                        ],
+                        [
+                            Sg.Text("\tUseful for long-term display or unattended operation",
+                                    font=(settings.FONT, message_size), background_color=color),
+                        ],
+                    ],
+                    justification="left",
+                    background_color=color,
+                    ),
+            ],
         ],
         element_justification="center",
         expand_x=True,
