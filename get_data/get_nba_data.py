@@ -59,16 +59,37 @@ def get_all_nba_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
                 team_has_data = False
                 return team_info, team_has_data, currently_playing
 
-            # Get team records
-            home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team_name)).get_dict()
-            away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team_name)).get_dict()
+            # Get team records - safely access nested data
+            try:
+                home_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(home_team_name)).get_dict()
+                away_team_info = teaminfocommon.TeamInfoCommon(get_nba_team_id(away_team_name)).get_dict()
 
-            team_info["home_record"] = (str(home_team_info["resultSets"][0]["rowSet"][0][9]) +
-                                        "-" + str(home_team_info["resultSets"][0]["rowSet"][0][10])
-                                        )
-            team_info["away_record"] = (str(away_team_info["resultSets"][0]["rowSet"][0][9]) +
-                                        "-" + str(away_team_info["resultSets"][0]["rowSet"][0][10])
-                                        )
+                # Validate nested structure exists before accessing
+                home_result_sets = home_team_info.get("resultSets", [])
+                away_result_sets = away_team_info.get("resultSets", [])
+                
+                if home_result_sets and len(home_result_sets) > 0:
+                    home_row_set = home_result_sets[0].get("rowSet", [])
+                    if home_row_set and len(home_row_set) > 0 and len(home_row_set[0]) > 10:
+                        team_info["home_record"] = (str(home_row_set[0][9]) + "-" + str(home_row_set[0][10]))
+                    else:
+                        team_info["home_record"] = "N/A"
+                else:
+                    team_info["home_record"] = "N/A"
+                    
+                if away_result_sets and len(away_result_sets) > 0:
+                    away_row_set = away_result_sets[0].get("rowSet", [])
+                    if away_row_set and len(away_row_set) > 0 and len(away_row_set[0]) > 10:
+                        team_info["away_record"] = (str(away_row_set[0][9]) + "-" + str(away_row_set[0][10]))
+                    else:
+                        team_info["away_record"] = "N/A"
+                else:
+                    team_info["away_record"] = "N/A"
+                    
+            except (IndexError, KeyError, TypeError) as e:
+                logger.warning("Error fetching NBA team records: %s", str(e))
+                team_info["home_record"] = "N/A"
+                team_info["away_record"] = "N/A"
 
             # Get team logos
             team_info = get_team_logo(home_team_name, away_team_name, "NBA", team_info)
@@ -226,11 +247,22 @@ def restructure_clock(game: dict) -> str:
 
 def get_play_by_play(game_id: int) -> str:
     """Get play by play information."""
-    pbp = playbyplay.PlayByPlay(game_id)
-    actions = pbp.get_dict()["game"]["actions"]  # plays are referred to in the live data as `actions`
-    last_action = actions[-1]
-
-    return " " + str(last_action["description"])
+    try:
+        pbp = playbyplay.PlayByPlay(game_id)
+        pbp_data = pbp.get_dict()
+        game = pbp_data.get("game", {})
+        actions = game.get("actions", [])  # plays are referred to in the live data as `actions`
+        
+        if not actions:
+            logger.warning("No play-by-play actions available for game %s", game_id)
+            return " No play-by-play available"
+            
+        last_action = actions[-1]
+        description = last_action.get("description", "No description available")
+        return " " + str(description)
+    except Exception as e:
+        logger.exception("Error getting NBA play-by-play for game %s: %s", game_id, str(e))
+        return " Play-by-play unavailable"
 
 
 

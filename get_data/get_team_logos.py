@@ -102,32 +102,53 @@ def download_team_logos(window: Sg.Window, teams: list) -> None:
                 Path.mkdir(sport_dir)
 
             # Fetch the JSON data
-            url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
-            response = requests.get(url, timeout=5)
-            data = response.json()
+            try:
+                url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_name}/{sport_league}/teams"
+                response = requests.get(url, timeout=5)
+                response.raise_for_status()
+                data = response.json()
+            except (requests.exceptions.RequestException, ValueError) as e:
+                logger.error("Failed to fetch team logos from ESPN for %s: %s", sport_league, str(e))
+                continue
 
             # Extract team data
             teams_data = data.get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
 
             # Download, process, resize, and save each logo
             for team in teams_data:
-                team_name = team["team"]["displayName"]
-                logo_url = team["team"]["logos"][0]["href"]
-                team_name = team_name.upper()
+                try:
+                    team_data = team.get("team", {})
+                    team_name = team_data.get("displayName", "")
+                    logos = team_data.get("logos", [])
+                    
+                    if not team_name or not logos:
+                        logger.warning("Missing team name or logo URL, skipping")
+                        continue
+                        
+                    logo_url = logos[0].get("href", "")
+                    if not logo_url:
+                        logger.warning("No logo URL for team %s", team_name)
+                        continue
+                        
+                    team_name = team_name.upper()
 
-                logger.info("Downloading logo for %s from %s...", team_name, teams[i][1])
+                    logger.info("Downloading logo for %s from %s...", team_name, teams[i][1])
 
-                img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
-                response = requests.get(logo_url, stream=True, timeout=5)
-                with Path(img_path_png).open("wb") as file:
-                    file.writelines(response.iter_content(chunk_size=1024))
+                    img_path_png = str(Path.cwd() / "images" / "sport_logos" / str(team_name)) + "_Original.png"
+                    response = requests.get(logo_url, stream=True, timeout=5)
+                    response.raise_for_status()
+                    
+                    with Path(img_path_png).open("wb") as file:
+                        file.writelines(response.iter_content(chunk_size=1024))
 
-                # Open, resize, and save the image with PIL
-                with Image.open(img_path_png):
-                    resize_image(img_path_png, sport_dir, team_name)
+                    # Open, resize, and save the image with PIL
+                    with Image.open(img_path_png):
+                        resize_image(img_path_png, sport_dir, team_name)
 
-                # Delete the original .png file
-                Path.unlink(Path(img_path_png))
+                    # Delete the original .png file
+                    Path.unlink(Path(img_path_png))
+                except Exception as e:
+                    logger.error("Failed to download/process logo for team %s: %s", team_name, str(e))
                 count +=1
                 window["PROGRESS_BAR"].update(current_count=count)
                 window.refresh()  # Refresh to display text
@@ -204,8 +225,8 @@ def get_random_logo() -> dict:
         logos[1] = [settings.teams[random_indexes[1]][1].upper(), settings.teams[random_indexes[1]][0].upper()]
     # If only one team in teams array then only return the one file location for logo
     else:
-        logos[0] = [settings.teams[[0][0]][1].upper(), settings.teams[[0][0]][0].upper()]
-        logos[1] = [settings.teams[[0][0]][1].upper(), settings.teams[[0][0]][0].upper()]
+        logos[0] = [settings.teams[0][1].upper(), settings.teams[0][0].upper()]
+        logos[1] = [settings.teams[0][1].upper(), settings.teams[0][0].upper()]
 
     return logos
 

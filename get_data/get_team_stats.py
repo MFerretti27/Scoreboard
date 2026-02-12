@@ -134,16 +134,22 @@ def get_nhl_team_stats(home_team_name: str, away_team_name: str = "") -> tuple[s
     :return: Tuple containing player statistics strings
     """
     # Get standings data
-    record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=10)
-    standings = record_data.json()
+    try:
+        record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=10)
+        record_data.raise_for_status()
+        standings = record_data.json()
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logger.error("Failed to fetch NHL standings: %s", str(e))
+        return "", ""
 
     team_stats = []
     home_stats = {}
     away_stats = {}
 
     # Build full team_stats list once from standings
-    for team in standings["standings"]:
-        team_name_full = team["teamName"]["default"]
+    for team in standings.get("standings", []):
+        team_name_data = team.get("teamName", {})
+        team_name_full = team_name_data.get("default", "")
 
         team_stat = {
             "team_name": team_name_full,
@@ -199,9 +205,14 @@ def get_nfl_team_stats(home_abbr: str, away_abbr: str = "") -> tuple[str, str]:
     away_team_stats = ""
 
     for team_abbr in [home_abbr, away_abbr]:
-        team_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
-        team_resp = requests.get(team_url, timeout=10)
-        team_data = team_resp.json()
+        try:
+            team_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_abbr}"
+            team_resp = requests.get(team_url, timeout=10)
+            team_resp.raise_for_status()
+            team_data = team_resp.json()
+        except (requests.exceptions.RequestException, ValueError) as e:
+            logger.error("Failed to fetch NFL team stats for %s: %s", team_abbr, str(e))
+            continue
 
         team_name = team_data.get("team", {}).get("displayName", "")
         team_stat = f"{team_name} Season Stats:\n\n"
