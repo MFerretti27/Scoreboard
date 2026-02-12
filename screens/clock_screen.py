@@ -62,12 +62,14 @@ def clock(window: Sg.Window, message: str) -> list:
     fetch_picture_timer = 60 * 1000  # How often the picture should update in seconds
     teams_with_data: list[bool] = []
     first_time = True
+    max_consecutive_failures = 20  # Maximum consecutive fetch failures before giving up
+    consecutive_failures = 0
 
     reset_window_elements(window)
     window["under_score_image"].update(filename="")
     event = window.read(timeout=100)
 
-    while True not in teams_with_data:
+    while True not in teams_with_data and consecutive_failures < max_consecutive_failures:
 
         # Every minute randomly select one of the users team logos to display
         if ticks_diff(ticks_ms(), fetch_picture) >= fetch_picture_timer or first_time:
@@ -108,15 +110,37 @@ def clock(window: Sg.Window, message: str) -> list:
                     logger.info("\nFetching data for %s", settings.teams[fetch_index][0])
                     data = get_data(settings.teams[fetch_index])
                     teams_with_data.append(data[1])
+                
+                # Track consecutive failures
+                if True not in teams_with_data:
+                    consecutive_failures += 1
+                    message = f"No Data For Any Teams (Attempt {consecutive_failures}/{max_consecutive_failures})"
+                    logger.warning("Consecutive failures: %d/%d", consecutive_failures, max_consecutive_failures)
+                else:
+                    consecutive_failures = 0  # Reset on success
                     message = "No Data For Any Teams"
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if fetch attempted
 
         # If fetched failed find out why and display message
         except Exception as error:
+            consecutive_failures += 1
             message = error_handling(window, error)
+            logger.error("Fetch failed (Attempt %d/%d): %s", consecutive_failures, max_consecutive_failures, str(error))
 
         event = window.read(timeout=100)
+
+    # If we exceeded max failures, log and exit to main screen
+    if consecutive_failures >= max_consecutive_failures:
+        logger.error("Maximum consecutive failures reached in clock screen. Returning to main screen.")
+        message = "Maximum fetch failures reached. Please check your internet connection and try again."
+        window["top_info"].update(value=message, font=(settings.FONT, settings.TIMEOUT_SIZE))
+        time.sleep(5)  # Show message for 5 seconds before exiting
+        window.close()
+        time.sleep(0.5)
+        json_saved_data = orjson.dumps(settings.saved_data)
+        subprocess.Popen([sys.executable, "-m", "screens.main_screen", json_saved_data])
+        sys.exit()
 
     # Reset Text Font Size before returning to main loop
     reset_window_elements(window)

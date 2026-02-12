@@ -44,38 +44,69 @@ def get_espn_data(team: list[str], team_info: dict[str, Any]) -> tuple[dict[str,
         "under_score_image": "",
     })
 
-    resp = requests.get(url, timeout=5)
-    response_as_json = resp.json()
+    try:
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()  # Raise exception for bad HTTP status codes
+        response_as_json = resp.json()
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+        logger.error("Failed to fetch or parse ESPN data for %s: %s", team_name, str(e))
+        raise RuntimeError(f"ESPN API request failed for {team_name}") from e
+
+    if "events" not in response_as_json or not response_as_json["events"]:
+        logger.warning("No events found in ESPN response for %s", team_name)
+        raise RuntimeError(f"No events in ESPN response for {team_name}")
 
     for event in response_as_json["events"]:
-        if team_name.upper() not in event["name"].upper():
+        if team_name.upper() not in event.get("name", "").upper():
             index += 1  # Continue looking for team in sports league events
             continue
 
         logger.info("Found Game: %s", team_name)
         team_has_data = True
-        competition = response_as_json["events"][index]["competitions"][0]
+        
+        # Safely access nested competition data
+        try:
+            competitions = response_as_json["events"][index].get("competitions", [])
+            if not competitions:
+                logger.warning("No competitions found for event, skipping")
+                continue
+            competition = competitions[0]
+        except (IndexError, KeyError) as e:
+            logger.error("Error accessing competition data: %s", str(e))
+            continue
 
         # Check if game is within the next month, if not then its too far out to display
-        if not is_valid_game_date(competition["date"]):
+        if not is_valid_game_date(competition.get("date", "")):
             logger.info("Game is too far in the future or too old, skipping")
             return team_info, False, False
 
-        # Get Score
-        team_info["home_score"] = competition["competitors"][0].get("score", "0")
-        team_info["away_score"] = competition["competitors"][1].get("score", "0")
+        # Get Score - safely access competitors
+        competitors = competition.get("competitors", [])
+        if len(competitors) < 2:
+            logger.warning("Invalid competitors data, skipping")
+            continue
+            
+        team_info["home_score"] = competitors[0].get("score", "0")
+        team_info["away_score"] = competitors[1].get("score", "0")
 
         if settings.display_records:
-            team_info["away_record"] = competition["competitors"][1].get("records", "N/A")[0].get("summary", "N/A")
-            team_info["home_record"] = competition["competitors"][0].get("records", "N/A")[0].get("summary", "N/A")
+            away_records = competitors[1].get("records", [])
+            home_records = competitors[0].get("records", [])
+            team_info["away_record"] = away_records[0].get("summary", "N/A") if away_records else "N/A"
+            team_info["home_record"] = home_records[0].get("summary", "N/A") if home_records else "N/A"
 
-        team_info["bottom_info"] = response_as_json["events"][index]["status"]["type"]["shortDetail"]
+        # Safely get status detail
+        status = response_as_json["events"][index].get("status", {})
+        status_type = status.get("type", {})
+        team_info["bottom_info"] = status_type.get("shortDetail", "Game Info Unavailable")
 
-        # Data only used in this function
-        home_name = competition["competitors"][0]["team"]["displayName"]
-        away_name = competition["competitors"][1]["team"]["displayName"]
-        home_short_name = competition["competitors"][0]["team"]["shortDisplayName"]
-        away_short_name = competition["competitors"][1]["team"]["shortDisplayName"]
+        # Data only used in this function - safely access team data
+        home_team = competitors[0].get("team", {})
+        away_team = competitors[1].get("team", {})
+        home_name = home_team.get("displayName", "Home Team")
+        away_name = away_team.get("displayName", "Away Team")
+        home_short_name = home_team.get("shortDisplayName", "HOME")
+        away_short_name = away_team.get("shortDisplayName", "AWAY")
 
         # Display team names above score
         team_info["above_score_txt"] = f"{away_short_name} @ {home_short_name}"

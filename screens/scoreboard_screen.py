@@ -470,6 +470,16 @@ def _handle_update_cycle(
 ) -> dict:
     """Execute display update cycle and return currently displaying team info."""
     currently_displaying = {}
+    
+    # Bounds checking for display_index
+    if not team_info or state.display_index >= len(team_info):
+        logger.warning("Invalid display_index: %d, team_info length: %d", 
+                      state.display_index, len(team_info))
+        return currently_displaying
+    
+    if state.display_index >= len(teams_with_data) or state.display_index >= len(teams_currently_playing):
+        logger.warning("Index out of bounds for teams_with_data or teams_currently_playing")
+        return currently_displaying
 
     if teams_with_data[state.display_index]:
         update_display(window, team_info, state.display_index,
@@ -556,11 +566,12 @@ def main(window: Sg.Window) -> None:
                 state.delay_clock = ticks_ms()
                 state.delay_over = False
 
-            if settings.stay_on_team and currently_displaying != team_info[state.display_index]:
-                state.display_index = state.original_index
+            if settings.stay_on_team and team_info and state.display_index < len(team_info):
+                if currently_displaying != team_info[state.display_index]:
+                    state.display_index = state.original_index
 
         except Exception as error:
-            logger.info(f"Error: {error}")
+            logger.exception("Error in main scoreboard loop: %s", str(error))
             handle_error(window, error=error, team_info=team_info)
 
 

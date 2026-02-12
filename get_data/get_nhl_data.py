@@ -31,40 +31,53 @@ def get_all_nhl_data(team_name: str) -> tuple[dict[str, Any], bool, bool]:
     try:
         team_id = get_nhl_game_id(team_name)
         box_score = requests.get(f"https://api-web.nhle.com/v1/gamecenter/{team_id}/boxscore", timeout=5)
-    except (requests.exceptions.RequestException, IndexError):
-        logger.info("Error fetching NHL data for team: %s", team_name)
+        box_score.raise_for_status()  # Raise exception for bad HTTP status
+    except (requests.exceptions.RequestException, IndexError) as e:
+        logger.info("Error fetching NHL data for team: %s - %s", team_name, str(e))
         return team_info, has_data, currently_playing  # Could not find any game to display
 
-    box_score = box_score.json()
+    try:
+        box_score = box_score.json()
+    except ValueError as e:
+        logger.error("Error parsing NHL JSON response for team: %s - %s", team_name, str(e))
+        return team_info, has_data, currently_playing
+        
     has_data = True
 
     # Get Scores, they are only available if game is playing or has finished
-    team_info["home_score"] = box_score["awayTeam"].get("score", "0")
-    team_info["away_score"] = box_score["homeTeam"].get("score", "0")
+    team_info["home_score"] = box_score.get("awayTeam", {}).get("score", "0")
+    team_info["away_score"] = box_score.get("homeTeam", {}).get("score", "0")
 
     team_info["under_score_image"] = ""  # Cannot get network image so ensure its set to nothing
 
-    # Get team names
-    away_team_name = box_score["awayTeam"]["commonName"]["default"]
-    home_team_name = box_score["homeTeam"]["commonName"]["default"]
+    # Get team names - safely access nested data
+    away_team_name = box_score.get("awayTeam", {}).get("commonName", {}).get("default", "Away Team")
+    home_team_name = box_score.get("homeTeam", {}).get("commonName", {}).get("default", "Home Team")
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Check if two of your teams are playing each other to not display same data twice
-    full_home_team_name = box_score["homeTeam"]["placeName"]["default"] + " " + home_team_name
-    full_away_team_name = box_score["awayTeam"]["placeName"]["default"] + " " + away_team_name
+    full_home_team_name = box_score.get("homeTeam", {}).get("placeName", {}).get("default", "") + " " + home_team_name
+    full_away_team_name = box_score.get("awayTeam", {}).get("placeName", {}).get("default", "") + " " + away_team_name
     if check_playing_each_other(full_home_team_name, full_away_team_name):
         team_has_data = False
         return team_info, team_has_data, currently_playing
 
     # Get team record
     if settings.display_records:
-        record_data = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=5).json()
-        for team in record_data["standings"]:
-            if home_team_name in team["teamName"]["default"]:
-                team_info["home_record"] = str(team["wins"]) + "-" + str(team["losses"])
+        try:
+            record_response = requests.get("https://api-web.nhle.com/v1/standings/now", timeout=5)
+            record_response.raise_for_status()
+            record_data = record_response.json()
+            for team in record_data.get("standings", []):
+                team_name_data = team.get("teamName", {}).get("default", "")
+                if home_team_name in team_name_data:
+                    team_info["home_record"] = str(team.get("wins", 0)) + "-" + str(team.get("losses", 0))
 
-            if away_team_name in team["teamName"]["default"]:
-                team_info["away_record"] = str(team["wins"]) + "-" + str(team["losses"])
+                if away_team_name in team_name_data:
+                    team_info["away_record"] = str(team.get("wins", 0)) + "-" + str(team.get("losses", 0))
+        except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+            logger.warning("Could not fetch NHL standings: %s", str(e))
+            # Continue without records - not critical
 
     # Get team logos
     team_info = get_team_logo(home_team_name, away_team_name, "NHL", team_info)
