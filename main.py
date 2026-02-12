@@ -1,8 +1,10 @@
 """Main file to run."""
+import json
 import os
 import platform
 import subprocess
 import sys
+import time
 import venv
 from pathlib import Path
 
@@ -56,9 +58,39 @@ def run_program_in_venv(venv_dir: str, program_script: str) -> None:
         logger.info(f"Error: Python executable not found at {python_executable}")
         sys.exit(1)
 
-    # Run the program
-    logger.info(f"Running program {program_script} inside virtual environment...")
-    subprocess.call([python_executable, "-m", program_script])
+    # Load settings to check continuous_mode
+    settings_path = Path("settings.json")
+    continuous_mode = False
+    restart_delay = 5
+    
+    if settings_path.exists():
+        try:
+            with settings_path.open(encoding="utf-8") as f:
+                settings_data = json.load(f)
+                continuous_mode = settings_data.get("continuous_mode", False)
+                restart_delay = settings_data.get("RESTART_DELAY_SECONDS", 5)
+        except (json.JSONDecodeError, OSError):
+            logger.info("Could not read settings.json, using default continuous_mode=False")
+
+    if continuous_mode:
+        logger.info(f"Continuous mode enabled. Program will restart automatically after {restart_delay} seconds.")
+        restart_count = 0
+        while True:
+            restart_count += 1
+            logger.info(f"Starting program {program_script} (run #{restart_count})...")
+            exit_code = subprocess.call([python_executable, "-m", program_script])
+            
+            if exit_code == 0:
+                logger.info(f"Program exited normally with code {exit_code}")
+            else:
+                logger.info(f"Program exited with code {exit_code}")
+            
+            logger.info(f"Restarting in {restart_delay} seconds...")
+            time.sleep(restart_delay)
+    else:
+        # Run the program once (original behavior)
+        logger.info(f"Running program {program_script} inside virtual environment...")
+        subprocess.call([python_executable, "-m", program_script])
 
 
 def set_screen() -> None:

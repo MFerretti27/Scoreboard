@@ -71,6 +71,8 @@ display_player_stats: bool
 no_spoiler_mode: bool
 stay_on_team: bool
 delay: bool
+continuous_mode: bool
+RESTART_DELAY_SECONDS: int
 
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Teams to display
@@ -157,6 +159,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "no_spoiler_mode": False,
     "stay_on_team": False,
     "delay": False,
+    "continuous_mode": False,
+    "RESTART_DELAY_SECONDS": 5,
 }
 
 

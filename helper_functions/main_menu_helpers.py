@@ -21,7 +21,7 @@ setting_keys_booleans = [
 
     "display_records", "display_venue", "display_network", "display_series", "display_odds",
     "display_date_ended", "prioritize_playing_team", "always_get_logos", "auto_update",
-    "display_playoff_championship_image", "display_player_stats",
+    "display_playoff_championship_image", "display_player_stats", "continuous_mode",
 ]
 
 
