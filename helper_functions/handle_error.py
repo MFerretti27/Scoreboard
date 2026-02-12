@@ -34,16 +34,33 @@ def handle_error(window: Sg.Window, *, error: Exception | None = None,
             try:
                 event = window.read(timeout=5)
                 check_events(window, event)  # Check for button presses
+                
+                # Try to fetch data for all teams, not just the first one
+                teams_fetched = 0
                 for fetch_index in range(len(settings.teams)):
-                    get_data(settings.teams[fetch_index])
-                    logger.info("Successfully got data after error")
+                    try:
+                        get_data(settings.teams[fetch_index])
+                        teams_fetched += 1
+                    except Exception as fetch_error:
+                        logger.warning("Failed to fetch data for team %s: %s", 
+                                     settings.teams[fetch_index][0], str(fetch_error))
+                
+                # If we successfully fetched at least one team, consider it a success
+                if teams_fetched > 0:
+                    logger.info("Successfully got data for %d/%d teams after error", 
+                              teams_fetched, len(settings.teams))
                     return
+                    
             except Exception as e:
-                logger.info("Could not get data, trying again...")
-                window["top_info"].update(value="Could not get data, trying again...", text_color="red")
-                window["bottom_info"].update(value=f"Error: {e}",
-                                                font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
-                                                text_color="red")
+                logger.exception("Could not get data, trying again: %s", str(e))
+                try:
+                    window["top_info"].update(value="Could not get data, trying again...", text_color="red")
+                    window["bottom_info"].update(value=f"Error: {e}",
+                                                    font=(settings.FONT, settings.NOT_PLAYING_TOP_INFO_SIZE),
+                                                    text_color="red")
+                except Exception as window_error:
+                    logger.error("Failed to update window during error handling: %s", str(window_error))
+                    
             wait(window, 30) # Wait 30 seconds before trying again
             time_till_clock = time_till_clock + 1
 

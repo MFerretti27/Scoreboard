@@ -43,12 +43,28 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
         data = statsapi.schedule(
             team=get_mlb_team_id(team_name), include_series_status=True, start_date=today, end_date=three_days_later,
         )
-        live = statsapi.get("game", {"gamePk": data[double_header]["game_id"], "fields": API_FIELDS})
+        
+        # Validate data exists and index is valid
+        if not data or double_header >= len(data):
+            logger.warning("MLB schedule data invalid or doubleheader index out of bounds: %d", double_header)
+            double_header = 0
+            if not data:
+                return team_info, has_data, currently_playing
+                
+        game_id = data[double_header].get("game_id")
+        if not game_id:
+            logger.warning("No game_id found in MLB schedule data")
+            return team_info, has_data, currently_playing
+            
+        live = statsapi.get("game", {"gamePk": game_id, "fields": API_FIELDS})
 
-        live_feed = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{data[double_header]["game_id"]}/feed/live',
-                                 timeout=5).json()
-    except Exception:
-        logger.exception("Could not get MLB data")
+        # Protected request with validation
+        response = requests.get(f'https://statsapi.mlb.com/api/v1.1/game/{game_id}/feed/live', timeout=5)
+        response.raise_for_status()
+        live_feed = response.json()
+        
+    except (requests.exceptions.RequestException, ValueError, KeyError, IndexError) as e:
+        logger.exception("Could not get MLB data: %s", str(e))
         double_header = 0
         return team_info, has_data, currently_playing  # Could not find game
 
@@ -56,28 +72,51 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
     # Cannot Get network so dont display anything, and if game is currently playing it will updated with base images
     team_info["under_score_image"] = ""
 
-    # Get Score
-    team_info["home_score"] = live["liveData"]["linescore"]["teams"]["home"].get("runs", 0)
-    team_info["away_score"] = live["liveData"]["linescore"]["teams"]["away"].get("runs", 0)
+    # Get Score - safely access nested data
+    try:
+        live_data = live.get("liveData", {})
+        linescore = live_data.get("linescore", {})
+        teams = linescore.get("teams", {})
+        team_info["home_score"] = teams.get("home", {}).get("runs", 0)
+        team_info["away_score"] = teams.get("away", {}).get("runs", 0)
+    except (KeyError, TypeError) as e:
+        logger.error("Error accessing MLB score data: %s", str(e))
+        team_info["home_score"] = "0"
+        team_info["away_score"] = "0"
 
     # Get date and put in local time
-    utc_time = datetime.strptime(live["gameData"]["datetime"]["dateTime"], "%Y-%m-%dT%H:%M:%S%z")
-    game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
+    try:
+        game_data = live.get("gameData", {})
+        datetime_data = game_data.get("datetime", {})
+        date_time_str = datetime_data.get("dateTime", "")
+        if date_time_str:
+            utc_time = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S%z")
+            game_time = utc_time.replace(tzinfo=UTC).astimezone().strftime("%-m/%-d - %-I:%M %p")
+        else:
+            game_time = "Time TBD"
+    except (ValueError, KeyError) as e:
+        logger.warning("Could not parse MLB game time: %s", str(e))
+        game_time = "Time TBD"
 
     # Get venue and set bottom info to display game time and venue
     team_info["bottom_info"] = game_time
     if settings.display_venue:
-        venue = live_feed["gameData"]["venue"]["name"]
+        venue = live_feed.get("gameData", {}).get("venue", {}).get("name", "Venue TBD")
         team_info["bottom_info"] = f"{game_time} @ {venue}"
 
-    # Get Home and Away team logos/names
-    home_team_name = live["gameData"]["teams"]["home"]["teamName"]
-    away_team_name = live["gameData"]["teams"]["away"]["teamName"]
+    # Get Home and Away team logos/names - safely access nested data
+    game_data = live.get("gameData", {})
+    teams_data = game_data.get("teams", {})
+    home_team_data = teams_data.get("home", {})
+    away_team_data = teams_data.get("away", {})
+    home_team_name = home_team_data.get("teamName", "Home Team")
+    away_team_name = away_team_data.get("teamName", "Away Team")
     team_info["above_score_txt"] = f"{away_team_name} @ {home_team_name}"
 
     # Check if two of your teams are playing each other to not display same data twice
-    full_home_team_name = live_feed["gameData"]["teams"]["home"]["franchiseName"] + " " + home_team_name
-    full_away_team_name = live_feed["gameData"]["teams"]["away"]["franchiseName"] + " " + away_team_name
+    live_feed_teams = live_feed.get("gameData", {}).get("teams", {})
+    full_home_team_name = live_feed_teams.get("home", {}).get("franchiseName", "") + " " + home_team_name
+    full_away_team_name = live_feed_teams.get("away", {}).get("franchiseName", "") + " " + away_team_name
     if check_playing_each_other(full_home_team_name, full_away_team_name):
         team_has_data = False
         return team_info, team_has_data, currently_playing
@@ -94,16 +133,20 @@ def get_all_mlb_data(team_name: str, double_header: int = 0) -> tuple[dict[str, 
 
     # Get Home and Away team records
     if settings.display_records:
-        home_wins = live["gameData"]["teams"]["home"]["record"]["wins"]
-        home_losses = live["gameData"]["teams"]["home"]["record"]["losses"]
+        home_record = home_team_data.get("record", {})
+        home_wins = home_record.get("wins", 0)
+        home_losses = home_record.get("losses", 0)
         team_info["home_record"] = f"{home_wins!s}-{home_losses!s}"
 
-        away_wins = live["gameData"]["teams"]["away"]["record"]["wins"]
-        away_losses = live["gameData"]["teams"]["away"]["record"]["losses"]
+        away_record = away_team_data.get("record", {})
+        away_wins = away_record.get("wins", 0)
+        away_losses = away_record.get("losses", 0)
         team_info["away_record"] = f"{away_wins!s}-{away_losses!s}"
 
     # Check if game is currently playing
-    if "Progress" in live["gameData"]["status"]["detailedState"]:
+    status = game_data.get("status", {})
+    detailed_state = status.get("detailedState", "")
+    if "Progress" in detailed_state:
         currently_playing = True
         team_info = append_mlb_data(team_info, team_name, double_header)
 
