@@ -566,9 +566,10 @@ def main(window: Sg.Window) -> None:
                 state.delay_clock = ticks_ms()
                 state.delay_over = False
 
-            if settings.stay_on_team and team_info and state.display_index < len(team_info):
-                if currently_displaying != team_info[state.display_index]:
-                    state.display_index = state.original_index
+            if (settings.stay_on_team and team_info and 
+                state.display_index < len(team_info) and 
+                currently_displaying != team_info[state.display_index]):
+                state.display_index = state.original_index
 
         except Exception as error:
             logger.exception("Error in main scoreboard loop: %s", str(error))

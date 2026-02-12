@@ -118,7 +118,7 @@ def clock(window: Sg.Window, message: str) -> list:
                     logger.warning("Consecutive failures: %d/%d", consecutive_failures, max_consecutive_failures)
                 else:
                     consecutive_failures = 0  # Reset on success
-                    message = "No Data For Any Teams"
+                    # Keep existing message or use default - success will exit loop
 
                 fetch_clock = ticks_add(fetch_clock, fetch_timer)  # Reset Timer if fetch attempted
 

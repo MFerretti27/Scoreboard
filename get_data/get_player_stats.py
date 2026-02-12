@@ -237,74 +237,78 @@ def get_mlb_player_stats(team_name: str) -> tuple[str, str]:
             for pid in batting_order:
                 pid_str = f"ID{pid}"
                 player = team_players.get(pid_str)
-            if not player:
-                continue
-            name = " ".join(player["person"]["fullName"].split()[1:])
-            position = player.get("position", {}).get("abbreviation", "-")
-            if position == "C":
-                position = position.replace("C", "C ") # Make catcher position two characters for alignment
-            game_bat = player.get("stats", {}).get("batting", None)
-            season_bat = player.get("seasonStats", {}).get("batting", None)
-            if game_bat:
-                rbi = game_bat.get("rbi", 0)
-                rbi = ", " + str(rbi) + " RBI" if rbi > 0 else ""
+                if not player:
+                    continue
+                name = " ".join(player["person"]["fullName"].split()[1:])
+                position = player.get("position", {}).get("abbreviation", "-")
+                if position == "C":
+                    position = position.replace("C", "C ") # Make catcher position two characters for alignment
+                game_bat = player.get("stats", {}).get("batting", None)
+                season_bat = player.get("seasonStats", {}).get("batting", None)
+                if game_bat:
+                    rbi = game_bat.get("rbi", 0)
+                    rbi = ", " + str(rbi) + " RBI" if rbi > 0 else ""
 
-                hits = game_bat.get("hits", 0)
-                at_bats = game_bat.get("atBats", 0)
+                    hits = game_bat.get("hits", 0)
+                    at_bats = game_bat.get("atBats", 0)
 
-                summary = f"{hits}/{at_bats}"
-                avg = season_bat.get("avg") if season_bat else "-"
-                if avg == ".000":
-                    continue  # Skip players with .000 average
+                    summary = f"{hits}/{at_bats}"
+                    avg = season_bat.get("avg") if season_bat else "-"
+                    if avg == ".000":
+                        continue  # Skip players with .000 average
 
-                # Print all plate appearance outcomes for this player
-                pa_outcomes = []
-                plays = data1["liveData"]["plays"]["allPlays"]
-                for play in plays:
-                    if ("matchup" in play and "batter" in play["matchup"] and
-                        play["matchup"]["batter"]["id"] == pid):
-                            desc = play["result"].get("description", "")
+                    # Print all plate appearance outcomes for this player
+                    pa_outcomes = []
+                    plays = live_data.get("plays", {}).get("allPlays", [])
+                    for play in plays:
+                        matchup = play.get("matchup", {})
+                        batter = matchup.get("batter", {})
+                        if batter.get("id") == pid:
+                            result = play.get("result", {})
+                            desc = result.get("description", "")
                             pa_outcomes.append(desc)
-                # Map eventType to short codes
-                event_map = {
-                    "Home Run": "HR",
-                    "Walk": "BB",
-                    "Strikeout": "K",
-                    "Single": "1B",
-                    "Double": "2B",
-                    "Triple": "3B",
-                    "Hit By Pitch": "HBP",
-                    "Sac Fly": "SF",
-                    "Sac Bunt": "SH",
-                    "Groundout": "GO",
-                    "Flyout": "FO",
-                    "Lineout": "LO",
-                    "Pop Out": "PO",
-                    "Bunt Groundout": "BGO",
-                    "Bunt Pop Out": "BPO",
-                    "Foul Out": "FO",
-                    "Fielders Choice": "FC",
-                    "Field Out": "OUT",
-                    "Forceout": "OUT",
-                    "Grounded Into DP": "GIDP",
-                    "Intent Walk": "IBB",
-                    "Catcher Interference": "CI",
-                    "Error": "E",
-                    "Strikeout Double Play": "KDP",
-                }
-                # For each play, print only the event code, numbered
-                pa_events: list[str] = []
-                pa_events = []
-                for p in plays:
-                    if "matchup" in p and "batter" in p["matchup"] and p["matchup"]["batter"]["id"] == pid:
-                        event = p["result"].get("event", "")
-                        event_code = event_map.get(event, event.upper() if event else event)
-                        pa_events.append(event_code)
-                short = " ".join(pa_events)
-                if team_type == "home":
-                    home_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
-                else:
-                    away_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
+                    # Map eventType to short codes
+                    event_map = {
+                        "Home Run": "HR",
+                        "Walk": "BB",
+                        "Strikeout": "K",
+                        "Single": "1B",
+                        "Double": "2B",
+                        "Triple": "3B",
+                        "Hit By Pitch": "HBP",
+                        "Sac Fly": "SF",
+                        "Sac Bunt": "SH",
+                        "Groundout": "GO",
+                        "Flyout": "FO",
+                        "Lineout": "LO",
+                        "Pop Out": "PO",
+                        "Bunt Groundout": "BGO",
+                        "Bunt Pop Out": "BPO",
+                        "Foul Out": "FO",
+                        "Fielders Choice": "FC",
+                        "Field Out": "OUT",
+                        "Forceout": "OUT",
+                        "Grounded Into DP": "GIDP",
+                        "Intent Walk": "IBB",
+                        "Catcher Interference": "CI",
+                        "Error": "E",
+                        "Strikeout Double Play": "KDP",
+                    }
+                    # For each play, print only the event code, numbered
+                    pa_events: list[str] = []
+                    for p in plays:
+                        matchup = p.get("matchup", {})
+                        batter = matchup.get("batter", {})
+                        if batter.get("id") == pid:
+                            result = p.get("result", {})
+                            event = result.get("event", "")
+                            event_code = event_map.get(event, event.upper() if event else event)
+                            pa_events.append(event_code)
+                    short = " ".join(pa_events)
+                    if team_type == "home":
+                        home_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
+                    else:
+                        away_player_stats += f"{position} {name}: AVG {avg} H/AB: {summary} | {short}{rbi}\n\n"
 
         return home_player_stats.rstrip("\n"), away_player_stats.rstrip("\n")
     except Exception as e:
